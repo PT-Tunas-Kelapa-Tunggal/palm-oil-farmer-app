@@ -151,6 +151,24 @@ struct AreaOutlineTests {
     }
 }
 
+struct GardenOrderTests {
+    @Test func newestGardensAndDraftsComeFirstAndLegacyGardensKeepTheirOrder() {
+        func garden(_ name: String, _ created: Date?) -> Garden {
+            var garden = Garden(id: UUID(), name: name, locationName: "", boundary: GardenBoundary(),
+                                plantingYear: 2016, soilType: .peat)
+            garden.createdAt = created
+            return garden
+        }
+        let legacyOld = garden("lama-1", nil), legacyNew = garden("lama-2", nil)
+        let older = garden("lama", Date(timeIntervalSince1970: 1_000)), newest = garden("baru", Date(timeIntervalSince1970: 3_000))
+        var draft = GardenDraft(location: GardenLocation(name: "draf", subtitle: "",
+            coordinate: GardenCoordinate(CLLocationCoordinate2D(latitude: 1, longitude: 104))))
+        draft.createdAt = Date(timeIntervalSince1970: 2_000)
+        let order = GardenListItem.newestFirst(gardens: [legacyOld, legacyNew, older, newest], drafts: [draft]).map(\.id)
+        #expect(order == [newest.id, draft.id, older.id, legacyNew.id, legacyOld.id])
+    }
+}
+
 struct NutrientLinkTests {
     @Test func everyNutrientNameInTheSummaryIsLinked() {
         let text = NutrientLinkedText.linked("Kadar magnesium paling jauh, disusul Nitrogen dan kalium. Fosfor berlebih; fosfor cukup.")

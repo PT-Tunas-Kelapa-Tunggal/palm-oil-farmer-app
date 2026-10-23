@@ -11,6 +11,8 @@ struct Garden: Identifiable, Codable {
     var fertilizerRecords: [FertilizerRecord]? = nil
     var harvestRecord: HarvestRecord? = nil
     var review: GardenReview? = nil
+    /// When the garden was registered. Gardens saved before this field have none.
+    var createdAt: Date? = nil
 }
 
 struct FertilizerRecord: Identifiable, Codable {

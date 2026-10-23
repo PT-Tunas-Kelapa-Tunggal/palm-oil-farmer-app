@@ -74,24 +74,26 @@ struct GardenListView: View {
                                 .frame(maxWidth: .infinity)
                                 .padding(.vertical, 48)
                         }
-                        ForEach(visibleGardens) { garden in
-                            Button {
-                                onSelectGarden(garden)
-                            } label: {
-                                GardenCard(garden: garden, referenceImage: referenceMapImage, metrics: previewMetrics)
-                            }
-                            .buttonStyle(.plain)
-                        }
-                        ForEach(visibleDrafts) { draft in
-                            Button {
-                                onSelectDraft(draft)
-                            } label: {
-                                GardenDraftCard(draft: draft)
-                            }
-                            .buttonStyle(.plain)
-                            .contextMenu {
-                                Button("Hapus draf", systemImage: "trash", role: .destructive) {
-                                    onDeleteDraft(draft)
+                        ForEach(GardenListItem.newestFirst(gardens: visibleGardens, drafts: visibleDrafts)) { item in
+                            switch item {
+                            case .garden(let garden):
+                                Button {
+                                    onSelectGarden(garden)
+                                } label: {
+                                    GardenCard(garden: garden, referenceImage: referenceMapImage, metrics: previewMetrics)
+                                }
+                                .buttonStyle(.plain)
+                            case .draft(let draft):
+                                Button {
+                                    onSelectDraft(draft)
+                                } label: {
+                                    GardenDraftCard(draft: draft)
+                                }
+                                .buttonStyle(.plain)
+                                .contextMenu {
+                                    Button("Hapus draf", systemImage: "trash", role: .destructive) {
+                                        onDeleteDraft(draft)
+                                    }
                                 }
                             }
                         }

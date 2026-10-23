@@ -190,6 +190,7 @@ struct GardenDetailsView: View {
         garden.fertilizerRecords = originalGarden?.fertilizerRecords
         garden.harvestRecord = originalGarden?.harvestRecord
         garden.review = originalGarden?.review
+        garden.createdAt = originalGarden == nil ? .now : originalGarden?.createdAt
         showsSaveError = !onSave(garden)
         if !showsSaveError && originalGarden != nil {
             dismiss()
