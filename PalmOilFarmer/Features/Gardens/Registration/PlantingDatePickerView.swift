@@ -1,7 +1,6 @@
 import SwiftUI
 
 struct PlantingDatePickerView: View {
-    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
     @State private var month: Int
     @State private var year: Int
     let onConfirm: (Int, Int) -> Void
@@ -35,9 +34,9 @@ struct PlantingDatePickerView: View {
             .pickerStyle(.wheel)
             .frame(height: 217)
             .padding(.horizontal, 16)
-            Spacer(minLength: 0)
+            .padding(.bottom, 16)
         }
-        .presentationDetents(dynamicTypeSize.isAccessibilitySize ? [.large] : [.height(317), .large])
+        .fittedSheetHeight()
         .presentationDragIndicator(.visible)
     }
 

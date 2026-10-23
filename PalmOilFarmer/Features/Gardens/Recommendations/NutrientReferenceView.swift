@@ -37,37 +37,35 @@ struct NutrientReferenceView: View {
     let reference: NutrientReference
 
     var body: some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: 16) {
-                VStack(alignment: .leading, spacing: 8) {
-                    Text("\(reference.name) (\(reference.symbol))").font(.title2.bold())
-                    Text(reference.role).font(.body)
-                }
-                VStack(alignment: .leading, spacing: 0) {
-                    Text("Pupuk yang mengandung \(reference.name.lowercased())")
-                        .font(.footnote.weight(.semibold))
-                        .foregroundStyle(.secondary)
-                        .padding(.bottom, 8)
-                    ForEach(reference.fertilizers.indices, id: \.self) { index in
-                        let fertilizer = reference.fertilizers[index]
-                        VStack(alignment: .leading, spacing: 4) {
-                            Text(fertilizer.name).font(.headline)
-                            Text(fertilizer.content).font(.footnote).foregroundStyle(.secondary)
-                        }
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                        .padding(.vertical, 12)
-                        if index < reference.fertilizers.count - 1 { Divider() }
-                    }
-                }
-                Text("Kadar \(reference.name.lowercased()) bisa berbeda per merek. Lihat keterangan pada karung pupuk.")
-                    .font(.footnote)
-                    .foregroundStyle(.secondary)
+        VStack(alignment: .leading, spacing: 16) {
+            VStack(alignment: .leading, spacing: 8) {
+                Text("\(reference.name) (\(reference.symbol))").font(.title2.bold())
+                Text(reference.role).font(.body)
             }
-            .padding(.horizontal, 24)
-            .padding(.top, 32)
-            .padding(.bottom, 16)
+            VStack(alignment: .leading, spacing: 0) {
+                Text("Pupuk yang mengandung \(reference.name.lowercased())")
+                    .font(.footnote.weight(.semibold))
+                    .foregroundStyle(.secondary)
+                    .padding(.bottom, 8)
+                ForEach(reference.fertilizers.indices, id: \.self) { index in
+                    let fertilizer = reference.fertilizers[index]
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text(fertilizer.name).font(.headline)
+                        Text(fertilizer.content).font(.footnote).foregroundStyle(.secondary)
+                    }
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(.vertical, 12)
+                    if index < reference.fertilizers.count - 1 { Divider() }
+                }
+            }
+            Text("Kadar \(reference.name.lowercased()) bisa berbeda per merek. Lihat keterangan pada karung pupuk.")
+                .font(.footnote)
+                .foregroundStyle(.secondary)
         }
-        .presentationDetents([.medium, .large])
+        .padding(.horizontal, 24)
+        .padding(.top, 32)
+        .padding(.bottom, 24)
+        .fittedSheetHeight()
         .presentationDragIndicator(.visible)
     }
 }

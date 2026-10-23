@@ -20,43 +20,39 @@ struct RegistrationIntroView: View {
         Group {
             switch step {
             case .guide:
-                guide
+                guide.fittedSheetHeight()
             case .search:
-                LocationSearchView(onSelect: onLocate)
+                LocationSearchView(onSelect: onLocate).presentationDetents([.large])
             }
         }
-        .presentationDetents(step == .guide ? [.height(412)] : [.large])
         .presentationDragIndicator(step == .guide ? .visible : .hidden)
         .presentationBackgroundInteraction(.disabled)
     }
 
     private var guide: some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: 0) {
-                Text("Petakan batas kebun")
-                    .font(.title2.bold())
-                    .padding(.bottom, 10)
+        VStack(alignment: .leading, spacing: 0) {
+            Text("Petakan batas kebun")
+                .font(.title2.bold())
+                .padding(.bottom, 10)
 
-                Text("Tandai titik titik di sepanjang batas kebun, pastikan seluruh bagian kebun masuk kedalam area pemetaan")
-                    .font(.subheadline)
-                    .fixedSize(horizontal: false, vertical: true)
-                    .frame(minHeight: 60, alignment: .topLeading)
-                    .padding(.bottom, 16)
+            Text("Tandai titik titik di sepanjang batas kebun, pastikan seluruh bagian kebun masuk kedalam area pemetaan")
+                .font(.subheadline)
+                .fixedSize(horizontal: false, vertical: true)
+                .frame(minHeight: 60, alignment: .topLeading)
+                .padding(.bottom, 16)
 
-                BoundaryGuideIllustration()
-                    .frame(height: contentHeight)
-                    .clipShape(RoundedRectangle(cornerRadius: 20))
-                    .padding(.bottom, 24)
+            BoundaryGuideIllustration()
+                .frame(height: contentHeight)
+                .clipShape(RoundedRectangle(cornerRadius: 20))
+                .padding(.bottom, 24)
 
-                PrimaryActionButton(title: "Lanjut") {
-                    withAnimation { step = .search }
-                }
+            PrimaryActionButton(title: "Lanjut") {
+                withAnimation { step = .search }
             }
-            .padding(.horizontal, 24)
-            .padding(.top, 32)
-            .padding(.bottom, 16)
         }
-        .scrollBounceBehavior(.basedOnSize)
+        .padding(.horizontal, 24)
+        .padding(.top, 32)
+        .padding(.bottom, 24)
     }
 }
 
