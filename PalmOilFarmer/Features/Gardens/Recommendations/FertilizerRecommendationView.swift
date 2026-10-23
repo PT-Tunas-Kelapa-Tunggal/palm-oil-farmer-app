@@ -5,6 +5,9 @@ struct FertilizerRecommendationView: View {
     let report: FertilizerRecommendationReport
     @State private var selectedTab: RecommendationTab
     @State private var selectedAreaID: String
+    @State private var reference: NutrientReference?
+    @State private var showsAreaPicker = false
+    @State private var showsNavigation = false
     @Environment(\.dismiss) private var dismiss
 
     init(report: FertilizerRecommendationReport, initialTab: RecommendationTab = .nutrients) {
@@ -45,12 +48,33 @@ struct FertilizerRecommendationView: View {
                             .frame(width: 134, height: 158)
                             .frame(maxWidth: .infinity)
                             .frame(height: 206)
-                        NutrientProjectionChart(values: report.nutrients)
+                        VStack(alignment: .leading, spacing: 12) {
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text("Proyeksi hara · Seluruh kebun").font(.caption).foregroundStyle(.secondary)
+                                Text("Kadar hara setelah pemupukan").font(.headline)
+                            }
+                            NutrientLegend()
+                            NutrientProjectionChart(values: report.nutrients, need: report.nutrientNeed) { symbol in
+                                reference = NutrientReference.reference(for: symbol)
+                            }
+                        }
+                        .padding(16)
+                        .background(.background, in: RoundedRectangle(cornerRadius: KropsTheme.Radius.card))
+                        if !report.nutrientSummary.isEmpty {
+                            Text(report.nutrientSummary)
+                                .font(.title3)
+                                .frame(maxWidth: .infinity, alignment: .leading)
+                                .padding(16)
+                                .background(.background, in: RoundedRectangle(cornerRadius: KropsTheme.Radius.card))
+                        }
                         FertilizerCostTable(lines: report.costs, total: report.totalCost)
                     case .allocation:
                         if let area = selectedArea {
                             Group {
-                                if let mapImage = area.mapImage {
+                                if area.zone != nil {
+                                    AllocationAreaMap(boundary: report.boundary, areas: report.areas, selectedID: area.id)
+                                        .allowsHitTesting(false)
+                                } else if let mapImage = area.mapImage {
                                     Image(mapImage).resizable().scaledToFill()
                                 } else {
                                     GardenMapView(boundary: report.boundary)
@@ -59,25 +83,41 @@ struct FertilizerRecommendationView: View {
                             .frame(height: 206)
                             .clipped()
                             .clipShape(RoundedRectangle(cornerRadius: 8))
-                            Menu {
-                                ForEach(report.areas) { area in
-                                    Button("Area " + area.id) { selectedAreaID = area.id }
+                            HStack {
+                                Button { showsAreaPicker = true } label: {
+                                    HStack(spacing: 8) {
+                                        Text("Area " + area.id).font(.title3.weight(.semibold))
+                                        Image(systemName: "chevron.down").font(.footnote.weight(.semibold))
+                                    }
+                                    .padding(.horizontal, 16)
+                                    .frame(minHeight: 44)
                                 }
-                            } label: {
-                                HStack(spacing: 12) {
-                                    Text("Area " + area.id).font(.title.weight(.bold))
-                                    Image(systemName: "chevron.down").font(.footnote)
-                                        .frame(width: 26, height: 26)
-                                        .background(.white.opacity(0.3), in: Circle())
+                                .buttonStyle(.glass)
+                                .accessibilityHint("Pilih area kebun lain")
+                                Spacer()
+                                if area.zone != nil {
+                                    Button { showsNavigation = true } label: {
+                                        Label("Buka Map", systemImage: "figure.walk")
+                                            .font(.headline)
+                                            .padding(.horizontal, 12)
+                                            .frame(minHeight: 44)
+                                    }
+                                    .buttonStyle(.glass)
                                 }
                             }
-                            .buttonStyle(.plain)
                             ForEach(area.periods) { period in
                                 FertilizerAllocationSection(period: period)
                             }
+                        } else {
+                            ContentUnavailableView("Area kebun belum tersedia", systemImage: "square.grid.2x2",
+                                                   description: Text("Batas kebun belum dapat dibagi menjadi area."))
                         }
                     case .rainfall:
-                        ContentUnavailableView("Data curah hujan belum tersedia", systemImage: "cloud.rain")
+                        if let rainfall = report.rainfall {
+                            RainfallForecastView(forecast: rainfall)
+                        } else {
+                            ContentUnavailableView("Data curah hujan belum tersedia", systemImage: "cloud.rain")
+                        }
                     }
                 }
                 .padding(.horizontal, 16)
@@ -87,6 +127,15 @@ struct FertilizerRecommendationView: View {
         }
         .background(KropsTheme.background.ignoresSafeArea())
         .toolbar(.hidden, for: .navigationBar)
+        .sheet(item: $reference) { reference in
+            NutrientReferenceView(reference: reference)
+        }
+        .sheet(isPresented: $showsAreaPicker) {
+            AreaPickerView(areas: report.areas, selectedID: selectedAreaID) { selectedAreaID = $0 }
+        }
+        .fullScreenCover(isPresented: $showsNavigation) {
+            AreaNavigationView(boundary: report.boundary, areas: report.areas, selectedID: selectedAreaID)
+        }
     }
 }
 
@@ -100,42 +149,138 @@ struct BoundarySilhouette: Shape {
     }
 }
 
+struct NutrientLegend: View {
+    var body: some View {
+        HStack(spacing: 12) {
+            Label { Text("Saat ini") } icon: {
+                RoundedRectangle(cornerRadius: 2).strokeBorder(.secondary, lineWidth: 1).frame(width: 10, height: 10)
+            }
+            Label { Text("Setelah pemupukan") } icon: {
+                RoundedRectangle(cornerRadius: 2).fill(Color(white: 0.34)).frame(width: 10, height: 10)
+            }
+            Label { Text("Kebutuhan") } icon: {
+                Rectangle().fill(.secondary).frame(width: 12, height: 1)
+            }
+        }
+        .font(.caption2)
+        .foregroundStyle(.secondary)
+        .labelStyle(LegendLabelStyle())
+    }
+
+    private struct LegendLabelStyle: LabelStyle {
+        func makeBody(configuration: Configuration) -> some View {
+            HStack(spacing: 4) { configuration.icon; configuration.title }
+        }
+    }
+}
+
 struct NutrientProjectionChart: View {
     let values: [NutrientProjection]
+    var need = 0.64
+    var onSelect: (String) -> Void = { _ in }
+    private let barHeight: CGFloat = 125
 
     var body: some View {
-        ScrollView(.horizontal) {
-            HStack(alignment: .bottom, spacing: 16) {
-                ForEach(values) { value in
-                    VStack(spacing: 8) {
+        HStack(alignment: .top, spacing: 16) {
+            ForEach(values) { value in
+                Button { onSelect(value.name) } label: {
+                    VStack(spacing: 4) {
                         HStack(alignment: .bottom, spacing: 3) {
                             RoundedRectangle(cornerRadius: 12)
                                 .strokeBorder(.secondary.opacity(0.4), lineWidth: 1)
-                                .frame(width: 26, height: 125 * max(0, min(value.current, 1)))
+                                .frame(width: 26, height: barHeight * max(0, min(value.current, 1)))
                             UnevenRoundedRectangle(topLeadingRadius: 12, topTrailingRadius: 12)
                                 .fill(Color(white: 0.34))
-                                .frame(width: 28, height: 125 * max(0, min(value.target, 1)))
+                                .frame(width: 28, height: barHeight * max(0, min(value.target, 1)))
                         }
-                        .frame(height: 125, alignment: .bottom)
+                        .frame(height: barHeight, alignment: .bottom)
+                        Divider()
                         Text(value.name).font(.subheadline.weight(.semibold))
+                        Text(value.status)
+                            .font(.caption2)
+                            .foregroundStyle(.secondary)
+                            .multilineTextAlignment(.center)
+                            .lineLimit(2, reservesSpace: true)
                     }
                     .frame(maxWidth: .infinity)
-                    .accessibilityElement(children: .combine)
-                    .accessibilityLabel("\(value.name), saat ini \(value.current), target \(value.target)")
+                    .contentShape(Rectangle())
                 }
+                .buttonStyle(.plain)
+                .accessibilityElement(children: .ignore)
+                .accessibilityLabel("\(value.name), \(value.status)")
+                .accessibilityHint("Lihat pupuk yang mengandung hara ini")
             }
-            .padding(.top, 8)
-            .overlay(alignment: .top) {
-                GeometryReader { geometry in
-                    Path { path in
-                        path.move(to: CGPoint(x: 0, y: 53))
-                        path.addLine(to: CGPoint(x: geometry.size.width, y: 53))
+        }
+        .overlay(alignment: .top) {
+            GeometryReader { geometry in
+                Path { path in
+                    let y = barHeight * (1 - need)
+                    path.move(to: CGPoint(x: 0, y: y))
+                    path.addLine(to: CGPoint(x: geometry.size.width, y: y))
+                }
+                .stroke(.secondary, style: StrokeStyle(lineWidth: 1, dash: [3, 4]))
+            }
+            .allowsHitTesting(false)
+        }
+    }
+}
+
+struct RainfallForecastView: View {
+    let forecast: RainfallForecast
+
+    var body: some View {
+        VStack(spacing: 16) {
+            VStack(alignment: .leading, spacing: 12) {
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("Prakiraan hujan · " + forecast.dateRange).font(.caption).foregroundStyle(.secondary)
+                    Text(forecast.headline).font(.headline)
+                }
+                HStack(spacing: 4) {
+                    ForEach(forecast.days) { day in
+                        VStack(spacing: 6) {
+                            Image(systemName: day.isHeavy ? "cloud.heavyrain.fill" : day.millimeters >= 5 ? "cloud.drizzle.fill" : "cloud.sun.fill")
+                                .symbolRenderingMode(.hierarchical)
+                                .font(.title3)
+                                .frame(height: 28)
+                            Text(day.weekday).font(.caption2).foregroundStyle(.secondary)
+                        }
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 8)
+                        .background(day.isHeavy ? KropsTheme.secondaryFill : KropsTheme.tertiaryFill,
+                                    in: RoundedRectangle(cornerRadius: 12))
+                        .accessibilityElement(children: .ignore)
+                        .accessibilityLabel("\(day.weekday), \(day.isHeavy ? "hujan lebat" : "hujan ringan") \(Int(day.millimeters)) milimeter")
                     }
-                    .stroke(.secondary, style: StrokeStyle(lineWidth: 1, dash: [3, 4]))
                 }
-                .allowsHitTesting(false)
+                RainfallLine(values: forecast.days.map(\.millimeters))
+                    .stroke(.secondary, lineWidth: 1.5)
+                    .frame(height: 36)
+                    .accessibilityHidden(true)
             }
-            .overlay(alignment: .top) { Divider().offset(y: 133) }
+            .padding(16)
+            .background(.background, in: RoundedRectangle(cornerRadius: KropsTheme.Radius.card))
+            Text(forecast.advice)
+                .font(.title3)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .padding(16)
+                .background(.background, in: RoundedRectangle(cornerRadius: KropsTheme.Radius.card))
+        }
+    }
+}
+
+/// Rain amounts across the week, drawn through the centre of each day column.
+struct RainfallLine: Shape {
+    let values: [Double]
+
+    func path(in rect: CGRect) -> Path {
+        Path { path in
+            guard let maximum = values.max(), maximum > 0, !values.isEmpty else { return }
+            let step = rect.width / CGFloat(values.count)
+            for (index, value) in values.enumerated() {
+                let point = CGPoint(x: rect.minX + step * (CGFloat(index) + 0.5),
+                                    y: rect.maxY - rect.height * value / maximum)
+                index == 0 ? path.move(to: point) : path.addLine(to: point)
+            }
         }
     }
 }
@@ -242,8 +387,11 @@ struct FertilizerAllocationSection: View {
 #Preview("Alokasi Pupuk") {
     FertilizerRecommendationView(report: RecommendationPreviewData.report, initialTab: .allocation)
 }
+#Preview("Curah Hujan") {
+    FertilizerRecommendationView(report: RecommendationPreviewData.report, initialTab: .rainfall)
+}
 #Preview("Nutrient Chart", traits: .sizeThatFitsLayout) {
-    NutrientProjectionChart(values: RecommendationPreviewData.report.nutrients).frame(width: 370, height: 170).padding()
+    NutrientProjectionChart(values: RecommendationPreviewData.report.nutrients).frame(width: 370, height: 190).padding()
 }
 #Preview("Cost Table", traits: .sizeThatFitsLayout) {
     FertilizerCostTable(lines: RecommendationPreviewData.report.costs, total: "Rp1,435,000").padding(16).frame(width: 402)

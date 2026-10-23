@@ -11,7 +11,7 @@ import SwiftUI
 struct PalmOilFarmerApp: App {
     var body: some Scene {
         WindowGroup {
-            FindingWaypointView()
+            ContentView()
         }
     }
 }

@@ -1,4 +1,5 @@
 import Foundation
+import CoreLocation
 
 enum RecommendationTab: String, CaseIterable, Identifiable {
     case nutrients = "Proyeksi hara"
@@ -9,8 +10,10 @@ enum RecommendationTab: String, CaseIterable, Identifiable {
 
 struct NutrientProjection: Identifiable {
     let name: String
+    /// Levels are fractions of the chart height.
     let current: Double
     let target: Double
+    var status = ""
     var id: String { name }
 }
 
@@ -39,6 +42,22 @@ struct FertilizerAllocationArea: Identifiable {
     let id: String
     let mapImage: String?
     let periods: [FertilizerAllocationPeriod]
+    /// The part of the garden this area covers, used for the area map and navigation.
+    var zone: WaypointZone? = nil
+}
+
+struct RainfallDay: Identifiable {
+    let weekday: String
+    let millimeters: Double
+    var id: String { weekday }
+    var isHeavy: Bool { millimeters >= 20 }
+}
+
+struct RainfallForecast {
+    let dateRange: String
+    let headline: String
+    let days: [RainfallDay]
+    let advice: AttributedString
 }
 
 /// Presentation data comes from a report; the UI does not calculate agronomic recommendations.
@@ -48,8 +67,10 @@ struct FertilizerRecommendationReport {
     let boundary: GardenBoundary
     let outline: [CGPoint]
     let nutrients: [NutrientProjection]
+    var nutrientNeed = 0.64
+    var nutrientSummary = ""
     let costs: [FertilizerCostLine]
     let totalCost: String
     let areas: [FertilizerAllocationArea]
+    var rainfall: RainfallForecast? = nil
 }
-

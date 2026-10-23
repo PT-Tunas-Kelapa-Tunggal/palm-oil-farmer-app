@@ -4,8 +4,13 @@ struct BoundaryEditorLayout<MapContent: View>: View {
     let boundary: GardenBoundary
     var metrics: GardenDisplayMetrics? = nil
     var isRegionOverview = false
+    var title = "Buat batas kebun"
+    /// Shown above the map while no point has been placed.
+    var hint: String? = nil
+    var showsControls = true
     let onClose: () -> Void
-    let onSkip: () -> Void
+    /// Offers "Lakukan Nanti" while no point has been placed.
+    var onSkip: (() -> Void)? = nil
     let onRecenter: () -> Void
     let onUndo: () -> Void
     let onClear: () -> Void
@@ -25,70 +30,90 @@ struct BoundaryEditorLayout<MapContent: View>: View {
             .ignoresSafeArea()
             .overlay(alignment: .top) {
                 VStack(spacing: 0) {
-                    ScreenHeader(title: "Buat batas area kebun", onClose: onClose)
+                    ScreenHeader(title: title, onClose: onClose)
                         .foregroundStyle(.white)
-                    if boundary.points.isEmpty {
-                        Button(action: onSkip) {
-                            HStack {
-                                Text("Lakukan nanti saat di kebun")
-                                Spacer()
-                                Image(systemName: "arrow.right")
+                    if boundary.points.isEmpty && showsControls {
+                        if let onSkip {
+                            Button(action: onSkip) {
+                                VStack(alignment: .leading, spacing: 4) {
+                                    HStack {
+                                        Text("Lakukan Nanti").font(.headline)
+                                        Spacer()
+                                        Image(systemName: "arrow.right")
+                                    }
+                                    Text("Jika kebun sulit ditemukan di peta, Anda dapat melanjutkan saat berada di kebun. Peta akan otomatis mengikuti posisi Anda.")
+                                        .font(.footnote)
+                                        .multilineTextAlignment(.leading)
+                                        .fixedSize(horizontal: false, vertical: true)
+                                }
+                                .foregroundStyle(.white.opacity(0.9))
+                                .padding(16)
+                                .frame(maxWidth: .infinity, alignment: .leading)
+                                .contentShape(RoundedRectangle(cornerRadius: 20))
                             }
-                            .font(.body)
-                            .foregroundStyle(.white.opacity(0.8))
-                            .padding(.horizontal, 24)
-                            .frame(minHeight: 52)
+                            .buttonStyle(.plain)
+                            .glassEffect(.regular.interactive(), in: RoundedRectangle(cornerRadius: 20))
+                            .padding(.horizontal, 12)
+                        } else if let hint {
+                            Text(hint)
+                                .font(.footnote)
+                                .foregroundStyle(.white.opacity(0.9))
+                                .padding(.horizontal, 16)
+                                .frame(maxWidth: .infinity, minHeight: 44, alignment: .leading)
+                                .glassEffect(.regular, in: RoundedRectangle(cornerRadius: 16))
+                                .padding(.horizontal, 12)
                         }
-                        .buttonStyle(.plain)
-                        .glassEffect(.regular.interactive(), in: Capsule())
-                        .padding(.horizontal, 12)
                     }
                 }
                 .environment(\.colorScheme, .dark)
             }
             .overlay(alignment: .bottom) {
-                VStack(alignment: .trailing, spacing: 28) {
-                    HStack(spacing: 14) {
-                        if isRegionOverview {
-                            Text("Menuju ke lokasi saat ini")
-                                .font(.footnote)
-                                .foregroundStyle(.white)
-                                .padding(12)
-                                .background(.black.opacity(0.65), in: Capsule())
-                        }
-                        Button(action: onRecenter) {
-                            Image(systemName: "location.fill")
-                                .font(.title2)
-                                .foregroundStyle(.secondary)
-                                .frame(width: 52, height: 52)
-                        }
-                        .buttonStyle(.plain)
-                        .glassEffect(.regular.interactive(), in: Circle())
-                        .accessibilityLabel("Kembali ke lokasi terpilih")
-                    }
-                    .padding(.trailing, 4)
-
-                    VStack(spacing: 8) {
-                        BoundaryMetricsView(boundary: boundary, metrics: metrics)
-                        HStack(spacing: 8) {
-                            BoundaryActionButton(title: "Urungkan", systemImage: "arrow.uturn.backward",
-                                                 isAvailable: !boundary.points.isEmpty, action: onUndo)
-                            BoundaryActionButton(title: "Hapus", systemImage: "trash",
-                                                 isAvailable: !boundary.points.isEmpty, action: onClear)
-                        }
-                        BoundaryActionButton(title: "Konfirmasi", systemImage: "checkmark",
-                                             isAvailable: isValid, isPrimary: true, action: onConfirm)
-                        if boundary.points.count >= 3 && !isValid {
-                            Text("Batas harus membentuk area tanpa garis berpotongan.")
-                                .font(.caption).foregroundStyle(.secondary)
-                        }
-                    }
-                    .padding(8)
-                    .glassEffect(.regular, in: RoundedRectangle(cornerRadius: 32))
-                }
-                .padding(.horizontal, 8)
-                .padding(.bottom, -10)
+                if showsControls { controls(isValid: isValid) }
             }
+    }
+
+    private func controls(isValid: Bool) -> some View {
+        VStack(alignment: .trailing, spacing: 28) {
+            HStack(spacing: 14) {
+                if isRegionOverview {
+                    Text("Menuju ke lokasi saat ini")
+                        .font(.footnote)
+                        .foregroundStyle(.white)
+                        .padding(12)
+                        .background(.black.opacity(0.65), in: Capsule())
+                }
+                Button(action: onRecenter) {
+                    Image(systemName: "location.fill")
+                        .font(.title2)
+                        .foregroundStyle(.secondary)
+                        .frame(width: 52, height: 52)
+                }
+                .buttonStyle(.plain)
+                .glassEffect(.regular.interactive(), in: Circle())
+                .accessibilityLabel("Ke posisi saya")
+            }
+            .padding(.trailing, 4)
+
+            VStack(spacing: 8) {
+                BoundaryMetricsView(boundary: boundary, metrics: metrics)
+                HStack(spacing: 8) {
+                    BoundaryActionButton(title: "Urungkan", systemImage: "arrow.uturn.backward",
+                                         isAvailable: !boundary.points.isEmpty, action: onUndo)
+                    BoundaryActionButton(title: "Hapus", systemImage: "trash",
+                                         isAvailable: !boundary.points.isEmpty, action: onClear)
+                }
+                BoundaryActionButton(title: "Konfirmasi", systemImage: "checkmark",
+                                     isAvailable: isValid, isPrimary: true, action: onConfirm)
+                if boundary.points.count >= 3 && !isValid {
+                    Text("Batas harus membentuk area tanpa garis berpotongan.")
+                        .font(.caption).foregroundStyle(.secondary)
+                }
+            }
+            .padding(8)
+            .glassEffect(.regular, in: RoundedRectangle(cornerRadius: 32))
+        }
+        .padding(.horizontal, 8)
+        .padding(.bottom, -10)
     }
 }
 

@@ -4,67 +4,52 @@ import MapKit
 struct GardenBoundaryView: View {
     let location: GardenLocation
     let onSave: (Garden) -> Bool
+    /// Saves the location as a draft for "Lakukan Nanti".
+    var onSaveDraft: ((GardenLocation) -> Bool)? = nil
+    /// Returns to the address search when a photo location is wrong.
+    var onSearchAgain: (() -> Void)? = nil
 
     @Environment(\.dismiss) private var dismiss
     @State private var boundary = GardenBoundary()
     @State private var position: MapCameraPosition
     @State private var showsDetails = false
     @State private var showsExitConfirmation = false
-    @State private var isRegionOverview = true
+    @State private var isRegionOverview = false
+    @State private var isConfirmingPhoto: Bool
+    @State private var locationManager = CLLocationManager()
 
-    init(location: GardenLocation, onSave: @escaping (Garden) -> Bool) {
+    init(location: GardenLocation, onSave: @escaping (Garden) -> Bool,
+         onSaveDraft: ((GardenLocation) -> Bool)? = nil, onSearchAgain: (() -> Void)? = nil) {
         self.location = location
         self.onSave = onSave
-        _position = State(initialValue: .region(MKCoordinateRegion(
+        self.onSaveDraft = onSaveDraft
+        self.onSearchAgain = onSearchAgain
+        _isConfirmingPhoto = State(initialValue: location.source == .photo)
+        let region = MKCoordinateRegion(
             center: location.coordinate.mapCoordinate,
-            span: MKCoordinateSpan(latitudeDelta: 0.1, longitudeDelta: 0.1)
-        )))
+            span: MKCoordinateSpan(latitudeDelta: 0.006, longitudeDelta: 0.006)
+        )
+        // A resumed draft is mapped on site, so the camera follows the farmer.
+        _position = State(initialValue: location.source == .draft
+            ? .userLocation(fallback: .region(region))
+            : .region(region))
     }
 
     var body: some View {
         MapReader { proxy in
             BoundaryEditorLayout(
                 boundary: boundary, isRegionOverview: isRegionOverview,
-                onClose: close, onSkip: { showsExitConfirmation = true },
+                hint: "Ketuk peta untuk menandai sudut-sudut kebun Anda.",
+                showsControls: !isConfirmingPhoto,
+                onClose: close,
+                onSkip: skipAction,
                 onRecenter: recenter,
                 onUndo: { _ = boundary.points.popLast() },
                 onClear: { boundary.points.removeAll() },
                 onConfirm: { showsDetails = true }
             ) {
                 Map(position: $position) {
-                    if boundary.points.count >= 3 {
-                        MapPolygon(coordinates: boundary.coordinates)
-                            .foregroundStyle(.white.opacity(0.25))
-                            .stroke(.white, lineWidth: 2)
-                    } else if boundary.points.count == 2 {
-                        MapPolyline(coordinates: boundary.coordinates).stroke(.white, lineWidth: 2)
-                    }
-                    ForEach(boundary.points.indices, id: \.self) { index in
-                        Annotation("", coordinate: boundary.points[index].mapCoordinate, anchor: .bottom) {
-                            BoundaryPointMarker(number: index + 1)
-                        }
-                    }
-                    ForEach(boundary.points.indices, id: \.self) { index in
-                        if boundary.points.count > 1 {
-                            let first = boundary.points[index].mapCoordinate
-                            let second = boundary.points[(index + 1) % boundary.points.count].mapCoordinate
-                            Annotation("", coordinate: midpoint(first, second)) {
-                                Text(distance(first, second))
-                                    .font(.caption2.weight(.medium))
-                                    .foregroundStyle(.white)
-                                    .padding(.horizontal, 4)
-                                    .padding(.vertical, 1)
-                                    .background(.black.opacity(0.7), in: Capsule())
-                            }
-                        }
-                    }
-                    if boundary.points.isEmpty {
-                        Annotation(isRegionOverview ? "Lokasi terpilih" : "", coordinate: location.coordinate.mapCoordinate) {
-                            Circle().fill(.white).frame(width: 28, height: 28)
-                                .padding(10).background(.white.opacity(0.35), in: Circle())
-                                .padding(8).background(.white.opacity(0.2), in: Circle())
-                        }
-                    }
+                    mapContent
                 }
                 .mapStyle(.imagery)
                 .mapControls {}
@@ -73,13 +58,17 @@ struct GardenBoundaryView: View {
                     isRegionOverview = context.region.span.latitudeDelta > 0.03
                 }
                 .simultaneousGesture(SpatialTapGesture().onEnded { tap in
-                    guard let coordinate = proxy.convert(tap.location, from: .local) else { return }
+                    guard !isConfirmingPhoto, let coordinate = proxy.convert(tap.location, from: .local) else { return }
                     let point = GardenCoordinate(coordinate)
                     guard !boundary.points.contains(point) else { return }
                     boundary.points.append(point)
                 })
             }
         }
+        .overlay(alignment: .bottom) {
+            if isConfirmingPhoto { photoConfirmation }
+        }
+        .onAppear { locationManager.requestWhenInUseAuthorization() }
         .sheet(isPresented: $showsDetails) {
             GardenDetailsView(location: location, boundary: boundary) { garden in
                 guard onSave(garden) else { return false }
@@ -96,16 +85,98 @@ struct GardenBoundaryView: View {
         }
     }
 
+    @MapContentBuilder
+    private var mapContent: some MapContent {
+        if boundary.points.count >= 3 {
+            MapPolygon(coordinates: boundary.coordinates)
+                .foregroundStyle(.white.opacity(0.25))
+                .stroke(.white, lineWidth: 2)
+        } else if boundary.points.count == 2 {
+            MapPolyline(coordinates: boundary.coordinates).stroke(.white, lineWidth: 2)
+        }
+        ForEach(boundary.points.indices, id: \.self) { index in
+            Annotation("", coordinate: boundary.points[index].mapCoordinate, anchor: .bottom) {
+                BoundaryPointMarker(number: index + 1)
+            }
+        }
+        ForEach(boundary.points.indices, id: \.self) { index in
+            if boundary.points.count > 1 {
+                let first = boundary.points[index].mapCoordinate
+                let second = boundary.points[(index + 1) % boundary.points.count].mapCoordinate
+                Annotation("", coordinate: midpoint(first, second)) {
+                    Text(distance(first, second))
+                        .font(.caption2.weight(.medium))
+                        .foregroundStyle(.white)
+                        .padding(.horizontal, 4)
+                        .padding(.vertical, 1)
+                        .background(.black.opacity(0.7), in: Capsule())
+                }
+            }
+        }
+        if isConfirmingPhoto {
+            Annotation("", coordinate: location.coordinate.mapCoordinate, anchor: .bottom) {
+                Image(systemName: "mappin.circle.fill")
+                    .font(.system(size: 44))
+                    .symbolRenderingMode(.palette)
+                    .foregroundStyle(Color.white, Color(white: 0.4))
+                    .shadow(radius: 4)
+                    .accessibilityLabel("Lokasi dari foto")
+            }
+        } else if boundary.points.isEmpty && location.source != .draft {
+            Annotation("", coordinate: location.coordinate.mapCoordinate) {
+                Circle().fill(.white).frame(width: 28, height: 28)
+                    .padding(10).background(.white.opacity(0.35), in: Circle())
+                    .padding(8).background(.white.opacity(0.2), in: Circle())
+                    .accessibilityLabel("Lokasi terpilih")
+            }
+        }
+        UserAnnotation()
+    }
+
+    private var photoConfirmation: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text("Lokasi Ditemukan dari Foto").font(.title3.weight(.semibold))
+            Text("Pastikan titik yang ditampilkan di peta adalah lokasi kebun Anda.")
+                .font(.subheadline)
+                .fixedSize(horizontal: false, vertical: true)
+                .padding(.bottom, 8)
+            PrimaryActionButton(title: "Ya, Ini kebun saya") {
+                withAnimation { isConfirmingPhoto = false }
+            }
+            Button("Cari Lagi") {
+                dismiss()
+                onSearchAgain?()
+            }
+            .font(.body)
+            .foregroundStyle(.secondary)
+            .frame(maxWidth: .infinity, minHeight: 44)
+        }
+        .padding(20)
+        .glassEffect(.regular, in: RoundedRectangle(cornerRadius: 32))
+        .padding(.horizontal, 8)
+        .padding(.bottom, 4)
+    }
+
+    private var skipAction: (() -> Void)? {
+        guard location.source == .search, onSaveDraft != nil else { return nil }
+        return saveDraft
+    }
+
+    private func saveDraft() {
+        guard let onSaveDraft, onSaveDraft(location) else { return }
+        dismiss()
+    }
+
     private func close() {
         if boundary.points.isEmpty { dismiss() } else { showsExitConfirmation = true }
     }
 
     private func recenter() {
         withAnimation {
-            position = .region(MKCoordinateRegion(
+            position = .userLocation(fallback: .region(MKCoordinateRegion(
                 center: location.coordinate.mapCoordinate,
-                span: MKCoordinateSpan(latitudeDelta: 0.01, longitudeDelta: 0.01)
-            ))
+                span: MKCoordinateSpan(latitudeDelta: 0.006, longitudeDelta: 0.006)
+            )))
         }
     }
 
@@ -122,7 +193,12 @@ struct GardenBoundaryView: View {
 }
 
 #if DEBUG
-#Preview("11 · Peta Kabupaten Live") {
-    GardenBoundaryView(location: GardenPreviewData.location, onSave: { _ in true })
+#Preview("11 · Peta dari Pencarian") {
+    GardenBoundaryView(location: GardenPreviewData.location, onSave: { _ in true }, onSaveDraft: { _ in true })
+}
+#Preview("11 · Konfirmasi Lokasi Foto") {
+    GardenBoundaryView(location: GardenLocation(name: "Lokasi dari foto", subtitle: "Foto kebun",
+                                                coordinate: GardenPreviewData.location.coordinate, source: .photo),
+                       onSave: { _ in true })
 }
 #endif

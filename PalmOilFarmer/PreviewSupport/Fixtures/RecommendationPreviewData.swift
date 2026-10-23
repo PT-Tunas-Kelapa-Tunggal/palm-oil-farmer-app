@@ -16,11 +16,12 @@ enum RecommendationPreviewData {
             CGPoint(x: 0.23222, y: 0.87896), CGPoint(x: 0.5, y: 1)
         ],
         nutrients: [
-            NutrientProjection(name: "N", current: 0.4, target: 0.64),
-            NutrientProjection(name: "P", current: 1, target: 0.64),
-            NutrientProjection(name: "K", current: 0.52, target: 0.64),
-            NutrientProjection(name: "Mg", current: 0.21, target: 0.64)
+            NutrientProjection(name: "N", current: 0.4, target: 0.64, status: "Kurang"),
+            NutrientProjection(name: "P", current: 1, target: 0.64, status: "Berlebih"),
+            NutrientProjection(name: "K", current: 0.52, target: 0.64, status: "Kurang"),
+            NutrientProjection(name: "Mg", current: 0.21, target: 0.64, status: "Sangat kurang")
         ],
+        nutrientSummary: "Kadar magnesium paling jauh di bawah kebutuhan, disusul nitrogen dan kalium. Fosfor sudah melebihi kebutuhan, jadi tidak perlu pupuk fosfor.",
         costs: [
             FertilizerCostLine(name: "Urea", quantity: "115", cost: "Rp800,000"),
             FertilizerCostLine(name: "KCl(MOP)", quantity: "130", cost: "Rp800,000"),
@@ -32,7 +33,8 @@ enum RecommendationPreviewData {
                 FertilizerAllocationPeriod(title: "Periode 1", dateRange: "Januari - Maret", lines: lines),
                 FertilizerAllocationPeriod(title: "Periode 2", dateRange: "Juni - Agustus", lines: lines)
             ])
-        ]
+        ],
+        rainfall: DemoReviewReport.rainfall(startingFrom: .now)
     )
 }
 #endif

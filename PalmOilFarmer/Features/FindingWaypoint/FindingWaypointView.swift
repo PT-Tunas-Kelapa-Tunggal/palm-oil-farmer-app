@@ -41,7 +41,7 @@ struct FindingWaypointView: View {
             }
         }
         .fullScreenCover(item: $mappingLocation) { location in
-            GardenBoundaryView(location: location, onSave: store.add)
+            GardenBoundaryView(location: location, onSave: { store.add($0) })
         }
         .alert("Data kebun", isPresented: Binding(
             get: { store.errorMessage != nil && mappingLocation == nil },

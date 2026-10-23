@@ -21,13 +21,30 @@ struct ConsentCheckbox: View {
     }
 }
 
+/// Program information first, then the contact form, in one sheet.
 struct ReviewRequestView: View {
-    let onSignIn: () -> Void
+    let onSubmit: (ReviewContactDetails) async throws -> Void
     @Environment(\.dismiss) private var dismiss
     @State private var hasConsent = false
     @State private var showsConsentError = false
+    @State private var showsForm = false
 
     var body: some View {
+        NavigationStack {
+            information
+                .toolbar(.hidden, for: .navigationBar)
+                .navigationDestination(isPresented: $showsForm) {
+                    ReviewContactFormView(onClose: { dismiss() }, onSubmit: onSubmit)
+                        .toolbar(.hidden, for: .navigationBar)
+                }
+        }
+        .presentationDetents([.large])
+        .alert("Persetujuan diperlukan", isPresented: $showsConsentError) {
+            Button("Mengerti", role: .cancel) {}
+        } message: { Text("Baca informasi dan setujui program peninjauan sebelum melanjutkan.") }
+    }
+
+    private var information: some View {
         VStack(spacing: 0) {
             ScreenHeader(title: "Permintaan Peninjauan", onClose: { dismiss() })
             ScrollView {
@@ -49,18 +66,14 @@ struct ReviewRequestView: View {
                 ConsentCheckbox(isChecked: $hasConsent,
                                 message: "Saya memahami dan menyetujui program peninjauan kebun.")
                     .padding(.horizontal, 8)
-                PrimaryActionButton(title: "Masuk dengan Apple", systemImage: "apple.logo") {
-                    if hasConsent { onSignIn() } else { showsConsentError = true }
+                PrimaryActionButton(title: "Lanjutkan") {
+                    if hasConsent { showsForm = true } else { showsConsentError = true }
                 }
             }
             .padding(.horizontal, 24)
             .padding(.top, 16)
             .padding(.bottom, 2)
         }
-        .presentationDetents([.large])
-        .alert("Persetujuan diperlukan", isPresented: $showsConsentError) {
-            Button("Mengerti", role: .cancel) {}
-        } message: { Text("Baca informasi dan setujui program peninjauan sebelum melanjutkan.") }
     }
 
     private func processStep(_ title: String, message: String) -> some View {
@@ -72,8 +85,8 @@ struct ReviewRequestView: View {
     }
 }
 
-#Preview("Informasi Peninjauan · Logged Out") {
-    ReviewRequestView(onSignIn: {})
+#Preview("Informasi Peninjauan") {
+    ReviewRequestView(onSubmit: { _ in })
 }
 #Preview("Consent", traits: .sizeThatFitsLayout) {
     @Previewable @State var checked = false

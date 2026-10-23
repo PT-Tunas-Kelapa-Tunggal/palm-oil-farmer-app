@@ -39,6 +39,15 @@ Keep the structure small: add folders and abstractions when real code needs them
 - Keep JSON keys and enum raw values compatible with existing `gardens.json`. Changing persisted types requires an explicit migration and compatibility tests.
 - Add waypoint work under Mapping while it is garden-specific. Promote it to a separate feature only when it gains independent workflows.
 
+## User testing build (branch `user-testing/midfid`)
+
+The app follows the Sketch **MID-FID Flow** page (KROPS file): Daftar Kebun (dari foto / dari pencarian), Profil Kebun, Ajukan Peninjauan, Hasil Peninjauan.
+
+- **Registration:** guide sheet → "Cari alamat" (place search, current location, or a geotagged photo). A photo location is confirmed on the map first ("Ya, Ini kebun saya" / "Cari Lagi").
+- **Lakukan Nanti:** saves the location as a draft (`garden-drafts.json`, separate from `gardens.json`). The draft card reopens the map following the farmer's position.
+- **Review:** consent → contact form → saved on the garden as `review`. There is no review service yet. **Facilitator:** long-press the "Status Pengajuan" header for 1.5 s to move the review to its next stage. "Lihat & unduh hasil" simulates an 8-second download.
+- **Results:** `DemoReviewReport` builds sample results from the garden. Areas (AA–CB) and fertilizer quantities follow the mapped boundary. Nutrient levels, prices, and rainfall are fixed examples. Tap a nutrient bar for its fertilizer reference; "Buka Map" guides to the selected area with GPS (straight-line distance, not a route).
+
 ## Verification
 
 Open `PalmOilFarmer.xcodeproj` and build the `PalmOilFarmer` scheme. Run its `PalmOilFarmerTests` test target on an iOS simulator with Product > Test. Tests use unique temporary directories, never the user's gardens file.

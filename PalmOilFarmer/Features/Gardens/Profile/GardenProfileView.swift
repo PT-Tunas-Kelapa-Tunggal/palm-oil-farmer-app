@@ -20,8 +20,8 @@ struct GardenProfileView: View {
     @Environment(\.dismiss) private var dismiss
     @State private var editor: HistoryEditor?
     @State private var showsReview = false
-    @State private var showsSignInNotice = false
     @State private var showsReviewStatus = false
+    @State private var opensStatusAfterReview = false
     @State private var showsResults = false
     @State private var showsGardenEditor = false
     @State private var showsDeleteConfirmation = false
@@ -59,6 +59,11 @@ struct GardenProfileView: View {
     }
 
     private var fertilizers: [FertilizerRecord] { garden.fertilizerRecords ?? [] }
+    /// Reference previews pass a fixed status; the app reads the saved review.
+    private var currentReviewStatus: ReviewStatus? { reviewStatus ?? garden.review?.status }
+    private var currentReport: FertilizerRecommendationReport? {
+        recommendationReport ?? (currentReviewStatus == .completed ? DemoReviewReport.make(for: garden) : nil)
+    }
     private var isComplete: Bool { !fertilizers.isEmpty && garden.harvestRecord != nil }
 
     var body: some View {
@@ -110,27 +115,41 @@ struct GardenProfileView: View {
             }
         }
         .navigationDestination(isPresented: $showsReviewStatus) {
-            if let reviewStatus {
-                ReviewStatusView(gardenName: garden.name, status: reviewStatus, entries: reviewEntries) {
-                    showsResults = true
+            LiveGardenReader(garden: garden) { garden in
+                if let status = reviewStatus ?? garden.review?.status {
+                    ReviewStatusView(
+                        gardenName: garden.name, status: status,
+                        entries: reviewEntries.isEmpty
+                            ? garden.review.map { ReviewTimelineEntry.entries(for: $0) } ?? []
+                            : reviewEntries,
+                        resultsDownloaded: garden.review?.resultsDownloaded ?? false,
+                        onAdvance: garden.review == nil ? nil : { updateReview(of: garden) { $0.advance() } },
+                        onDownloaded: { updateReview(of: garden) { $0.resultsDownloaded = true } }
+                    ) {
+                        showsResults = true
+                    }
                 }
             }
         }
         .navigationDestination(isPresented: $showsResults) {
-            if let recommendationReport {
-                FertilizerRecommendationView(report: recommendationReport)
+            if let currentReport {
+                FertilizerRecommendationView(report: currentReport)
             } else {
                 ContentUnavailableView("Hasil peninjauan belum tersedia", systemImage: "chart.bar.doc.horizontal")
             }
         }
-        .sheet(isPresented: $showsReview) {
-            ReviewRequestView {
-                showsSignInNotice = true
+        .sheet(isPresented: $showsReview, onDismiss: {
+            if opensStatusAfterReview {
+                opensStatusAfterReview = false
+                showsReviewStatus = true
             }
-            .alert("Masuk belum tersedia", isPresented: $showsSignInNotice) {
-                Button("Mengerti", role: .cancel) {}
-            } message: {
-                Text("Layanan akun dan pengajuan peninjauan belum terhubung.")
+        }) {
+            ReviewRequestView { contact in
+                var updated = garden
+                updated.review = GardenReview(contact: contact)
+                guard onUpdate(updated) else { throw ReviewSaveError() }
+                opensStatusAfterReview = true
+                showsReview = false
             }
         }
     }
@@ -180,13 +199,15 @@ struct GardenProfileView: View {
                 } else {
                     if isComplete {
                         PrimaryActionButton(title: reviewActionTitle, systemImage: reviewActionImage,
-                                            imagePlacement: .trailing) {
-                            if reviewStatus == .completed {
-                                showsResults = true
-                            } else if reviewStatus != nil {
-                                showsReviewStatus = true
-                            } else {
+                                            imagePlacement: .trailing,
+                                            isProminent: currentReviewStatus == nil || currentReviewStatus == .completed) {
+                            switch currentReviewStatus {
+                            case nil:
                                 showsReview = true
+                            case .completed where garden.review?.resultsDownloaded ?? (reviewStatus != nil):
+                                showsResults = true
+                            default:
+                                showsReviewStatus = true
                             }
                         }
                         .padding(.horizontal, KropsTheme.Spacing.screen)
@@ -215,13 +236,23 @@ struct GardenProfileView: View {
     }
 
     private var reviewActionTitle: String {
-        if reviewStatus == .completed { return "Lihat hasil peninjauan" }
-        return reviewStatus == nil ? "Ajukan peninjauan" : "Periksa peninjauan"
+        switch currentReviewStatus {
+        case nil: "Ajukan peninjauan"
+        case .completed: "Lihat hasil peninjauan"
+        default: "Lihat status peninjauan"
+        }
     }
 
     private var reviewActionImage: String {
-        if reviewStatus == .completed { return "chart.bar.fill" }
-        return reviewStatus == nil ? "paperplane.fill" : "stopwatch"
+        currentReviewStatus == nil ? "paperplane.fill" : "chevron.right"
+    }
+
+    private func updateReview(of garden: Garden, _ change: (inout GardenReview) -> Void) {
+        guard var review = garden.review else { return }
+        change(&review)
+        var updated = garden
+        updated.review = review
+        _ = onUpdate(updated)
     }
 
     private var map: some View {
@@ -249,6 +280,10 @@ struct GardenProfileView: View {
         }
     }
 
+}
+
+private struct ReviewSaveError: LocalizedError {
+    var errorDescription: String? { "Pengajuan tidak dapat disimpan di perangkat. Coba lagi." }
 }
 
 #if DEBUG

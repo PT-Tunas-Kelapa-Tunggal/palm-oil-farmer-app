@@ -10,6 +10,7 @@ struct Garden: Identifiable, Codable {
     var plantingMonth: Int? = nil
     var fertilizerRecords: [FertilizerRecord]? = nil
     var harvestRecord: HarvestRecord? = nil
+    var review: GardenReview? = nil
 }
 
 struct FertilizerRecord: Identifiable, Codable {

@@ -17,9 +17,9 @@ struct GlassSheetFlowPreview: View {
                 case .guide:
                     RegistrationIntroView(onLocate: { _ in })
                 case .photo:
-                    RegistrationIntroView(initialStep: .photo, onLocate: { _ in })
+                    LocationSearchView(initialResults: [], onSelect: { _ in })
                 case .address:
-                    RegistrationIntroView(initialStep: .address, onLocate: { _ in })
+                    RegistrationIntroView(initialStep: .search, onLocate: { _ in })
                 case .search:
                     LocationSearchView(initialResults: [], onSelect: { _ in })
                 case .details:

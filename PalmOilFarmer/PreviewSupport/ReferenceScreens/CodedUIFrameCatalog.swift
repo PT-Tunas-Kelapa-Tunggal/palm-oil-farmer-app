@@ -49,7 +49,7 @@ struct CodedUIFramePreview: View {
                                   footer: "Pilih sesuai nama pupuk yang tertera pada karung. Jika tidak ada dalam daftar, pilih Lainnya.",
                                   onSelect: { _ in })
             case 10:
-                ReviewRequestView(onSignIn: {})
+                ReviewRequestView(onSubmit: { _ in })
             case 11:
                 ReviewContactFormView(onSubmit: { _ in throw ReviewServiceError.unavailable })
             case 12, 13:

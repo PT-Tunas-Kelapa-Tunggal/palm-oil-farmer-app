@@ -1,6 +1,7 @@
 import SwiftUI
 
 struct ReviewContactFormView: View {
+    var onClose: (() -> Void)? = nil
     let onSubmit: (ReviewContactDetails) async throws -> Void
     @Environment(\.dismiss) private var dismiss
     @State private var name = ""
@@ -12,7 +13,7 @@ struct ReviewContactFormView: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            ScreenHeader(title: "Permintaan Peninjauan", onClose: { dismiss() })
+            ScreenHeader(title: "Permintaan Peninjauan", onClose: { (onClose ?? { dismiss() })() })
             ScrollView {
                 VStack(alignment: .leading, spacing: 24) {
                     Text("Isi data di bawah ini agar petugas dapat menghubungi Anda dan menjadwalkan kunjungan ke kebun.")
@@ -53,7 +54,6 @@ struct ReviewContactFormView: View {
             .padding(.top, 16)
             .padding(.bottom, 2)
         }
-        .presentationDetents([.large])
         .alert("Pengajuan belum dikirim", isPresented: Binding(
             get: { errorMessage != nil }, set: { if !$0 { errorMessage = nil } }
         )) {

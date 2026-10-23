@@ -6,7 +6,7 @@ Seluruh implementasi berada di folder ini. Tidak ada perubahan ke app entry poin
 
 - Buka FindingWaypointView.swift dan pilih preview “Finding Waypoint — data tersimpan” untuk tab Home/Pemupukan.
 - Preview “Pemupukan — contoh” dan “Zona 5” menggunakan data contoh yang tidak disimpan.
-- Untuk berjalan dengan GPS pada iPhone, **pengembang perlu mengganti sementara ContentView() dengan FindingWaypointView() di WindowGroup PalmOilFarmerApp.swift**, lalu Run ke iPhone. Perubahan ini sengaja tidak dilakukan oleh implementasi ini karena file tersebut berada di luar folder yang diizinkan.
+- Untuk berjalan dengan GPS pada iPhone, ganti sementara ContentView() dengan FindingWaypointView() di WindowGroup PalmOilFarmerApp.swift, lalu Run ke iPhone. Build user testing memakai ContentView; zona eksperimen ini dipakai ulang sebagai area di Hasil Peninjauan (Alokasi pupuk dan Navigasi Area).
 - Aktifkan internet dan izinkan lokasi saat aplikasi digunakan, termasuk Lokasi Tepat. Project sudah memiliki deskripsi izin lokasi.
 - Tab Home memakai GardenStore dan alur registrasi yang sudah ada: tambah/edit/hapus di Home memengaruhi data kebun asli.
 - Pemupukan → pilih kebun → pilih zona 1–6 → Mulai panduan. Tombol lokasi mengikuti posisi; menggeser peta melepaskan follow. Tombol peta menampilkan kebun kembali.
