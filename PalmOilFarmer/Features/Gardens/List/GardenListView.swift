@@ -43,8 +43,8 @@ struct GardenListView: View {
                 GeometryReader { geometry in
                     ScrollView {
                         EmptyStateView(
-                            title: "Belum ada kebun terdaftar",
-                            message: "Gambar batas kebun di peta untuk mulai memantau kondisi dan hasil panen."
+                            title: GardenListFilter.all.emptyTitle,
+                            message: GardenListFilter.all.emptyMessage
                         ) {
                             SeedlingIcon()
                         }

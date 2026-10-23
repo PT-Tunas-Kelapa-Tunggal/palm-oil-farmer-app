@@ -33,7 +33,7 @@ struct EmptyStateView<Illustration: View>: View {
 #Preview("Empty State", traits: .sizeThatFitsLayout) {
     EmptyStateView(
         title: "Belum ada kebun terdaftar",
-        message: "Gambar batas kebun di peta untuk mulai memantau kondisi dan hasil panen."
+        message: "Daftarkan kebun Anda untuk mulai memantau kondisi kebun dan mendapatkan rekomendasi pemupukan."
     ) {
         SeedlingIcon()
     }

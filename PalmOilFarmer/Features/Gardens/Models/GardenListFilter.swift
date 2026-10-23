@@ -72,7 +72,7 @@ enum GardenListFilter: String, CaseIterable, Identifiable {
 
     var emptyMessage: String {
         switch self {
-        case .all: "Gambar batas kebun di peta untuk mulai memantau kondisi dan hasil panen."
+        case .all: "Daftarkan kebun Anda untuk mulai memantau kondisi kebun dan mendapatkan rekomendasi pemupukan."
         case .draft: "Kebun yang disimpan dengan \"Lakukan Nanti\" muncul di sini agar pemetaannya bisa dilanjutkan di kebun."
         case .inReview: "Lengkapi riwayat pupuk dan panen, lalu ajukan peninjauan. Kebun yang sedang ditinjau muncul di sini."
         }
