@@ -40,19 +40,21 @@ struct ReviewContactFormView: View {
                 .padding(.top, 16)
             }
             .scrollDismissesKeyboard(.interactively)
-            VStack(spacing: 16) {
-                ConsentCheckbox(isChecked: $hasConsent,
-                                message: "Saya memastikan nomor telepon dan alamat di atas sudah benar.")
-                    .padding(.horizontal, 8)
-                PrimaryActionButton(title: isSubmitting ? "Mengirim…" : "Ajukan Sekarang",
-                                    systemImage: "paperplane.fill", imagePlacement: .trailing) {
-                    Task { await submit() }
+            .bottomActionBar {
+                VStack(spacing: 16) {
+                    ConsentCheckbox(isChecked: $hasConsent,
+                                    message: "Saya memastikan nomor telepon dan alamat di atas sudah benar.")
+                        .padding(.horizontal, 8)
+                    PrimaryActionButton(title: isSubmitting ? "Mengirim…" : "Ajukan Sekarang",
+                                        systemImage: "paperplane.fill", imagePlacement: .trailing) {
+                        Task { await submit() }
+                    }
+                    .disabled(isSubmitting)
                 }
-                .disabled(isSubmitting)
+                .padding(.horizontal, 24)
+                .padding(.top, 16)
+                .padding(.bottom, 2)
             }
-            .padding(.horizontal, 24)
-            .padding(.top, 16)
-            .padding(.bottom, 2)
         }
         .alert("Pengajuan belum dikirim", isPresented: Binding(
             get: { errorMessage != nil }, set: { if !$0 { errorMessage = nil } }

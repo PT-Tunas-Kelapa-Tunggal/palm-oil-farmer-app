@@ -126,10 +126,12 @@ struct GardenDetailsView: View {
                         .contentShape(Rectangle())
                         .onTapGesture { isNameFocused = false }
                 }
-                PrimaryActionButton(title: "Simpan", action: save)
-                    .padding(.horizontal, 24)
-                    .padding(.top, 16)
-                    .padding(.bottom, 2)
+                .bottomActionBar {
+                    PrimaryActionButton(title: "Simpan", action: save)
+                        .padding(.horizontal, 24)
+                        .padding(.top, 16)
+                        .padding(.bottom, 2)
+                }
             }
             .containerBackground(.clear, for: .navigation)
             .toolbar(.hidden, for: .navigationBar)
