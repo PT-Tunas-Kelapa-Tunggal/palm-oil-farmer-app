@@ -133,9 +133,12 @@ struct HarvestHistoryEditor: View {
     @State private var showsError = false
     @Environment(\.dismiss) private var dismiss
 
+    static let frequencyRange = 1...31
+
     init(record: HarvestRecord?, onSave: @escaping (HarvestRecord) -> Bool) {
         self.onSave = onSave
-        _frequency = State(initialValue: min(max(record?.frequencyPerMonth ?? 2, 1), 31))
+        _frequency = State(initialValue: min(max(record?.frequencyPerMonth ?? 2, Self.frequencyRange.lowerBound),
+                                             Self.frequencyRange.upperBound))
         _weight = State(initialValue: record?.latestWeightKg ?? 450)
     }
 
@@ -146,58 +149,169 @@ struct HarvestHistoryEditor: View {
     var body: some View {
         VStack(spacing: 0) {
             ScreenHeader(title: "Riwayat Panen", confirmationAction: save, onClose: { dismiss() })
-            ScrollView {
-                VStack(spacing: 16) {
-                    VStack(spacing: 0) {
-                        Text("Frekuensi Panen").font(.title2.weight(.bold))
-                        Text("Jumlah panen yang biasanya dilakukan\ndi kebun ini")
-                            .font(.body).foregroundStyle(.secondary).multilineTextAlignment(.center)
-                        Stepper(value: $frequency, in: 1...31) {
-                            Text("\(frequency) kali")
-                                .font(.title.weight(.semibold))
-                        }
-                        .padding(.horizontal, 24)
-                        .padding(.vertical, 32)
-                        Text("dalam satu bulan").font(.body)
-                    }
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, 24)
-                    .frame(minHeight: 254)
-                    .background(KropsTheme.tertiaryFill, in: RoundedRectangle(cornerRadius: 48))
-
-                    VStack(spacing: 0) {
-                        Text("Rata-rata berat panen").font(.title2.weight(.bold))
-                        Text("Perkiraan berat TBS yang didapat setiap\nkali panen")
-                            .font(.body).foregroundStyle(.secondary).multilineTextAlignment(.center)
-                        Picker("Berat panen dalam kg", selection: $weight) {
-                            ForEach(weightOptions, id: \.self) { value in
-                                Text("\(value.formatted()) kg").tag(value)
-                            }
-                        }
-                        .pickerStyle(.wheel)
-                        .frame(height: 217)
-                        Text("setiap kali panen").font(.body)
-                    }
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, 24)
-                    .frame(minHeight: 363)
-                    .background(KropsTheme.tertiaryFill, in: RoundedRectangle(cornerRadius: 48))
+            VStack(spacing: 16) {
+                HarvestCard(title: "Frekuensi Panen",
+                            message: "Jumlah panen yang biasanya dilakukan di kebun ini",
+                            footer: "dalam satu bulan") {
+                    HarvestFrequencyStepper(value: $frequency, range: Self.frequencyRange)
                 }
-                .padding(.horizontal, 16)
-                .padding(.bottom, 16)
+                HarvestCard(title: "Rata-rata berat per panen",
+                            message: "Perkiraan berat TBS yang didapat setiap kali panen",
+                            footer: "setiap kali panen") {
+                    HarvestWeightWheel(selection: $weight, options: weightOptions)
+                }
             }
+            .padding(.horizontal, 16)
+            .padding(.bottom, 16)
         }
-        .presentationDetents([.height(721), .large])
+        .fittedSheetHeight()
+        .presentationBackground(Color(uiColor: .systemBackground))
         .alert("Riwayat belum tersimpan", isPresented: $showsError) {
             Button("Mengerti", role: .cancel) {}
         }
     }
 
     private func save() {
-        guard (1...31).contains(frequency), weight.isFinite, weight > 0 else { showsError = true; return }
+        guard Self.frequencyRange.contains(frequency), weight.isFinite, weight > 0 else { showsError = true; return }
         if onSave(HarvestRecord(frequencyPerMonth: frequency, latestWeightKg: weight)) {
             dismiss()
         } else { showsError = true }
+    }
+}
+
+/// A rounded card with a centred title, explanation, control, and unit line, as in the Sketch form.
+private struct HarvestCard<Control: View>: View {
+    let title: String
+    let message: String
+    let footer: String
+    @ViewBuilder let control: () -> Control
+
+    var body: some View {
+        VStack(spacing: 16) {
+            VStack(spacing: 0) {
+                Text(title).font(.title2.bold())
+                Text(message).font(.body).foregroundStyle(.secondary)
+            }
+            .multilineTextAlignment(.center)
+            .padding(.horizontal, 32)
+            control()
+            Text(footer).font(.body)
+        }
+        .frame(maxWidth: .infinity)
+        .padding(.vertical, 32)
+        .background(Color(uiColor: .quaternarySystemFill), in: RoundedRectangle(cornerRadius: 40))
+    }
+}
+
+struct HarvestFrequencyStepper: View {
+    @Binding var value: Int
+    let range: ClosedRange<Int>
+
+    var body: some View {
+        HStack(spacing: 24) {
+            stepButton("minus", label: "Kurangi", isEnabled: value > range.lowerBound) { value -= 1 }
+            VStack(spacing: 8) {
+                HStack(alignment: .firstTextBaseline, spacing: 8) {
+                    Text("\(value)")
+                        .font(.largeTitle.bold())
+                        .monospacedDigit()
+                        .contentTransition(.numericText(value: Double(value)))
+                    Text("kali").font(.headline)
+                }
+                Rectangle().fill(.separator).frame(width: 57, height: 1)
+            }
+            .frame(minWidth: 57)
+            stepButton("plus", label: "Tambah", isEnabled: value < range.upperBound) { value += 1 }
+        }
+        .frame(minHeight: 64)
+        .animation(.snappy, value: value)
+        .sensoryFeedback(.selection, trigger: value)
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel("Frekuensi panen")
+        .accessibilityValue("\(value) kali dalam satu bulan")
+        .accessibilityAdjustableAction { direction in
+            switch direction {
+            case .increment where value < range.upperBound: value += 1
+            case .decrement where value > range.lowerBound: value -= 1
+            default: break
+            }
+        }
+    }
+
+    private func stepButton(_ symbol: String, label: String, isEnabled: Bool,
+                            action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            Image(systemName: symbol)
+                .font(.system(size: 30, weight: .regular))
+                .frame(width: 44, height: 64)
+                .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .foregroundStyle(isEnabled ? Color.primary : Color.secondary.opacity(0.4))
+        .disabled(!isEnabled)
+        .accessibilityLabel(label)
+    }
+}
+
+/// Five visible rows: the centred value is large inside a capsule; rows fade with distance.
+struct HarvestWeightWheel: View {
+    @Binding var selection: Double
+    let options: [Double]
+    @State private var centred: Double?
+
+    private static let rowHeight: CGFloat = 35
+
+    var body: some View {
+        ScrollView(.vertical) {
+            LazyVStack(spacing: 0) {
+                ForEach(options, id: \.self) { option in
+                    row(option)
+                        .frame(height: Self.rowHeight)
+                        .id(option)
+                }
+            }
+            .scrollTargetLayout()
+        }
+        .scrollIndicators(.hidden)
+        .scrollTargetBehavior(.viewAligned)
+        .scrollPosition(id: $centred, anchor: .center)
+        .contentMargins(.vertical, Self.rowHeight * 2, for: .scrollContent)
+        .frame(width: 140, height: Self.rowHeight * 5)
+        .background {
+            Capsule()
+                .fill(Color(uiColor: .quaternarySystemFill))
+                .frame(width: 83, height: 41)
+        }
+        .overlay {
+            Text("kg")
+                .font(.headline)
+                .offset(x: 58)
+                .allowsHitTesting(false)
+        }
+        .onAppear { centred = selection }
+        .onChange(of: centred) { _, value in
+            if let value { selection = value }
+        }
+        .sensoryFeedback(.selection, trigger: centred)
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel("Rata-rata berat per panen")
+        .accessibilityValue("\(selection.formatted()) kilogram")
+        .accessibilityAdjustableAction { direction in
+            guard let index = options.firstIndex(of: selection) else { return }
+            let next = direction == .increment ? index + 1 : index - 1
+            if options.indices.contains(next) { centred = options[next] }
+        }
+    }
+
+    private func row(_ option: Double) -> some View {
+        let distance = abs((options.firstIndex(of: option) ?? 0) - (options.firstIndex(of: centred ?? selection) ?? 0))
+        return Text(option.formatted())
+            .font(distance == 0 ? .largeTitle.bold() : distance == 1 ? .title2.bold() : .headline)
+            .monospacedDigit()
+            .foregroundStyle(Color.primary.opacity(distance == 0 ? 1 : distance == 1 ? 0.6 : 0.3))
+            .frame(maxWidth: .infinity)
+            .contentShape(Rectangle())
+            .onTapGesture { withAnimation { centred = option } }
     }
 }
 
@@ -212,7 +326,9 @@ struct HarvestHistoryEditor: View {
     @Previewable @State var draft = FertilizerDraft(record: GardenPreviewData.fertilizers[0])
     FertilizerEntryCard(draft: $draft, onSelectType: {}).padding().frame(width: 402)
 }
-#Preview("Panen · Default", traits: .fixedLayout(width: 402, height: 721)) {
-    HarvestHistoryEditor(record: nil, onSave: { _ in true })
+#Preview("Panen · Default") {
+    Color.clear.sheet(isPresented: .constant(true)) {
+        HarvestHistoryEditor(record: nil, onSave: { _ in true })
+    }
 }
 #endif
