@@ -1,9 +1,17 @@
 import SwiftUI
 
+/// A numeric field in one fertilizer card; used for focus and scrolling.
+struct FertilizerField: Hashable {
+    enum Kind: CaseIterable { case bagWeight, bagCount, dose }
+    let draftID: UUID
+    let kind: Kind
+}
+
 struct FertilizerHistoryEditor: View {
     @State private var drafts: [FertilizerDraft]
     @State private var selectedDraftID: UUID?
     @State private var errorMessage: String?
+    @FocusState private var focusedField: FertilizerField?
     let onSave: ([FertilizerRecord]) -> Bool
     @Environment(\.dismiss) private var dismiss
 
@@ -20,29 +28,52 @@ struct FertilizerHistoryEditor: View {
             VStack(spacing: 0) {
                 ScreenHeader(title: "Riwayat Pemupukan", buttonSize: 44, height: 68,
                              confirmationAction: save, onClose: { dismiss() })
-                ScrollView {
-                    VStack(spacing: 16) {
-                        ForEach($drafts) { $draft in
-                            FertilizerEntryCard(draft: $draft) { selectedDraftID = draft.id }
+                ScrollViewReader { reader in
+                    ScrollView {
+                        VStack(spacing: 16) {
+                            ForEach($drafts) { $draft in
+                                FertilizerEntryCard(draft: $draft, focusedField: $focusedField) {
+                                    focusedField = nil
+                                    selectedDraftID = draft.id
+                                }
                                 .contextMenu {
                                     Button("Hapus jenis pupuk", role: .destructive) {
                                         drafts.removeAll { $0.id == draft.id }
                                     }
                                 }
+                            }
+                            Button {
+                                let draft = FertilizerDraft()
+                                drafts.append(draft)
+                                focusedField = nil
+                                withAnimation { reader.scrollTo(draft.id, anchor: .top) }
+                            } label: {
+                                Label("Tambah jenis pupuk", systemImage: "plus")
+                                    .frame(maxWidth: .infinity, minHeight: 52)
+                                    .background(Color(uiColor: .systemGray4), in: Capsule())
+                            }
+                            .buttonStyle(.plain)
                         }
-                        Button {
-                            drafts.append(FertilizerDraft())
-                        } label: {
-                            Label("Tambah jenis pupuk", systemImage: "plus")
-                                .frame(maxWidth: .infinity, minHeight: 52)
-                                .background(Color(uiColor: .systemGray4), in: Capsule())
-                        }
-                        .buttonStyle(.plain)
+                        .padding(16)
                     }
-                    .padding(16)
-                    .padding(.bottom, 16)
+                    // Room below the last control so it can scroll clear of the keyboard and the home indicator.
+                    .contentMargins(.bottom, 96, for: .scrollContent)
+                    .scrollDismissesKeyboard(.immediately)
+                    .onChange(of: focusedField) { _, field in
+                        guard let field else { return }
+                        withAnimation { reader.scrollTo(field, anchor: .center) }
+                    }
                 }
-                .scrollDismissesKeyboard(.interactively)
+            }
+            .toolbar {
+                ToolbarItemGroup(placement: .keyboard) {
+                    Spacer()
+                    if let next = nextField {
+                        Button("Berikutnya") { focusedField = next }
+                    }
+                    Button("Selesai") { focusedField = nil }
+                        .fontWeight(.semibold)
+                }
             }
             .containerBackground(.clear, for: .navigation)
             .toolbar(.hidden, for: .navigationBar)
@@ -65,7 +96,14 @@ struct FertilizerHistoryEditor: View {
         .presentationDetents([.large])
     }
 
+    private var nextField: FertilizerField? {
+        let order = drafts.flatMap { draft in FertilizerField.Kind.allCases.map { FertilizerField(draftID: draft.id, kind: $0) } }
+        guard let focusedField, let index = order.firstIndex(of: focusedField), index + 1 < order.count else { return nil }
+        return order[index + 1]
+    }
+
     private func save() {
+        focusedField = nil
         let filled = drafts.filter { !$0.isEmpty }
         let records = filled.compactMap(\.record)
         guard records.count == filled.count else {
@@ -80,6 +118,7 @@ struct FertilizerHistoryEditor: View {
 
 struct FertilizerEntryCard: View {
     @Binding var draft: FertilizerDraft
+    var focusedField: FocusState<FertilizerField?>.Binding? = nil
     let onSelectType: () -> Void
 
     var body: some View {
@@ -88,32 +127,21 @@ struct FertilizerEntryCard: View {
                 title: "Jenis Pupuk", placeholder: "Pilih jenis pupuk",
                 value: draft.name.isEmpty ? nil : draft.name, action: onSelectType
             )
+            .id(draft.id)
             Divider()
-            VStack(alignment: .leading, spacing: 12) {
-                fieldTitle("Berat per karung")
-                HStack {
-                    TextField("cth: 50", value: $draft.bagWeightKg, format: .number).keyboardType(.decimalPad)
-                        .accessibilityLabel("Berat per karung, kilogram")
-                    Text("kg").fontWeight(.regular)
-                }
+            numberField("Berat per karung", unit: "kg", kind: .bagWeight,
+                        accessibility: "Berat per karung, kilogram") {
+                TextField("cth: 50", value: $draft.bagWeightKg, format: .number).keyboardType(.decimalPad)
             }
             Divider()
-            VStack(alignment: .leading, spacing: 12) {
-                fieldTitle("Jumlah karung")
-                HStack {
-                    TextField("cth: 6", value: $draft.bagCount, format: .number).keyboardType(.numberPad)
-                        .accessibilityLabel("Jumlah karung")
-                    Text("sak").fontWeight(.regular)
-                }
+            numberField("Jumlah karung", unit: "sak", kind: .bagCount,
+                        accessibility: "Jumlah karung") {
+                TextField("cth: 6", value: $draft.bagCount, format: .number).keyboardType(.numberPad)
             }
             Divider()
-            VStack(alignment: .leading, spacing: 12) {
-                fieldTitle("Dosis per pohon")
-                HStack {
-                    TextField("cth: 1.5", value: $draft.doseKgPerTree, format: .number).keyboardType(.decimalPad)
-                        .accessibilityLabel("Dosis per pohon, kilogram")
-                    Text("kg").fontWeight(.regular)
-                }
+            numberField("Dosis per pohon", unit: "kg", kind: .dose,
+                        accessibility: "Dosis per pohon, kilogram") {
+                TextField("cth: 1.5", value: $draft.doseKgPerTree, format: .number).keyboardType(.decimalPad)
             }
         }
         .font(.title3.weight(.semibold))
@@ -121,8 +149,24 @@ struct FertilizerEntryCard: View {
         .background(KropsTheme.tertiaryFill, in: RoundedRectangle(cornerRadius: 24))
     }
 
-    private func fieldTitle(_ title: String) -> some View {
-        Text(title).font(.headline).foregroundStyle(.secondary)
+    @ViewBuilder
+    private func numberField<Field: View>(_ title: String, unit: String,
+                                          kind: FertilizerField.Kind, accessibility: String,
+                                          @ViewBuilder field: () -> Field) -> some View {
+        let id = FertilizerField(draftID: draft.id, kind: kind)
+        VStack(alignment: .leading, spacing: 12) {
+            Text(title).font(.headline).foregroundStyle(.secondary)
+            HStack {
+                if let focusedField {
+                    field().focused(focusedField, equals: id)
+                } else {
+                    field()
+                }
+                Text(unit).fontWeight(.regular)
+            }
+            .accessibilityLabel(accessibility)
+        }
+        .id(id)
     }
 }
 
