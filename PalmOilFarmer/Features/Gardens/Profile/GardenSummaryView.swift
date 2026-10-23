@@ -44,7 +44,7 @@ struct GardenMetricTile: View {
                     Image(systemName: systemImage).font(.title2)
                 }
             }
-            .foregroundStyle(KropsTheme.primaryText.opacity(0.7))
+            .foregroundStyle(.tertiary)
             .padding(.top, 4)
         }
         .accessibilityElement(children: .combine)

@@ -24,11 +24,10 @@ enum KropsTheme {
 
     // MARK: Surfaces
 
-    static let background = Color(uiColor: UIColor { traits in
-        traits.userInterfaceStyle == .dark ? .secondarySystemBackground : UIColor(rgb: 0xF3F6F0)
-    })
-    /// Grouped card and field background, lightly tinted green.
-    static let cardFill = dynamic(light: 0xE3ECE0, dark: 0x26322B)
+    /// Surfaces are neutral grey so green stays reserved for primary actions and status.
+    static let background = dynamic(light: 0xF2F2F2, dark: 0x1C1C1C)
+    /// Grouped card and field background.
+    static let cardFill = dynamic(light: 0xEAEAEA, dark: 0x2C2C2C)
     static let secondaryFill = Color(uiColor: .secondarySystemFill)
     static let secondaryText = Color(uiColor: .secondaryLabel)
     static let titleText = Color.primary.opacity(0.7)

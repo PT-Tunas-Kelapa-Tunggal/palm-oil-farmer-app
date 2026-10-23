@@ -36,7 +36,6 @@ struct GardenCard: View {
                     .frame(maxWidth: .infinity, alignment: .leading)
                 }
                 .font(.footnote)
-                .labelStyle(TintedIconLabelStyle())
                 if garden.review?.isInProgress == true {
                     Label("Dalam proses peninjauan", systemImage: "hourglass")
                         .font(.footnote.weight(.semibold))
