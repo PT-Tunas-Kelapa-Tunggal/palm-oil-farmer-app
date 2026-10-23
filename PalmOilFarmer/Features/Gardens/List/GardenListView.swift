@@ -11,8 +11,9 @@ struct GardenListView: View {
     var previewMetrics: GardenDisplayMetrics? = nil
     var onSelectGarden: (Garden) -> Void = { _ in }
     let onRegisterGarden: () -> Void
-    /// Debug builds only: opens developer tools.
+    /// Debug builds only: opens developer tools when the title is held.
     var onOpenDeveloperMode: (() -> Void)? = nil
+    @State private var developerTrigger = 0
     @State private var selectedFilter = GardenListFilter.all
     @AppStorage(DeveloperSettings.showsHomeFilterKey) private var showsFilter = true
 
@@ -27,15 +28,14 @@ struct GardenListView: View {
                 Text("Kebun")
                     .font(.largeTitle.bold())
                     .foregroundStyle(gardens.isEmpty && drafts.isEmpty ? KropsTheme.titleText : .primary)
+                    // Debug builds: hold the title to open Mode Developer, hidden from test participants.
+                    .onLongPressGesture(minimumDuration: 1.5) {
+                        guard let onOpenDeveloperMode else { return }
+                        developerTrigger += 1
+                        onOpenDeveloperMode()
+                    }
+                    .sensoryFeedback(.success, trigger: developerTrigger)
                 Spacer()
-                if let onOpenDeveloperMode {
-                    Button("Mode Developer", systemImage: "wrench.and.screwdriver", action: onOpenDeveloperMode)
-                        .labelStyle(.iconOnly)
-                        .font(.title3)
-                        .foregroundStyle(.secondary)
-                        .frame(width: 44, height: 44)
-                        .glassEffect(.regular.interactive(), in: Circle())
-                }
             }
             .padding(KropsTheme.Spacing.screen)
 

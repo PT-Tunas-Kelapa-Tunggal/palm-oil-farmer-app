@@ -45,6 +45,7 @@ The app follows the Sketch **MID-FID Flow** page (KROPS file): Daftar Kebun (dar
 
 - **Registration:** guide sheet → "Cari alamat" (place search, current location, or a geotagged photo). A photo location is confirmed on the map first ("Ya, Ini kebun saya" / "Cari Lagi").
 - **Lakukan Nanti:** saves the location as a draft (`garden-drafts.json`, separate from `gardens.json`). The draft card reopens the map following the farmer's position.
+- **Mode Developer (debug builds):** hold the "Kebun" title for 1.5 s to open it. It erases all garden data and toggles the home filter tabs.
 - **Review:** consent → contact form → saved on the garden as `review`. There is no review service yet. **Facilitator:** long-press the "Status Pengajuan" header for 1.5 s to move the review to its next stage. "Lihat & unduh hasil" simulates an 8-second download.
 - **Results:** `DemoReviewReport` builds sample results from the garden. Areas (AA–CB) and fertilizer quantities follow the mapped boundary. Nutrient levels, prices, and rainfall are fixed examples. Tap a nutrient bar for its fertilizer reference; "Buka Map" guides to the selected area with GPS (straight-line distance, not a route).
 
