@@ -22,10 +22,9 @@ struct KeyboardActionBar: View {
             .buttonStyle(.glassProminent)
             .tint(KropsTheme.buttonBackground)
         }
-        // Small controls keep attention on the field being filled.
-        .font(.subheadline)
+        // Regular (medium) controls stay readable without pulling focus from the field.
         .buttonBorderShape(.capsule)
-        .controlSize(.small)
+        .controlSize(.regular)
         .padding(.horizontal, 16)
         .padding(.top, 10)
         .padding(.bottom, 10)
