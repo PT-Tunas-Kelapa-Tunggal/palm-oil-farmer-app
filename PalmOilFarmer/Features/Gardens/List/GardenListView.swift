@@ -56,54 +56,62 @@ struct GardenListView: View {
                 )
                 .padding(.horizontal, KropsTheme.Spacing.screen)
                 .padding(.bottom, 12)
-                ScrollView {
-                    LazyVStack(spacing: 12) {
-                        if visibleGardens.isEmpty && visibleDrafts.isEmpty && downloads.isEmpty {
-                            Text(filter.emptyMessage)
-                                .font(.body)
-                                .foregroundStyle(.secondary)
-                                .multilineTextAlignment(.center)
-                                .frame(maxWidth: .infinity)
-                                .padding(.vertical, 48)
+                if visibleGardens.isEmpty && visibleDrafts.isEmpty && downloads.isEmpty {
+                    GeometryReader { geometry in
+                        ScrollView {
+                            EmptyStateView(title: filter.emptyTitle, message: filter.emptyMessage, messageFont: .body) {
+                                Image(systemName: filter.emptySymbol)
+                                    .font(.system(size: 40, weight: .regular))
+                                    .frame(width: 88, height: 88)
+                                    .background(KropsTheme.cardFill, in: Circle())
+                            }
+                            .frame(maxWidth: .infinity, minHeight: geometry.size.height * 0.8)
                         }
-                        ForEach(GardenListItem.newestFirst(gardens: visibleGardens, drafts: visibleDrafts)) { item in
-                            switch item {
-                            case .garden(let garden):
-                                Button {
-                                    onSelectGarden(garden)
-                                } label: {
-                                    GardenCard(garden: garden, referenceImage: referenceMapImage, metrics: previewMetrics)
-                                }
-                                .buttonStyle(.plain)
-                            case .draft(let draft):
-                                Button {
-                                    onSelectDraft(draft)
-                                } label: {
-                                    GardenDraftCard(draft: draft)
-                                }
-                                .buttonStyle(.plain)
-                                .contextMenu {
-                                    Button("Hapus draf", systemImage: "trash", role: .destructive) {
-                                        onDeleteDraft(draft)
+                        .scrollBounceBehavior(.basedOnSize)
+                    }
+                    .transition(.opacity)
+                } else {
+                    ScrollView {
+                        LazyVStack(spacing: 12) {
+                            ForEach(GardenListItem.newestFirst(gardens: visibleGardens, drafts: visibleDrafts)) { item in
+                                switch item {
+                                case .garden(let garden):
+                                    Button {
+                                        onSelectGarden(garden)
+                                    } label: {
+                                        GardenCard(garden: garden, referenceImage: referenceMapImage, metrics: previewMetrics)
+                                    }
+                                    .buttonStyle(.plain)
+                                case .draft(let draft):
+                                    Button {
+                                        onSelectDraft(draft)
+                                    } label: {
+                                        GardenDraftCard(draft: draft)
+                                    }
+                                    .buttonStyle(.plain)
+                                    .contextMenu {
+                                        Button("Hapus draf", systemImage: "trash", role: .destructive) {
+                                            onDeleteDraft(draft)
+                                        }
                                     }
                                 }
                             }
-                        }
-                        ForEach(downloads) { item in
-                            Button {
-                                onSelectDownload(item)
-                            } label: {
-                                MapDownloadCard(location: item.location, state: item.state,
-                                                referenceMapImage: item.referenceMapImage)
+                            ForEach(downloads) { item in
+                                Button {
+                                    onSelectDownload(item)
+                                } label: {
+                                    MapDownloadCard(location: item.location, state: item.state,
+                                                    referenceMapImage: item.referenceMapImage)
+                                }
+                                .buttonStyle(.plain)
                             }
-                            .buttonStyle(.plain)
                         }
+                        .padding(.horizontal, KropsTheme.Spacing.screen)
+                        .padding(.bottom, 12)
+                        .animation(.snappy, value: filter)
                     }
-                    .padding(.horizontal, KropsTheme.Spacing.screen)
-                    .padding(.bottom, 12)
-                    .animation(.snappy, value: filter)
+                    .scrollIndicators(.hidden)
                 }
-                .scrollIndicators(.hidden)
             }
         }
         .background(KropsTheme.background.ignoresSafeArea())

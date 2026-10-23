@@ -50,7 +50,7 @@ enum GardenListItem: Identifiable {
 enum GardenListFilter: String, CaseIterable, Identifiable {
     case all = "Semua"
     case draft = "Draf"
-    case inReview = "Ditinjau"
+    case inReview = "Peninjauan"
 
     var id: Self { self }
 
@@ -62,11 +62,27 @@ enum GardenListFilter: String, CaseIterable, Identifiable {
         }
     }
 
+    var emptyTitle: String {
+        switch self {
+        case .all: "Belum ada kebun terdaftar"
+        case .draft: "Tidak ada draf"
+        case .inReview: "Belum ada peninjauan"
+        }
+    }
+
     var emptyMessage: String {
         switch self {
-        case .all: "Belum ada kebun terdaftar."
-        case .draft: "Tidak ada kebun yang menunggu pemetaan."
-        case .inReview: "Tidak ada kebun dalam proses peninjauan."
+        case .all: "Gambar batas kebun di peta untuk mulai memantau kondisi dan hasil panen."
+        case .draft: "Kebun yang disimpan dengan \"Lakukan Nanti\" muncul di sini agar pemetaannya bisa dilanjutkan di kebun."
+        case .inReview: "Lengkapi riwayat pupuk dan panen, lalu ajukan peninjauan. Kebun yang sedang ditinjau muncul di sini."
+        }
+    }
+
+    var emptySymbol: String {
+        switch self {
+        case .all: "leaf"
+        case .draft: "map"
+        case .inReview: "doc.text.magnifyingglass"
         }
     }
 
