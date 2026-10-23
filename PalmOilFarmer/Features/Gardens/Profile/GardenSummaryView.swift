@@ -15,38 +15,59 @@ struct GardenSummaryView: View {
             ? AnyLayout(VStackLayout(spacing: 7))
             : AnyLayout(HStackLayout(spacing: 7))
         layout {
-            GardenMetricTile(title: "Luas", value: displayMetrics.area, systemImage: "point.topleft.down.to.point.bottomright.curvepath")
-            GardenMetricTile(title: "Perimeter", value: displayMetrics.perimeter, systemImage: "rectangle.dashed")
-            GardenMetricTile(title: "Tahun tanam", value: String(garden.plantingYear), systemImage: "calendar")
+            GardenMetricTile(title: "Luas", value: displayMetrics.area, kind: .area)
+            GardenMetricTile(title: "Perimeter", value: displayMetrics.perimeter, kind: .perimeter)
+            GardenMetricTile(title: "Tahun tanam", value: String(garden.plantingYear), kind: .year)
         }
     }
 }
 
 struct GardenMetricTile: View {
+    enum Kind {
+        case area, perimeter, year
+
+        var fill: Color {
+            switch self {
+            case .area: KropsTheme.Metric.areaFill
+            case .perimeter: KropsTheme.Metric.perimeterFill
+            case .year: KropsTheme.Metric.yearFill
+            }
+        }
+
+        var ink: Color {
+            switch self {
+            case .area: KropsTheme.Metric.areaInk
+            case .perimeter: KropsTheme.Metric.perimeterInk
+            case .year: KropsTheme.Metric.yearInk
+            }
+        }
+    }
+
     let title: String
     let value: String
-    let systemImage: String
+    let kind: Kind
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 2) {
-            Text(title).font(.caption2)
-            Text(value).font(.headline)
-        }
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .padding(16)
-        .frame(minHeight: 67)
-        .background(KropsTheme.cardFill, in: RoundedRectangle(cornerRadius: 16))
-        .overlay(alignment: .topTrailing) {
+        VStack(alignment: .leading, spacing: 10) {
             Group {
-                if systemImage == "point.topleft.down.to.point.bottomright.curvepath" {
-                    GardenAreaIcon().scaleEffect(1.4)
-                } else {
-                    Image(systemName: systemImage).font(.title2)
+                switch kind {
+                case .area: GardenAreaIcon().scaleEffect(1.1)
+                case .perimeter: Image(systemName: "rectangle.dashed")
+                case .year: Image(systemName: "calendar")
                 }
             }
-            .foregroundStyle(.tertiary)
-            .padding(.top, 4)
+            .font(.subheadline.weight(.semibold))
+            .foregroundStyle(kind.ink)
+            .frame(width: 32, height: 32)
+            .background(kind.ink.opacity(0.14), in: Circle())
+            VStack(alignment: .leading, spacing: 0) {
+                Text(value).font(.headline).foregroundStyle(.primary)
+                Text(title).font(.caption).foregroundStyle(.secondary)
+            }
         }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(12)
+        .background(kind.fill, in: RoundedRectangle(cornerRadius: 16))
         .accessibilityElement(children: .combine)
     }
 }
@@ -60,7 +81,7 @@ struct GardenMetricTile: View {
 }
 
 #Preview("Metric Tile", traits: .sizeThatFitsLayout) {
-    GardenMetricTile(title: "Luas", value: "2,3 ha", systemImage: "point.topleft.down.to.point.bottomright.curvepath")
+    GardenMetricTile(title: "Luas", value: "2,3 ha", kind: .area)
         .frame(width: 119).padding()
 }
 #endif

@@ -49,6 +49,16 @@ enum KropsTheme {
         static let heavyRain = dynamic(light: 0x163F73, dark: 0xB5D6F5)
     }
 
+    /// Garden metric tiles: a soft fill with a matching ink for the icon (ink on fill ≥ 4.7:1).
+    enum Metric {
+        static let areaFill = dynamic(light: 0xE3F1E6, dark: 0x1F3325)
+        static let areaInk = dynamic(light: 0x2E6B3F, dark: 0x8FD19E)
+        static let perimeterFill = dynamic(light: 0xE2EEF9, dark: 0x1C2B3B)
+        static let perimeterInk = dynamic(light: 0x1F5FA8, dark: 0x9CC6F0)
+        static let yearFill = dynamic(light: 0xFBEEDB, dark: 0x3A2C17)
+        static let yearInk = dynamic(light: 0x9A5B0B, dark: 0xF2B866)
+    }
+
     enum Typography {
         static let fieldLabel = Font.headline
         static let body = Font.body
