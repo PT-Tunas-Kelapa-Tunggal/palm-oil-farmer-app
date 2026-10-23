@@ -8,6 +8,7 @@ struct ContentView: View {
     @State private var pendingLocation: GardenLocation?
     @State private var mappingLocation: GardenLocation?
     @State private var reopensSearch = false
+    @State private var showsDeveloperMode = false
 
     var body: some View {
         NavigationStack {
@@ -21,9 +22,17 @@ struct ContentView: View {
                     registrationStep = .guide
                     showsRegistration = true
                 },
-                onEraseAll: debugEraseAll
+                onOpenDeveloperMode: developerModeAction
             )
             .toolbar(.hidden, for: .navigationBar)
+            #if DEBUG
+            .navigationDestination(isPresented: $showsDeveloperMode) {
+                DeveloperModeView(gardenCount: store.gardens.count, draftCount: store.drafts.count) {
+                    selectedGardenID = nil
+                    store.eraseAll()
+                }
+            }
+            #endif
             .navigationDestination(item: $selectedGardenID) { id in
                 if let garden = store.gardens.first(where: { $0.id == id }) {
                     GardenProfileView(garden: garden, onDelete: store.delete, onUpdate: store.update)
@@ -55,13 +64,10 @@ struct ContentView: View {
         }
     }
 
-    /// Debug builds get a home-screen button that erases all garden data for repeat test sessions.
-    private var debugEraseAll: (() -> Void)? {
+    /// Debug builds get developer tools from the home screen, for repeat test sessions.
+    private var developerModeAction: (() -> Void)? {
         #if DEBUG
-        return {
-            selectedGardenID = nil
-            store.eraseAll()
-        }
+        return { showsDeveloperMode = true }
         #else
         return nil
         #endif
