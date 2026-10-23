@@ -77,8 +77,8 @@ struct GardenListView: View {
             PrimaryActionButton(title: "Daftarkan Kebun", systemImage: "plus", action: onRegisterGarden)
                 .padding(.horizontal, 34)
                 .padding(.bottom, 2)
-                .padding(.top, 12)
-                .background(KropsTheme.background)
+                .padding(.top, 24)
+                .background { BottomBlurFade() }
         }
     }
 }

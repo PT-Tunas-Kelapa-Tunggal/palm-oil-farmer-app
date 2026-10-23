@@ -30,11 +30,6 @@ struct KeyboardActionBar: View {
         .padding(.top, 10)
         .padding(.bottom, 10)
         // Fades the content scrolling underneath, like the system scroll edge effect.
-        .background {
-            LinearGradient(stops: [.init(color: Color(uiColor: .systemBackground).opacity(0), location: 0),
-                                   .init(color: Color(uiColor: .systemBackground), location: 0.45)],
-                           startPoint: .top, endPoint: .bottom)
-                .allowsHitTesting(false)
-        }
+        .background { BottomBlurFade() }
     }
 }

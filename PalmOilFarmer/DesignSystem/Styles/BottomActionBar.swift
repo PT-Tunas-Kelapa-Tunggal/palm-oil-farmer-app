@@ -21,13 +21,7 @@ struct BottomActionBar<Action: View>: ViewModifier {
             .overlay {
                 action()
                     // Content scrolling underneath fades out rather than showing through.
-                    .background {
-                        LinearGradient(stops: [.init(color: Color(uiColor: .systemBackground).opacity(0), location: 0),
-                                               .init(color: Color(uiColor: .systemBackground), location: 0.3)],
-                                       startPoint: .top, endPoint: .bottom)
-                            .ignoresSafeArea(edges: .bottom)
-                            .allowsHitTesting(false)
-                    }
+                    .background { BottomBlurFade() }
                     .onGeometryChange(for: CGFloat.self) { $0.size.height } action: { actionHeight = $0 }
                     .frame(maxHeight: .infinity, alignment: .bottom)
                     .ignoresSafeArea(.keyboard, edges: .bottom)
