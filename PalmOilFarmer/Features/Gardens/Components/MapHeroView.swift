@@ -7,6 +7,8 @@ struct MapHeroView<MapContent: View>: View {
     let onBack: () -> Void
     var onEdit: (() -> Void)? = nil
     var onDelete: (() -> Void)? = nil
+    /// When set, edit and delete stay visible but disabled, with this explanation in the menu.
+    var lockedReason: String? = nil
     @ViewBuilder let map: () -> MapContent
 
     var body: some View {
@@ -29,12 +31,18 @@ struct MapHeroView<MapContent: View>: View {
             .overlay(alignment: .topTrailing) {
                 if onEdit != nil || onDelete != nil {
                     Menu {
-                        if let onEdit {
-                            Button("Edit kebun", systemImage: "pencil", action: onEdit)
+                        if let lockedReason {
+                            Text(lockedReason)
                         }
-                        if let onDelete {
-                            Button("Hapus kebun", systemImage: "trash", role: .destructive, action: onDelete)
+                        Section {
+                            if let onEdit {
+                                Button("Edit kebun", systemImage: "pencil", action: onEdit)
+                            }
+                            if let onDelete {
+                                Button("Hapus kebun", systemImage: "trash", role: .destructive, action: onDelete)
+                            }
                         }
+                        .disabled(lockedReason != nil)
                     } label: {
                         Image(systemName: "ellipsis")
                             .font(.title2)

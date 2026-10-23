@@ -175,7 +175,10 @@ struct GardenProfileView: View {
                         topInset: topInset,
                         onBack: { dismiss() },
                         onEdit: { showsGardenEditor = true },
-                        onDelete: onDelete == nil ? nil : { showsDeleteConfirmation = true }
+                        onDelete: onDelete == nil ? nil : { showsDeleteConfirmation = true },
+                        lockedReason: currentReviewStatus == nil
+                            ? nil
+                            : "Sudah diajukan untuk peninjauan"
                     ) {
                         GardenMapView(boundary: garden.boundary, referenceImage: referenceMapImage)
                     }
