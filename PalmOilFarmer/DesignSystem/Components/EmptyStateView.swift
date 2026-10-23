@@ -8,7 +8,7 @@ struct EmptyStateView<Illustration: View>: View {
     var body: some View {
         VStack(spacing: KropsTheme.Spacing.section) {
             illustration()
-                .foregroundStyle(KropsTheme.secondaryText)
+                .foregroundStyle(KropsTheme.primaryText)
                 .accessibilityHidden(true)
 
             VStack(spacing: 2) {

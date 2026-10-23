@@ -145,7 +145,7 @@ struct FertilizerEntryCard: View {
         }
         .font(.title3.weight(.semibold))
         .padding(16)
-        .background(KropsTheme.tertiaryFill, in: RoundedRectangle(cornerRadius: 24))
+        .background(KropsTheme.cardFill, in: RoundedRectangle(cornerRadius: 24))
     }
 
     @ViewBuilder

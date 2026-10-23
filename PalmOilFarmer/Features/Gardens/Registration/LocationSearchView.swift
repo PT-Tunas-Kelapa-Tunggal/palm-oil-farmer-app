@@ -108,7 +108,7 @@ struct LocationSearchView: View {
                                 Image(systemName: "mappin.and.ellipse")
                                     .font(.title3)
                                     .frame(width: 36, height: 36)
-                                    .background(KropsTheme.tertiaryFill, in: Circle())
+                                    .background(KropsTheme.cardFill, in: Circle())
                                 VStack(alignment: .leading, spacing: 0) {
                                     Text(location.name).font(.headline)
                                     Text(location.subtitle).font(.subheadline).foregroundStyle(.secondary)
@@ -117,7 +117,7 @@ struct LocationSearchView: View {
                             }
                             .padding(16)
                             .frame(minHeight: 74)
-                            .background(KropsTheme.tertiaryFill, in: RoundedRectangle(cornerRadius: KropsTheme.Radius.card))
+                            .background(KropsTheme.cardFill, in: RoundedRectangle(cornerRadius: KropsTheme.Radius.card))
                             .contentShape(RoundedRectangle(cornerRadius: KropsTheme.Radius.card))
                         }
                         .buttonStyle(.plain)
@@ -161,7 +161,7 @@ struct LocationSearchView: View {
                 Image(systemName: "location.fill")
                     .font(.title3)
                     .frame(width: 36, height: 36)
-                    .background(KropsTheme.tertiaryFill, in: Circle())
+                    .background(KropsTheme.cardFill, in: Circle())
                 VStack(alignment: .leading, spacing: 0) {
                     Text("Gunakan lokasi saat ini").font(.headline)
                     Text(isLocating ? "Mencari lokasi…" : "Lokasi perangkat")
@@ -173,7 +173,7 @@ struct LocationSearchView: View {
             }
             .padding(16)
             .frame(minHeight: 74)
-            .background(KropsTheme.tertiaryFill, in: RoundedRectangle(cornerRadius: KropsTheme.Radius.card))
+            .background(KropsTheme.cardFill, in: RoundedRectangle(cornerRadius: KropsTheme.Radius.card))
             .contentShape(RoundedRectangle(cornerRadius: KropsTheme.Radius.card))
         }
         .buttonStyle(.plain)
@@ -199,7 +199,7 @@ struct LocationSearchView: View {
             }
             .frame(maxWidth: .infinity)
             .padding(24)
-            .background(KropsTheme.tertiaryFill, in: RoundedRectangle(cornerRadius: KropsTheme.Radius.card))
+            .background(KropsTheme.cardFill, in: RoundedRectangle(cornerRadius: KropsTheme.Radius.card))
             .contentShape(RoundedRectangle(cornerRadius: KropsTheme.Radius.card))
         }
         .buttonStyle(.plain)

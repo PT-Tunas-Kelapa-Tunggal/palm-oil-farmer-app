@@ -35,7 +35,7 @@ struct GardenMetricTile: View {
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(16)
         .frame(minHeight: 67)
-        .background(KropsTheme.tertiaryFill, in: RoundedRectangle(cornerRadius: 16))
+        .background(KropsTheme.cardFill, in: RoundedRectangle(cornerRadius: 16))
         .overlay(alignment: .topTrailing) {
             Group {
                 if systemImage == "point.topleft.down.to.point.bottomright.curvepath" {
@@ -44,7 +44,7 @@ struct GardenMetricTile: View {
                     Image(systemName: systemImage).font(.title2)
                 }
             }
-            .foregroundStyle(.tertiary)
+            .foregroundStyle(KropsTheme.primaryText.opacity(0.7))
             .padding(.top, 4)
         }
         .accessibilityElement(children: .combine)

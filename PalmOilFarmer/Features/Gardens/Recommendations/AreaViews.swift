@@ -22,7 +22,6 @@ struct AllocationAreaMap: View {
             }
             .mapStyle(.imagery(elevation: .flat))
             .mapControls {}
-            .saturation(0)
             .onTapGesture(coordinateSpace: .local) { location in
                 guard let onSelect, let coordinate = proxy.convert(location, from: .local),
                       let area = areas.first(where: { $0.zone?.contains(coordinate) == true }) else { return }
@@ -157,7 +156,7 @@ struct AreaPickerView: View {
                             HStack(spacing: 16) {
                                 AreaThumbnail(zone: area.zone)
                                     .frame(width: 52, height: 52)
-                                    .background(KropsTheme.tertiaryFill, in: RoundedRectangle(cornerRadius: 8))
+                                    .background(KropsTheme.cardFill, in: RoundedRectangle(cornerRadius: 8))
                                 Text("Area " + area.id).font(.body)
                                 Spacer()
                                 if area.id == selectedID {

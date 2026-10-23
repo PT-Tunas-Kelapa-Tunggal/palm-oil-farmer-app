@@ -28,7 +28,6 @@ struct GardenMapView: View {
                 }
                 .mapStyle(.imagery)
                 .mapControls {}
-                .saturation(0)
                 .allowsHitTesting(false)
             }
         }
@@ -47,7 +46,7 @@ struct BoundaryPointMarker: View {
                 .font(.caption2)
                 .foregroundStyle(.white)
                 .frame(minWidth: markerSize, minHeight: markerSize)
-                .background(.gray, in: Circle())
+                .background(KropsTheme.primary, in: Circle())
                 .overlay { Circle().stroke(.white, lineWidth: 1.5) }
             Image(systemName: "triangle.fill")
                 .font(.caption2)

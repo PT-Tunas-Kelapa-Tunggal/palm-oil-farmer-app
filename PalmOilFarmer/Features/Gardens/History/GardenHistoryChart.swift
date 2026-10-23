@@ -34,7 +34,7 @@ struct GardenHistoryChart: View {
                 .font(.subheadline.weight(.semibold))
                 .padding(.horizontal, 16)
                 .frame(maxWidth: .infinity, minHeight: 52)
-                .background(KropsTheme.tertiaryFill, in: Capsule())
+                .background(KropsTheme.cardFill, in: Capsule())
             }
             .buttonStyle(.plain)
         }

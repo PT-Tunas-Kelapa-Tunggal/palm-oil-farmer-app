@@ -19,7 +19,6 @@ struct LocationMapPreview: View {
                 )), interactionModes: [])
                 .mapStyle(.imagery)
                 .mapControls {}
-                .saturation(0)
             }
         }
         .allowsHitTesting(false)

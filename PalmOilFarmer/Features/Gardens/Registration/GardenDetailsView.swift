@@ -115,7 +115,7 @@ struct GardenDetailsView: View {
                             }
                         }
                         .padding(16)
-                        .background(KropsTheme.tertiaryFill, in: RoundedRectangle(cornerRadius: KropsTheme.Radius.card))
+                        .background(KropsTheme.cardFill, in: RoundedRectangle(cornerRadius: KropsTheme.Radius.card))
                         .padding(.horizontal, KropsTheme.Spacing.screen)
                         .padding(.vertical, 8)
                     }
@@ -168,7 +168,7 @@ struct GardenDetailsView: View {
         .padding(12)
         .frame(maxWidth: .infinity)
         .frame(minHeight: 72)
-        .background(KropsTheme.tertiaryFill, in: RoundedRectangle(cornerRadius: KropsTheme.Radius.metric))
+        .background(KropsTheme.cardFill, in: RoundedRectangle(cornerRadius: KropsTheme.Radius.metric))
     }
 
     private func save() {

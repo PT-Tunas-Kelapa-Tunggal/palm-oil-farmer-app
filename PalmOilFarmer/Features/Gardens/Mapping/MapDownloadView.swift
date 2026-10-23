@@ -55,7 +55,7 @@ struct MapDownloadProgressView: View {
         }
         .padding(.horizontal, 16)
         .padding(.vertical, usesCardBackground ? 16 : 8)
-        .background(usesCardBackground ? KropsTheme.tertiaryFill : .clear, in: RoundedRectangle(cornerRadius: 24))
+        .background(usesCardBackground ? KropsTheme.cardFill : .clear, in: RoundedRectangle(cornerRadius: 24))
     }
 }
 

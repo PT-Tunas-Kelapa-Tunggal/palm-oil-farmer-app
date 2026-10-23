@@ -47,7 +47,7 @@ struct GardenProfileProgressView: View {
             .frame(maxWidth: .infinity, alignment: .leading)
             .background {
                 ProfileCalloutShape(pointerFraction: step == .fertilizer ? 0.5 : 0.96)
-                    .fill(KropsTheme.tertiaryFill)
+                    .fill(KropsTheme.cardFill)
             }
 
             Button(action: onContinue) {
@@ -58,7 +58,7 @@ struct GardenProfileProgressView: View {
                 }
                 .padding(16)
                 .frame(minHeight: 52)
-                .background(KropsTheme.tertiaryFill, in: RoundedRectangle(cornerRadius: 24))
+                .background(KropsTheme.cardFill, in: RoundedRectangle(cornerRadius: 24))
             }
             .buttonStyle(.plain)
         }
@@ -76,7 +76,7 @@ struct GardenProfileProgressView: View {
         }
             .foregroundStyle(.white)
             .frame(width: 33, height: 33)
-            .background(index <= step.rawValue ? Color(white: 0.28) : Color(uiColor: .systemGray3), in: Circle())
+            .background(index <= step.rawValue ? KropsTheme.primary : Color(uiColor: .systemGray3), in: Circle())
             .overlay {
                 if index > step.rawValue {
                     Circle().fill(Color(uiColor: .systemGray3))
@@ -87,7 +87,7 @@ struct GardenProfileProgressView: View {
 
     private func progressLine(completed: Bool) -> some View {
         Rectangle()
-            .fill(completed ? Color(white: 0.28) : Color(uiColor: .systemGray3))
+            .fill(completed ? KropsTheme.primary : Color(uiColor: .systemGray3))
             .frame(height: 8)
     }
 }

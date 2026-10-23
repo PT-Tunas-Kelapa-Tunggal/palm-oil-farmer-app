@@ -20,3 +20,14 @@ struct PrimaryActionButtonStyle: PrimitiveButtonStyle {
         }
     }
 }
+
+/// Brand-coloured icon with standard text, for metadata rows.
+struct TintedIconLabelStyle: LabelStyle {
+    func makeBody(configuration: Configuration) -> some View {
+        Label {
+            configuration.title
+        } icon: {
+            configuration.icon.foregroundStyle(KropsTheme.primaryText)
+        }
+    }
+}

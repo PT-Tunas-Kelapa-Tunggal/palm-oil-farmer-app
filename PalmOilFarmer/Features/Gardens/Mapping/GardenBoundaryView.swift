@@ -57,7 +57,6 @@ struct GardenBoundaryView: View {
                 }
                 .mapStyle(.imagery)
                 .mapControls {}
-                .saturation(0)
                 .onMapCameraChange { context in
                     isRegionOverview = context.region.span.latitudeDelta > 0.03
                 }
@@ -126,7 +125,7 @@ struct GardenBoundaryView: View {
                 Image(systemName: "mappin.circle.fill")
                     .font(.system(size: 44))
                     .symbolRenderingMode(.palette)
-                    .foregroundStyle(Color.white, Color(white: 0.4))
+                    .foregroundStyle(Color.white, KropsTheme.primary)
                     .shadow(radius: 4)
                     .accessibilityLabel("Lokasi dari foto")
             }

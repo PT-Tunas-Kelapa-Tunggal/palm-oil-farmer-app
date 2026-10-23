@@ -36,12 +36,14 @@ struct GardenCard: View {
                     .frame(maxWidth: .infinity, alignment: .leading)
                 }
                 .font(.footnote)
+                .labelStyle(TintedIconLabelStyle())
                 if garden.review?.isInProgress == true {
                     Label("Dalam proses peninjauan", systemImage: "hourglass")
-                        .font(.footnote)
+                        .font(.footnote.weight(.semibold))
+                        .foregroundStyle(KropsTheme.warningText)
                         .padding(.horizontal, 12)
                         .frame(maxWidth: .infinity, minHeight: 32, alignment: .leading)
-                        .background(KropsTheme.tertiaryFill, in: Capsule())
+                        .background(KropsTheme.warningFill, in: Capsule())
                         .padding(.top, 4)
                 }
             }

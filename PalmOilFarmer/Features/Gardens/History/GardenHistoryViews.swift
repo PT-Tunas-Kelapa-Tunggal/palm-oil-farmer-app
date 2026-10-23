@@ -13,7 +13,7 @@ struct FertilizerHistoryCard: View {
         .padding(.horizontal, 16)
         .padding(.vertical, 12)
         .frame(maxWidth: .infinity, minHeight: 130, alignment: .leading)
-        .background(KropsTheme.tertiaryFill, in: RoundedRectangle(cornerRadius: 18))
+        .background(KropsTheme.cardFill, in: RoundedRectangle(cornerRadius: 18))
     }
 }
 
@@ -27,7 +27,7 @@ struct HarvestHistoryCard: View {
         }
         .padding(.horizontal, 16)
         .padding(.vertical, 12)
-        .background(KropsTheme.tertiaryFill, in: RoundedRectangle(cornerRadius: 18))
+        .background(KropsTheme.cardFill, in: RoundedRectangle(cornerRadius: 18))
     }
 }
 

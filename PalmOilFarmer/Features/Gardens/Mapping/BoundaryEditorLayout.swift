@@ -132,7 +132,7 @@ struct BoundaryActionButton: View {
                 .frame(maxWidth: .infinity)
                 .frame(minHeight: 62)
                 .glassEffect(
-                    .regular.tint(Color(white: isAvailable ? 0.45 : 0.5)).interactive(),
+                    .regular.tint(isPrimary && isAvailable ? KropsTheme.primary : Color(white: isAvailable ? 0.45 : 0.5)).interactive(),
                     in: RoundedRectangle(cornerRadius: 30)
                 )
         }

@@ -216,7 +216,7 @@ struct FertilizerCostTable: View {
             .frame(minHeight: 32)
         }
         .font(.subheadline)
-        .background(KropsTheme.tertiaryFill.opacity(0.35), in: RoundedRectangle(cornerRadius: 8))
+        .background(KropsTheme.cardFill.opacity(0.35), in: RoundedRectangle(cornerRadius: 8))
         .clipShape(RoundedRectangle(cornerRadius: 8))
     }
 
@@ -261,7 +261,7 @@ struct FertilizerAllocationSection: View {
                 }
             }
             .padding(.horizontal, 16)
-            .background(KropsTheme.tertiaryFill, in: RoundedRectangle(cornerRadius: 24))
+            .background(KropsTheme.cardFill, in: RoundedRectangle(cornerRadius: 24))
         }
     }
 }

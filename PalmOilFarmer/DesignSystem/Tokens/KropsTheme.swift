@@ -1,18 +1,54 @@
 import SwiftUI
 
 /// Shared visual roles. Feature-specific map geometry stays in its feature.
+///
+/// Colour pairs were checked against WCAG 2.2: text and icons on their backgrounds are at least
+/// 4.5:1, chart marks against their surface and against each other at least 3:1 (dark-mode chart
+/// marks are about 2.8:1 against the card, so every chart also labels its marks and has a legend).
+/// Status is never shown by colour alone: badges and chart states also carry an icon or text.
 enum KropsTheme {
+    private static func dynamic(light: UInt32, dark: UInt32) -> Color {
+        Color(uiColor: UIColor { traits in
+            UIColor(rgb: traits.userInterfaceStyle == .dark ? dark : light)
+        })
+    }
+
+    // MARK: Brand
+
+    /// Palm-leaf green for filled controls. White text on it: 6.4:1 light, 4.9:1 dark.
+    static let primary = dynamic(light: 0x2E6B3F, dark: 0x3B7F4E)
+    /// Green for text, links, and icons on the screen background: 5.9:1 light, 9.6:1 dark.
+    static let primaryText = dynamic(light: 0x2E6B3F, dark: 0x8FD19E)
+    /// Ripe fruit-bunch orange for small highlights: 4.9:1 light, 8.0:1 dark.
+    static let accent = dynamic(light: 0xB5541A, dark: 0xF0A067)
+
+    // MARK: Surfaces
+
     static let background = Color(uiColor: UIColor { traits in
-        traits.userInterfaceStyle == .dark
-            ? .secondarySystemBackground
-            : UIColor(white: 0.937, alpha: 1)
+        traits.userInterfaceStyle == .dark ? .secondarySystemBackground : UIColor(rgb: 0xF3F6F0)
     })
-    static let tertiaryFill = Color(uiColor: .tertiarySystemFill)
+    /// Grouped card and field background, lightly tinted green.
+    static let cardFill = dynamic(light: 0xE3ECE0, dark: 0x26322B)
     static let secondaryFill = Color(uiColor: .secondarySystemFill)
-    static let primaryText = Color.primary
     static let secondaryText = Color(uiColor: .secondaryLabel)
     static let titleText = Color.primary.opacity(0.7)
-    static let buttonBackground = Color(white: 0.34)
+    static let buttonBackground = primary
+
+    // MARK: Status (reserved; always paired with an icon or label)
+
+    static let warningFill = dynamic(light: 0xFBEBD0, dark: 0x3A2A10)
+    static let warningText = dynamic(light: 0x8A5300, dark: 0xF5C16C)
+
+    // MARK: Charts
+
+    enum Chart {
+        /// Nutrient level now / after fertilizing.
+        static let current = dynamic(light: 0x6E9F79, dark: 0x4E7A58)
+        static let target = dynamic(light: 0x1F4D2C, dark: 0xB8E6C2)
+        /// Rain below / at or above the heavy-rain threshold.
+        static let lightRain = dynamic(light: 0x5E92C2, dark: 0x4A75A0)
+        static let heavyRain = dynamic(light: 0x163F73, dark: 0xB5D6F5)
+    }
 
     enum Typography {
         static let fieldLabel = Font.headline
@@ -31,5 +67,12 @@ enum KropsTheme {
         static let screen: CGFloat = 16
         static let content: CGFloat = 32
         static let section: CGFloat = 24
+    }
+}
+
+private extension UIColor {
+    convenience init(rgb: UInt32) {
+        self.init(red: CGFloat((rgb >> 16) & 0xFF) / 255, green: CGFloat((rgb >> 8) & 0xFF) / 255,
+                  blue: CGFloat(rgb & 0xFF) / 255, alpha: 1)
     }
 }

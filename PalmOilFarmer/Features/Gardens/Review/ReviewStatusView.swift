@@ -152,7 +152,7 @@ struct ReviewStatusView: View {
                 .font(.footnote).foregroundStyle(.secondary)
             }
             .padding(16)
-            .background(KropsTheme.tertiaryFill, in: RoundedRectangle(cornerRadius: 24))
+            .background(KropsTheme.cardFill, in: RoundedRectangle(cornerRadius: 24))
             Text("Anda dapat keluar dari halaman ini. Setelah selesai diunduh, hasil peninjauan dapat dibuka tanpa sinyal internet.")
                 .font(.footnote).foregroundStyle(.secondary)
                 .padding(.horizontal, 8)
@@ -187,7 +187,7 @@ struct ReviewTimelineRow: View {
                 .padding(.top, entry.date == nil ? 12 : 34)
                 .overlay(alignment: .top) {
                     Circle()
-                        .fill(entry.isReached ? Color.primary : Color.secondary)
+                        .fill(entry.isReached ? KropsTheme.primary : Color.secondary)
                         .frame(width: entry.isReached ? 20 : 12, height: entry.isReached ? 20 : 12)
                         .offset(y: entry.date == nil ? 7 : 24)
                 }
