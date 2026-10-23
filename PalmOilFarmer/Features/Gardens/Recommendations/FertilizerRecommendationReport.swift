@@ -2,7 +2,7 @@ import Foundation
 import CoreLocation
 
 enum RecommendationTab: String, CaseIterable, Identifiable {
-    case nutrients = "Proyeksi hara"
+    case nutrients = "Kebutuhan pupuk"
     case allocation = "Alokasi pupuk"
     case rainfall = "Curah hujan"
     var id: String { rawValue }

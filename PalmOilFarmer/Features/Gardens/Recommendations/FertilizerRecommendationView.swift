@@ -50,11 +50,10 @@ struct FertilizerRecommendationView: View {
                             .frame(height: 206)
                         VStack(alignment: .leading, spacing: 12) {
                             VStack(alignment: .leading, spacing: 2) {
-                                Text("Proyeksi hara · Seluruh kebun").font(.caption).foregroundStyle(.secondary)
-                                Text("Kadar hara setelah pemupukan").font(.headline)
+                                Text("Kebutuhan pupuk · Seluruh kebun").font(.caption).foregroundStyle(.secondary)
+                                Text("Kadar hara dibanding kebutuhan").font(.headline)
                             }
-                            NutrientLegend()
-                            NutrientProjectionChart(values: report.nutrients, need: report.nutrientNeed) { symbol in
+                            NutrientNeedChart(values: report.nutrients, need: report.nutrientNeed) { symbol in
                                 reference = NutrientReference.reference(for: symbol)
                             }
                         }
@@ -143,82 +142,6 @@ struct BoundarySilhouette: Shape {
         Path { path in
             path.addLines(points.map { CGPoint(x: rect.minX + $0.x * rect.width, y: rect.minY + $0.y * rect.height) })
             path.closeSubpath()
-        }
-    }
-}
-
-struct NutrientLegend: View {
-    var body: some View {
-        HStack(spacing: 12) {
-            Label { Text("Saat ini") } icon: {
-                RoundedRectangle(cornerRadius: 2).strokeBorder(.secondary, lineWidth: 1).frame(width: 10, height: 10)
-            }
-            Label { Text("Setelah pemupukan") } icon: {
-                RoundedRectangle(cornerRadius: 2).fill(Color(white: 0.34)).frame(width: 10, height: 10)
-            }
-            Label { Text("Kebutuhan") } icon: {
-                Rectangle().fill(.secondary).frame(width: 12, height: 1)
-            }
-        }
-        .font(.caption2)
-        .foregroundStyle(.secondary)
-        .labelStyle(LegendLabelStyle())
-    }
-
-    private struct LegendLabelStyle: LabelStyle {
-        func makeBody(configuration: Configuration) -> some View {
-            HStack(spacing: 4) { configuration.icon; configuration.title }
-        }
-    }
-}
-
-struct NutrientProjectionChart: View {
-    let values: [NutrientProjection]
-    var need = 0.64
-    var onSelect: (String) -> Void = { _ in }
-    private let barHeight: CGFloat = 125
-
-    var body: some View {
-        HStack(alignment: .top, spacing: 16) {
-            ForEach(values) { value in
-                Button { onSelect(value.name) } label: {
-                    VStack(spacing: 4) {
-                        HStack(alignment: .bottom, spacing: 3) {
-                            RoundedRectangle(cornerRadius: 12)
-                                .strokeBorder(.secondary.opacity(0.4), lineWidth: 1)
-                                .frame(width: 26, height: barHeight * max(0, min(value.current, 1)))
-                            UnevenRoundedRectangle(topLeadingRadius: 12, topTrailingRadius: 12)
-                                .fill(Color(white: 0.34))
-                                .frame(width: 28, height: barHeight * max(0, min(value.target, 1)))
-                        }
-                        .frame(height: barHeight, alignment: .bottom)
-                        Divider()
-                        Text(value.name).font(.subheadline.weight(.semibold))
-                        Text(value.status)
-                            .font(.caption2)
-                            .foregroundStyle(.secondary)
-                            .multilineTextAlignment(.center)
-                            .lineLimit(2, reservesSpace: true)
-                    }
-                    .frame(maxWidth: .infinity)
-                    .contentShape(Rectangle())
-                }
-                .buttonStyle(.plain)
-                .accessibilityElement(children: .ignore)
-                .accessibilityLabel("\(value.name), \(value.status)")
-                .accessibilityHint("Lihat pupuk yang mengandung hara ini")
-            }
-        }
-        .overlay(alignment: .top) {
-            GeometryReader { geometry in
-                Path { path in
-                    let y = barHeight * (1 - need)
-                    path.move(to: CGPoint(x: 0, y: y))
-                    path.addLine(to: CGPoint(x: geometry.size.width, y: y))
-                }
-                .stroke(.secondary, style: StrokeStyle(lineWidth: 1, dash: [3, 4]))
-            }
-            .allowsHitTesting(false)
         }
     }
 }
@@ -342,7 +265,7 @@ struct FertilizerAllocationSection: View {
 }
 
 #if DEBUG
-#Preview("Proyeksi Hara") {
+#Preview("Kebutuhan Pupuk") {
     FertilizerRecommendationView(report: RecommendationPreviewData.report)
 }
 #Preview("Alokasi Pupuk") {
@@ -350,9 +273,6 @@ struct FertilizerAllocationSection: View {
 }
 #Preview("Curah Hujan") {
     FertilizerRecommendationView(report: RecommendationPreviewData.report, initialTab: .rainfall)
-}
-#Preview("Nutrient Chart", traits: .sizeThatFitsLayout) {
-    NutrientProjectionChart(values: RecommendationPreviewData.report.nutrients).frame(width: 370, height: 190).padding()
 }
 #Preview("Cost Table", traits: .sizeThatFitsLayout) {
     FertilizerCostTable(lines: RecommendationPreviewData.report.costs, total: "Rp1,435,000").padding(16).frame(width: 402)
