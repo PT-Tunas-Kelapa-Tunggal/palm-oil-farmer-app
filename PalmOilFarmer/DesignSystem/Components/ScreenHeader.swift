@@ -1,11 +1,13 @@
 import SwiftUI
 
+/// One header for every screen and sheet, so back, close, and confirm buttons are always 44 pt.
 struct ScreenHeader: View {
+    private let buttonSize: CGFloat = 44
+
     let title: String
     var systemImage = "xmark"
     var subtitle: String? = nil
-    var buttonSize: CGFloat = 48
-    var height: CGFloat = 72
+    var height: CGFloat = 68
     var confirmationAction: (() -> Void)? = nil
     let onClose: () -> Void
 
@@ -20,7 +22,7 @@ struct ScreenHeader: View {
                     Text(subtitle).font(.footnote).foregroundStyle(.secondary)
                 }
             }
-            .padding(.horizontal, max(buttonSize, 44) + 24)
+            .padding(.horizontal, buttonSize + 24)
             .padding(.vertical, 12)
 
             HStack {
@@ -38,7 +40,7 @@ struct ScreenHeader: View {
                         Image(systemName: "checkmark")
                             .font(.title2.weight(.medium))
                             .foregroundStyle(.white)
-                            .frame(minWidth: 44, minHeight: 44)
+                            .frame(minWidth: buttonSize, minHeight: buttonSize)
                             .background(.black, in: Circle())
                     }
                     .buttonStyle(.plain)

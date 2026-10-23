@@ -26,7 +26,7 @@ struct FertilizerHistoryEditor: View {
     var body: some View {
         NavigationStack {
             VStack(spacing: 0) {
-                ScreenHeader(title: "Riwayat Pemupukan", buttonSize: 44, height: 68,
+                ScreenHeader(title: "Riwayat Pemupukan",
                              confirmationAction: save, onClose: { dismiss() })
                 ScrollViewReader { reader in
                     ScrollView {

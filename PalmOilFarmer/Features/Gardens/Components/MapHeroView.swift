@@ -46,7 +46,7 @@ struct HeroToolbar: View {
     var isOverContent = false
 
     var body: some View {
-        ScreenHeader(title: title, systemImage: "chevron.left", buttonSize: 44, height: 68, onClose: onBack)
+        ScreenHeader(title: title, systemImage: "chevron.left", onClose: onBack)
             .overlay(alignment: .trailing) {
                 if onEdit != nil || onDelete != nil {
                     Menu {
