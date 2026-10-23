@@ -90,6 +90,20 @@ final class GardenStore {
         }
     }
 
+    #if DEBUG
+    /// Debug only: removes both files, including unreadable ones, and starts empty.
+    func eraseAll() {
+        for url in [persistence.fileURL, draftPersistence.fileURL] {
+            try? FileManager.default.removeItem(at: url)
+        }
+        gardens = []
+        drafts = []
+        loadFailed = false
+        draftsLoadFailed = false
+        errorMessage = nil
+    }
+    #endif
+
     private func persistDrafts(_ updated: [GardenDraft]) -> Bool {
         guard !draftsLoadFailed else {
             errorMessage = "Draf lama tidak dapat dibuka. Penyimpanan dihentikan agar draf tersebut tidak tertimpa."

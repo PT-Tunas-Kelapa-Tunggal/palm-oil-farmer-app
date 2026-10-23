@@ -16,11 +16,13 @@ struct ContentView: View {
                 drafts: store.drafts,
                 onSelectDraft: { mappingLocation = $0.location },
                 onDeleteDraft: { _ = store.deleteDraft($0) },
-                onSelectGarden: { selectedGardenID = $0.id }
-            ) {
-                registrationStep = .guide
-                showsRegistration = true
-            }
+                onSelectGarden: { selectedGardenID = $0.id },
+                onRegisterGarden: {
+                    registrationStep = .guide
+                    showsRegistration = true
+                },
+                onEraseAll: debugEraseAll
+            )
             .toolbar(.hidden, for: .navigationBar)
             .navigationDestination(item: $selectedGardenID) { id in
                 if let garden = store.gardens.first(where: { $0.id == id }) {
@@ -51,6 +53,18 @@ struct ContentView: View {
         } message: {
             Text(store.errorMessage ?? "")
         }
+    }
+
+    /// Debug builds get a home-screen button that erases all garden data for repeat test sessions.
+    private var debugEraseAll: (() -> Void)? {
+        #if DEBUG
+        return {
+            selectedGardenID = nil
+            store.eraseAll()
+        }
+        #else
+        return nil
+        #endif
     }
 
     /// Wait until the intro sheet closes before presenting the full-screen map.

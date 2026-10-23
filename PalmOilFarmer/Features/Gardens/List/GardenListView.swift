@@ -11,6 +11,9 @@ struct GardenListView: View {
     var previewMetrics: GardenDisplayMetrics? = nil
     var onSelectGarden: (Garden) -> Void = { _ in }
     let onRegisterGarden: () -> Void
+    /// Debug builds only: erases every garden and draft.
+    var onEraseAll: (() -> Void)? = nil
+    @State private var confirmsErase = false
     @State private var filter = GardenListFilter.all
 
     private var visibleGardens: [Garden] { gardens.filter(filter.includes) }
@@ -18,11 +21,28 @@ struct GardenListView: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            Text("Kebun")
-                .font(.largeTitle.bold())
-                .foregroundStyle(gardens.isEmpty && drafts.isEmpty ? KropsTheme.titleText : .primary)
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .padding(KropsTheme.Spacing.screen)
+            HStack {
+                Text("Kebun")
+                    .font(.largeTitle.bold())
+                    .foregroundStyle(gardens.isEmpty && drafts.isEmpty ? KropsTheme.titleText : .primary)
+                Spacer()
+                if let onEraseAll {
+                    Button("Hapus semua data", systemImage: "trash") { confirmsErase = true }
+                        .labelStyle(.iconOnly)
+                        .font(.title3)
+                        .frame(width: 44, height: 44)
+                        .glassEffect(.regular.interactive(), in: Circle())
+                        .foregroundStyle(.red)
+                        .confirmationDialog("Hapus semua data kebun?", isPresented: $confirmsErase,
+                                            titleVisibility: .visible) {
+                            Button("Hapus semua", role: .destructive, action: onEraseAll)
+                            Button("Batal", role: .cancel) {}
+                        } message: {
+                            Text("Debug: semua kebun, draf, riwayat, dan status peninjauan dihapus dari perangkat ini.")
+                        }
+                }
+            }
+            .padding(KropsTheme.Spacing.screen)
 
             if gardens.isEmpty && drafts.isEmpty && downloads.isEmpty {
                 GeometryReader { geometry in

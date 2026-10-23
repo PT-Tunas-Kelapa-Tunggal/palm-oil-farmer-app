@@ -44,6 +44,23 @@ struct UserTestingFlowTests {
         #expect(GardenStore(fileURL: file).gardens.count == 1)
     }
 
+    @Test func eraseAllClearsGardensDraftsAndUnreadableFiles() throws {
+        let directory = try temporaryDirectory()
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let file = directory.appending(path: "gardens.json")
+        try Data("not JSON".utf8).write(to: file)
+        let store = GardenStore(fileURL: file)
+        #expect(!store.add(squareGarden()))
+        store.eraseAll()
+        #expect(store.errorMessage == nil)
+        #expect(store.addDraft(GardenDraft(location: location())))
+        #expect(store.add(squareGarden()))
+        store.eraseAll()
+        #expect(store.gardens.isEmpty && store.drafts.isEmpty)
+        let reopened = GardenStore(fileURL: file)
+        #expect(reopened.gardens.isEmpty && reopened.drafts.isEmpty && reopened.errorMessage == nil)
+    }
+
     @Test func unreadableDraftsAreNotOverwritten() throws {
         let directory = try temporaryDirectory()
         defer { try? FileManager.default.removeItem(at: directory) }
