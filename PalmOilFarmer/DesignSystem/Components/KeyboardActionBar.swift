@@ -12,21 +12,23 @@ struct KeyboardActionBar: View {
             if let onNext {
                 Button(action: onNext) {
                     Label("Berikutnya", systemImage: "chevron.down")
-                        .padding(.horizontal, 6)
                 }
                 .buttonStyle(.glass)
+                .foregroundStyle(.primary)
             }
             Button(action: onDone) {
-                Text("Selesai").fontWeight(.semibold).padding(.horizontal, 6)
+                Text("Selesai").fontWeight(.semibold)
             }
             .buttonStyle(.glassProminent)
             .tint(KropsTheme.buttonBackground)
         }
+        // Small controls keep attention on the field being filled.
+        .font(.subheadline)
         .buttonBorderShape(.capsule)
-        .controlSize(.large)
+        .controlSize(.small)
         .padding(.horizontal, 16)
-        .padding(.top, 12)
-        .padding(.bottom, 12)
+        .padding(.top, 10)
+        .padding(.bottom, 10)
         // Fades the content scrolling underneath, like the system scroll edge effect.
         .background {
             LinearGradient(stops: [.init(color: Color(uiColor: .systemBackground).opacity(0), location: 0),
