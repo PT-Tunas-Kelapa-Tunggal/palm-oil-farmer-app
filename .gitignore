@@ -1,0 +1,14 @@
+# Xcode settings specific to each developer.
+xcuserdata/
+
+# Local build products and macOS metadata.
+.DS_Store
+/build/
+/DerivedData/
+*.xcuserstate
+
+# Screenshots and reports from local development sessions.
+/DesignReview/
+/CODED_UI_UPDATE.md
+/GLASS_SHEET_UPDATE.md
+/OPTIMIZATION_REVIEW.md
