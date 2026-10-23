@@ -11,6 +11,10 @@ struct GardenListView: View {
     var previewMetrics: GardenDisplayMetrics? = nil
     var onSelectGarden: (Garden) -> Void = { _ in }
     let onRegisterGarden: () -> Void
+    @State private var filter = GardenListFilter.all
+
+    private var visibleGardens: [Garden] { gardens.filter(filter.includes) }
+    private var visibleDrafts: [GardenDraft] { filter.includesDrafts ? drafts : [] }
 
     var body: some View {
         VStack(spacing: 0) {
@@ -33,9 +37,27 @@ struct GardenListView: View {
                     }
                 }
             } else {
+                Picker("Status kebun", selection: $filter) {
+                    ForEach(GardenListFilter.allCases) { filter in
+                        Text(filter.rawValue)
+                            .accessibilityLabel(filter.accessibilityLabel)
+                            .tag(filter)
+                    }
+                }
+                .pickerStyle(.segmented)
+                .padding(.horizontal, KropsTheme.Spacing.screen)
+                .padding(.bottom, 12)
                 ScrollView {
                     LazyVStack(spacing: 12) {
-                        ForEach(gardens) { garden in
+                        if visibleGardens.isEmpty && visibleDrafts.isEmpty && downloads.isEmpty {
+                            Text(filter.emptyMessage)
+                                .font(.body)
+                                .foregroundStyle(.secondary)
+                                .multilineTextAlignment(.center)
+                                .frame(maxWidth: .infinity)
+                                .padding(.vertical, 48)
+                        }
+                        ForEach(visibleGardens) { garden in
                             Button {
                                 onSelectGarden(garden)
                             } label: {
@@ -43,7 +65,7 @@ struct GardenListView: View {
                             }
                             .buttonStyle(.plain)
                         }
-                        ForEach(drafts) { draft in
+                        ForEach(visibleDrafts) { draft in
                             Button {
                                 onSelectDraft(draft)
                             } label: {
@@ -68,6 +90,7 @@ struct GardenListView: View {
                     }
                     .padding(.horizontal, KropsTheme.Spacing.screen)
                     .padding(.bottom, 12)
+                    .animation(.snappy, value: filter)
                 }
                 .scrollIndicators(.hidden)
             }

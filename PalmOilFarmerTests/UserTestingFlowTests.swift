@@ -141,3 +141,32 @@ struct NutrientLinkTests {
         #expect(links == ["Mg", "N", "K", "P", "P"])
     }
 }
+
+struct GardenListFilterTests {
+    private func garden(fertilized: Bool, harvested: Bool, review: ReviewStatus?) -> Garden {
+        var garden = Garden(id: UUID(), name: "Uji", locationName: "Bintan", boundary: GardenBoundary(),
+                            plantingYear: 2016, soilType: .peat)
+        if fertilized { garden.fertilizerRecords = [FertilizerRecord(name: "Urea", bagWeightKg: 50, bagCount: 1, doseKgPerTree: 1)] }
+        if harvested { garden.harvestRecord = HarvestRecord(frequencyPerMonth: 2, latestWeightKg: 400) }
+        if let review {
+            var value = GardenReview(contact: ReviewContactDetails(name: "A", phone: "08123456789", address: "B"))
+            while value.status != review { value.advance() }
+            garden.review = value
+        }
+        return garden
+    }
+
+    @Test func eachGardenFallsIntoOneStage() {
+        let incomplete = garden(fertilized: true, harvested: false, review: nil)
+        let ready = garden(fertilized: true, harvested: true, review: nil)
+        let reviewing = garden(fertilized: true, harvested: true, review: .scheduled)
+        let done = garden(fertilized: true, harvested: true, review: .completed)
+        let all = [incomplete, ready, reviewing, done]
+        #expect(all.filter(GardenListFilter.incomplete.includes).map(\.id) == [incomplete.id])
+        #expect(all.filter(GardenListFilter.inReview.includes).map(\.id) == [reviewing.id])
+        #expect(all.filter(GardenListFilter.results.includes).map(\.id) == [done.id])
+        #expect(all.filter(GardenListFilter.all.includes).count == 4)
+        #expect(all.filter(GardenListFilter.draft.includes).isEmpty)
+        #expect(GardenListFilter.draft.includesDrafts && !GardenListFilter.results.includesDrafts)
+    }
+}

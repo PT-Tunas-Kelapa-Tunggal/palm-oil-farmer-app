@@ -67,7 +67,7 @@ struct GardenProfileView: View {
         recommendationReport ?? (currentReviewStatus == .completed ? DemoReviewReport.make(for: garden) : nil)
     }
     private var hasHero: Bool { showsHeader && layout == .standard }
-    private var isComplete: Bool { !fertilizers.isEmpty && garden.harvestRecord != nil }
+    private var isComplete: Bool { garden.isProfileComplete }
 
     var body: some View {
         GeometryReader { geometry in
