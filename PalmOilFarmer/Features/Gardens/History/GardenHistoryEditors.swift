@@ -65,16 +65,15 @@ struct FertilizerHistoryEditor: View {
                     }
                 }
             }
-            .toolbar {
-                ToolbarItemGroup(placement: .keyboard) {
-                    Spacer()
-                    if let next = nextField {
-                        Button("Berikutnya") { focusedField = next }
-                    }
-                    Button("Selesai") { focusedField = nil }
-                        .fontWeight(.semibold)
+            // A floating bar with a gap above the keyboard; the inset also lifts the scroll content clear of it.
+            .safeAreaInset(edge: .bottom, spacing: 0) {
+                if focusedField != nil {
+                    KeyboardActionBar(onNext: nextField.map { next in { focusedField = next } },
+                                      onDone: { focusedField = nil })
+                        .transition(.opacity)
                 }
             }
+            .animation(.easeOut(duration: 0.2), value: focusedField == nil)
             .containerBackground(.clear, for: .navigation)
             .toolbar(.hidden, for: .navigationBar)
             .navigationDestination(item: $selectedDraftID) { id in
@@ -112,6 +111,41 @@ struct FertilizerHistoryEditor: View {
         }
         if onSave(records) { dismiss() } else {
             errorMessage = "Data tidak dapat disimpan di perangkat. Coba lagi."
+        }
+    }
+}
+
+struct KeyboardActionBar: View {
+    var onNext: (() -> Void)?
+    let onDone: () -> Void
+
+    var body: some View {
+        HStack(spacing: 8) {
+            Spacer()
+            if let onNext {
+                Button(action: onNext) {
+                    Label("Berikutnya", systemImage: "chevron.down")
+                        .padding(.horizontal, 6)
+                }
+                .buttonStyle(.glass)
+            }
+            Button(action: onDone) {
+                Text("Selesai").fontWeight(.semibold).padding(.horizontal, 6)
+            }
+            .buttonStyle(.glassProminent)
+            .tint(KropsTheme.buttonBackground)
+        }
+        .buttonBorderShape(.capsule)
+        .controlSize(.large)
+        .padding(.horizontal, 16)
+        .padding(.top, 12)
+        .padding(.bottom, 12)
+        // Fades the content scrolling underneath, like the system scroll edge effect.
+        .background {
+            LinearGradient(stops: [.init(color: Color(uiColor: .systemBackground).opacity(0), location: 0),
+                                   .init(color: Color(uiColor: .systemBackground), location: 0.45)],
+                           startPoint: .top, endPoint: .bottom)
+                .allowsHitTesting(false)
         }
     }
 }
