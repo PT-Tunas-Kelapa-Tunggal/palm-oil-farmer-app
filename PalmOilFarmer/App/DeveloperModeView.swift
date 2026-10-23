@@ -20,10 +20,15 @@ struct DeveloperModeView: View {
                     Text("Data di perangkat ini")
                 }
                 Section {
-                    Button("Hapus semua data kebun", systemImage: "trash", role: .destructive) {
+                    Button(role: .destructive) {
                         confirmsErase = true
+                    } label: {
+                        Label {
+                            Text("Hapus semua data kebun")
+                        } icon: {
+                            Image(systemName: "trash").foregroundStyle(.red)
+                        }
                     }
-                    .tint(.red)
                     .disabled(gardenCount == 0 && draftCount == 0)
                 } footer: {
                     Text("Menghapus semua kebun, draf, riwayat pupuk dan panen, serta status peninjauan. Izin lokasi dan foto tidak ikut direset.")

@@ -1,4 +1,5 @@
 import SwiftUI
+import UIKit
 
 /// A map with a dark fade at the top for a header. The header itself is `HeroToolbar`,
 /// which screens can pin above their scroll view; `showsToolbar` keeps it inside the map instead.
@@ -58,7 +59,15 @@ struct HeroToolbar: View {
                                 Button("Edit kebun", systemImage: "pencil", action: onEdit)
                             }
                             if let onDelete {
-                                Button("Hapus kebun", systemImage: "trash", role: .destructive, action: onDelete)
+                                Button(role: .destructive, action: onDelete) {
+                                    Label {
+                                        Text("Hapus kebun")
+                                    } icon: {
+                                        // System menus tint template icons; a pre-coloured image keeps the trash red.
+                                        Image(uiImage: UIImage(systemName: "trash")?
+                                            .withTintColor(.systemRed, renderingMode: .alwaysOriginal) ?? UIImage())
+                                    }
+                                }
                             }
                         }
                         .disabled(lockedReason != nil)
@@ -69,6 +78,8 @@ struct HeroToolbar: View {
                     }
                     .buttonStyle(.plain)
                     .glassEffect(.regular.interactive(), in: Circle())
+                    // Without this, menu icons take the app's green tint; destructive items stay red.
+                    .tint(Color(uiColor: .label))
                     .accessibilityLabel("Opsi kebun")
                     .padding(.trailing, 12)
                 }
