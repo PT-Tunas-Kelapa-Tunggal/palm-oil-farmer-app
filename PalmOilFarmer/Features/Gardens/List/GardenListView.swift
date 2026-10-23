@@ -37,14 +37,11 @@ struct GardenListView: View {
                     }
                 }
             } else {
-                Picker("Status kebun", selection: $filter) {
-                    ForEach(GardenListFilter.allCases) { filter in
-                        Text(filter.rawValue)
-                            .accessibilityLabel(filter.accessibilityLabel)
-                            .tag(filter)
-                    }
-                }
-                .pickerStyle(.segmented)
+                BadgedSegmentedControl(
+                    options: GardenListFilter.allCases, selection: $filter,
+                    title: \.rawValue, accessibilityName: \.accessibilityName,
+                    badge: { $0.actionCount(gardens: gardens, drafts: drafts) }
+                )
                 .padding(.horizontal, KropsTheme.Spacing.screen)
                 .padding(.bottom, 12)
                 ScrollView {

@@ -156,17 +156,24 @@ struct GardenListFilterTests {
         return garden
     }
 
-    @Test func eachGardenFallsIntoOneStage() {
+    @Test func stagesLabelCardsAndOnlyDraftsAndReviewsAreFiltered() {
         let incomplete = garden(fertilized: true, harvested: false, review: nil)
         let ready = garden(fertilized: true, harvested: true, review: nil)
-        let reviewing = garden(fertilized: true, harvested: true, review: .scheduled)
+        let submitted = garden(fertilized: true, harvested: true, review: .submitted)
+        let scheduled = garden(fertilized: true, harvested: true, review: .scheduled)
         let done = garden(fertilized: true, harvested: true, review: .completed)
-        let all = [incomplete, ready, reviewing, done]
-        #expect(all.filter(GardenListFilter.incomplete.includes).map(\.id) == [incomplete.id])
-        #expect(all.filter(GardenListFilter.inReview.includes).map(\.id) == [reviewing.id])
-        #expect(all.filter(GardenListFilter.results.includes).map(\.id) == [done.id])
-        #expect(all.filter(GardenListFilter.all.includes).count == 4)
-        #expect(all.filter(GardenListFilter.draft.includes).isEmpty)
-        #expect(GardenListFilter.draft.includesDrafts && !GardenListFilter.results.includesDrafts)
+        #expect(incomplete.stage == .incomplete)
+        #expect(ready.stage == .readyForReview)
+        #expect(scheduled.stage == .inReview(.scheduled))
+        #expect(done.stage == .results(downloaded: false))
+        let all = [incomplete, ready, submitted, scheduled, done]
+        #expect(all.filter(GardenListFilter.inReview.includes).map(\.id) == [submitted.id, scheduled.id])
+        #expect(all.filter(GardenListFilter.all.includes).count == 5)
+        let draft = GardenDraft(location: GardenLocation(name: "D", subtitle: "",
+            coordinate: GardenCoordinate(CLLocationCoordinate2D(latitude: 1, longitude: 104))))
+        // Incomplete, ready, scheduled, and unopened results need action, plus the draft.
+        #expect(GardenListFilter.all.actionCount(gardens: all, drafts: [draft]) == 5)
+        #expect(GardenListFilter.draft.actionCount(gardens: all, drafts: [draft]) == 1)
+        #expect(GardenListFilter.inReview.actionCount(gardens: all, drafts: [draft]) == 1)
     }
 }
