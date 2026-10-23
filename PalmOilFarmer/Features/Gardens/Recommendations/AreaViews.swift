@@ -8,18 +8,28 @@ struct AllocationAreaMap: View {
     let selectedID: String?
     var showsUser = false
     var position: Binding<MapCameraPosition>? = nil
+    /// Tapping inside an area, or on its label, selects it.
+    var onSelect: ((String) -> Void)? = nil
 
     var body: some View {
-        Group {
-            if let position {
-                Map(position: position) { content }
-            } else {
-                Map(initialPosition: .rect(AllocationAreaMap.rect(for: boundary)), interactionModes: []) { content }
+        MapReader { proxy in
+            Group {
+                if let position {
+                    Map(position: position) { content }
+                } else {
+                    Map(initialPosition: .rect(AllocationAreaMap.rect(for: boundary)), interactionModes: []) { content }
+                }
+            }
+            .mapStyle(.imagery(elevation: .flat))
+            .mapControls {}
+            .saturation(0)
+            .onTapGesture(coordinateSpace: .local) { location in
+                guard let onSelect, let coordinate = proxy.convert(location, from: .local),
+                      let area = areas.first(where: { $0.zone?.contains(coordinate) == true }) else { return }
+                onSelect(area.id)
             }
         }
-        .mapStyle(.imagery(elevation: .flat))
-        .mapControls {}
-        .saturation(0)
+        .sensoryFeedback(.selection, trigger: selectedID)
     }
 
     @MapContentBuilder
@@ -36,10 +46,18 @@ struct AllocationAreaMap: View {
                                 lineWidth: area.id == selectedID ? 4 : 1)
                 }
                 Annotation("", coordinate: zone.destination) {
-                    Text(area.id)
-                        .font(.caption.weight(.semibold))
-                        .foregroundStyle(.white)
-                        .shadow(radius: 2)
+                    Button { onSelect?(area.id) } label: {
+                        Text(area.id)
+                            .font(.caption.weight(.semibold))
+                            .foregroundStyle(.white)
+                            .shadow(radius: 2)
+                            .frame(minWidth: 44, minHeight: 44)
+                            .contentShape(Rectangle())
+                    }
+                    .buttonStyle(.plain)
+                    .disabled(onSelect == nil)
+                    .accessibilityLabel("Area " + area.id)
+                    .accessibilityAddTraits(area.id == selectedID ? .isSelected : [])
                 }
                 .annotationTitles(.hidden)
             }
@@ -60,6 +78,24 @@ struct AllocationAreaMap: View {
 }
 
 extension WaypointZone {
+    /// Even-odd ray casting per fragment; fragments are small enough to treat degrees as planar.
+    func contains(_ coordinate: CLLocationCoordinate2D) -> Bool {
+        fragments.contains { fragment in
+            var inside = false
+            var previous = fragment.last
+            for point in fragment {
+                if let previous,
+                   (point.latitude > coordinate.latitude) != (previous.latitude > coordinate.latitude),
+                   coordinate.longitude < (previous.longitude - point.longitude)
+                       * (coordinate.latitude - point.latitude) / (previous.latitude - point.latitude) + point.longitude {
+                    inside.toggle()
+                }
+                previous = point
+            }
+            return inside
+        }
+    }
+
     /// Fragments are triangles; edges used by only one fragment form the zone's outline.
     var outlineSegments: [[CLLocationCoordinate2D]] {
         struct Key: Hashable { let latitude: Int64, longitude: Int64 }

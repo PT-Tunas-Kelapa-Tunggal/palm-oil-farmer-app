@@ -117,4 +117,19 @@ struct AreaOutlineTests {
                                 destination: corners[0], areaSquareMeters: 1)
         #expect(zone.outlineSegments.count == 4)
     }
+
+    @Test func tappedCoordinateFindsItsArea() {
+        let report = DemoReviewReport.make(for: Garden(
+            id: UUID(), name: "Uji", locationName: "Bintan",
+            boundary: GardenBoundary(points: [(0.0, 0.0), (0.0, 0.002), (0.002, 0.002), (0.002, 0.0)].map {
+                GardenCoordinate(CLLocationCoordinate2D(latitude: 1 + $0.0, longitude: 104 + $0.1))
+            }),
+            plantingYear: 2016, soilType: .peat
+        ))
+        for area in report.areas {
+            let destination = try! #require(area.zone).destination
+            #expect(report.areas.filter { $0.zone?.contains(destination) == true }.map(\.id) == [area.id])
+        }
+        #expect(report.areas.allSatisfy { $0.zone?.contains(CLLocationCoordinate2D(latitude: 0, longitude: 0)) == false })
+    }
 }

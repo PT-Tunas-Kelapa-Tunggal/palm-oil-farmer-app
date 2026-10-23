@@ -72,8 +72,8 @@ struct FertilizerRecommendationView: View {
                         if let area = selectedArea {
                             Group {
                                 if area.zone != nil {
-                                    AllocationAreaMap(boundary: report.boundary, areas: report.areas, selectedID: area.id)
-                                        .allowsHitTesting(false)
+                                    AllocationAreaMap(boundary: report.boundary, areas: report.areas,
+                                                      selectedID: area.id) { selectedAreaID = $0 }
                                 } else if let mapImage = area.mapImage {
                                     Image(mapImage).resizable().scaledToFill()
                                 } else {
