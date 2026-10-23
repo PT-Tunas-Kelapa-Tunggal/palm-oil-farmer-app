@@ -24,7 +24,7 @@ struct RainfallChart: View {
                 BarMark(x: .value("Hari", day.weekday), y: .value("Curah hujan", day.millimeters),
                         width: .ratio(0.55))
                     .clipShape(UnevenRoundedRectangle(topLeadingRadius: 4, topTrailingRadius: 4))
-                    .foregroundStyle(day.isHeavy ? KropsTheme.buttonBackground : Color(white: 0.78))
+                    .foregroundStyle(day.isHeavy ? KropsTheme.Chart.heavyRain : KropsTheme.Chart.lightRain)
                     .opacity(selectedWeekday == nil || selectedWeekday == day.weekday ? 1 : 0.35)
                     .annotation(position: .top, spacing: 4) {
                         if day.isHeavy || selectedWeekday == day.weekday {
@@ -56,7 +56,9 @@ struct RainfallChart: View {
                     if let weekday = value.as(String.self), let day = days.first(where: { $0.weekday == weekday }) {
                         VStack(spacing: 4) {
                             Image(systemName: day.symbol)
-                                .symbolRenderingMode(.hierarchical)
+                                .symbolRenderingMode(.palette)
+                                .foregroundStyle(Color.secondary,
+                                                 day.millimeters >= 5 ? KropsTheme.Chart.lightRain : Color.orange)
                                 .font(.body)
                             Text(weekday).font(.caption2)
                         }

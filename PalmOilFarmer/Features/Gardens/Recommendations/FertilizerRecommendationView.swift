@@ -43,8 +43,8 @@ struct FertilizerRecommendationView: View {
                     switch selectedTab {
                     case .nutrients:
                         BoundarySilhouette(points: report.outline)
-                            .fill(Color(white: 0.77))
-                            .overlay { BoundarySilhouette(points: report.outline).stroke(Color(white: 0.35), lineWidth: 2) }
+                            .fill(KropsTheme.primary.opacity(0.25))
+                            .overlay { BoundarySilhouette(points: report.outline).stroke(KropsTheme.primaryText, lineWidth: 2) }
                             .frame(width: 134, height: 158)
                             .frame(maxWidth: .infinity)
                             .frame(height: 206)

@@ -9,8 +9,17 @@ struct NutrientNeedChart: View {
     var need = 0.64
     var onSelect: (String) -> Void = { _ in }
 
-    private static let currentFill = Color(white: 0.8)
-    private static let targetFill = KropsTheme.buttonBackground
+    private static let currentFill = KropsTheme.Chart.current
+    private static let targetFill = KropsTheme.Chart.target
+
+    /// Shortfall reads as a warning and excess as the accent; the status word itself carries the meaning.
+    static func statusColor(_ status: String) -> Color {
+        switch status {
+        case "Kurang", "Sangat kurang": KropsTheme.warningText
+        case "Berlebih": KropsTheme.accent
+        default: KropsTheme.primaryText
+        }
+    }
 
     private func percent(_ level: Double) -> Double {
         need > 0 ? level / need * 100 : 0
@@ -65,9 +74,10 @@ struct NutrientNeedChart: View {
                                 Text(symbol)
                                     .font(.subheadline.weight(.semibold))
                                     .foregroundStyle(Color.primary)
-                                Text(values.first { $0.name == symbol }?.status ?? "")
-                                    .font(.caption2)
-                                    .foregroundStyle(KropsTheme.secondaryText)
+                                let status = values.first { $0.name == symbol }?.status ?? ""
+                                Text(status)
+                                    .font(.caption2.weight(.semibold))
+                                    .foregroundStyle(Self.statusColor(status))
                                     .multilineTextAlignment(.center)
                                     .lineLimit(2, reservesSpace: true)
                             }
@@ -92,10 +102,10 @@ struct NutrientLegend: View {
     var body: some View {
         HStack(spacing: 12) {
             legendItem("Saat ini") {
-                RoundedRectangle(cornerRadius: 2).fill(Color(white: 0.8)).frame(width: 10, height: 10)
+                RoundedRectangle(cornerRadius: 2).fill(KropsTheme.Chart.current).frame(width: 10, height: 10)
             }
             legendItem("Setelah pemupukan") {
-                RoundedRectangle(cornerRadius: 2).fill(KropsTheme.buttonBackground).frame(width: 10, height: 10)
+                RoundedRectangle(cornerRadius: 2).fill(KropsTheme.Chart.target).frame(width: 10, height: 10)
             }
             legendItem("Kebutuhan") {
                 Rectangle()

@@ -37,7 +37,7 @@ struct AllocationAreaMap: View {
             if let zone = area.zone {
                 ForEach(zone.fragments.indices, id: \.self) { index in
                     MapPolygon(coordinates: zone.fragments[index])
-                        .foregroundStyle(.white.opacity(area.id == selectedID ? 0.3 : 0.08))
+                        .foregroundStyle(area.id == selectedID ? KropsTheme.accent.opacity(0.45) : .white.opacity(0.08))
                 }
                 ForEach(zone.outlineSegments.indices, id: \.self) { index in
                     MapPolyline(coordinates: zone.outlineSegments[index])
