@@ -93,6 +93,7 @@ struct FertilizerRecommendationView: View {
                                 }
                                 .buttonStyle(.glass)
                                 .buttonBorderShape(.capsule)
+                                .foregroundStyle(.primary)
                                 .accessibilityHint("Pilih area kebun lain")
                                 Spacer()
                                 if area.zone != nil {
@@ -102,6 +103,7 @@ struct FertilizerRecommendationView: View {
                                     }
                                     .buttonStyle(.glass)
                                     .buttonBorderShape(.capsule)
+                                    .foregroundStyle(.primary)
                                 }
                             }
                             ForEach(area.periods) { period in
