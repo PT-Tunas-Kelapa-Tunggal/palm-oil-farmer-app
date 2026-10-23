@@ -1,6 +1,5 @@
 #if DEBUG
 import SwiftUI
-import PhotosUI
 
 /// Full-screen compositions reuse the production UI, with fixed Sketch map data for comparison.
 struct RegistrationFramePreview: View {

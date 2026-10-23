@@ -1,5 +1,4 @@
 import SwiftUI
-import PhotosUI
 
 struct LocationSearchView: View {
     let onSelect: (GardenLocation) -> Void
@@ -13,7 +12,6 @@ struct LocationSearchView: View {
     @State private var locationProvider = CurrentLocationProvider()
     @State private var isLocating = false
     @State private var showsPhotoPicker = false
-    @State private var photo: PhotosPickerItem?
     @State private var photoStatus: PhotoStatus
     private let searchLocations: (String) async throws -> [GardenLocation]
 
@@ -147,11 +145,16 @@ struct LocationSearchView: View {
             }
             isLocating = false
         }
-        .task(id: photo) {
-            await locatePhoto()
-        }
         .sheet(isPresented: $showsPhotoPicker) {
-            GardenPhotoPickerView { photo = $0 }
+            GardenPhotoPickerView { coordinate in
+                // The sheet must finish closing before this one dismisses.
+                Task {
+                    try? await Task.sleep(for: .milliseconds(350))
+                    onSelect(GardenLocation(name: "Lokasi dari foto", subtitle: "Foto kebun",
+                                            coordinate: coordinate, source: .photo))
+                    dismiss()
+                }
+            }
         }
     }
 
@@ -226,30 +229,6 @@ struct LocationSearchView: View {
             guard !Task.isCancelled else { return }
             isSearching = false
             errorMessage = "Pencarian gagal. Periksa koneksi internet lalu coba lagi."
-        }
-    }
-
-    @MainActor
-    private func locatePhoto() async {
-        guard let photo else { return }
-        photoStatus = .loading
-        do {
-            guard let data = try await photo.loadTransferable(type: Data.self) else {
-                photoStatus = .failed
-                return
-            }
-            try Task.checkCancellation()
-            guard let coordinate = PhotoLocationReader.coordinate(in: data) else {
-                photoStatus = .missingLocation
-                return
-            }
-            photoStatus = .idle
-            onSelect(GardenLocation(name: "Lokasi dari foto", subtitle: "Foto kebun",
-                                    coordinate: coordinate, source: .photo))
-            dismiss()
-        } catch {
-            guard !Task.isCancelled else { return }
-            photoStatus = .failed
         }
     }
 }
