@@ -171,7 +171,7 @@ struct GardenProfileView: View {
             VStack(spacing: 0) {
                 if showsHeader && layout == .standard {
                     MapHeroView(
-                        title: garden.name,
+                        title: "Detail Kebun",
                         topInset: topInset,
                         onBack: { dismiss() },
                         onEdit: { showsGardenEditor = true },
