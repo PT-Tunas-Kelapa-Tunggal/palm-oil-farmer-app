@@ -50,7 +50,7 @@ struct RainfallDay: Identifiable {
     let weekday: String
     let millimeters: Double
     var id: String { weekday }
-    var isHeavy: Bool { millimeters >= 20 }
+    var isHeavy: Bool { millimeters >= Self.heavyThreshold }
 }
 
 struct RainfallForecast {

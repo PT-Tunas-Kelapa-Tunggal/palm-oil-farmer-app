@@ -233,27 +233,7 @@ struct RainfallForecastView: View {
                     Text("Prakiraan hujan · " + forecast.dateRange).font(.caption).foregroundStyle(.secondary)
                     Text(forecast.headline).font(.headline)
                 }
-                HStack(spacing: 4) {
-                    ForEach(forecast.days) { day in
-                        VStack(spacing: 6) {
-                            Image(systemName: day.isHeavy ? "cloud.heavyrain.fill" : day.millimeters >= 5 ? "cloud.drizzle.fill" : "cloud.sun.fill")
-                                .symbolRenderingMode(.hierarchical)
-                                .font(.title3)
-                                .frame(height: 28)
-                            Text(day.weekday).font(.caption2).foregroundStyle(.secondary)
-                        }
-                        .frame(maxWidth: .infinity)
-                        .padding(.vertical, 8)
-                        .background(day.isHeavy ? KropsTheme.secondaryFill : KropsTheme.tertiaryFill,
-                                    in: RoundedRectangle(cornerRadius: 12))
-                        .accessibilityElement(children: .ignore)
-                        .accessibilityLabel("\(day.weekday), \(day.isHeavy ? "hujan lebat" : "hujan ringan") \(Int(day.millimeters)) milimeter")
-                    }
-                }
-                RainfallLine(values: forecast.days.map(\.millimeters))
-                    .stroke(.secondary, lineWidth: 1.5)
-                    .frame(height: 36)
-                    .accessibilityHidden(true)
+                RainfallChart(days: forecast.days)
             }
             .padding(16)
             .background(.background, in: RoundedRectangle(cornerRadius: KropsTheme.Radius.card))
@@ -262,23 +242,6 @@ struct RainfallForecastView: View {
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .padding(16)
                 .background(.background, in: RoundedRectangle(cornerRadius: KropsTheme.Radius.card))
-        }
-    }
-}
-
-/// Rain amounts across the week, drawn through the centre of each day column.
-struct RainfallLine: Shape {
-    let values: [Double]
-
-    func path(in rect: CGRect) -> Path {
-        Path { path in
-            guard let maximum = values.max(), maximum > 0, !values.isEmpty else { return }
-            let step = rect.width / CGFloat(values.count)
-            for (index, value) in values.enumerated() {
-                let point = CGPoint(x: rect.minX + step * (CGFloat(index) + 0.5),
-                                    y: rect.maxY - rect.height * value / maximum)
-                index == 0 ? path.move(to: point) : path.addLine(to: point)
-            }
         }
     }
 }
