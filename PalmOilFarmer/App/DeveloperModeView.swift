@@ -8,6 +8,7 @@ struct DeveloperModeView: View {
     let onEraseAll: () -> Void
     @Environment(\.dismiss) private var dismiss
     @State private var confirmsErase = false
+    @AppStorage(DeveloperSettings.showsHomeFilterKey) private var showsHomeFilter = true
 
     var body: some View {
         VStack(spacing: 0) {
@@ -18,6 +19,14 @@ struct DeveloperModeView: View {
                     LabeledContent("Draf", value: draftCount.formatted())
                 } header: {
                     Text("Data di perangkat ini")
+                }
+                Section {
+                    Toggle("Filter Semua / Draf / Peninjauan", isOn: $showsHomeFilter)
+                        .tint(KropsTheme.primary)
+                } header: {
+                    Text("Tampilan beranda")
+                } footer: {
+                    Text("Jika dimatikan, tab filter disembunyikan dan daftar menampilkan semua kebun.")
                 }
                 Section {
                     Button(role: .destructive) {

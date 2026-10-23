@@ -13,8 +13,11 @@ struct GardenListView: View {
     let onRegisterGarden: () -> Void
     /// Debug builds only: opens developer tools.
     var onOpenDeveloperMode: (() -> Void)? = nil
-    @State private var filter = GardenListFilter.all
+    @State private var selectedFilter = GardenListFilter.all
+    @AppStorage(DeveloperSettings.showsHomeFilterKey) private var showsFilter = true
 
+    /// With the tabs hidden the list behaves as Semua, whatever tab was last chosen.
+    private var filter: GardenListFilter { showsFilter ? selectedFilter : .all }
     private var visibleGardens: [Garden] { gardens.filter(filter.includes) }
     private var visibleDrafts: [GardenDraft] { filter.includesDrafts ? drafts : [] }
 
@@ -49,13 +52,15 @@ struct GardenListView: View {
                     }
                 }
             } else {
-                BadgedSegmentedControl(
-                    options: GardenListFilter.allCases, selection: $filter,
-                    title: \.rawValue, accessibilityName: \.accessibilityName,
-                    badge: { $0.actionCount(gardens: gardens, drafts: drafts) }
-                )
-                .padding(.horizontal, KropsTheme.Spacing.screen)
-                .padding(.bottom, 12)
+                if showsFilter {
+                    BadgedSegmentedControl(
+                        options: GardenListFilter.allCases, selection: $selectedFilter,
+                        title: \.rawValue, accessibilityName: \.accessibilityName,
+                        badge: { $0.actionCount(gardens: gardens, drafts: drafts) }
+                    )
+                    .padding(.horizontal, KropsTheme.Spacing.screen)
+                    .padding(.bottom, 12)
+                }
                 if visibleGardens.isEmpty && visibleDrafts.isEmpty && downloads.isEmpty {
                     GeometryReader { geometry in
                         ScrollView {
