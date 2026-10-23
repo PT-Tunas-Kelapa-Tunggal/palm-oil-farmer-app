@@ -85,24 +85,22 @@ struct FertilizerRecommendationView: View {
                             .clipShape(RoundedRectangle(cornerRadius: 8))
                             HStack {
                                 Button { showsAreaPicker = true } label: {
-                                    HStack(spacing: 8) {
-                                        Text("Area " + area.id).font(.title3.weight(.semibold))
-                                        Image(systemName: "chevron.down").font(.footnote.weight(.semibold))
+                                    HStack(spacing: 6) {
+                                        Text("Area " + area.id).font(.headline)
+                                        Image(systemName: "chevron.down").font(.caption.weight(.semibold))
                                     }
-                                    .padding(.horizontal, 16)
-                                    .frame(minHeight: 44)
                                 }
                                 .buttonStyle(.glass)
+                                .buttonBorderShape(.capsule)
                                 .accessibilityHint("Pilih area kebun lain")
                                 Spacer()
                                 if area.zone != nil {
                                     Button { showsNavigation = true } label: {
                                         Label("Buka Map", systemImage: "figure.walk")
-                                            .font(.headline)
-                                            .padding(.horizontal, 12)
-                                            .frame(minHeight: 44)
+                                            .font(.subheadline.weight(.semibold))
                                     }
                                     .buttonStyle(.glass)
+                                    .buttonBorderShape(.capsule)
                                 }
                             }
                             ForEach(area.periods) { period in
