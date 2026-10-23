@@ -17,6 +17,10 @@ struct GardenBoundaryView: View {
     @State private var isRegionOverview = false
     @State private var isConfirmingPhoto: Bool
     @State private var locationManager = CLLocationManager()
+    /// Finger position minus the dragged marker's tip, so a point does not jump under the finger.
+    /// Drags use the global space: annotation views are hosted apart from the map's own hierarchy.
+    @State private var dragOffset: CGSize?
+    @State private var draggingIndex: Int?
 
     init(location: GardenLocation, onSave: @escaping (Garden) -> Bool,
          onSaveDraft: ((GardenLocation) -> Bool)? = nil, onSearchAgain: (() -> Void)? = nil) {
@@ -39,7 +43,7 @@ struct GardenBoundaryView: View {
         MapReader { proxy in
             BoundaryEditorLayout(
                 boundary: boundary, isRegionOverview: isRegionOverview,
-                hint: "Ketuk peta untuk menandai sudut-sudut kebun Anda.",
+                hint: "Ketuk peta untuk menandai sudut-sudut kebun Anda. Geser titik untuk memindahkannya.",
                 showsControls: !isConfirmingPhoto,
                 onClose: close,
                 onSkip: skipAction,
@@ -49,7 +53,7 @@ struct GardenBoundaryView: View {
                 onConfirm: { showsDetails = true }
             ) {
                 Map(position: $position) {
-                    mapContent
+                    mapContent(proxy)
                 }
                 .mapStyle(.imagery)
                 .mapControls {}
@@ -58,7 +62,8 @@ struct GardenBoundaryView: View {
                     isRegionOverview = context.region.span.latitudeDelta > 0.03
                 }
                 .simultaneousGesture(SpatialTapGesture().onEnded { tap in
-                    guard !isConfirmingPhoto, let coordinate = proxy.convert(tap.location, from: .local) else { return }
+                    guard !isConfirmingPhoto, !isOnMarker(tap.location, proxy: proxy),
+                          let coordinate = proxy.convert(tap.location, from: .local) else { return }
                     let point = GardenCoordinate(coordinate)
                     guard !boundary.points.contains(point) else { return }
                     boundary.points.append(point)
@@ -86,7 +91,7 @@ struct GardenBoundaryView: View {
     }
 
     @MapContentBuilder
-    private var mapContent: some MapContent {
+    private func mapContent(_ proxy: MapProxy) -> some MapContent {
         if boundary.points.count >= 3 {
             MapPolygon(coordinates: boundary.coordinates)
                 .foregroundStyle(.white.opacity(0.25))
@@ -97,6 +102,9 @@ struct GardenBoundaryView: View {
         ForEach(boundary.points.indices, id: \.self) { index in
             Annotation("", coordinate: boundary.points[index].mapCoordinate, anchor: .bottom) {
                 BoundaryPointMarker(number: index + 1)
+                    .scaleEffect(draggingIndex == index ? 1.2 : 1)
+                    .highPriorityGesture(moveGesture(for: index, proxy: proxy))
+                    .accessibilityHint("Geser untuk memindahkan titik")
             }
         }
         ForEach(boundary.points.indices, id: \.self) { index in
@@ -131,6 +139,34 @@ struct GardenBoundaryView: View {
             }
         }
         UserAnnotation()
+    }
+
+    private func moveGesture(for index: Int, proxy: MapProxy) -> some Gesture {
+        DragGesture(minimumDistance: 4, coordinateSpace: .global)
+            .onChanged { drag in
+                guard boundary.points.indices.contains(index) else { return }
+                draggingIndex = index
+                if dragOffset == nil,
+                   let tip = proxy.convert(boundary.points[index].mapCoordinate, to: .global) {
+                    dragOffset = CGSize(width: drag.startLocation.x - tip.x, height: drag.startLocation.y - tip.y)
+                }
+                let offset = dragOffset ?? .zero
+                let tip = CGPoint(x: drag.location.x - offset.width, y: drag.location.y - offset.height)
+                guard let coordinate = proxy.convert(tip, from: .global) else { return }
+                boundary.points[index] = GardenCoordinate(coordinate)
+            }
+            .onEnded { _ in
+                dragOffset = nil
+                draggingIndex = nil
+            }
+    }
+
+    /// Markers sit above their point; a tap on one must not also add a new point.
+    private func isOnMarker(_ location: CGPoint, proxy: MapProxy) -> Bool {
+        boundary.points.contains { point in
+            guard let tip = proxy.convert(point.mapCoordinate, to: .local) else { return false }
+            return hypot(location.x - tip.x, location.y - (tip.y - 18)) < 26
+        }
     }
 
     private var photoConfirmation: some View {
