@@ -1,5 +1,7 @@
 import SwiftUI
 
+/// A map with a dark fade at the top for a header. The header itself is `HeroToolbar`,
+/// which screens can pin above their scroll view; `showsToolbar` keeps it inside the map instead.
 struct MapHeroView<MapContent: View>: View {
     let title: String
     var topInset: CGFloat = 62
@@ -9,6 +11,7 @@ struct MapHeroView<MapContent: View>: View {
     var onDelete: (() -> Void)? = nil
     /// When set, edit and delete stay visible but disabled, with this explanation in the menu.
     var lockedReason: String? = nil
+    var showsToolbar = true
     @ViewBuilder let map: () -> MapContent
 
     var body: some View {
@@ -23,12 +26,28 @@ struct MapHeroView<MapContent: View>: View {
                     .allowsHitTesting(false)
             }
             .overlay(alignment: .top) {
-                ScreenHeader(title: title, systemImage: "chevron.left", buttonSize: 44, height: 68, onClose: onBack)
-                    .foregroundStyle(.white)
-                    .environment(\.colorScheme, .dark)
-                    .padding(.top, topInset)
+                if showsToolbar {
+                    HeroToolbar(title: title, onBack: onBack, onEdit: onEdit, onDelete: onDelete,
+                                lockedReason: lockedReason)
+                        .padding(.top, topInset)
+                }
             }
-            .overlay(alignment: .topTrailing) {
+    }
+}
+
+/// Back button, title, and options menu. Over the map it is white on the map's dark fade;
+/// once the content scrolls under it (`isOverContent`) it switches to a material bar with standard text.
+struct HeroToolbar: View {
+    let title: String
+    let onBack: () -> Void
+    var onEdit: (() -> Void)? = nil
+    var onDelete: (() -> Void)? = nil
+    var lockedReason: String? = nil
+    var isOverContent = false
+
+    var body: some View {
+        ScreenHeader(title: title, systemImage: "chevron.left", buttonSize: 44, height: 68, onClose: onBack)
+            .overlay(alignment: .trailing) {
                 if onEdit != nil || onDelete != nil {
                     Menu {
                         if let lockedReason {
@@ -50,13 +69,13 @@ struct MapHeroView<MapContent: View>: View {
                     }
                     .buttonStyle(.plain)
                     .glassEffect(.regular.interactive(), in: Circle())
-                    .foregroundStyle(.white)
-                    .environment(\.colorScheme, .dark)
                     .accessibilityLabel("Opsi kebun")
-                    .padding(.top, topInset + 12)
                     .padding(.trailing, 12)
                 }
             }
+            .foregroundStyle(isOverContent ? Color.primary : Color.white)
+            .environment(\.colorScheme, isOverContent ? .light : .dark)
+            .animation(.easeOut(duration: 0.2), value: isOverContent)
     }
 }
 

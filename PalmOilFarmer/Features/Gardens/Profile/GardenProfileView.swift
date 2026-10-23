@@ -26,6 +26,8 @@ struct GardenProfileView: View {
     @State private var showsGardenEditor = false
     @State private var showsDeleteConfirmation = false
     @State private var showsDeleteError = false
+    /// True once the map has scrolled under the pinned toolbar.
+    @State private var isToolbarOverContent = false
 
     private enum HistoryEditor: String, Identifiable {
         case fertilizer, harvest
@@ -64,6 +66,7 @@ struct GardenProfileView: View {
     private var currentReport: FertilizerRecommendationReport? {
         recommendationReport ?? (currentReviewStatus == .completed ? DemoReviewReport.make(for: garden) : nil)
     }
+    private var hasHero: Bool { showsHeader && layout == .standard }
     private var isComplete: Bool { !fertilizers.isEmpty && garden.harvestRecord != nil }
 
     var body: some View {
@@ -73,7 +76,31 @@ struct GardenProfileView: View {
                     .padding(.bottom, 32)
             }
             .scrollIndicators(.hidden)
-            .ignoresSafeArea(edges: showsHeader && layout == .standard ? .top : [])
+            .ignoresSafeArea(edges: hasHero ? .top : [])
+            .onScrollGeometryChange(for: Bool.self) { scroll in
+                // The hero is 380 pt tall; the toolbar bottom sits about 68 pt below the safe area.
+                scroll.contentOffset.y + scroll.contentInsets.top > 380 - geometry.safeAreaInsets.top - 68
+            } action: { _, isOver in
+                isToolbarOverContent = isOver
+            }
+            .overlay(alignment: .top) {
+                if hasHero {
+                    HeroToolbar(
+                        title: "Detail Kebun",
+                        onBack: { dismiss() },
+                        onEdit: { showsGardenEditor = true },
+                        onDelete: onDelete == nil ? nil : { showsDeleteConfirmation = true },
+                        lockedReason: currentReviewStatus == nil ? nil : "Sudah diajukan untuk peninjauan",
+                        isOverContent: isToolbarOverContent
+                    )
+                    .background {
+                        Rectangle()
+                            .fill(.bar)
+                            .ignoresSafeArea(edges: .top)
+                            .opacity(isToolbarOverContent ? 1 : 0)
+                    }
+                }
+            }
         }
         .background(KropsTheme.background.ignoresSafeArea())
         .toolbar(.hidden, for: .navigationBar)
@@ -169,17 +196,9 @@ struct GardenProfileView: View {
             .padding(.horizontal, KropsTheme.Spacing.screen)
         } else {
             VStack(spacing: 0) {
-                if showsHeader && layout == .standard {
-                    MapHeroView(
-                        title: "Detail Kebun",
-                        topInset: topInset,
-                        onBack: { dismiss() },
-                        onEdit: { showsGardenEditor = true },
-                        onDelete: onDelete == nil ? nil : { showsDeleteConfirmation = true },
-                        lockedReason: currentReviewStatus == nil
-                            ? nil
-                            : "Sudah diajukan untuk peninjauan"
-                    ) {
+                if hasHero {
+                    MapHeroView(title: "Detail Kebun", topInset: topInset, onBack: { dismiss() },
+                                showsToolbar: false) {
                         GardenMapView(boundary: garden.boundary, referenceImage: referenceMapImage)
                     }
                 } else {
