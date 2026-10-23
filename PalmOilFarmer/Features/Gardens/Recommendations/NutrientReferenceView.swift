@@ -77,3 +77,35 @@ struct NutrientReferenceView: View {
         NutrientReferenceView(reference: NutrientReference.all[0])
     }
 }
+
+/// Text where every nutrient name is a link that opens its fertilizer reference.
+struct NutrientLinkedText: View {
+    let text: String
+    let onSelect: (String) -> Void
+
+    static let scheme = "kebun-hara"
+
+    var body: some View {
+        Text(Self.linked(text))
+            .tint(.primary)
+            .environment(\.openURL, OpenURLAction { url in
+                guard url.scheme == Self.scheme, let symbol = url.host() else { return .systemAction }
+                onSelect(symbol)
+                return .handled
+            })
+    }
+
+    static func linked(_ text: String) -> AttributedString {
+        var attributed = AttributedString(text)
+        for reference in NutrientReference.all {
+            var searchStart = attributed.startIndex
+            while let range = attributed[searchStart...].range(of: reference.name, options: .caseInsensitive) {
+                attributed[range].link = URL(string: "\(scheme)://\(reference.symbol)")
+                attributed[range].underlineStyle = .single
+                attributed[range].inlinePresentationIntent = .stronglyEmphasized
+                searchStart = range.upperBound
+            }
+        }
+        return attributed
+    }
+}

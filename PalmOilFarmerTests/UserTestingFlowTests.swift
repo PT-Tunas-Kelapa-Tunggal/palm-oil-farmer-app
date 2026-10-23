@@ -133,3 +133,11 @@ struct AreaOutlineTests {
         #expect(report.areas.allSatisfy { $0.zone?.contains(CLLocationCoordinate2D(latitude: 0, longitude: 0)) == false })
     }
 }
+
+struct NutrientLinkTests {
+    @Test func everyNutrientNameInTheSummaryIsLinked() {
+        let text = NutrientLinkedText.linked("Kadar magnesium paling jauh, disusul Nitrogen dan kalium. Fosfor berlebih; fosfor cukup.")
+        let links = text.runs.compactMap { $0.link?.host() }
+        #expect(links == ["Mg", "N", "K", "P", "P"])
+    }
+}

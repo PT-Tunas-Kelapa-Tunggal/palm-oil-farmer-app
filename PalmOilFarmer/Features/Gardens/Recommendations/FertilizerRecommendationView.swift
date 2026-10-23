@@ -60,7 +60,9 @@ struct FertilizerRecommendationView: View {
                         .padding(16)
                         .background(.background, in: RoundedRectangle(cornerRadius: KropsTheme.Radius.card))
                         if !report.nutrientSummary.isEmpty {
-                            Text(report.nutrientSummary)
+                            NutrientLinkedText(text: report.nutrientSummary) { symbol in
+                                reference = NutrientReference.reference(for: symbol)
+                            }
                                 .font(.title3)
                                 .frame(maxWidth: .infinity, alignment: .leading)
                                 .padding(16)
