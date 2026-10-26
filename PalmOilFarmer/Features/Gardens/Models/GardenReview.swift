@@ -1,8 +1,5 @@
 import Foundation
 
-enum ReviewStatus: Int, CaseIterable, Codable {
-    case submitted, scheduled, inReview, completed
-}
 
 /// Review progress saved with the garden. Older gardens decode without it.
 struct GardenReview: Codable {

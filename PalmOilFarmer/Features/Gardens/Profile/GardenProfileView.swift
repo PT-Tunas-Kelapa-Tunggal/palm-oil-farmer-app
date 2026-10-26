@@ -28,6 +28,9 @@ struct GardenProfileView: View {
     @State private var showsDeleteError = false
     /// True once the map has scrolled under the pinned toolbar.
     @State private var isToolbarOverContent = false
+    @State private var activeReviewStatus: ReviewStatus?
+    @State private var activeReviewEntries: [ReviewTimelineEntry] = []
+    @State private var activeReport: FertilizerRecommendationReport?
 
     private enum HistoryEditor: String, Identifiable {
         case fertilizer, harvest
@@ -62,9 +65,9 @@ struct GardenProfileView: View {
 
     private var fertilizers: [FertilizerRecord] { garden.fertilizerRecords ?? [] }
     /// Reference previews pass a fixed status; the app reads the saved review.
-    private var currentReviewStatus: ReviewStatus? { reviewStatus ?? garden.review?.status }
+    private var currentReviewStatus: ReviewStatus? { activeReviewStatus ?? reviewStatus ?? garden.review?.status }
     private var currentReport: FertilizerRecommendationReport? {
-        recommendationReport ?? (currentReviewStatus == .completed ? DemoReviewReport.make(for: garden) : nil)
+        activeReport ?? recommendationReport ?? (currentReviewStatus == .completed ? DemoReviewReport.make(for: garden) : nil)
     }
     private var hasHero: Bool { showsHeader && layout == .standard }
     private var isComplete: Bool { garden.isProfileComplete }
@@ -143,13 +146,13 @@ struct GardenProfileView: View {
         }
         .navigationDestination(isPresented: $showsReviewStatus) {
             LiveGardenReader(garden: garden) { garden in
-                if let status = reviewStatus ?? garden.review?.status {
+                if let status = currentReviewStatus {
                     ReviewStatusView(
                         gardenName: garden.name, status: status,
-                        entries: reviewEntries.isEmpty
+                        entries: !activeReviewEntries.isEmpty ? activeReviewEntries : (reviewEntries.isEmpty
                             ? garden.review.map { ReviewTimelineEntry.entries(for: $0) } ?? []
-                            : reviewEntries,
-                        resultsDownloaded: garden.review?.resultsDownloaded ?? false,
+                            : reviewEntries),
+                        resultsDownloaded: (activeReviewStatus == .completed) || (garden.review?.resultsDownloaded ?? false),
                         onAdvance: garden.review == nil ? nil : { updateReview(of: garden) { $0.advance() } },
                         onDownloaded: { updateReview(of: garden) { $0.resultsDownloaded = true } }
                     ) {
@@ -172,12 +175,16 @@ struct GardenProfileView: View {
             }
         }) {
             ReviewRequestView { contact in
+                try await submitReview(details: contact)
                 var updated = garden
                 updated.review = GardenReview(contact: contact)
                 guard onUpdate(updated) else { throw ReviewSaveError() }
                 opensStatusAfterReview = true
                 showsReview = false
             }
+        }
+        .task {
+            await loadReview()
         }
     }
 
@@ -226,7 +233,7 @@ struct GardenProfileView: View {
                             switch currentReviewStatus {
                             case nil:
                                 showsReview = true
-                            case .completed where garden.review?.resultsDownloaded ?? (reviewStatus != nil):
+                            case .completed where (activeReviewStatus == .completed) || (garden.review?.resultsDownloaded ?? (reviewStatus != nil)):
                                 showsResults = true
                             default:
                                 showsReviewStatus = true
@@ -275,6 +282,43 @@ struct GardenProfileView: View {
         var updated = garden
         updated.review = review
         _ = onUpdate(updated)
+    }
+
+    private func loadReview() async {
+        if let existing = try? await CloudKitFarmerReviewRepository.shared.fetchRequest(for: garden.id) {
+            await MainActor.run {
+                activeReviewStatus = existing.status
+                activeReviewEntries = existing.timeline.entries(for: existing.status)
+                activeReport = existing.makeRecommendationReport()
+            }
+        }
+    }
+
+    private func submitReview(details: ReviewContactDetails) async throws {
+        let boundaryPoints = garden.boundary.points.map { CoordinatePoint(latitude: $0.latitude, longitude: $0.longitude) }
+        let usages = (garden.fertilizerRecords ?? []).map {
+            FertilizerUsage(id: $0.id, name: $0.name, bagWeightKg: $0.bagWeightKg, bagCount: $0.bagCount, doseKgPerTree: $0.doseKgPerTree)
+        }
+        let harvest = garden.harvestRecord.map {
+            HarvestYield(frequencyPerMonth: $0.frequencyPerMonth, latestWeightKg: $0.latestWeightKg)
+        }
+        let request = PlantationReviewRequest(
+            farmer: FarmerContact(name: details.name, phone: details.phone, address: details.address),
+            garden: GardenSummary(id: garden.id, name: garden.name, locationName: garden.locationName, areaHectares: garden.boundary.areaHectares),
+            boundary: boundaryPoints,
+            agronomy: AgronomicProfile(
+                plantingYear: garden.plantingYear,
+                plantingMonth: garden.plantingMonth,
+                soilType: garden.soilType.rawValue,
+                fertilizerRecords: usages,
+                harvestRecord: harvest
+            )
+        )
+        let saved = try await CloudKitFarmerReviewRepository.shared.submitRequest(request)
+        await MainActor.run {
+            activeReviewStatus = saved.status
+            activeReviewEntries = saved.timeline.entries(for: saved.status)
+        }
     }
 
     private var map: some View {
