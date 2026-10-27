@@ -16,14 +16,18 @@ Keep the structure small: add folders and abstractions when real code needs them
 | Folder | Responsibility |
 | --- | --- |
 | `PalmOilFarmer/App` | App entry point, shared store ownership, top-level navigation |
-| `PalmOilFarmer/DesignSystem/Tokens` | Shared colors, spacing, typography, corner radii, control dimensions |
-| `PalmOilFarmer/DesignSystem/Components` | Reusable UI with no dependency on garden models or services |
-| `PalmOilFarmer/DesignSystem/Styles` | Button styles and shared presentation modifiers |
-| `PalmOilFarmer/DesignSystem/Catalog` | Light, dark, and accessibility-size component previews |
+| `PalmOilFarmer/Core/DesignSystem/Tokens` | Shared colors, spacing, typography, corner radii, control dimensions |
+| `PalmOilFarmer/Core/DesignSystem/Components` | Reusable UI with no dependency on garden models or services |
+| `PalmOilFarmer/Core/DesignSystem/Styles` | Button styles and shared presentation modifiers |
+| `PalmOilFarmer/Core/DesignSystem/Catalog` | Light, dark, and accessibility-size component previews |
 | `PalmOilFarmer/Features/Gardens/Models` | Shared garden values, boundary geometry, display metrics |
 | `PalmOilFarmer/Features/Gardens/Data` | Store, JSON persistence, location access, MapKit search, photo metadata |
-| `PalmOilFarmer/Features/Gardens/Components` | Shared UI that understands gardens or maps |
-| Other Gardens subfolders | Screens and helpers for List, Registration, Mapping, Profile, History, Review, Recommendations |
+| `PalmOilFarmer/Features/Gardens/Views/Components` | Shared UI that understands gardens or maps |
+| `PalmOilFarmer/Features/Gardens/Views` | Screens, flows, and local components for List, Registration, Mapping, Profile, History, Review, Recommendations |
+| `PalmOilFarmer/Features/FindingBlock` | Allocation section and navigation with Models, Data, Views |
+| `PalmOilFarmer/Features/FindingWaypoint` | Separate waypoint experiment with Models, Data, Views |
+| `PalmOilFarmer/Resources` | Asset catalog; asset names remain unchanged |
+| `Docs` | Architecture, screen map, implementation notes |
 | `PalmOilFarmer/PreviewSupport` | Debug fixtures and reference-screen compositions |
 | `PalmOilFarmerTests` | Swift Testing checks for persistence, validation, and geometry |
 
@@ -32,12 +36,12 @@ Keep the structure small: add folders and abstractions when real code needs them
 - Keep transient UI state in the view. `GardenStore` owns saved gardens; profile views receive the latest value from their parent. Editors own local drafts and publish them only after a successful save.
 - A profile's `onUpdate` must update the parent's source of truth. Static reference previews intentionally use fixed input; use a stateful parent for interactive editing previews.
 - Put calculations and validation in value types. Add a feature model only when orchestration becomes substantial; there is no mandatory ViewModel per screen.
-- Keep framework access at the data boundary. `LocationSearchView` accepts a search closure for deterministic results. Existing `initialResults` is a convenience for fixed reference previews.
+- Keep framework access at the data boundary. `LocationSearchScreen` accepts a search closure for deterministic results. Existing `initialResults` is a convenience for fixed reference previews.
 - Design system components must not depend on `Garden`, `GardenStore`, or preview fixtures. `GardenPickerField` currently has a historical name but takes only generic labels, values, and content.
 - Prefer semantic system typography for text. Use shared tokens for repeated visual roles; illustration coordinates and map dimensions can remain local constants.
 - Keep small, closely related types together. Extract a type when its name or responsibility deserves a discoverable file.
 - Keep JSON keys and enum raw values compatible with existing `gardens.json`. Changing persisted types requires an explicit migration and compatibility tests.
-- Add waypoint work under Mapping while it is garden-specific. Promote it to a separate feature only when it gains independent workflows.
+- FindingWaypoint is a separate experimental flow; FindingBlock is embedded in recommendations. Shared garden values remain owned by Gardens.
 
 ## Verification
 

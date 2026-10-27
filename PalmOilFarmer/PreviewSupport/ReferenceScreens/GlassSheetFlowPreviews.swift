@@ -11,25 +11,25 @@ struct GlassSheetFlowPreview: View {
     @State private var isPresented = false
 
     var body: some View {
-        GardenListView(onRegisterGarden: { isPresented = true })
+        GardenListScreen(onRegisterGarden: { isPresented = true })
             .sheet(isPresented: $isPresented) {
                 switch screen {
                 case .guide:
-                    RegistrationIntroView(onLocate: { _ in })
+                    RegistrationFlow(onLocate: { _ in })
                 case .photo:
-                    RegistrationIntroView(initialStep: .photo, onLocate: { _ in })
+                    RegistrationFlow(initialStep: .photo, onLocate: { _ in })
                 case .address:
-                    RegistrationIntroView(initialStep: .address, onLocate: { _ in })
+                    RegistrationFlow(initialStep: .address, onLocate: { _ in })
                 case .search:
-                    LocationSearchView(initialResults: [], onSelect: { _ in })
+                    LocationSearchScreen(initialResults: [], onSelect: { _ in })
                 case .details:
-                    GardenDetailsView(
+                    GardenDetailsScreen(
                         location: GardenPreviewData.location, boundary: GardenPreviewData.boundary,
                         onSave: { _ in true }, referenceMapImage: "GardenBoundaryMap",
                         metrics: GardenPreviewData.metrics
                     )
                 case .plantingDate:
-                    PlantingDatePickerView(onConfirm: { _, _ in })
+                    PlantingDatePickerScreen(onConfirm: { _, _ in })
                 }
             }
     }

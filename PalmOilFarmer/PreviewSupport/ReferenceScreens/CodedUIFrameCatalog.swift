@@ -15,50 +15,50 @@ struct CodedUIFramePreview: View {
         Group {
             switch index {
             case 0:
-                GardenListView(onRegisterGarden: {})
+                GardenListScreen(onRegisterGarden: {})
             case 1:
-                GardenListView(gardens: [GardenPreviewData.garden], downloads: [download],
+                GardenListScreen(gardens: [GardenPreviewData.garden], downloads: [download],
                                referenceMapImage: "GardenCardMap",
                                previewMetrics: GardenDisplayMetrics(area: "2,4 ha", perimeter: "2324 m"),
                                onRegisterGarden: {})
             case 2:
-                GardenListView(downloads: [download], onRegisterGarden: {})
+                GardenListScreen(downloads: [download], onRegisterGarden: {})
             case 3:
                 profile(garden: GardenPreviewData.garden, layout: .overview)
             case 4:
                 profile(garden: GardenPreviewData.garden)
             case 5, 6:
-                MapDownloadView(location: GardenPreviewData.location,
+                MapDownloadScreen(location: GardenPreviewData.location,
                                 state: index == 5 ? .referenceProgress : .completed,
                                 onMapBoundary: {}, referenceMapImage: "CodedRegionHero")
             case 7:
-                FertilizerHistoryEditor(
+                FertilizerHistoryScreen(
                     records: [FertilizerRecord(name: "Dolomit Super", bagWeightKg: 50, bagCount: 6, doseKgPerTree: 1.5)],
                     includesEmptyDraft: true, onSave: { _ in true }
                 )
             case 8:
                 profile(garden: GardenPreviewData.fertilizedGarden)
                     .overlay(alignment: .bottom) {
-                        HarvestHistoryEditor(record: nil, onSave: { _ in true })
+                        HarvestHistoryScreen(record: nil, onSave: { _ in true })
                             .frame(height: 721)
                             .background { SheetGlassBackground() }
                             .padding(.bottom, -34)
                     }
             case 9:
-                SelectionListView(title: "Jenis Pupuk", options: FertilizerCatalogue.names, selected: "Urea",
+                SelectionListScreen(title: "Jenis Pupuk", options: FertilizerCatalogue.names, selected: "Urea",
                                   footer: "Pilih sesuai nama pupuk yang tertera pada karung. Jika tidak ada dalam daftar, pilih Lainnya.",
                                   onSelect: { _ in })
             case 10:
-                ReviewRequestView(onContinue: {})
+                ReviewRequestScreen(onContinue: {})
             case 11:
-                ReviewContactFormView(onSubmit: { _ in throw ReviewServiceError.unavailable })
+                ReviewContactFormScreen(onSubmit: { _ in throw ReviewServiceError.unavailable })
             case 12, 13:
                 AppleSignInReferencePreview(isLoading: index == 13)
             case 14:
                 profile(garden: GardenPreviewData.fertilizedGarden)
             case 15, 16, 17, 18:
                 let status: ReviewStatus = index == 15 ? .scheduled : (index == 16 ? .inReview : (index == 17 ? .completed : .submitted))
-                ReviewStatusView(gardenName: "Belakang Rumah", status: status,
+                ReviewStatusScreen(gardenName: "Belakang Rumah", status: status,
                                  entries: ReviewTimelineEntry.referenceEntries(for: status), onViewResults: {})
             case 19:
                 profile(garden: GardenPreviewData.completedGarden)
@@ -67,7 +67,7 @@ struct CodedUIFramePreview: View {
             case 21:
                 profile(garden: GardenPreviewData.completedGarden, reviewStatus: .completed)
             case 22, 23:
-                FertilizerRecommendationView(report: RecommendationPreviewData.report,
+                FertilizerRecommendationScreen(report: RecommendationPreviewData.report,
                                             initialTab: index == 22 ? .nutrients : .allocation)
             case 24:
                 profile(garden: GardenPreviewData.fertilizedGarden, layout: .chart)
@@ -99,14 +99,14 @@ struct CodedUIFramePreview: View {
                 details
             case 38:
                 details.overlay(alignment: .bottom) {
-                    PlantingDatePickerView(onConfirm: { _, _ in })
+                    PlantingDatePickerScreen(onConfirm: { _, _ in })
                         .frame(height: 351)
                         .background { SheetGlassBackground() }
                         .padding(.horizontal, 8)
                         .padding(.bottom, -34)
                 }
             case 39:
-                SelectionListView(title: "Jenis Tanah", options: SoilType.allCases.map(\.displayName),
+                SelectionListScreen(title: "Jenis Tanah", options: SoilType.allCases.map(\.displayName),
                                   selected: "Tanah Mineral",
                                   footer: "Jenis tanah membantu kami memahami kondisi kebun Anda. Pilih yang paling mendekati.",
                                   onSelect: { _ in })
@@ -126,14 +126,14 @@ struct CodedUIFramePreview: View {
     }
 
     private var details: some View {
-        GardenDetailsView(location: GardenPreviewData.location, boundary: GardenPreviewData.boundary,
+        GardenDetailsScreen(location: GardenPreviewData.location, boundary: GardenPreviewData.boundary,
                           onSave: { _ in true }, referenceMapImage: "GardenBoundaryMap", metrics: GardenPreviewData.metrics)
             .background { SheetGlassBackground() }
     }
 
     private func profile(garden: Garden, layout: GardenProfileLayout = .standard,
                          reviewStatus: ReviewStatus? = nil) -> some View {
-        GardenProfileView(
+        GardenProfileScreen(
             garden: garden, referenceMapImage: layout == .standard ? "CodedProfileMap" : "GardenProfileMap",
             metrics: GardenPreviewData.metrics, showsHeader: layout == .standard, layout: layout,
             chartValues: [1, 3, 1.5, 0.5], reviewStatus: reviewStatus,

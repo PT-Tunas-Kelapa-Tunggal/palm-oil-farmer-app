@@ -11,7 +11,7 @@ struct ContentView: View {
 
     var body: some View {
         NavigationStack {
-            GardenListView(gardens: store.gardens,
+            GardenListScreen(gardens: store.gardens,
                            drafts: draftStore.drafts.filter { draft in !store.gardens.contains { $0.id == draft.id } }, onResumeDraft: {
                 mappingDraft = $0
             }, onSelectGarden: { garden in
@@ -23,13 +23,13 @@ struct ContentView: View {
             .toolbar(.hidden, for: .navigationBar)
             .navigationDestination(item: $selectedGardenID) { id in
                 if let garden = store.gardens.first(where: { $0.id == id }) {
-                    GardenProfileView(garden: garden, onDelete: store.delete,
+                    GardenProfileScreen(garden: garden, onDelete: store.delete,
                                       onUpdateReview: { store.updateReview($0, for: id) }, onUpdate: store.update)
                 }
             }
         }
         .sheet(isPresented: $showsRegistration, onDismiss: openMappingIfNeeded) {
-            RegistrationIntroView(initialStep: retrySearch ? .address : .guide) { location in
+            RegistrationFlow(initialStep: retrySearch ? .address : .guide) { location in
                 pendingLocation = location
                 showsRegistration = false
             }
@@ -37,7 +37,7 @@ struct ContentView: View {
         .fullScreenCover(item: $mappingDraft, onDismiss: {
             if retrySearch { showsRegistration = true }
         }) { draft in
-            GardenBoundaryView(location: draft.location, initialBoundary: draft.boundary,
+            GardenBoundaryScreen(location: draft.location, initialBoundary: draft.boundary,
                                resumesDraft: draftStore.drafts.contains { $0.id == draft.id },
                                onDefer: draftStore.save, onSearchAgain: { retrySearch = true }) { garden in
                 guard store.add(garden) else { return false }

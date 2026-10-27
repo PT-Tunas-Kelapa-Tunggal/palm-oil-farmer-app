@@ -4,13 +4,13 @@ import PhotosUI
 
 /// Full-screen compositions reuse the production UI, with fixed Sketch map data for comparison.
 struct RegistrationFramePreview: View {
-    let step: RegistrationIntroView.Step
-    var photoStatus = RegistrationIntroView.PhotoStatus.idle
+    let step: RegistrationFlow.Step
+    var photoStatus = RegistrationFlow.PhotoStatus.idle
     var selectedLocation: GardenLocation? = nil
     var body: some View {
-        GardenListView(onRegisterGarden: {})
+        GardenListScreen(onRegisterGarden: {})
             .overlay(alignment: .bottom) {
-                RegistrationIntroView(
+                RegistrationFlow(
                     initialStep: step, initialPhotoStatus: photoStatus, initialLocation: selectedLocation,
                     referenceMapImage: "AddressSatelliteSource", onLocate: { _ in }
                 )
@@ -29,9 +29,9 @@ struct RegistrationFramePreview: View {
 struct SearchFramePreview: View {
     var query = ""
     var body: some View {
-        GardenListView(onRegisterGarden: {})
+        GardenListScreen(onRegisterGarden: {})
             .overlay(alignment: .bottom) {
-                LocationSearchView(initialQuery: query,
+                LocationSearchScreen(initialQuery: query,
                                    initialResults: query.isEmpty ? [] : [GardenPreviewData.location],
                                    onSelect: { _ in })
                     .id(query)
