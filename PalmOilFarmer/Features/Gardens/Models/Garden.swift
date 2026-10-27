@@ -10,6 +10,7 @@ struct Garden: Identifiable, Codable {
     var plantingMonth: Int? = nil
     var fertilizerRecords: [FertilizerRecord]? = nil
     var harvestRecord: HarvestRecord? = nil
+    var review: GardenReview? = nil
 }
 
 struct FertilizerRecord: Identifiable, Codable {
@@ -34,6 +35,13 @@ enum SoilType: String, CaseIterable, Identifiable, Codable {
     case other = "Lainnya"
 
     var id: String { rawValue }
+
+    // Keep legacy soil values editable while matching the new registration choices.
+    static func registrationOptions(current: SoilType?) -> [SoilType] {
+        let options: [SoilType] = [.mineral, .peat, .other]
+        if let current, !options.contains(current) { return options + [current] }
+        return options
+    }
 
     var displayName: String {
         self == .other ? rawValue : "Tanah " + rawValue

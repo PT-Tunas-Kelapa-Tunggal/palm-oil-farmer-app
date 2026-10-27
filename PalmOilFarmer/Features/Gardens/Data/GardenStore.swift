@@ -40,6 +40,16 @@ final class GardenStore {
         return persist(updated)
     }
 
+    func updateReview(_ review: GardenReview, for gardenID: UUID) -> Bool {
+        guard var garden = gardens.first(where: { $0.id == gardenID }) else {
+            errorMessage = "Kebun tidak ditemukan."
+            return false
+        }
+        // A network response must not overwrite history edited while it was in flight.
+        garden.review = review
+        return update(garden)
+    }
+
     func delete(_ garden: Garden) -> Bool {
         guard gardens.contains(where: { $0.id == garden.id }) else {
             errorMessage = "Kebun tidak ditemukan."

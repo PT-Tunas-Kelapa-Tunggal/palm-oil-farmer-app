@@ -4,6 +4,9 @@ import MapKit
 struct GardenBoundaryView: View {
     let location: GardenLocation
     let onSave: (Garden) -> Bool
+    var onDefer: ((MappingDraft) -> Bool)? = nil
+    var onSearchAgain: (() -> Void)? = nil
+    var resumesDraft = false
 
     @Environment(\.dismiss) private var dismiss
     @State private var boundary = GardenBoundary()
@@ -11,27 +14,63 @@ struct GardenBoundaryView: View {
     @State private var showsDetails = false
     @State private var showsExitConfirmation = false
     @State private var isRegionOverview = true
+    @State private var photoConfirmed: Bool
+    @State private var locationProvider = CurrentLocationProvider()
+    @State private var isLocating = false
+    @State private var locationError: String?
 
-    init(location: GardenLocation, onSave: @escaping (Garden) -> Bool) {
+    init(location: GardenLocation, initialBoundary: GardenBoundary = GardenBoundary(),
+         resumesDraft: Bool = false, onDefer: ((MappingDraft) -> Bool)? = nil, onSearchAgain: (() -> Void)? = nil,
+         onSave: @escaping (Garden) -> Bool) {
         self.location = location
         self.onSave = onSave
+        self.onDefer = onDefer
+        self.onSearchAgain = onSearchAgain
+        self.resumesDraft = resumesDraft
+        _boundary = State(initialValue: initialBoundary)
+        _photoConfirmed = State(initialValue: location.source != .photo || !initialBoundary.points.isEmpty)
         _position = State(initialValue: .region(MKCoordinateRegion(
             center: location.coordinate.mapCoordinate,
-            span: MKCoordinateSpan(latitudeDelta: 0.1, longitudeDelta: 0.1)
+            span: MKCoordinateSpan(latitudeDelta: 0.005, longitudeDelta: 0.005)
         )))
     }
 
     var body: some View {
+        Group {
+            if photoConfirmed {
+                editor
+            } else {
+                PhotoLocationConfirmationView(location: location, onConfirm: {
+                    photoConfirmed = true
+                }, onSearchAgain: {
+                    onSearchAgain?()
+                    dismiss()
+                })
+            }
+        }
+    }
+
+    private var editor: some View {
         MapReader { proxy in
             BoundaryEditorLayout(
                 boundary: boundary, isRegionOverview: isRegionOverview,
-                onClose: close, onSkip: { showsExitConfirmation = true },
+                allowsDeferring: location.source == .search && onDefer != nil,
+                closeConfirmation: ScreenCloseConfirmation(
+                    isPresented: $showsExitConfirmation,
+                    title: "Keluar dari pemetaan?",
+                    message: "Batas yang belum disimpan perlu dipetakan ulang saat kamu kembali.",
+                    destructiveTitle: "Jangan Simpan",
+                    cancelTitle: "Lanjutkan pemetaan",
+                    onDiscard: { dismiss() }
+                ),
+                onClose: close, onSkip: deferMapping,
                 onRecenter: recenter,
                 onUndo: { _ = boundary.points.popLast() },
                 onClear: { boundary.points.removeAll() },
                 onConfirm: { showsDetails = true }
             ) {
                 Map(position: $position) {
+                    UserAnnotation()
                     if boundary.points.count >= 3 {
                         MapPolygon(coordinates: boundary.coordinates)
                             .foregroundStyle(.white.opacity(0.25))
@@ -68,7 +107,6 @@ struct GardenBoundaryView: View {
                 }
                 .mapStyle(.imagery)
                 .mapControls {}
-                .saturation(0)
                 .onMapCameraChange { context in
                     isRegionOverview = context.region.span.latitudeDelta > 0.03
                 }
@@ -88,25 +126,46 @@ struct GardenBoundaryView: View {
                 return true
             }
         }
-        .confirmationDialog("Keluar dari pemetaan?", isPresented: $showsExitConfirmation, titleVisibility: .visible) {
-            Button("Keluar tanpa menyimpan", role: .destructive) { dismiss() }
-            Button("Lanjutkan pemetaan", role: .cancel) {}
-        } message: {
-            Text("Batas yang belum disimpan perlu dipetakan ulang saat kamu kembali.")
+        .task { if resumesDraft { recenter() } }
+        .task(id: isLocating) {
+            guard isLocating else { return }
+            defer { isLocating = false }
+            do {
+                let coordinate = try await locationProvider.coordinate()
+                try Task.checkCancellation()
+                withAnimation {
+                    position = .userLocation(followsHeading: false, fallback: .region(
+                        MKCoordinateRegion(center: coordinate,
+                            span: MKCoordinateSpan(latitudeDelta: 0.005, longitudeDelta: 0.005))))
+                }
+            } catch {
+                guard !Task.isCancelled else { return }
+                locationError = "Lokasi tidak dapat diperoleh. Periksa izin lokasi dan coba lagi."
+            }
         }
+        .alert("Pemetaan kebun", isPresented: Binding(
+            get: { locationError != nil }, set: { if !$0 { locationError = nil } }
+        )) {
+            Button("Mengerti", role: .cancel) {}
+        } message: { Text(locationError ?? "") }
     }
 
     private func close() {
         if boundary.points.isEmpty { dismiss() } else { showsExitConfirmation = true }
     }
 
-    private func recenter() {
-        withAnimation {
-            position = .region(MKCoordinateRegion(
-                center: location.coordinate.mapCoordinate,
-                span: MKCoordinateSpan(latitudeDelta: 0.01, longitudeDelta: 0.01)
-            ))
+    private func deferMapping() {
+        guard let onDefer else { return }
+        if onDefer(MappingDraft(location: location, boundary: boundary)) {
+            dismiss()
+        } else {
+            locationError = "Draf belum tersimpan. Coba lagi."
         }
+    }
+
+    private func recenter() {
+        guard !isLocating else { return }
+        isLocating = true
     }
 
     private func midpoint(_ first: CLLocationCoordinate2D, _ second: CLLocationCoordinate2D) -> CLLocationCoordinate2D {

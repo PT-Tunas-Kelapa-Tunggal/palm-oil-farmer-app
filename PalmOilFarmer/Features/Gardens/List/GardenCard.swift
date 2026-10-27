@@ -36,6 +36,13 @@ struct GardenCard: View {
                     .frame(maxWidth: .infinity, alignment: .leading)
                 }
                 .font(.footnote)
+                if let review = garden.review {
+                    Label(review.status == .completed ? "Hasil peninjauan tersedia" : "Dalam proses peninjauan",
+                          systemImage: review.status == .completed ? "checkmark.seal" : "clock")
+                        .font(.footnote)
+                        .foregroundStyle(.secondary)
+                        .padding(.top, 4)
+                }
             }
             .frame(maxWidth: .infinity, alignment: .leading)
             .padding(10)

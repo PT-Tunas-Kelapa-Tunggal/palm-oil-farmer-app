@@ -3,6 +3,7 @@ import SwiftUI
 struct GardenDetailsView: View {
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
     private let locationName: String
+    private let gardenID: UUID
     private let originalGarden: Garden?
     let boundary: GardenBoundary
     let onSave: (Garden) -> Bool
@@ -28,6 +29,7 @@ struct GardenDetailsView: View {
         metrics: GardenDisplayMetrics? = nil
     ) {
         locationName = location.name
+        gardenID = location.id
         originalGarden = nil
         self.boundary = boundary
         self.onSave = onSave
@@ -42,6 +44,7 @@ struct GardenDetailsView: View {
         onSave: @escaping (Garden) -> Bool
     ) {
         locationName = garden.locationName
+        gardenID = garden.id
         originalGarden = garden
         boundary = garden.boundary
         self.onSave = onSave
@@ -65,77 +68,82 @@ struct GardenDetailsView: View {
             ? AnyLayout(VStackLayout(spacing: 7))
             : AnyLayout(HStackLayout(spacing: 7))
         NavigationStack {
-            VStack(spacing: 0) {
-                ScreenHeader(title: originalGarden == nil ? "Data kebun" : "Edit kebun", onClose: {
-                    isNameFocused = false
-                    dismiss()
-                })
-                .simultaneousGesture(TapGesture().onEnded {
-                    isNameFocused = false
-                })
-                ScrollView {
-                    VStack(spacing: 0) {
-                        GardenMapView(boundary: boundary, referenceImage: referenceMapImage, showsAnnotations: true)
-                            .frame(height: 201)
-                            .simultaneousGesture(TapGesture().onEnded {
-                                isNameFocused = false
-                            })
-    
-                        TextField("Nama Kebun", text: $name)
-                            .font(.title)
-                            .textInputAutocapitalization(.words)
-                            .focused($isNameFocused)
-                            .submitLabel(.done)
-                            .onSubmit { isNameFocused = false }
-                            .accessibilityIdentifier("gardenName")
+            GeometryReader { geometry in
+                VStack(spacing: 0) {
+                    ScreenHeader(title: originalGarden == nil ? "Data kebun" : "Edit kebun", onClose: {
+                        isNameFocused = false
+                        dismiss()
+                    })
+                    .simultaneousGesture(TapGesture().onEnded {
+                        isNameFocused = false
+                    })
+                    ScrollView {
+                        VStack(spacing: 0) {
+                            GardenMapView(boundary: boundary, referenceImage: referenceMapImage, showsAnnotations: true)
+                                .frame(height: 201)
+                                .simultaneousGesture(TapGesture().onEnded {
+                                    isNameFocused = false
+                                })
+
+                            TextField("Nama Kebun", text: $name)
+                                .font(.title)
+                                .textInputAutocapitalization(.words)
+                                .focused($isNameFocused)
+                                .submitLabel(.done)
+                                .onSubmit { isNameFocused = false }
+                                .accessibilityIdentifier("gardenName")
+                                .padding(16)
+                                .frame(minHeight: 66)
+
+                            metricsLayout {
+                                detailMetric("Luas tanah", value: displayMetrics.area)
+                                detailMetric("Perimeter", value: displayMetrics.perimeter)
+                            }
+                            .padding(.horizontal, KropsTheme.Spacing.screen)
+                            .padding(.vertical, 8)
+                            .contentShape(Rectangle())
+                            .onTapGesture { isNameFocused = false }
+
+                            VStack(spacing: 16) {
+                                FormSelectionRow(title: "Tahun Tanam", placeholder: "Pilih tahun tanam",
+                                                 value: plantingYear.map { "\(PlantingDatePickerView.monthNames[plantingMonth - 1]) \($0)" },
+                                                 systemImage: "calendar", trailingImage: "chevron.up.chevron.down") {
+                                    isNameFocused = false
+                                    showsPlantingDate = true
+                                }
+                                Divider()
+                                FormSelectionRow(title: "Jenis Tanah", placeholder: "Pilih jenis tanah",
+                                                 value: soilType?.displayName, systemImage: "leaf.fill") {
+                                    isNameFocused = false
+                                    showsSoilTypes = true
+                                }
+                            }
                             .padding(16)
-                            .frame(minHeight: 66)
-    
-                        metricsLayout {
-                            detailMetric("Luas tanah", value: displayMetrics.area)
-                            detailMetric("Perimeter", value: displayMetrics.perimeter)
+                            .background(KropsTheme.tertiaryFill, in: RoundedRectangle(cornerRadius: KropsTheme.Radius.card))
+                            .padding(.horizontal, KropsTheme.Spacing.screen)
+                            .padding(.vertical, 8)
                         }
-                        .padding(.horizontal, KropsTheme.Spacing.screen)
-                        .padding(.vertical, 8)
-                        .contentShape(Rectangle())
-                        .onTapGesture { isNameFocused = false }
-    
-                        VStack(spacing: 16) {
-                            FormSelectionRow(title: "Tahun Tanam", placeholder: "Pilih tahun tanam",
-                                             value: plantingYear.map { "\(PlantingDatePickerView.monthNames[plantingMonth - 1]) \($0)" },
-                                             systemImage: "calendar", trailingImage: "chevron.up.chevron.down") {
-                                isNameFocused = false
-                                showsPlantingDate = true
-                            }
-                            Divider()
-                            FormSelectionRow(title: "Jenis Tanah", placeholder: "Pilih jenis tanah",
-                                             value: soilType?.displayName, systemImage: "leaf.fill") {
-                                isNameFocused = false
-                                showsSoilTypes = true
-                            }
-                        }
-                        .padding(16)
-                        .background(KropsTheme.tertiaryFill, in: RoundedRectangle(cornerRadius: KropsTheme.Radius.card))
-                        .padding(.horizontal, KropsTheme.Spacing.screen)
-                        .padding(.vertical, 8)
                     }
+                    .scrollDismissesKeyboard(.immediately)
+                    .background {
+                        Color.clear
+                            .contentShape(Rectangle())
+                            .onTapGesture { isNameFocused = false }
+                    }
+                    PrimaryActionButton(title: "Simpan", action: save)
+                        .padding(.horizontal, 24)
+                        .padding(.top, 16)
+                        .padding(.bottom, 2)
                 }
-                .scrollDismissesKeyboard(.interactively)
-                .background {
-                    Color.clear
-                        .contentShape(Rectangle())
-                        .onTapGesture { isNameFocused = false }
-                }
-                PrimaryActionButton(title: "Simpan", action: save)
-                    .padding(.horizontal, 24)
-                    .padding(.top, 16)
-                    .padding(.bottom, 2)
+                .frame(width: geometry.size.width, height: geometry.size.height, alignment: .top)
             }
+            // Resolve keyboard avoidance inside the sheet's content container.
+            .ignoresSafeArea(.keyboard, edges: .bottom)
             .containerBackground(.clear, for: .navigation)
             .toolbar(.hidden, for: .navigationBar)
             .navigationDestination(isPresented: $showsSoilTypes) {
                 SelectionListView(
-                    title: "Jenis Tanah", options: SoilType.allCases.map(\.displayName),
+                    title: "Jenis Tanah", options: SoilType.registrationOptions(current: soilType).map(\.displayName),
                     selected: soilType?.displayName,
                     footer: "Jenis tanah membantu kami memahami kondisi kebun Anda. Pilih yang paling mendekati."
                 ) { selected in
@@ -149,6 +157,8 @@ struct GardenDetailsView: View {
                 }
             }
         }
+        // Keep the save action at the bottom while the keyboard overlays the sheet.
+        .ignoresSafeArea(.keyboard, edges: .bottom)
         .presentationDetents([.large])
         .interactiveDismissDisabled(!name.isEmpty)
         .alert("Kebun belum tersimpan", isPresented: $showsSaveError) {
@@ -180,13 +190,14 @@ struct GardenDetailsView: View {
         }
         errorMessage = "Data tidak dapat disimpan di perangkat. Coba lagi."
         var garden = Garden(
-            id: originalGarden?.id ?? UUID(), name: trimmedName,
+            id: gardenID, name: trimmedName,
             locationName: locationName, boundary: boundary,
             plantingYear: plantingYear, soilType: soilType
         )
         garden.plantingMonth = plantingMonth
         garden.fertilizerRecords = originalGarden?.fertilizerRecords
         garden.harvestRecord = originalGarden?.harvestRecord
+        garden.review = originalGarden?.review
         showsSaveError = !onSave(garden)
         if !showsSaveError && originalGarden != nil {
             dismiss()

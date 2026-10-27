@@ -2,6 +2,8 @@ import SwiftUI
 
 struct GardenListView: View {
     var gardens: [Garden] = []
+    var drafts: [MappingDraft] = []
+    var onResumeDraft: (MappingDraft) -> Void = { _ in }
     var downloads: [MapDownloadItem] = []
     var onSelectDownload: (MapDownloadItem) -> Void = { _ in }
     var referenceMapImage: String? = nil
@@ -17,7 +19,7 @@ struct GardenListView: View {
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .padding(KropsTheme.Spacing.screen)
 
-            if gardens.isEmpty && downloads.isEmpty {
+            if gardens.isEmpty && downloads.isEmpty && drafts.isEmpty {
                 GeometryReader { geometry in
                     ScrollView {
                         EmptyStateView(
@@ -32,6 +34,29 @@ struct GardenListView: View {
             } else {
                 ScrollView {
                     LazyVStack(spacing: 12) {
+                        ForEach(drafts) { draft in
+                            Button { onResumeDraft(draft) } label: {
+                                VStack(alignment: .leading, spacing: 0) {
+                                    LocationMapPreview(location: draft.location)
+                                        .frame(height: 180)
+                                        .clipped()
+                                    VStack(alignment: .leading, spacing: 8) {
+                                        Label(draft.location.name, systemImage: "location")
+                                            .font(.subheadline)
+                                        HStack {
+                                            Text("Lanjutkan pemetaan").font(.headline)
+                                            Spacer()
+                                            Image(systemName: "arrow.right")
+                                        }
+                                    }
+                                    .padding(16)
+                                }
+                                .foregroundStyle(.primary)
+                                .background(.background, in: RoundedRectangle(cornerRadius: 24))
+                                .clipShape(RoundedRectangle(cornerRadius: 24))
+                            }
+                            .buttonStyle(.plain)
+                        }
                         ForEach(gardens) { garden in
                             Button {
                                 onSelectGarden(garden)

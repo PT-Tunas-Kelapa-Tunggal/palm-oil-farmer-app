@@ -8,6 +8,7 @@ struct GardenProfileView: View {
     let garden: Garden
     let onUpdate: (Garden) -> Bool
     let onDelete: ((Garden) -> Bool)?
+    let onUpdateReview: ((GardenReview) -> Bool)?
     var referenceMapImage: String? = nil
     var metrics: GardenDisplayMetrics? = nil
     var showsHeader = true
@@ -20,12 +21,17 @@ struct GardenProfileView: View {
     @Environment(\.dismiss) private var dismiss
     @State private var editor: HistoryEditor?
     @State private var showsReview = false
-    @State private var showsSignInNotice = false
+    @State private var showsReviewForm = false
+    @State private var receivedReview: GardenReview?
+    @State private var submittedReviewNeedsNavigation = false
+    @State private var reviewError: String?
+    @Environment(\.reviewService) private var reviewService
     @State private var showsReviewStatus = false
     @State private var showsResults = false
     @State private var showsGardenEditor = false
     @State private var showsDeleteConfirmation = false
     @State private var showsDeleteError = false
+    @State private var isNavigationOverMap = true
 
     private enum HistoryEditor: String, Identifiable {
         case fertilizer, harvest
@@ -43,6 +49,7 @@ struct GardenProfileView: View {
         reviewEntries: [ReviewTimelineEntry] = [],
         recommendationReport: FertilizerRecommendationReport? = nil,
         onDelete: ((Garden) -> Bool)? = nil,
+        onUpdateReview: ((GardenReview) -> Bool)? = nil,
         onUpdate: @escaping (Garden) -> Bool
     ) {
         self.garden = garden
@@ -56,22 +63,68 @@ struct GardenProfileView: View {
         self.recommendationReport = recommendationReport
         self.onUpdate = onUpdate
         self.onDelete = onDelete
+        self.onUpdateReview = onUpdateReview
+    }
+
+    private var demoReview: GardenReview? {
+        guard garden.review?.isLocalSimulation == true else { return nil }
+        return garden.review
+    }
+
+    private var currentReviewStatus: ReviewStatus? { demoReview?.status ?? garden.review?.status ?? reviewStatus }
+    private var currentReviewEntries: [ReviewTimelineEntry] { demoReview?.entries ?? garden.review?.entries ?? reviewEntries }
+    private var currentReport: FertilizerRecommendationReport? {
+        if demoReview?.status == .completed { return .local(for: garden) }
+        return garden.review?.report ?? recommendationReport
     }
 
     private var fertilizers: [FertilizerRecord] { garden.fertilizerRecords ?? [] }
     private var isComplete: Bool { !fertilizers.isEmpty && garden.harvestRecord != nil }
 
     var body: some View {
-        GeometryReader { geometry in
-            ScrollView {
-                profileContent(topInset: geometry.safeAreaInsets.top)
-                    .padding(.bottom, 32)
-            }
-            .scrollIndicators(.hidden)
-            .ignoresSafeArea(edges: showsHeader && layout == .standard ? .top : [])
+        ScrollView {
+            profileContent
+                .padding(.bottom, 32)
         }
+        .scrollIndicators(.hidden)
+        .scrollEdgeEffectHidden(isNavigationOverMap, for: .top)
+        .onScrollGeometryChange(for: Bool.self) { geometry in
+            geometry.contentOffset.y + geometry.contentInsets.top < 240
+        } action: { _, isOverMap in
+            isNavigationOverMap = isOverMap
+        }
+        .refreshable { await refreshReview() }
+        .ignoresSafeArea(edges: showsHeader && layout == .standard ? .top : [])
         .background(KropsTheme.background.ignoresSafeArea())
-        .toolbar(.hidden, for: .navigationBar)
+        .navigationTitle(showsHeader && layout == .standard ? "Detail Kebun" : "")
+        .navigationBarTitleDisplayMode(.inline)
+        .toolbar(showsHeader && layout == .standard ? .visible : .hidden, for: .navigationBar)
+        .toolbarColorScheme(.dark, for: .navigationBar)
+        .toolbarBackground(.ultraThinMaterial, for: .navigationBar)
+        .toolbarBackground(isNavigationOverMap ? .hidden : .visible, for: .navigationBar)
+        .toolbar {
+            if showsHeader && layout == .standard {
+                ToolbarItem(placement: .topBarTrailing) {
+                    Menu {
+                        Button("Edit kebun", systemImage: "pencil") { showsGardenEditor = true }
+                        if onDelete != nil {
+                            Button("Hapus kebun", systemImage: "trash", role: .destructive) {
+                                showsDeleteConfirmation = true
+                            }
+                        }
+                    } label: {
+                        Image(systemName: "ellipsis")
+                    }
+                    .accessibilityLabel("Opsi kebun")
+                }
+            }
+        }
+        .task(id: garden.id) { await refreshReview() }
+        .alert("Status peninjauan", isPresented: Binding(
+            get: { reviewError != nil }, set: { if !$0 { reviewError = nil } }
+        )) {
+            Button("Mengerti", role: .cancel) {}
+        } message: { Text(reviewError ?? "") }
         .sheet(isPresented: $showsGardenEditor) {
             GardenDetailsView(editing: garden, referenceMapImage: referenceMapImage, metrics: metrics, onSave: onUpdate)
         }
@@ -110,33 +163,94 @@ struct GardenProfileView: View {
             }
         }
         .navigationDestination(isPresented: $showsReviewStatus) {
-            if let reviewStatus {
-                ReviewStatusView(gardenName: garden.name, status: reviewStatus, entries: reviewEntries) {
+            if let status = currentReviewStatus {
+                ReviewStatusView(gardenName: garden.name, status: status, entries: currentReviewEntries, downloadURL: currentReport?.downloadURL,
+                                 onRefresh: { await refreshReview() },
+                                 onAdvanceDemo: demoAdvanceAction) {
                     showsResults = true
                 }
             }
         }
         .navigationDestination(isPresented: $showsResults) {
-            if let recommendationReport {
-                FertilizerRecommendationView(report: recommendationReport)
-            } else {
-                ContentUnavailableView("Hasil peninjauan belum tersedia", systemImage: "chart.bar.doc.horizontal")
-            }
+            FertilizerRecommendationView(report: currentReport ?? .local(for: garden),
+                                         initialTab: currentReport?.nutrients.isEmpty == false ? .nutrients : .allocation,
+                                         isDemo: demoReview != nil, garden: garden)
         }
-        .sheet(isPresented: $showsReview) {
-            ReviewRequestView {
-                showsSignInNotice = true
+        .sheet(isPresented: $showsReview, onDismiss: {
+            showsReviewForm = false
+            if submittedReviewNeedsNavigation {
+                submittedReviewNeedsNavigation = false
+                showsReviewStatus = true
             }
-            .alert("Masuk belum tersedia", isPresented: $showsSignInNotice) {
-                Button("Mengerti", role: .cancel) {}
-            } message: {
-                Text("Layanan akun dan pengajuan peninjauan belum terhubung.")
+        }) {
+            NavigationStack {
+                ReviewRequestView { showsReviewForm = true }
+                    .navigationDestination(isPresented: $showsReviewForm) {
+                        ReviewContactFormView { contact in
+                            let review: GardenReview
+                            if let receivedReview {
+                                review = receivedReview
+                            } else {
+                                do {
+                                    review = try await reviewService.submit(garden, contact)
+                                } catch ReviewServiceError.unavailable {
+                                    #if DEBUG
+                                    review = .localSimulation(for: garden.id)
+                                    #else
+                                    throw ReviewServiceError.unavailable
+                                    #endif
+                                }
+                                receivedReview = review
+                            }
+                            guard saveReview(review) else { throw ReviewServiceError.persistenceFailed }
+                            receivedReview = nil
+                            submittedReviewNeedsNavigation = true
+                            showsReview = false
+                        }
+                        .toolbar(.hidden, for: .navigationBar)
+                    }
             }
         }
     }
 
+    private var demoAdvanceAction: (() -> Void)? {
+        guard demoReview != nil else { return nil }
+        return { advanceDemoReview() }
+    }
+
+    private func advanceDemoReview() {
+        #if DEBUG
+        guard let review = demoReview,
+              let next = ReviewStatus(rawValue: review.status.rawValue + 1) else { return }
+        if !saveReview(.localSimulation(for: garden.id, status: next)) {
+            reviewError = "Status belum tersimpan di perangkat. Coba lagi."
+        }
+        #endif
+    }
+
+    private func saveReview(_ review: GardenReview) -> Bool {
+        if let onUpdateReview { return onUpdateReview(review) }
+        var updated = garden
+        updated.review = review
+        return onUpdate(updated)
+    }
+
+    @MainActor
+    private func refreshReview() async {
+        guard let savedReview = garden.review, savedReview.isLocalSimulation != true else { return }
+        do {
+            guard let review = try await reviewService.refresh(garden) else { return }
+            if !saveReview(review) {
+                reviewError = "Status terbaru belum tersimpan di perangkat. Coba lagi."
+            }
+        } catch {
+            guard !Task.isCancelled else { return }
+            reviewError = "Status belum dapat diperbarui. Periksa koneksi dan coba lagi."
+        }
+    }
+
     @ViewBuilder
-    private func profileContent(topInset: CGFloat) -> some View {
+    private var profileContent: some View {
         if layout == .overview {
             VStack(spacing: 12) {
                 map.clipShape(RoundedRectangle(cornerRadius: 16))
@@ -151,15 +265,16 @@ struct GardenProfileView: View {
         } else {
             VStack(spacing: 0) {
                 if showsHeader && layout == .standard {
-                    MapHeroView(
-                        title: garden.name,
-                        topInset: topInset,
-                        onBack: { dismiss() },
-                        onEdit: { showsGardenEditor = true },
-                        onDelete: onDelete == nil ? nil : { showsDeleteConfirmation = true }
-                    ) {
-                        GardenMapView(boundary: garden.boundary, referenceImage: referenceMapImage)
-                    }
+                    GardenMapView(boundary: garden.boundary, referenceImage: referenceMapImage)
+                        .frame(height: 380)
+                        .clipped()
+                        .overlay(alignment: .top) {
+                            // Keep the native navigation title readable over satellite imagery.
+                            LinearGradient(colors: [.black.opacity(0.5), .clear],
+                                           startPoint: .top, endPoint: .bottom)
+                                .frame(height: 185)
+                                .allowsHitTesting(false)
+                        }
                 } else {
                     map
                 }
@@ -178,13 +293,11 @@ struct GardenProfileView: View {
                         .padding(.top, 8)
                     profileProgress(step: .harvest)
                 } else {
-                    if isComplete {
+                    if isComplete || currentReviewStatus != nil {
                         PrimaryActionButton(title: reviewActionTitle, systemImage: reviewActionImage,
                                             imagePlacement: .trailing) {
-                            if reviewStatus == .completed {
+                            if currentReviewStatus != nil {
                                 showsResults = true
-                            } else if reviewStatus != nil {
-                                showsReviewStatus = true
                             } else {
                                 showsReview = true
                             }
@@ -215,13 +328,11 @@ struct GardenProfileView: View {
     }
 
     private var reviewActionTitle: String {
-        if reviewStatus == .completed { return "Lihat hasil peninjauan" }
-        return reviewStatus == nil ? "Ajukan peninjauan" : "Periksa peninjauan"
+        currentReviewStatus == nil ? "Ajukan peninjauan" : "Lihat hasil peninjauan"
     }
 
     private var reviewActionImage: String {
-        if reviewStatus == .completed { return "chart.bar.fill" }
-        return reviewStatus == nil ? "paperplane.fill" : "stopwatch"
+        currentReviewStatus == nil ? "paperplane.fill" : "chart.bar.fill"
     }
 
     private var map: some View {
@@ -252,6 +363,26 @@ struct GardenProfileView: View {
 }
 
 #if DEBUG
+#Preview("Detail Kebun · Sudah Diajukan") {
+    var garden = GardenPreviewData.completedGarden
+    garden.review = GardenReview(requestID: "preview", status: .submitted,
+                                 entries: ReviewTimelineEntry.referenceEntries(for: .submitted))
+    return NavigationStack {
+        GardenProfileView(garden: garden, referenceMapImage: "CodedProfileMap",
+                          metrics: GardenPreviewData.metrics, onUpdate: { _ in true })
+    }
+}
+#Preview("Detail Kebun · Navigasi") {
+    NavigationStack {
+        Color.clear
+            .navigationDestination(isPresented: .constant(true)) {
+                GardenProfileView(garden: GardenPreviewData.completedGarden,
+                                  referenceMapImage: "CodedProfileMap",
+                                  metrics: GardenPreviewData.metrics,
+                                  onDelete: { _ in true }, onUpdate: { _ in true })
+            }
+    }
+}
 #Preview("01 Copy 3 · Lengkapi Pupuk") {
     GardenProfileView(garden: GardenPreviewData.garden, referenceMapImage: "CodedProfileMap",
                       metrics: GardenPreviewData.metrics, onUpdate: { _ in true })

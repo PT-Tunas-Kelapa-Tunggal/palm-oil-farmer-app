@@ -1,4 +1,5 @@
 import SwiftUI
+import PhotosUI
 
 struct LocationSearchView: View {
     let onSelect: (GardenLocation) -> Void
@@ -11,6 +12,8 @@ struct LocationSearchView: View {
     @FocusState private var isSearchFocused: Bool
     @State private var locationProvider = CurrentLocationProvider()
     @State private var isLocating = false
+    @State private var photo: PhotosPickerItem?
+    @State private var isReadingPhoto = false
     var currentLocationSubtitle = "Gunakan lokasi perangkat"
     private let searchLocations: (String) async throws -> [GardenLocation]
 
@@ -29,10 +32,10 @@ struct LocationSearchView: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            ScreenHeader(title: "Cari Kota/Kabupaten", onClose: { dismiss() })
+            ScreenHeader(title: "Cari alamat", onClose: { dismiss() })
 
             HStack {
-                TextField("Cari Kabupaten/Kota, Pulau", text: $query)
+                TextField("Cari tempat terdekat dari kebun", text: $query)
                     .focused($isSearchFocused)
                     .submitLabel(.search)
                     .autocorrectionDisabled()
@@ -47,6 +50,13 @@ struct LocationSearchView: View {
             .background(Color(uiColor: .systemGray6), in: Capsule())
             .padding(.horizontal, KropsTheme.Spacing.screen)
 
+            Text("Nama desa, masjid, sekolah, atau simpang jalan yang Anda kenal.")
+                .font(.footnote)
+                .foregroundStyle(.secondary)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .padding(.horizontal, 32)
+                .padding(.vertical, 8)
+
             ScrollView {
                 VStack(spacing: 8) {
                     if isSearching {
@@ -54,7 +64,7 @@ struct LocationSearchView: View {
                     } else if let errorMessage {
                         Text(errorMessage).foregroundStyle(.secondary).padding()
                     } else if !query.isEmpty && results.isEmpty {
-                        Text("Lokasi tidak ditemukan. Coba nama kabupaten atau kota lain.")
+                        Text("Lokasi tidak ditemukan. Coba nama tempat atau alamat lain.")
                             .foregroundStyle(.secondary).padding()
                     }
 
@@ -66,7 +76,7 @@ struct LocationSearchView: View {
                                     .frame(width: 36, height: 36)
                                     .background(KropsTheme.tertiaryFill, in: Circle())
                                 VStack(alignment: .leading, spacing: 0) {
-                                    Text("Lokasi saat ini").font(.headline)
+                                    Text("Gunakan lokasi saat ini").font(.headline)
                                     Text(isLocating ? "Mencari lokasi…" : currentLocationSubtitle)
                                         .font(.subheadline)
                                 }
@@ -106,17 +116,17 @@ struct LocationSearchView: View {
                         .buttonStyle(.plain)
                     }
 
-                    Text("Cari kabupaten atau kota tempat kebun berada. Koneksi internet diperlukan untuk mencari dan memuat peta.")
-                        .font(.subheadline)
-                        .foregroundStyle(.secondary)
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                        .padding(16)
-                        .background(Color(uiColor: .systemGray6).opacity(0.4), in: RoundedRectangle(cornerRadius: KropsTheme.Radius.card))
+                    if query.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                        GardenPhotoPickerView(isReadingPhoto: isReadingPhoto, onOpen: {
+                            isSearchFocused = false
+                        }) { photo = $0 }
+                    }
                 }
                 .padding(.horizontal, KropsTheme.Spacing.screen)
                 .padding(.top, 8)
             }
         }
+        .task(id: photo) { await readPhoto() }
         .task { isSearchFocused = true }
         .task(id: query) {
             await search()
@@ -127,7 +137,7 @@ struct LocationSearchView: View {
                 let coordinate = try await locationProvider.coordinate()
                 try Task.checkCancellation()
                 onSelect(GardenLocation(name: "Lokasi saat ini", subtitle: "Lokasi perangkat",
-                                        coordinate: GardenCoordinate(coordinate)))
+                                        coordinate: GardenCoordinate(coordinate), source: .currentLocation))
                 dismiss()
             } catch {
                 guard !Task.isCancelled else { return }
@@ -136,6 +146,30 @@ struct LocationSearchView: View {
             isLocating = false
         }
         .presentationDetents([.large])
+    }
+
+    @MainActor
+    private func readPhoto() async {
+        guard let photo else { return }
+        isReadingPhoto = true
+        errorMessage = nil
+        defer { isReadingPhoto = false }
+        do {
+            guard let data = try await photo.loadTransferable(type: Data.self) else {
+                errorMessage = "Foto tidak dapat dibaca. Coba foto lain."
+                return
+            }
+            try Task.checkCancellation()
+            guard let coordinate = PhotoLocationReader.coordinate(in: data) else {
+                errorMessage = "Data lokasi tidak ditemukan. Pilih foto lain atau cari alamat kebun."
+                return
+            }
+            onSelect(GardenLocation(name: "Lokasi dari foto", subtitle: "Foto kebun",
+                                    coordinate: coordinate, source: .photo))
+        } catch {
+            guard !Task.isCancelled else { return }
+            errorMessage = "Foto tidak dapat dibaca. Coba foto lain."
+        }
     }
 
     @MainActor

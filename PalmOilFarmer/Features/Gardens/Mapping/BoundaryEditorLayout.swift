@@ -4,6 +4,8 @@ struct BoundaryEditorLayout<MapContent: View>: View {
     let boundary: GardenBoundary
     var metrics: GardenDisplayMetrics? = nil
     var isRegionOverview = false
+    var allowsDeferring = true
+    var closeConfirmation: ScreenCloseConfirmation? = nil
     let onClose: () -> Void
     let onSkip: () -> Void
     let onRecenter: () -> Void
@@ -25,23 +27,35 @@ struct BoundaryEditorLayout<MapContent: View>: View {
             .ignoresSafeArea()
             .overlay(alignment: .top) {
                 VStack(spacing: 0) {
-                    ScreenHeader(title: "Buat batas area kebun", onClose: onClose)
+                    ScreenHeader(title: boundary.points.count >= 3 ? "Buat batas area kebun" : "Buat batas kebun",
+                                 closeConfirmation: closeConfirmation, onClose: onClose)
                         .foregroundStyle(.white)
                     if boundary.points.isEmpty {
-                        Button(action: onSkip) {
-                            HStack {
-                                Text("Lakukan nanti saat di kebun")
-                                Spacer()
-                                Image(systemName: "arrow.right")
+                        if allowsDeferring {
+                            Button(action: onSkip) {
+                                VStack(alignment: .leading, spacing: 2) {
+                                    HStack {
+                                        Text("Lakukan Nanti").bold()
+                                        Spacer()
+                                        Image(systemName: "arrow.right")
+                                    }
+                                    Text("Jika kebun sulit ditemukan di peta, Anda dapat melanjutkan saat berada di kebun. Peta akan otomatis mengikuti posisi Anda.")
+                                }
+                                .font(.body)
+                                .foregroundStyle(.white.opacity(0.85))
+                                .padding(20)
                             }
-                            .font(.body)
-                            .foregroundStyle(.white.opacity(0.8))
-                            .padding(.horizontal, 24)
-                            .frame(minHeight: 52)
+                            .buttonStyle(.plain)
+                            .glassEffect(.regular.interactive(), in: RoundedRectangle(cornerRadius: 24))
+                            .padding(.horizontal, 12)
+                        } else {
+                            Text("Ketuk peta untuk menandai sudut-sudut kebun Anda.")
+                                .font(.body)
+                                .foregroundStyle(.white)
+                                .padding(16)
+                                .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 24))
+                                .padding(.horizontal, 12)
                         }
-                        .buttonStyle(.plain)
-                        .glassEffect(.regular.interactive(), in: Capsule())
-                        .padding(.horizontal, 12)
                     }
                 }
                 .environment(\.colorScheme, .dark)
@@ -64,7 +78,7 @@ struct BoundaryEditorLayout<MapContent: View>: View {
                         }
                         .buttonStyle(.plain)
                         .glassEffect(.regular.interactive(), in: Circle())
-                        .accessibilityLabel("Kembali ke lokasi terpilih")
+                        .accessibilityLabel("Menuju lokasi saat ini")
                     }
                     .padding(.trailing, 4)
 

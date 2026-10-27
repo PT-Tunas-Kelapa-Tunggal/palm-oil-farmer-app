@@ -1,10 +1,10 @@
 import SwiftUI
 
-enum ReviewStatus: Int, CaseIterable {
+enum ReviewStatus: Int, CaseIterable, Codable {
     case submitted, scheduled, inReview, completed
 }
 
-struct ReviewTimelineEntry: Identifiable {
+struct ReviewTimelineEntry: Identifiable, Codable {
     let id: Int
     let date: String?
     let title: String
@@ -46,13 +46,23 @@ struct ReviewStatusView: View {
     let gardenName: String
     let status: ReviewStatus
     let entries: [ReviewTimelineEntry]
+    var downloadURL: URL? = nil
+    var onRefresh: () async -> Void = {}
+    var onAdvanceDemo: (() -> Void)? = nil
     let onViewResults: () -> Void
     @Environment(\.dismiss) private var dismiss
+    @State private var download = ReviewReportDownload.shared
 
     var body: some View {
         VStack(spacing: 0) {
             ScreenHeader(title: "Status Pengajuan", systemImage: "chevron.left",
-                         subtitle: "Kebun " + gardenName, onClose: { dismiss() })
+                         subtitle: "Kebun " + gardenName,
+                         onTitleLongPress: onAdvanceDemo, onClose: { dismiss() })
+            if onAdvanceDemo != nil {
+                Text("Simulasi · belum dikirim ke server")
+                    .font(.caption).foregroundStyle(.secondary)
+                    .padding(.bottom, 8)
+            }
             ScrollView {
                 VStack(spacing: 24) {
                     ForEach(entries) { entry in
@@ -60,16 +70,41 @@ struct ReviewStatusView: View {
                     }
                 }
                 .background(alignment: .leading) {
-                    Rectangle().fill(.secondary).frame(width: 1)
+                    Rectangle().fill(.primary).frame(width: 1)
                         .padding(.top, 34).padding(.bottom, -24).offset(x: 10)
                 }
                 .padding(.horizontal, 24)
                 .padding(.top, 16)
+                .padding(.bottom, 16)
             }
             .scrollIndicators(.hidden)
+            .refreshable { await onRefresh() }
             if status == .completed {
-                PrimaryActionButton(title: "Lihat & unduh hasil", systemImage: "document.fill",
-                                    imagePlacement: .trailing, action: onViewResults)
+                if let downloadURL {
+                    if download.activeURL == downloadURL {
+                        ReviewDownloadProgressCard(receivedBytes: download.receivedBytes,
+                                                   expectedBytes: download.expectedBytes)
+                    } else if let file = download.savedFile(for: downloadURL) {
+                        ShareLink("Buka hasil unduhan", item: file)
+                            .padding(.top, 8)
+                    } else {
+                        Button("Unduh hasil peninjauan") { download.start(downloadURL) }
+                            .disabled(download.activeURL != nil)
+                            .padding(.top, 8)
+                        if let message = download.errorMessage {
+                            Text(message).font(.footnote).foregroundStyle(.secondary)
+                                .padding(.horizontal, 24)
+                        }
+                    }
+                }
+                PrimaryActionButton(title: downloadURL == nil ? "Lihat hasil peninjauan" : "Lihat & unduh hasil", systemImage: "document.fill",
+                                    imagePlacement: .trailing) {
+                    if let downloadURL, download.savedFile(for: downloadURL) == nil,
+                       download.activeURL == nil {
+                        download.start(downloadURL)
+                    }
+                    onViewResults()
+                }
                     .padding(.horizontal, 24).padding(.vertical, 8)
             }
         }
@@ -98,7 +133,7 @@ struct ReviewTimelineRow: View {
                 .frame(width: 20)
                 .padding(.bottom, isLast ? 0 : -24)
 
-            VStack(alignment: .leading, spacing: 8) {
+            VStack(alignment: .leading, spacing: 4) {
                 if let date = entry.date {
                     Text(date).font(.footnote).foregroundStyle(.secondary)
                 }
@@ -136,4 +171,46 @@ struct ReviewTimelineRow: View {
 #Preview("Timeline Row", traits: .sizeThatFitsLayout) {
     ReviewTimelineRow(entry: ReviewTimelineEntry.referenceEntries(for: .submitted)[0])
         .padding(24).frame(width: 402)
+}
+
+struct ReviewDownloadProgressCard: View {
+    let receivedBytes: Int64
+    let expectedBytes: Int64
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            VStack(alignment: .leading, spacing: 8) {
+                Text("Mengunduh hasil peninjauan").font(.headline)
+                if expectedBytes > 0 {
+                    HStack(spacing: 8) {
+                        let fraction = min(1, Double(receivedBytes) / Double(expectedBytes))
+                        ProgressView(value: fraction).tint(.primary)
+                        Text(fraction.formatted(.percent.precision(.fractionLength(0))))
+                            .font(.footnote).foregroundStyle(.secondary)
+                    }
+                } else {
+                    ProgressView()
+                }
+                Text(ByteCountFormatter.string(fromByteCount: receivedBytes, countStyle: .file)
+                     + (expectedBytes > 0
+                        ? " dari " + ByteCountFormatter.string(fromByteCount: expectedBytes, countStyle: .file)
+                        : ""))
+                    .font(.footnote).foregroundStyle(.secondary)
+            }
+            .padding(16)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .background(KropsTheme.tertiaryFill, in: RoundedRectangle(cornerRadius: 24))
+            Text("Anda dapat keluar dari halaman ini. Setelah selesai diunduh, hasil peninjauan dapat dibuka tanpa sinyal internet.")
+                .font(.footnote).foregroundStyle(.secondary)
+                .padding(.horizontal, 8)
+        }
+        .padding(.horizontal, 16)
+    }
+}
+
+#Preview("Unduhan laporan", traits: .sizeThatFitsLayout) {
+    ReviewDownloadProgressCard(receivedBytes: 8_000_000, expectedBytes: 20_000_000)
+        .padding(.vertical, 16)
+        .frame(width: 402)
+        .background(KropsTheme.background)
 }

@@ -28,7 +28,6 @@ struct GardenMapView: View {
                 }
                 .mapStyle(.imagery)
                 .mapControls {}
-                .saturation(0)
                 .allowsHitTesting(false)
             }
         }

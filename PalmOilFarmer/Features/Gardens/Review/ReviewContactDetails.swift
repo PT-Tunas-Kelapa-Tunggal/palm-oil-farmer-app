@@ -7,7 +7,12 @@ struct ReviewContactDetails {
 }
 
 enum ReviewServiceError: LocalizedError {
-    case unavailable
-    var errorDescription: String? { "Layanan pengajuan peninjauan belum terhubung." }
+    case unavailable, persistenceFailed
+    var errorDescription: String? {
+        switch self {
+        case .unavailable: "Layanan pengajuan peninjauan belum terhubung."
+        case .persistenceFailed: "Pengajuan diterima, tetapi status belum tersimpan di perangkat. Periksa koneksi layanan sebelum mencoba lagi."
+        }
+    }
 }
 

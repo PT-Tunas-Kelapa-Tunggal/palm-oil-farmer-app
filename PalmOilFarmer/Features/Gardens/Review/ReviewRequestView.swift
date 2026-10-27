@@ -22,7 +22,7 @@ struct ConsentCheckbox: View {
 }
 
 struct ReviewRequestView: View {
-    let onSignIn: () -> Void
+    let onContinue: () -> Void
     @Environment(\.dismiss) private var dismiss
     @State private var hasConsent = false
     @State private var showsConsentError = false
@@ -49,8 +49,8 @@ struct ReviewRequestView: View {
                 ConsentCheckbox(isChecked: $hasConsent,
                                 message: "Saya memahami dan menyetujui program peninjauan kebun.")
                     .padding(.horizontal, 8)
-                PrimaryActionButton(title: "Masuk dengan Apple", systemImage: "apple.logo") {
-                    if hasConsent { onSignIn() } else { showsConsentError = true }
+                PrimaryActionButton(title: "Lanjutkan") {
+                    if hasConsent { onContinue() } else { showsConsentError = true }
                 }
             }
             .padding(.horizontal, 24)
@@ -73,7 +73,7 @@ struct ReviewRequestView: View {
 }
 
 #Preview("Informasi Peninjauan · Logged Out") {
-    ReviewRequestView(onSignIn: {})
+    ReviewRequestView(onContinue: {})
 }
 #Preview("Consent", traits: .sizeThatFitsLayout) {
     @Previewable @State var checked = false

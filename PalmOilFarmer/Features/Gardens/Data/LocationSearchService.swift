@@ -6,7 +6,7 @@ enum LocationSearchService {
     static func search(_ query: String) async throws -> [GardenLocation] {
         let request = MKLocalSearch.Request()
         request.naturalLanguageQuery = "\(query), Indonesia"
-        request.resultTypes = .address
+        request.resultTypes = [.address, .pointOfInterest]
         let response = try await MKLocalSearch(request: request).start()
         try Task.checkCancellation()
         return response.mapItems.map { item in
