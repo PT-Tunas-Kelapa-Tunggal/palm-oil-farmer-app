@@ -1,5 +1,7 @@
 # Implementasi CodedUI2
 
+Catatan implementasi sebelum refactor struktur. Untuk lokasi file dan status alur terbaru, lihat [ScreenMap](ScreenMap.md); untuk hasil pemeriksaan task ini, lihat [Verification](Verification.md).
+
 Sumber: dokumen Sketch KROPS, page CodedUI2 (8DE4612E-1AC7-45FD-ACC8-1812F7C8915C).
 Audit 25 Oktober 2026: struktur frame dan teks seluruh alur diperiksa; screenshot digunakan untuk registrasi, profil, hasil, pilihan area, navigasi, dan unduhan.
 
@@ -24,7 +26,7 @@ Audit 25 Oktober 2026: struktur frame dan teks seluruh alur diperiksa; screensho
 
 Layanan backend belum tersedia dalam project. Default ReviewService melempar error yang jelas; aplikasi tidak menganggap pengajuan berhasil tanpa respons layanan.
 
-Sediakan ReviewService(submit:refresh:) melalui environment reviewService pada ContentView.
+Sediakan ReviewService(submit:refresh:) melalui environment reviewService pada AppFlow.
 - submit menerima Garden dan ReviewContactDetails, lalu mengembalikan GardenReview dari respons server.
 - refresh menerima Garden dengan requestID tersimpan, lalu mengembalikan status/laporan terbaru atau nil bila tidak berubah.
 - Transport harus memakai idempotency untuk pengajuan agar retry jaringan tidak membuat permintaan ganda.
@@ -35,7 +37,7 @@ Sediakan ReviewService(submit:refresh:) melalui environment reviewService pada C
 
 Data pada RecommendationPreviewData hanya contoh dari desain dan hanya dikompilasi pada DEBUG; bukan hasil analisis kebun atau prakiraan cuaca aktual.
 
-## Validasi
+## Validasi sebelum refactor
 
 - BuildProject berhasil.
 - Swift Testing: 19 tes lulus, mencakup penyimpanan lama, kegagalan tulis, draf yang bertahan setelah relaunch, laporan Codable, dan pembaruan status yang mempertahankan riwayat terbaru.

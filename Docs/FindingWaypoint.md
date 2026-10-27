@@ -1,12 +1,14 @@
 # Finding Waypoint — eksperimen
 
+Catatan implementasi sebelum refactor struktur. Untuk lokasi file dan status alur terbaru, lihat [ScreenMap](ScreenMap.md); untuk hasil pemeriksaan task ini, lihat [Verification](Verification.md).
+
 Implementasi berada di `PalmOilFarmer/Features/FindingWaypoint/{Models,Data,Views}`; fixture berada di PreviewSupport. Tidak ada perubahan ke app entry point, model Garden, penyimpanan zona, assets, atau target pengujian.
 
 ## Menjalankan
 
 - Buka FindingWaypointFlow.swift dan pilih preview “Finding Waypoint — data tersimpan” untuk tab Home/Pemupukan.
 - Preview “Pemupukan — contoh” dan “Zona 5” menggunakan data contoh yang tidak disimpan.
-- Untuk berjalan dengan GPS pada iPhone, **pengembang perlu mengganti sementara ContentView() dengan FindingWaypointFlow() di WindowGroup PalmOilFarmerApp.swift**, lalu Run ke iPhone. Perubahan ini sengaja tidak dilakukan oleh implementasi ini karena file tersebut berada di luar folder yang diizinkan.
+- Untuk berjalan dengan GPS pada iPhone, **pengembang perlu mengganti sementara AppFlow() dengan FindingWaypointFlow() di WindowGroup PalmOilFarmerApp.swift**, lalu Run ke iPhone. Perubahan ini sengaja tidak dilakukan oleh implementasi ini agar root produksi tetap sama.
 - Aktifkan internet dan izinkan lokasi saat aplikasi digunakan, termasuk Lokasi Tepat. Project sudah memiliki deskripsi izin lokasi.
 - Tab Home memakai GardenStore dan alur registrasi yang sudah ada: tambah/edit/hapus di Home memengaruhi data kebun asli.
 - Pemupukan → pilih kebun → pilih zona 1–6 → Mulai panduan. Tombol lokasi mengikuti posisi; menggeser peta melepaskan follow. Tombol peta menampilkan kebun kembali.
@@ -26,7 +28,7 @@ Implementasi berada di `PalmOilFarmer/Features/FindingWaypoint/{Models,Data,View
 - “Dekat titik tujuan” muncul hanya ketika jarak <=15 m dan akurasi <=10 m. Ini indikator perkiraan, bukan konfirmasi tiba atau jaminan zona yang benar. Zona kecil tetap membutuhkan verifikasi lapangan.
 - Tidak ada background tracking, offline map, routing internal kebun, atau jaminan akurasi GPS. Kanopi pohon dan kondisi perangkat perlu diuji di kebun.
 
-## Pemeriksaan
+## Pemeriksaan sebelum refactor
 
 Build melalui Xcode berhasil. RunCodeSnippet memeriksa persegi panjang, L, U, titik collinear, segitiga, masing-masing dalam dua arah urutan: enam zona, luas total, keseimbangan luas, waypoint di dalam fragmen. Batas menyilang/kosong dan GPS invalid/kedaluwarsa juga diperiksa.
 

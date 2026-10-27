@@ -1,5 +1,7 @@
 # FindingBlock
 
+Catatan implementasi sebelum refactor struktur. Untuk lokasi file dan status alur terbaru, lihat [ScreenMap](ScreenMap.md); untuk hasil pemeriksaan task ini, lihat [Verification](Verification.md).
+
 Logika pembagian wilayah dan GPS mengikuti FindingWaypoint. UI mengikuti Sketch KROPS / CodedUI2: Fertilizer Allocation, Pilih Area Kebun, dan Navigasi Area.
 
 ## Alur dan tampilan
@@ -17,5 +19,5 @@ Batas kebun aktif dibagi menjadi dua kolom dan tiga baris dengan luas seimbang; 
 GPS memakai CLLocationUpdate dan CLServiceSession. Sesi dimulai saat layar navigasi aktif, berhenti ketika ditutup/tidak aktif. Posisi lebih tua dari 15 detik diabaikan; garis dan jarak memerlukan Lokasi Tepat dan akurasi <=25 m. Garis menunjukkan arah langsung, bukan rute jalan.
 Pembagian mendukung poligon valid sampai 500 titik, rentang lokal <1°. MapKit memerlukan koneksi untuk citra satelit.
 
-## Validasi
+## Validasi sebelum refactor
 Build berhasil. Tes geometri, luas, identitas kebun, dan GPS sebelumnya lulus. Tes baru kode area serta penghilangan garis triangulasi lulus. Preview alokasi, pilihan area, navigasi, dan profil dipakai untuk memeriksa susunan UI. Pemuatan citra MapKit dan GPS lapangan tetap perlu pemeriksaan perangkat.

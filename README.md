@@ -3,6 +3,10 @@
 An iOS app for oil palm farmers, built with SwiftUI and organized by feature, with one app target and a Swift Testing target.
 Keep the structure small: add folders and abstractions when real code needs them.
 
+Start with the [screen map](Docs/ScreenMap.md) to find a page, its components, data owner, and navigation. See [architecture](Docs/Architecture.md) for placement rules and [verification](Docs/Verification.md) for refactor checks.
+
+The app starts at `PalmOilFarmerApp → AppFlow → GardenListScreen`. Screen files name navigation/modal destinations; Flow files connect steps.
+
 ## Naming
 
 - Display name: **Palm Oil Farmer**.

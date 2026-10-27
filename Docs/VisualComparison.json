@@ -1,0 +1,199 @@
+[
+  {
+    "name": "list-download-dark-large",
+    "changedPixels": 0,
+    "totalPixels": 351348,
+    "bbox": null
+  },
+  {
+    "name": "list-download-dark-normal",
+    "changedPixels": 0,
+    "totalPixels": 351348,
+    "bbox": null
+  },
+  {
+    "name": "list-download-light-large",
+    "changedPixels": 0,
+    "totalPixels": 351348,
+    "bbox": null
+  },
+  {
+    "name": "list-download-light-normal",
+    "changedPixels": 0,
+    "totalPixels": 351348,
+    "bbox": null
+  },
+  {
+    "name": "list-draft-dark-large",
+    "changedPixels": 67243,
+    "totalPixels": 351348,
+    "bbox": [
+      15,
+      107,
+      387,
+      290
+    ]
+  },
+  {
+    "name": "list-draft-dark-normal",
+    "changedPixels": 0,
+    "totalPixels": 351348,
+    "bbox": null
+  },
+  {
+    "name": "list-draft-light-large",
+    "changedPixels": 0,
+    "totalPixels": 351348,
+    "bbox": null
+  },
+  {
+    "name": "list-draft-light-normal",
+    "changedPixels": 0,
+    "totalPixels": 351348,
+    "bbox": null
+  },
+  {
+    "name": "list-empty-dark-large",
+    "changedPixels": 0,
+    "totalPixels": 351348,
+    "bbox": null
+  },
+  {
+    "name": "list-empty-dark-normal",
+    "changedPixels": 0,
+    "totalPixels": 351348,
+    "bbox": null
+  },
+  {
+    "name": "list-empty-light-large",
+    "changedPixels": 0,
+    "totalPixels": 351348,
+    "bbox": null
+  },
+  {
+    "name": "list-empty-light-normal",
+    "changedPixels": 0,
+    "totalPixels": 351348,
+    "bbox": null
+  },
+  {
+    "name": "list-long-dark-large",
+    "changedPixels": 0,
+    "totalPixels": 351348,
+    "bbox": null
+  },
+  {
+    "name": "list-long-dark-normal",
+    "changedPixels": 0,
+    "totalPixels": 351348,
+    "bbox": null
+  },
+  {
+    "name": "list-long-light-large",
+    "changedPixels": 0,
+    "totalPixels": 351348,
+    "bbox": null
+  },
+  {
+    "name": "list-long-light-normal",
+    "changedPixels": 0,
+    "totalPixels": 351348,
+    "bbox": null
+  },
+  {
+    "name": "nutrients-dark-large",
+    "changedPixels": 0,
+    "totalPixels": 351348,
+    "bbox": null
+  },
+  {
+    "name": "nutrients-dark-normal",
+    "changedPixels": 0,
+    "totalPixels": 351348,
+    "bbox": null
+  },
+  {
+    "name": "nutrients-light-large",
+    "changedPixels": 0,
+    "totalPixels": 351348,
+    "bbox": null
+  },
+  {
+    "name": "nutrients-light-normal",
+    "changedPixels": 0,
+    "totalPixels": 351348,
+    "bbox": null
+  },
+  {
+    "name": "profile-dark-large",
+    "changedPixels": 0,
+    "totalPixels": 351348,
+    "bbox": null
+  },
+  {
+    "name": "profile-dark-normal",
+    "changedPixels": 0,
+    "totalPixels": 351348,
+    "bbox": null
+  },
+  {
+    "name": "profile-light-large",
+    "changedPixels": 0,
+    "totalPixels": 351348,
+    "bbox": null
+  },
+  {
+    "name": "profile-light-normal",
+    "changedPixels": 0,
+    "totalPixels": 351348,
+    "bbox": null
+  },
+  {
+    "name": "profile-partial-dark-large",
+    "changedPixels": 0,
+    "totalPixels": 351348,
+    "bbox": null
+  },
+  {
+    "name": "profile-partial-dark-normal",
+    "changedPixels": 0,
+    "totalPixels": 351348,
+    "bbox": null
+  },
+  {
+    "name": "profile-partial-light-large",
+    "changedPixels": 0,
+    "totalPixels": 351348,
+    "bbox": null
+  },
+  {
+    "name": "profile-partial-light-normal",
+    "changedPixels": 0,
+    "totalPixels": 351348,
+    "bbox": null
+  },
+  {
+    "name": "review-dark-large",
+    "changedPixels": 0,
+    "totalPixels": 351348,
+    "bbox": null
+  },
+  {
+    "name": "review-dark-normal",
+    "changedPixels": 0,
+    "totalPixels": 351348,
+    "bbox": null
+  },
+  {
+    "name": "review-light-large",
+    "changedPixels": 0,
+    "totalPixels": 351348,
+    "bbox": null
+  },
+  {
+    "name": "review-light-normal",
+    "changedPixels": 0,
+    "totalPixels": 351348,
+    "bbox": null
+  }
+]
