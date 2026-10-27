@@ -1,12 +1,6 @@
 import Foundation
 import Observation
 
-struct MappingDraft: Identifiable, Codable {
-    var id: UUID { location.id }
-    let location: GardenLocation
-    var boundary: GardenBoundary
-}
-
 @MainActor
 @Observable
 final class MappingDraftStore {

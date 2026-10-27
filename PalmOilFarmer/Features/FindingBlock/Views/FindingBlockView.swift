@@ -77,94 +77,11 @@ struct FindingBlockView: View {
             isLoading = false
         }
         .sheet(isPresented: $showsAreaPicker) {
-            BlockAreaPicker(blocks: blocks, selectedID: $selectedBlockID)
+            BlockAreaPickerScreen(blocks: blocks, selectedID: $selectedBlockID)
         }
         .fullScreenCover(isPresented: $showsMap) {
             FindingBlockMapScreen(garden: garden, zones: blocks, selectedZoneID: $selectedBlockID)
         }
-    }
-}
-
-private struct BlockAreaPicker: View {
-    let blocks: [GardenBlock]
-    @Binding var selectedID: Int
-    @State private var pendingID: Int
-    @State private var query = ""
-    @Environment(\.dismiss) private var dismiss
-
-    init(blocks: [GardenBlock], selectedID: Binding<Int>) {
-        self.blocks = blocks
-        _selectedID = selectedID
-        _pendingID = State(initialValue: selectedID.wrappedValue)
-    }
-
-    private var filteredBlocks: [GardenBlock] {
-        blocks.filter { query.isEmpty || $0.code.localizedCaseInsensitiveContains(query) }
-    }
-
-    var body: some View {
-        VStack(spacing: 0) {
-            ScreenHeader(title: "Area Kebun", confirmationAction: {
-                selectedID = pendingID
-                dismiss()
-            }, onClose: { dismiss() })
-            TextField("Cari kode area", text: $query)
-                .textInputAutocapitalization(.characters)
-                .autocorrectionDisabled()
-                .padding(16)
-                .background(KropsTheme.tertiaryFill, in: Capsule())
-                .padding(.horizontal, 16)
-            ScrollView {
-                LazyVStack(spacing: 8) {
-                    ForEach(filteredBlocks) { block in
-                        Button { pendingID = block.id } label: {
-                            HStack(spacing: 16) {
-                                BlockAreaThumbnail(block: block)
-                                    .frame(width: 68, height: 68)
-                                    .clipShape(RoundedRectangle(cornerRadius: 12))
-                                Text("Area " + block.code).font(.title3)
-                                Spacer()
-                                if pendingID == block.id {
-                                    Image(systemName: "checkmark").foregroundStyle(.secondary)
-                                }
-                            }
-                            .contentShape(Rectangle())
-                        }
-                        .buttonStyle(.plain)
-                        .accessibilityAddTraits(pendingID == block.id ? .isSelected : [])
-                    }
-                    if filteredBlocks.isEmpty { ContentUnavailableView.search(text: query) }
-                }
-                .padding(16)
-            }
-        }
-        .presentationDetents([.large])
-    }
-}
-
-private struct BlockAreaThumbnail: View {
-    let block: GardenBlock
-
-    var body: some View {
-        Canvas { context, size in
-            let points = block.fragments.flatMap { $0.map { MKMapPoint($0) } }
-            guard let minX = points.map(\.x).min(), let maxX = points.map(\.x).max(),
-                  let minY = points.map(\.y).min(), let maxY = points.map(\.y).max() else { return }
-            let scale = min((size.width - 14) / max(maxX - minX, 1),
-                            (size.height - 14) / max(maxY - minY, 1))
-            func projected(_ coordinate: CLLocationCoordinate2D) -> CGPoint {
-                let point = MKMapPoint(coordinate)
-                return CGPoint(x: (point.x - (minX + maxX) / 2) * scale + size.width / 2,
-                               y: (point.y - (minY + maxY) / 2) * scale + size.height / 2)
-            }
-            for edge in block.outlineEdges {
-                var path = Path()
-                path.addLines(edge.map(projected))
-                context.stroke(path, with: .color(.black.opacity(0.55)), lineWidth: 1.5)
-            }
-        }
-        .background(Color(white: 0.62))
-        .accessibilityHidden(true)
     }
 }
 
@@ -177,7 +94,7 @@ private struct BlockAreaThumbnail: View {
 }
 #Preview("Pilih Area · Sketch") {
     @Previewable @State var selectedID = 3
-    BlockAreaPicker(blocks: BlockZoning.zones(for: GardenPreviewData.completedGarden.boundary),
+    BlockAreaPickerScreen(blocks: BlockZoning.zones(for: GardenPreviewData.completedGarden.boundary),
                     selectedID: $selectedID)
 }
 #endif

@@ -31,46 +31,6 @@ struct HarvestHistoryCard: View {
     }
 }
 
-struct HistoryValueRow: View {
-    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
-    let title: String
-    let value: String
-
-    var body: some View {
-        let layout = dynamicTypeSize.isAccessibilitySize
-            ? AnyLayout(VStackLayout(alignment: .leading, spacing: 4))
-            : AnyLayout(HStackLayout(spacing: 8))
-        layout {
-            Text(title)
-            if !dynamicTypeSize.isAccessibilitySize { Spacer(minLength: 4) }
-            Text(value).fontWeight(.semibold)
-        }
-        .font(.subheadline)
-        .frame(minHeight: 20)
-        .accessibilityElement(children: .combine)
-    }
-}
-
-struct GardenSectionHeader: View {
-    let title: String
-    let onEdit: () -> Void
-
-    var body: some View {
-        HStack {
-            Text(title).font(.title3.weight(.semibold))
-            Spacer()
-            Button(action: onEdit) {
-                Label("Ubah", systemImage: "pencil.line")
-                    .font(.subheadline)
-                    .frame(minWidth: 44, minHeight: 44)
-            }
-            .buttonStyle(.plain)
-        }
-        .padding(.horizontal, 8)
-        .frame(minHeight: 25)
-    }
-}
-
 #if DEBUG
 #Preview("Fertilizer Card", traits: .sizeThatFitsLayout) {
     FertilizerHistoryCard(record: GardenPreviewData.fertilizers[0]).padding().frame(width: 402)

@@ -1,6 +1,6 @@
 import SwiftUI
 
-struct ContentView: View {
+struct AppFlow: View {
     @State private var store = GardenStore()
     @State private var draftStore = MappingDraftStore()
     @State private var selectedGardenID: UUID?
@@ -69,5 +69,5 @@ struct ContentView: View {
 }
 
 #Preview {
-    ContentView()
+    AppFlow()
 }

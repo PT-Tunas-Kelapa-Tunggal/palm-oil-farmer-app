@@ -31,10 +31,10 @@ struct EmptyStateView<Illustration: View>: View {
 #if DEBUG
 #Preview("Empty State", traits: .sizeThatFitsLayout) {
     EmptyStateView(
-        title: "Belum ada kebun terdaftar",
-        message: "Gambar batas kebun di peta untuk mulai memantau kondisi dan hasil panen."
+        title: "Belum ada data",
+        message: "Tambahkan data pertama untuk memulai."
     ) {
-        SeedlingIcon()
+        Image(systemName: "tray").font(.system(size: 64))
     }
     .frame(width: 402)
     .padding(.vertical, 32)

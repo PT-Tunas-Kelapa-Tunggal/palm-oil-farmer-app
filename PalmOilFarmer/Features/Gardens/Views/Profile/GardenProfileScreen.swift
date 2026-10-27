@@ -307,16 +307,13 @@ struct GardenProfileScreen: View {
                     }
 
                     if !fertilizers.isEmpty {
-                        fertilizerHistory
+                        GardenFertilizerHistorySection(fertilizers: fertilizers, hasHarvest: garden.harvestRecord != nil) {
+                            editor = .fertilizer
+                        }
                     }
 
                     if let harvest = garden.harvestRecord {
-                        VStack(spacing: 16) {
-                            GardenSectionHeader(title: "Riwayat Panen") { editor = .harvest }
-                            HarvestHistoryCard(record: harvest)
-                        }
-                        .padding(.horizontal, KropsTheme.Spacing.screen)
-                        .padding(.vertical, 8)
+                        GardenHarvestHistorySection(harvest: harvest) { editor = .harvest }
                     }
 
                     if !isComplete {
@@ -340,19 +337,6 @@ struct GardenProfileScreen: View {
             .frame(height: 201)
     }
 
-    private var fertilizerHistory: some View {
-        VStack(spacing: 16) {
-            GardenSectionHeader(title: "Riwayat pupuk") { editor = .fertilizer }
-            VStack(spacing: 8) {
-                ForEach(fertilizers) { record in
-                    FertilizerHistoryCard(record: record)
-                }
-            }
-        }
-        .padding(.horizontal, KropsTheme.Spacing.screen)
-        .padding(.top, 8)
-        .padding(.bottom, garden.harvestRecord == nil ? 24 : 8)
-    }
 
     private func profileProgress(step: GardenProfileStep) -> some View {
         GardenProfileProgressView(step: step) {

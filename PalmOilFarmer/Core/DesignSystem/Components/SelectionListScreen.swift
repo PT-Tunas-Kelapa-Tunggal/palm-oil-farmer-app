@@ -52,9 +52,9 @@ struct SelectionListScreen: View {
     }
 }
 
-#Preview("Jenis Tanah · Selected") {
-    SelectionListScreen(title: "Jenis Tanah", options: SoilType.allCases.map(\.displayName),
-                      selected: "Tanah Mineral",
-                      footer: "Jenis tanah membantu kami memahami kondisi kebun Anda. Pilih yang paling mendekati.",
+#Preview("Selection List · Selected") {
+    SelectionListScreen(title: "Pilihan", options: ["Pilihan pertama", "Pilihan kedua"],
+                      selected: "Pilihan pertama",
+                      footer: "Pilih opsi yang paling sesuai.",
                       onSelect: { _ in })
 }

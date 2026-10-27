@@ -36,24 +36,7 @@ struct GardenListScreen: View {
                     LazyVStack(spacing: 12) {
                         ForEach(drafts) { draft in
                             Button { onResumeDraft(draft) } label: {
-                                VStack(alignment: .leading, spacing: 0) {
-                                    LocationMapPreview(location: draft.location)
-                                        .frame(height: 180)
-                                        .clipped()
-                                    VStack(alignment: .leading, spacing: 8) {
-                                        Label(draft.location.name, systemImage: "location")
-                                            .font(.subheadline)
-                                        HStack {
-                                            Text("Lanjutkan pemetaan").font(.headline)
-                                            Spacer()
-                                            Image(systemName: "arrow.right")
-                                        }
-                                    }
-                                    .padding(16)
-                                }
-                                .foregroundStyle(.primary)
-                                .background(.background, in: RoundedRectangle(cornerRadius: 24))
-                                .clipShape(RoundedRectangle(cornerRadius: 24))
+                                MappingDraftCard(draft: draft)
                             }
                             .buttonStyle(.plain)
                         }
