@@ -2,6 +2,9 @@ import SwiftUI
 
 struct GardenListScreen: View {
     var gardens: [Garden] = []
+    /// When supplied, this repository provides the gardens shown by the list.
+    /// Otherwise the screen uses the `gardens` value passed by its app owner.
+    var repository: (any GardenListRepository)? = nil
     var drafts: [MappingDraft] = []
     var onResumeDraft: (MappingDraft) -> Void = { _ in }
     var downloads: [MapDownloadItem] = []
@@ -11,15 +14,17 @@ struct GardenListScreen: View {
     var onSelectGarden: (Garden) -> Void = { _ in }
     let onRegisterGarden: () -> Void
 
+    private var displayedGardens: [Garden] { repository?.gardens ?? gardens }
+
     var body: some View {
         VStack(spacing: 0) {
             Text("Kebun")
                 .font(.largeTitle.bold())
-                .foregroundStyle(gardens.isEmpty ? KropsTheme.titleText : .primary)
+                .foregroundStyle(displayedGardens.isEmpty ? KropsTheme.titleText : .primary)
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .padding(KropsTheme.Spacing.screen)
 
-            if gardens.isEmpty && downloads.isEmpty && drafts.isEmpty {
+            if displayedGardens.isEmpty && downloads.isEmpty && drafts.isEmpty {
                 GeometryReader { geometry in
                     ScrollView {
                         EmptyStateView(
@@ -40,7 +45,7 @@ struct GardenListScreen: View {
                             }
                             .buttonStyle(.plain)
                         }
-                        ForEach(gardens) { garden in
+                        ForEach(displayedGardens) { garden in
                             Button {
                                 onSelectGarden(garden)
                             } label: {
@@ -77,6 +82,10 @@ struct GardenListScreen: View {
 
 #Preview("01 · Kebun Kosong") {
     GardenListScreen(onRegisterGarden: {})
+}
+
+#Preview("01 · Kebun Dummy") {
+    GardenListScreen(repository: DummyGardenListRepository(), onRegisterGarden: {})
 }
 
 #if DEBUG

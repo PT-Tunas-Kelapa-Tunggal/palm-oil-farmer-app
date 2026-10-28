@@ -11,7 +11,10 @@ struct AppFlow: View {
 
     var body: some View {
         NavigationStack {
-            GardenListScreen(gardens: store.gardens,
+            GardenListScreen(
+                           // Restore `gardens: store.gardens` and remove the repository
+                           // argument below to use the saved gardens again.
+                           repository: DummyGardenListRepository(),
                            drafts: draftStore.drafts.filter { draft in !store.gardens.contains { $0.id == draft.id } }, onResumeDraft: {
                 mappingDraft = $0
             }, onSelectGarden: { garden in
