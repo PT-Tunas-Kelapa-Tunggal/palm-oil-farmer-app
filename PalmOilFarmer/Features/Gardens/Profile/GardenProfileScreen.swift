@@ -79,12 +79,24 @@ struct GardenProfileScreen: View {
     }
 
     private var fertilizers: [FertilizerRecord] { garden.fertilizerRecords ?? [] }
-    private var isComplete: Bool { !fertilizers.isEmpty && garden.harvestRecord != nil }
 
     var body: some View {
         ScrollView {
-            profileContent
-                .padding(.bottom, 32)
+            GardenProfileContent(
+                garden: garden, referenceMapImage: referenceMapImage, metrics: metrics,
+                showsHeader: showsHeader, layout: layout, chartValues: chartValues,
+                currentReviewStatus: currentReviewStatus,
+                onEditFertilizer: { editor = .fertilizer },
+                onEditHarvest: { editor = .harvest },
+                onReview: {
+                    if currentReviewStatus != nil {
+                        showsResults = true
+                    } else {
+                        showsReview = true
+                    }
+                }
+            )
+            .padding(.bottom, 32)
         }
         .scrollIndicators(.hidden)
         .scrollEdgeEffectHidden(isNavigationOverMap, for: .top)
@@ -183,34 +195,31 @@ struct GardenProfileScreen: View {
                 showsReviewStatus = true
             }
         }) {
-            NavigationStack {
-                ReviewRequestScreen { showsReviewForm = true }
-                    .navigationDestination(isPresented: $showsReviewForm) {
-                        ReviewContactFormScreen { contact in
-                            let review: GardenReview
-                            if let receivedReview {
-                                review = receivedReview
-                            } else {
-                                do {
-                                    review = try await reviewService.submit(garden, contact)
-                                } catch ReviewServiceError.unavailable {
-                                    #if DEBUG
-                                    review = .localSimulation(for: garden.id)
-                                    #else
-                                    throw ReviewServiceError.unavailable
-                                    #endif
-                                }
-                                receivedReview = review
-                            }
-                            guard saveReview(review) else { throw ReviewServiceError.persistenceFailed }
-                            receivedReview = nil
-                            submittedReviewNeedsNavigation = true
-                            showsReview = false
-                        }
-                        .toolbar(.hidden, for: .navigationBar)
-                    }
-            }
+            ReviewSubmissionView(showsReviewForm: $showsReviewForm, onSubmit: submitReview)
         }
+    }
+
+    // Keep the server response across failed local saves so retry does not submit twice.
+    private func submitReview(_ contact: ReviewContactDetails) async throws {
+        let review: GardenReview
+        if let receivedReview {
+            review = receivedReview
+        } else {
+            do {
+                review = try await reviewService.submit(garden, contact)
+            } catch ReviewServiceError.unavailable {
+                #if DEBUG
+                review = .localSimulation(for: garden.id)
+                #else
+                throw ReviewServiceError.unavailable
+                #endif
+            }
+            receivedReview = review
+        }
+        guard saveReview(review) else { throw ReviewServiceError.persistenceFailed }
+        receivedReview = nil
+        submittedReviewNeedsNavigation = true
+        showsReview = false
     }
 
     private var demoAdvanceAction: (() -> Void)? {
@@ -248,102 +257,6 @@ struct GardenProfileScreen: View {
             reviewError = "Status belum dapat diperbarui. Periksa koneksi dan coba lagi."
         }
     }
-
-    @ViewBuilder
-    private var profileContent: some View {
-        if layout == .overview {
-            VStack(spacing: 12) {
-                map.clipShape(RoundedRectangle(cornerRadius: 16))
-                VStack(alignment: .leading, spacing: 8) {
-                    Text(garden.name).font(.title)
-                    GardenSummaryView(garden: garden, metrics: metrics)
-                }
-                .padding(10)
-                .background(.background, in: RoundedRectangle(cornerRadius: KropsTheme.Radius.card))
-            }
-            .padding(.horizontal, KropsTheme.Spacing.screen)
-        } else {
-            VStack(spacing: 0) {
-                if showsHeader && layout == .standard {
-                    GardenMapView(boundary: garden.boundary, referenceImage: referenceMapImage)
-                        .frame(height: 380)
-                        .clipped()
-                        .overlay(alignment: .top) {
-                            // Keep the native navigation title readable over satellite imagery.
-                            LinearGradient(colors: [.black.opacity(0.5), .clear],
-                                           startPoint: .top, endPoint: .bottom)
-                                .frame(height: 185)
-                                .allowsHitTesting(false)
-                        }
-                } else {
-                    map
-                }
-                Text(garden.name)
-                    .font(.title)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .padding(16)
-
-                GardenSummaryView(garden: garden, metrics: metrics)
-                    .padding(.horizontal, KropsTheme.Spacing.screen)
-                    .padding(.vertical, 8)
-
-                if layout == .chart {
-                    GardenHistoryChart(values: chartValues) { editor = .harvest }
-                        .padding(.horizontal, KropsTheme.Spacing.screen)
-                        .padding(.top, 8)
-                    profileProgress(step: .harvest)
-                } else {
-                    if isComplete || currentReviewStatus != nil {
-                        PrimaryActionButton(title: reviewActionTitle, systemImage: reviewActionImage,
-                                            imagePlacement: .trailing) {
-                            if currentReviewStatus != nil {
-                                showsResults = true
-                            } else {
-                                showsReview = true
-                            }
-                        }
-                        .padding(.horizontal, KropsTheme.Spacing.screen)
-                        .padding(.vertical, 8)
-                    }
-
-                    if !fertilizers.isEmpty {
-                        GardenFertilizerHistorySection(fertilizers: fertilizers, hasHarvest: garden.harvestRecord != nil) {
-                            editor = .fertilizer
-                        }
-                    }
-
-                    if let harvest = garden.harvestRecord {
-                        GardenHarvestHistorySection(harvest: harvest) { editor = .harvest }
-                    }
-
-                    if !isComplete {
-                        profileProgress(step: fertilizers.isEmpty ? .fertilizer : .harvest)
-                    }
-                }
-            }
-        }
-    }
-
-    private var reviewActionTitle: String {
-        currentReviewStatus == nil ? "Ajukan peninjauan" : "Lihat hasil peninjauan"
-    }
-
-    private var reviewActionImage: String {
-        currentReviewStatus == nil ? "paperplane.fill" : "chart.bar.fill"
-    }
-
-    private var map: some View {
-        GardenMapView(boundary: garden.boundary, referenceImage: referenceMapImage)
-            .frame(height: 201)
-    }
-
-
-    private func profileProgress(step: GardenProfileStep) -> some View {
-        GardenProfileProgressView(step: step) {
-            editor = step == .fertilizer ? .fertilizer : .harvest
-        }
-    }
-
 }
 
 #if DEBUG

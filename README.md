@@ -67,3 +67,5 @@ Open `DesignSystemCatalog.swift` in Canvas to inspect shared controls. Before me
 - [Swift Testing](https://developer.apple.com/documentation/testing)
 
 The folder layout is a project convention, not an Apple-mandated architecture.
+
+Latest Gardens ownership refactor: [verification](Docs/OwnershipVerification.md) and [accepted plan](Docs/RefactorOwnershipPlan.md).

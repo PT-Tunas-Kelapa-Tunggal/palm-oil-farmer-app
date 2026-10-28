@@ -92,11 +92,11 @@ Setiap entri memisahkan asal presentasi, komposisi, dan pemilik data. Komponen i
 
 **Asal/status:** Aktif; push dari daftar melalui [AppFlow](../PalmOilFarmer/App/AppFlow.swift). Juga dipakai tab Home eksperimen.
 
-**Komposisi:** [GardenSummaryView](../PalmOilFarmer/Features/Gardens/Profile/Components/GardenSummaryView.swift), [GardenFertilizerHistorySection](../PalmOilFarmer/Features/Gardens/Profile/Components/GardenFertilizerHistorySection.swift), [GardenHarvestHistorySection](../PalmOilFarmer/Features/Gardens/Profile/Components/GardenHarvestHistorySection.swift), [GardenProfileProgressView](../PalmOilFarmer/Features/Gardens/Profile/Components/GardenProfileProgressView.swift), [GardenHistoryChart](../PalmOilFarmer/Features/Gardens/History/Components/GardenHistoryChart.swift); map/gradient, judul, toolbar, review action, profileContent/map/profileProgress masih inline.
+**Komposisi:** [GardenSummaryView](../PalmOilFarmer/Features/Gardens/Profile/Components/GardenSummaryView.swift), [GardenFertilizerHistorySection](../PalmOilFarmer/Features/Gardens/Profile/Components/GardenFertilizerHistorySection.swift), [GardenHarvestHistorySection](../PalmOilFarmer/Features/Gardens/Profile/Components/GardenHarvestHistorySection.swift), [GardenProfileProgressView](../PalmOilFarmer/Features/Gardens/Profile/Components/GardenProfileProgressView.swift), [GardenHistoryChart](../PalmOilFarmer/Features/Gardens/History/Components/GardenHistoryChart.swift); [GardenProfileContent](../PalmOilFarmer/Features/Gardens/Profile/GardenProfileContent.swift) menyusun map/gradient, judul, ringkasan, riwayat, review action dan progress. ScrollView, toolbar dan presentasi tetap di screen.
 
 **Data dan output:** [Garden](../PalmOilFarmer/Features/Gardens/Shared/Garden.swift) terkini milik induk. State modal/editor/review/scroll lokal. onUpdate/onDelete/onUpdateReview diteruskan ke store. [ReviewService](../PalmOilFarmer/Features/Gardens/Review/ReviewService.swift) lewat environment; refresh tidak dipindah.
 
-**Varian/modal:** standard aktif; overview/chart reference. Sheet edit, pupuk, panen, review; push status/hasil; confirmation hapus dan alert kegagalan. Section riwayat memakai [FertilizerHistoryCard](../PalmOilFarmer/Features/Gardens/History/Components/GardenHistoryViews.swift), [HarvestHistoryCard](../PalmOilFarmer/Features/Gardens/History/Components/GardenHistoryViews.swift), [GardenSectionHeader](../PalmOilFarmer/Features/Gardens/Shared/Components/GardenSectionHeader.swift).
+**Varian/modal:** standard aktif; overview/chart reference. Sheet edit, pupuk, panen, [ReviewSubmissionView](../PalmOilFarmer/Features/Gardens/Review/ReviewSubmissionView.swift) (NavigationStack informasi → kontak); push status/hasil; confirmation hapus dan alert kegagalan. Section riwayat memakai [FertilizerHistoryCard](../PalmOilFarmer/Features/Gardens/History/Components/GardenHistoryViews.swift), [HarvestHistoryCard](../PalmOilFarmer/Features/Gardens/History/Components/GardenHistoryViews.swift), [GardenSectionHeader](../PalmOilFarmer/Features/Gardens/Profile/Components/GardenSectionHeader.swift).
 
 ### Petakan batas kebun
 
@@ -226,7 +226,7 @@ Setiap entri memisahkan asal presentasi, komposisi, dan pemilik data. Komponen i
 
 **Komposisi:** [ScreenHeader](../PalmOilFarmer/Core/DesignSystem/Components/ScreenHeader.swift), contactField inline, [ConsentCheckbox](../PalmOilFarmer/Features/Gardens/Review/Components/ConsentCheckbox.swift), [PrimaryActionButton](../PalmOilFarmer/Core/DesignSystem/Components/PrimaryActionButton.swift).
 
-**Data dan output:** name/phone/address/consent/focus/submitting/error lokal. onSubmit async diberikan profil, memanggil [ReviewService](../PalmOilFarmer/Features/Gardens/Review/ReviewService.swift) dan saveReview; receivedReview di profil menjaga retry jika persistence gagal.
+**Data dan output:** name/phone/address/consent/focus/submitting/error lokal. onSubmit async diteruskan ReviewSubmissionView dari submitReview pada profil, memanggil [ReviewService](../PalmOilFarmer/Features/Gardens/Review/ReviewService.swift) dan saveReview; receivedReview di profil menjaga retry jika persistence gagal.
 
 **Varian/modal:** Validasi, submitting, error; interaksi tutup dinonaktifkan saat submit. Berhasil: profil menutup sheet lalu push status.
 

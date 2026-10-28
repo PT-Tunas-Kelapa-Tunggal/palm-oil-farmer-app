@@ -47,7 +47,7 @@ Docs/
 | GardenDetailsScreen berada di Details | Form yang sama dipakai pendaftaran dan edit profil; kedua mode dan pemanggil dicatat di ScreenMap, tanpa menduplikasi editor. |
 | GardenBoundaryScreen tetap satu screen | State editor dan konfirmasi lokasi foto berkaitan erat; `editor` masih computed property pada screen supaya task GPS dan sheet detail tetap menempel di lokasi semula. |
 | Panduan awal RegistrationFlow tetap inline | Hanya komposisi singkat teks, ilustrasi dan tombol; state langkah tetap milik flow. Langkah pencarian adalah screen tersendiri. |
-| Profil masih memiliki `profileContent`, `map`, `profileProgress` inline | Bagian ini menyusun varian standard/overview/chart dan callback yang dikuasai profil; section riwayat pupuk dan panen yang mandiri sudah diekstrak. |
+| GardenProfileContent menyusun isi; ReviewSubmissionView menyusun sheet | GardenProfileScreen tetap memiliki seluruh state presentasi, submit/refresh, response retry, onDismiss dan callback store. Dua komponen baru tidak menambah store, task atau Flow. |
 | GardenProfileLayout dan GardenProfileStep tetap dekat UI | Keduanya konfigurasi presentasi, bukan model persistence. GardenMetricTile tetap bersama GardenSummaryView karena hanya membentuk ringkasan tersebut. |
 | History cards tetap satu file GardenHistoryViews | Kartu pupuk dan panen kecil dan berhubungan; HistoryValueRow dan GardenSectionHeader yang dipakai lintas area dipisahkan ke komponen bersama. |
 | GardenPickerField tetap di design system | API hanya label, nilai dan content generik walaupun nama historisnya menyebut Garden. Preview EmptyStateView kini memakai ikon generik dan SelectionListScreen memakai opsi string tanpa SoilType; SeedlingIcon tetap milik Gardens. |
@@ -66,3 +66,23 @@ Semua tipe yang dipisah mempertahankan implementasinya. Hanya `BlockAreaPickerSc
 Fixtures Gardens, Recommendation dan Waypoint berada di PreviewSupport/Fixtures dan dijaga `#if DEBUG`. Komposisi reference berada di PreviewSupport/ReferenceScreens. Preview lokal sederhana boleh berada di file pemilik UI. Preview yang menunjukkan hasil unduhan atau varian profil tidak berarti alur tersebut aktif dari root. Lihat status tiap tujuan di ScreenMap.
 
 Dokumen implementasi [CodedUI2](CodedUI2Implementation.md), [FindingBlock](FindingBlock.md), dan [FindingWaypoint](FindingWaypoint.md) memuat konteks sebelumnya; hasil verifikasi refactor saat ini dicatat di [Verification](Verification.md).
+
+## Ownership Gardens setelah pengelompokan area
+
+[GardenProfileContent](../PalmOilFarmer/Features/Gardens/Profile/GardenProfileContent.swift) menerima nilai kebun/layout/status dan tiga callback: edit pupuk, edit panen, aksi review. ScrollView dan tracking scroll tetap di GardenProfileScreen. [ReviewSubmissionView](../PalmOilFarmer/Features/Gardens/Review/ReviewSubmissionView.swift) menerima binding showsReviewForm serta onSubmit; NavigationStack sheet dipindahkan utuh. Respons server tetap disimpan di receivedReview pada profil jika persistence gagal, agar retry tidak mengirim permintaan kedua. Perpindahan ke status tetap terjadi sesudah sheet ditutup.
+
+| Shared | Pemakai runtime |
+| --- | --- |
+| Garden, GardenBoundary, GardenLocation, GardenDisplayMetrics | List, Details, Mapping, Profile dan fitur yang memakai kontrak kebun |
+| GardenStore / GardenPersistence | AppFlow; FindingWaypointFlow ketika eksperimen dijalankan |
+| CurrentLocationProvider | Registration/LocationSearchScreen, Mapping/GardenBoundaryScreen |
+| GardenMapView | List, Profile, Details dan Recommendations |
+| LocationMapPreview | Kartu draf List dan reference MapDownloads |
+| GardenAreaIcon | List/GardenCard, Profile/GardenSummaryView dan GardenProfileProgressView |
+| HistoryValueRow | Kartu riwayat History dan Recommendations/FertilizerCostTable |
+
+SeedlingIcon milik List, BoundaryGuideIllustration milik Registration, MapHeroView milik MapDownloads. FertilizerAllocationSection milik Recommendations meskipun juga dipakai FindingBlock. Garden sebagai aggregate persistence merujuk model review/laporan di area pemiliknya; folder bukan batas module dan tidak menjamin dependensi satu arah.
+
+Verifikasi iterasi ownership: [OwnershipVerification](OwnershipVerification.md). Verifikasi 27 Oktober tetap merupakan catatan historis refactor pertama.
+
+Penyimpangan kecil dari rencana: GardenSectionHeader berada di Profile/Components karena hanya dua section profil yang memakainya saat runtime. Preview di History tidak menjadikannya komponen bersama.

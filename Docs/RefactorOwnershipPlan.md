@@ -1,10 +1,10 @@
 # Rencana struktur SwiftUI yang sederhana dan konsisten
 
-**Revisi 28 Oktober 2026 — hanya rencana, belum implementasi.** Dokumen ini menggantikan versi sebelumnya dari RefactorOwnershipPlan. Source diperiksa pada branch `codex/refactor-swiftui-structure`, commit `5245dd4`. Sebelum revisi, satu-satunya file untracked adalah dokumen rencana ini; source tracked bersih.
+**Rencana disetujui 28 Oktober 2026 — kini diimplementasikan.** Dokumen ini menggantikan versi sebelumnya dari RefactorOwnershipPlan. Source diperiksa pada branch `codex/refactor-swiftui-structure`, commit `5245dd4`. Sebelum revisi, satu-satunya file untracked adalah dokumen rencana ini; source tracked bersih.
 
 Tujuan: seseorang yang ingin mengubah satu bagian aplikasi dapat menemukan halaman, komponen dan pemilik datanya dari nama file serta lokasi yang berdekatan. Tidak ada target jumlah folder atau jumlah baris per file.
 
-[Architecture](Architecture.md) dan [ScreenMap](ScreenMap.md) masih menggambarkan implementasi sekarang. Struktur di bawah adalah target berikutnya, bukan klaim pekerjaan sudah selesai. Panduan pertama tetap menjadi acuan kompatibilitas data/Git/pengujian, tetapi pilihan struktur dan pemisahan pada rencana terbaru ini menggantikan usulan lamanya ketika implementasi diminta.
+[Architecture](Architecture.md) dan [ScreenMap](ScreenMap.md) sudah diperbarui. Hasil pemeriksaan dan batasannya dicatat terpisah di [OwnershipVerification](OwnershipVerification.md). Bagian urutan kerja/verifikasi berikut mempertahankan rencana yang disepakati; tidak semua skenario di dalamnya otomatis merupakan bukti tes lulus. Panduan pertama tetap menjadi acuan kompatibilitas data/Git/pengujian, tetapi pilihan struktur dan pemisahan pada rencana terbaru ini menggantikan usulan lamanya ketika implementasi diminta.
 
 ## 1. Keputusan penamaan
 
@@ -98,7 +98,7 @@ Tidak membuat subfolder kosong atau satu folder Models/Data untuk satu file. Tid
 ## 3. Batas kode bersama
 
 - `Shared` menyimpan Garden, geometri/lokasi, display metrics, store/persistence kebun dan layanan lokasi yang dipakai pencarian serta pemetaan. Instansiasi GardenStore tetap di AppFlow; memindahkan file tidak memindahkan pemilik state.
-- Komponen bersama: GardenMapView, LocationMapPreview, GardenAreaIcon, GardenSectionHeader dan HistoryValueRow. Catat pemakai runtime masing-masing pada Architecture setelah implementasi.
+- Komponen bersama: GardenMapView, LocationMapPreview, GardenAreaIcon dan HistoryValueRow. Catat pemakai runtime masing-masing pada Architecture setelah implementasi.
 - SeedlingIcon masuk List; BoundaryGuideIllustration masuk Registration; MapHeroView, MapDownloadCard dan MapDownloadProgressView masuk MapDownloads. Pemakaian oleh preview tidak otomatis menjadikan komponen Shared.
 - Model MappingDraft tetap milik Mapping walaupun ditampilkan List. Card unduhan tetap milik MapDownloads walaupun dipasang List. FertilizerAllocationSection tetap milik Recommendations walaupun dipakai FindingBlock. Pemakaian lintas area tidak mengharuskan duplikasi atau pemindahan ke Shared.
 - Garden adalah aggregate persistence yang merujuk GardenReview dan laporan rekomendasi. Ketergantungan nilai lintas folder ini dipertahankan, tanpa migrasi JSON. Struktur folder tidak memberikan isolasi module atau jaminan dependensi satu arah.
@@ -164,7 +164,7 @@ Selesai bila: seluruh path tujuan terisi tanpa lokasi lama ganda; tanggung jawab
 
 ## 7. Lampiran: perpindahan 74 file yang ada
 
-Semua tujuan di bawah relatif terhadap `PalmOilFarmer/Features/Gardens/`. Asal ditautkan ke file yang ada sekarang. Tujuan belum dibuat. Semua nama tipe dan file dipertahankan; dua file baru pada bagian 4 tidak termasuk 74 perpindahan ini.
+Semua tujuan di bawah relatif terhadap `PalmOilFarmer/Features/Gardens/`. Label asal mempertahankan lokasi historis; tautan mengarah ke file tujuan yang kini sudah dibuat. Semua nama tipe dan file dipertahankan; dua file baru pada bagian 4 tidak termasuk 74 perpindahan ini.
 
 | File asal | Tujuan |
 | --- | --- |
@@ -198,7 +198,7 @@ Semua tujuan di bawah relatif terhadap `PalmOilFarmer/Features/Gardens/`. Asal d
 | [Views/Components/FertilizerAllocationSection.swift](../PalmOilFarmer/Features/Gardens/Recommendations/Components/FertilizerAllocationSection.swift) | `Recommendations/Components/FertilizerAllocationSection.swift` |
 | [Views/Components/GardenAreaIcon.swift](../PalmOilFarmer/Features/Gardens/Shared/Components/GardenAreaIcon.swift) | `Shared/Components/GardenAreaIcon.swift` |
 | [Views/Components/GardenMapView.swift](../PalmOilFarmer/Features/Gardens/Shared/Components/GardenMapView.swift) | `Shared/Components/GardenMapView.swift` |
-| [Views/Components/GardenSectionHeader.swift](../PalmOilFarmer/Features/Gardens/Shared/Components/GardenSectionHeader.swift) | `Shared/Components/GardenSectionHeader.swift` |
+| [Views/Components/GardenSectionHeader.swift](../PalmOilFarmer/Features/Gardens/Profile/Components/GardenSectionHeader.swift) | `Profile/Components/GardenSectionHeader.swift` |
 | [Views/Components/HistoryValueRow.swift](../PalmOilFarmer/Features/Gardens/Shared/Components/HistoryValueRow.swift) | `Shared/Components/HistoryValueRow.swift` |
 | [Views/Components/LocationMapPreview.swift](../PalmOilFarmer/Features/Gardens/Shared/Components/LocationMapPreview.swift) | `Shared/Components/LocationMapPreview.swift` |
 | [Views/Components/MapDownloadCard.swift](../PalmOilFarmer/Features/Gardens/MapDownloads/Components/MapDownloadCard.swift) | `MapDownloads/Components/MapDownloadCard.swift` |
@@ -242,3 +242,5 @@ Semua tujuan di bawah relatif terhadap `PalmOilFarmer/Features/Gardens/`. Asal d
 | [Views/Review/ReviewContactFormScreen.swift](../PalmOilFarmer/Features/Gardens/Review/ReviewContactFormScreen.swift) | `Review/ReviewContactFormScreen.swift` |
 | [Views/Review/ReviewRequestScreen.swift](../PalmOilFarmer/Features/Gardens/Review/ReviewRequestScreen.swift) | `Review/ReviewRequestScreen.swift` |
 | [Views/Review/ReviewStatusScreen.swift](../PalmOilFarmer/Features/Gardens/Review/ReviewStatusScreen.swift) | `Review/ReviewStatusScreen.swift` |
+
+Penyesuaian saat implementasi: GardenSectionHeader dipindahkan ke Profile/Components setelah pemeriksaan seluruh pemakai menunjukkan hanya section profil yang menggunakannya saat runtime.
