@@ -24,10 +24,8 @@ The app starts at `PalmOilFarmerApp → AppFlow → GardenListScreen`. Screen fi
 | `PalmOilFarmer/Core/DesignSystem/Components` | Reusable UI with no dependency on garden models or services |
 | `PalmOilFarmer/Core/DesignSystem/Styles` | Button styles and shared presentation modifiers |
 | `PalmOilFarmer/Core/DesignSystem/Catalog` | Light, dark, and accessibility-size component previews |
-| `PalmOilFarmer/Features/Gardens/Models` | Shared garden values, boundary geometry, display metrics |
-| `PalmOilFarmer/Features/Gardens/Data` | Store, JSON persistence, location access, MapKit search, photo metadata |
-| `PalmOilFarmer/Features/Gardens/Views/Components` | Shared UI that understands gardens or maps |
-| `PalmOilFarmer/Features/Gardens/Views` | Screens, flows, and local components for List, Registration, Mapping, Profile, History, Review, Recommendations |
+| `PalmOilFarmer/Features/Gardens` | List, Profile, Details, Registration, Mapping, History, Review, Recommendations, MapDownloads; screens and supporting data/services live together |
+| `PalmOilFarmer/Features/Gardens/Shared` | Shared garden values, persistence, location access and domain UI components |
 | `PalmOilFarmer/Features/FindingBlock` | Allocation section and navigation with Models, Data, Views |
 | `PalmOilFarmer/Features/FindingWaypoint` | Separate waypoint experiment with Models, Data, Views |
 | `PalmOilFarmer/Resources` | Asset catalog; asset names remain unchanged |

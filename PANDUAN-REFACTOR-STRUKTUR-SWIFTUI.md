@@ -16,7 +16,7 @@ Dokumen ini adalah panduan implementasi untuk coding agent, bukan bukti bahwa re
 
 Saat pengguna meminta menjalankan seluruh panduan, inventarisasi seluruh aplikasi dan terapkan bertahap mulai dari Gardens/List, lalu area Gardens lain dan fitur lainnya. Jika pengguna membatasi task, misalnya hanya Gardens/List, patuhi batas itu; jangan memindahkan seluruh Core atau resource dalam task yang sempit. Saat pengguna hanya meminta audit atau revisi panduan, jangan menjalankan refactor aplikasi atau operasi Git.
 
-## 2. Fakta awal yang harus diverifikasi ulang
+## 2. Fakta historis baseline awal yang harus diverifikasi ulang
 
 Catatan berikut berasal dari pembacaan source pada 27 Oktober 2026. Baca ulang kode dan instruksi repo sebelum bekerja; kondisi ini bisa berubah.
 
@@ -40,51 +40,16 @@ Catatan berikut berasal dari pembacaan source pada 27 Oktober 2026. Baca ulang k
 
 ## 3. Struktur tujuan dan aturan penempatan
 
-Berikut konvensi tujuan untuk refactor penuh. Isinya diisi berdasarkan source aktual; jangan membuat folder kosong atau menduplikasi lokasi lama dan baru.
+Konvensi Gardens diperbarui pada 28 Oktober 2026 sesuai [rencana ownership](Docs/RefactorOwnershipPlan.md). Struktur aktual dan alasan penempatan tersedia di [Architecture](Docs/Architecture.md).
 
-```text
-PalmOilFarmer/
-├── App/                          # Entry point, pemilik store, alur tingkat app
-├── Core/
-│   └── DesignSystem/
-│       ├── Tokens/
-│       ├── Components/           # UI generik tanpa model/layanan fitur
-│       ├── Styles/
-│       └── Catalog/              # Preview komponen generik
-├── Features/
-│   ├── Gardens/
-│   │   ├── Models/
-│   │   ├── Data/                 # Store, persistence, akses framework/layanan
-│   │   └── Views/
-│   │       ├── List/
-│   │       │   ├── GardenListScreen.swift
-│   │       │   └── Components/
-│   │       │       └── GardenCard.swift
-│   │       ├── Profile/
-│   │       ├── Registration/
-│   │       ├── Mapping/
-│   │       ├── History/
-│   │       ├── Review/
-│   │       ├── Recommendations/
-│   │       └── Components/       # UI yang digunakan lintas area Gardens
-│   ├── FindingBlock/
-│   └── FindingWaypoint/
-├── Resources/
-│   └── Assets.xcassets/
-└── PreviewSupport/               # Fixtures dan komposisi reference/eksperimen
-
-PalmOilFarmerTests/               # Tetap menjadi target test tersendiri
-Docs/
-├── Architecture.md
-└── ScreenMap.md
-```
-
-- `Core/DesignSystem` menggantikan lokasi top-level `DesignSystem` dalam refactor penuh. Jangan membuat `Core/Common/Views` sebagai tempat kedua untuk komponen generik yang sama.
-- Tambahkan `Core/Services`, `Core/Extensions`, atau `Core/Models` hanya jika ada tanggung jawab bersama yang nyata dan sudah ditelusuri. Hindari `Utils` sebagai tempat serba guna. Jangan memindahkan semua model domain ke Core hanya karena dipakai dua fitur; catat penggunaan lintas fitur dan pilih perubahan terkecil yang memperjelas kepemilikannya.
-- Di fitur, gunakan `Models` dan `Data` untuk kebutuhan non-UI, serta `Views` untuk UI. Untuk fitur kecil, isi `Views` boleh datar. Buat subarea/Components ketika membantu pencarian, bukan untuk mengejar keseragaman jumlah folder.
-- Pindahkan asset catalog ke Resources sebagai satu kesatuan pada task yang mencakup resource. Pertahankan nama aset, konfigurasi target, dan lookup-nya. PreviewSupport berisi kode Swift pendukung, sehingga tetap terpisah dari resource statis.
-- Jangan menambahkan wrapper `iOS`, Controllers, Repository, Fonts, atau ViewModels tanpa kebutuhan. Bila sudah ada pola lokal yang relevan, jelaskan pemetaannya.
-- Ikuti struktur tujuan ini secara konsisten pada area yang dikerjakan. Bila fakta kode memerlukan penyimpangan, tulis alasan spesifik dalam Architecture.md; jangan memakai alasan umum “sesuaikan kebutuhan” untuk membiarkan batas tetap kabur.
+- App, Core/DesignSystem, Features, Resources dan PreviewSupport tetap dipisahkan.
+- Gardens dikelompokkan per area: List, Profile, Details, Registration, Mapping, History, Review, Recommendations, MapDownloads, Shared.
+- Screen, model dan layanan berada dekat area pemilik. Components menampung UI lokal; Recommendations/Models menampung kontrak laporan. Jangan membuat Models/Data/Views di setiap area secara otomatis.
+- Shared menampung domain, store/persistence, layanan lokasi bersama dan komponen yang benar-benar lintas area. Pemakaian lintas area saja tidak menghapus ownership: draf milik Mapping, laporan milik Recommendations.
+- FindingBlock dan FindingWaypoint mempertahankan struktur yang ada. Jangan memindahkan demi keseragaman.
+- Core/DesignSystem berisi UI generik tanpa dependensi fitur, termasuk preview. Jangan membuat Utils/Common atau lapisan repository/ViewModel/coordinator tanpa kebutuhan.
+- Flow adalah penamaan opsional bagi penghubung langkah yang sudah ada. Tidak membuat Flow per area. Nama file mengikuti tipe utama; helper kecil terkait boleh tetap bersama.
+- Pertahankan aset, target, konfigurasi dan kontrak data. Tidak ada folder kosong atau source duplikat.
 
 ### Penamaan dan batas UI
 
