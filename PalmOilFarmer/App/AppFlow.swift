@@ -2,6 +2,7 @@ import SwiftUI
 
 struct AppFlow: View {
     @State private var store = GardenStore()
+    @State private var dummyRepository = DummyGardenListRepository()
     @State private var draftStore = MappingDraftStore()
     @State private var selectedGardenID: UUID?
     @State private var showsRegistration = false
@@ -12,20 +13,26 @@ struct AppFlow: View {
     var body: some View {
         NavigationStack {
             GardenListScreen(
-                           // Restore `gardens: store.gardens` and remove the repository
-                           // argument below to use the saved gardens again.
-                           repository: DummyGardenListRepository(),
-                           drafts: draftStore.drafts.filter { draft in !store.gardens.contains { $0.id == draft.id } }, onResumeDraft: {
-                mappingDraft = $0
-            }, onSelectGarden: { garden in
-                selectedGardenID = garden.id
-            }) {
+                // To show saved gardens, pass `gardens: store.gardens` and remove
+                // the repository argument.
+                repository: dummyRepository,
+                drafts: draftStore.drafts.filter { draft in !store.gardens.contains { $0.id == draft.id } },
+                onResumeDraft: { mappingDraft = $0 },
+                onSelectGarden: { garden in selectedGardenID = garden.id }
+            ) {
                 retrySearch = false
                 showsRegistration = true
             }
             .toolbar(.hidden, for: .navigationBar)
             .navigationDestination(item: $selectedGardenID) { id in
-                if let garden = store.gardens.first(where: { $0.id == id }) {
+                if let garden = dummyRepository.gardens.first(where: { $0.id == id }) {
+                    GardenProfileScreen(
+                        garden: garden,
+                        onDelete: { dummyRepository.delete($0) },
+                        onUpdateReview: { dummyRepository.updateReview($0, for: id) },
+                        onUpdate: { dummyRepository.update($0) }
+                    )
+                } else if let garden = store.gardens.first(where: { $0.id == id }) {
                     GardenProfileScreen(garden: garden, onDelete: store.delete,
                                       onUpdateReview: { store.updateReview($0, for: id) }, onUpdate: store.update)
                 }

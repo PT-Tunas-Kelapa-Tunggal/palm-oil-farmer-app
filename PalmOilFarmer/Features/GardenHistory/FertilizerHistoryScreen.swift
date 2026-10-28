@@ -50,10 +50,10 @@ struct FertilizerHistoryScreen: View {
                 SelectionListScreen(
                     title: "Jenis Pupuk", options: FertilizerCatalogue.names,
                     selected: drafts.first(where: { $0.id == id })?.name,
-                    footer: "Pilih sesuai nama pupuk yang tertera pada karung. Jika tidak ada dalam daftar, pilih Lainnya."
+                    footer: "Pilih formula NPK yang tertera pada karung, masukkan komposisi sendiri, atau pilih komposisi tidak diketahui."
                 ) { name in
                     guard let index = drafts.firstIndex(where: { $0.id == id }) else { return }
-                    drafts[index].name = name
+                    drafts[index].selectFertilizerType(name)
                 }
             }
             .alert("Riwayat belum tersimpan", isPresented: Binding(
@@ -68,6 +68,10 @@ struct FertilizerHistoryScreen: View {
     private func save() {
         let filled = drafts.filter { !$0.isEmpty }
         let records = filled.compactMap(\.record)
+        if filled.contains(where: { $0.usesCustomNPKComposition && !$0.hasValidNPKComposition }) {
+            errorMessage = "Isi persentase N, P₂O₅, dan K₂O antara 0 sampai 100. Untuk NPKMg, isi juga MgO."
+            return
+        }
         guard records.count == filled.count else {
             errorMessage = "Lengkapi jenis pupuk, berat, jumlah karung, dan dosis dengan nilai lebih dari nol."
             return

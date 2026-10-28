@@ -19,6 +19,14 @@ struct FertilizerRecord: Identifiable, Codable {
     var bagWeightKg: Double
     var bagCount: Int
     var doseKgPerTree: Double
+    var npkComposition: NPKComposition? = nil
+}
+
+struct NPKComposition: Codable, Equatable {
+    var nitrogenPercent: Double
+    var phosphatePercent: Double
+    var potashPercent: Double
+    var magnesiumPercent: Double? = nil
 }
 
 struct HarvestRecord: Codable {

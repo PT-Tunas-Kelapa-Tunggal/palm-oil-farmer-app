@@ -8,8 +8,28 @@ struct FertilizerEntryCard: View {
         VStack(alignment: .leading, spacing: 16) {
             FormSelectionRow(
                 title: "Jenis Pupuk", placeholder: "Pilih jenis pupuk",
-                value: draft.name.isEmpty ? nil : draft.name, action: onSelectType
+                value: draft.name.isEmpty ? nil : draft.displayName, action: onSelectType
             )
+            if draft.usesCustomNPKComposition {
+                Divider()
+                VStack(alignment: .leading, spacing: 12) {
+                    fieldTitle("Komposisi NPK (% hara)")
+                    HStack(spacing: 12) {
+                        compositionField("N", binding: $draft.nitrogenPercent)
+                        compositionField("P₂O₅", binding: $draft.phosphatePercent)
+                        compositionField("K₂O", binding: $draft.potashPercent)
+                    }
+                    if draft.requiresMagnesiumComposition {
+                        compositionField("MgO", binding: $draft.magnesiumPercent)
+                    }
+                    Text("Masukkan persentase sesuai label pupuk. Contoh NPK 12-6-32: N 12, P₂O₅ 6, K₂O 32.")
+                        .font(.footnote).fontWeight(.regular).foregroundStyle(.secondary)
+                }
+            } else if draft.name == FertilizerCatalogue.unknownNPK {
+                Divider()
+                Text("Komposisi tidak perlu diisi. Gunakan informasi berat dan dosis pada label pupuk jika tersedia.")
+                    .font(.subheadline).fontWeight(.regular).foregroundStyle(.secondary)
+            }
             Divider()
             VStack(alignment: .leading, spacing: 12) {
                 fieldTitle("Berat per karung")
@@ -45,5 +65,18 @@ struct FertilizerEntryCard: View {
 
     private func fieldTitle(_ title: String) -> some View {
         Text(title).font(.headline).foregroundStyle(.secondary)
+    }
+
+    private func compositionField(_ title: String, binding: Binding<Double?>) -> some View {
+        VStack(alignment: .leading, spacing: 6) {
+            Text(title).font(.subheadline).foregroundStyle(.secondary)
+            TextField("%", value: binding, format: .number)
+                .keyboardType(.decimalPad)
+                .accessibilityLabel("Persentase \(title)")
+                .padding(10)
+                .background(.background, in: RoundedRectangle(cornerRadius: 10))
+        }
+        .fontWeight(.regular)
+        .frame(maxWidth: .infinity, alignment: .leading)
     }
 }
