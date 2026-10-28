@@ -39,8 +39,8 @@ Tidak menjalankan ulang snapshot atau interaksi UI pada iterasi pemindahan ini k
 
 ## Cara menemukan kode
 
-- Susunan profil: [GardenProfileScreen](../PalmOilFarmer/Features/GardenProfile/GardenProfileScreen.swift) → [GardenProfileContent](../PalmOilFarmer/Features/GardenProfile/GardenProfileContent.swift).
-- Pengajuan: [ReviewSubmissionView](../PalmOilFarmer/Features/GardenReview/ReviewSubmissionView.swift) → callback submitReview di GardenProfileScreen → [ReviewService](../PalmOilFarmer/Features/GardenReview/ReviewService.swift).
-- Simpan kebun: callback ke [AppFlow](../PalmOilFarmer/App/AppFlow.swift) → [GardenStore](../PalmOilFarmer/Shared/Gardens/GardenStore.swift) → [GardenPersistence](../PalmOilFarmer/Shared/Gardens/GardenPersistence.swift).
+- Susunan profil: [GardenProfileScreen](../../PalmOilFarmer/Features/GardenProfile/GardenProfileScreen.swift) → [GardenProfileContent](../../PalmOilFarmer/Features/GardenProfile/GardenProfileContent.swift).
+- Pengajuan: [ReviewSubmissionView](../../PalmOilFarmer/Features/GardenReview/ReviewSubmissionView.swift) → callback submitReview di GardenProfileScreen → [ReviewService](../../PalmOilFarmer/Features/GardenReview/ReviewService.swift).
+- Simpan kebun: callback ke [AppFlow](../../PalmOilFarmer/App/AppFlow.swift) → [GardenStore](../../PalmOilFarmer/Shared/Gardens/GardenStore.swift) → [GardenPersistence](../../PalmOilFarmer/Shared/Gardens/GardenPersistence.swift).
 
 Perubahan disimpan sebagai satu commit lokal perpindahan + dokumentasi. Tidak melakukan push, PR atau merge.

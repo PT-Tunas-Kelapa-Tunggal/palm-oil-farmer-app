@@ -3,7 +3,7 @@
 An iOS app for oil palm farmers, built with SwiftUI and organized by feature, with one app target and a Swift Testing target.
 Keep the structure small: add folders and abstractions when real code needs them.
 
-Start with the [screen map](Docs/ScreenMap.md) to find a page, its components, data owner, and navigation. See [architecture](Docs/Architecture.md) for placement rules and [verification](Docs/FeatureFoldersVerification.md) for the latest folder refactor checks.
+Start with the [screen map](Docs/ScreenMap.md) to find a page, its components, data owner, and navigation. See [architecture](Docs/Architecture.md) for placement rules and the [documentation index](Docs/README.md) for setup and supporting guides.
 
 The app starts at `PalmOilFarmerApp → AppFlow → GardenListScreen`. Screen files name navigation/modal destinations; Flow files connect steps.
 
@@ -40,7 +40,7 @@ The app starts at `PalmOilFarmerApp → AppFlow → GardenListScreen`. Screen fi
 | `PalmOilFarmer/Features/FindingBlock` | Allocation section and navigation with Models, Data, Views |
 | `PalmOilFarmer/Features/FindingWaypoint` | Separate waypoint experiment with Models, Data, Views |
 | `PalmOilFarmer/Resources` | Asset catalog; asset names remain unchanged |
-| `Docs` | Architecture, screen map, implementation notes |
+| `Docs` | Current guides and archived development records |
 | `PalmOilFarmer/PreviewSupport` | Debug fixtures and reference-screen compositions |
 | `PalmOilFarmerTests` | Swift Testing checks for persistence, validation, and geometry |
 
@@ -133,4 +133,4 @@ Open `DesignSystemCatalog.swift` in Canvas to inspect shared controls. Before me
 
 The folder layout is a project convention, not an Apple-mandated architecture.
 
-Latest folder refactor: [verification](Docs/FeatureFoldersVerification.md). Previous profile extraction: [verification](Docs/OwnershipVerification.md) and [historical plan](Docs/RefactorOwnershipPlan.md).
+Historical refactor plans and verification reports are collected in [Docs/Archive](Docs/Archive/README.md).

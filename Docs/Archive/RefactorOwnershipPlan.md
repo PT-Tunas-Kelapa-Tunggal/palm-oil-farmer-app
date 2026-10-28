@@ -1,13 +1,13 @@
 # Rencana struktur SwiftUI yang sederhana dan konsisten
 
-> Catatan historis. Struktur folder telah diperbarui menjadi Features langsung dan Shared/Gardens. Gunakan [Architecture](Architecture.md) untuk struktur saat ini dan [FeatureFoldersVerification](FeatureFoldersVerification.md) untuk pemeriksaan terbaru. Tautan source dalam dokumen ini mengikuti lokasi sekarang; uraian dan hasil tes tetap merujuk iterasi saat itu.
+> Catatan historis. Struktur folder telah diperbarui menjadi Features langsung dan Shared/Gardens. Gunakan [Architecture](../Architecture.md) untuk struktur saat ini dan [FeatureFoldersVerification](FeatureFoldersVerification.md) untuk pemeriksaan terbaru. Tautan source dalam dokumen ini mengikuti lokasi sekarang; uraian dan hasil tes tetap merujuk iterasi saat itu.
 
 
 **Rencana disetujui 28 Oktober 2026 — kini diimplementasikan.** Dokumen ini menggantikan versi sebelumnya dari RefactorOwnershipPlan. Source diperiksa pada branch `codex/refactor-swiftui-structure`, commit `5245dd4`. Sebelum revisi, satu-satunya file untracked adalah dokumen rencana ini; source tracked bersih.
 
 Tujuan: seseorang yang ingin mengubah satu bagian aplikasi dapat menemukan halaman, komponen dan pemilik datanya dari nama file serta lokasi yang berdekatan. Tidak ada target jumlah folder atau jumlah baris per file.
 
-[Architecture](Architecture.md) dan [ScreenMap](ScreenMap.md) sudah diperbarui. Hasil pemeriksaan dan batasannya dicatat terpisah di [OwnershipVerification](OwnershipVerification.md). Bagian urutan kerja/verifikasi berikut mempertahankan rencana yang disepakati; tidak semua skenario di dalamnya otomatis merupakan bukti tes lulus. Panduan pertama tetap menjadi acuan kompatibilitas data/Git/pengujian, tetapi pilihan struktur dan pemisahan pada rencana terbaru ini menggantikan usulan lamanya ketika implementasi diminta.
+[Architecture](../Architecture.md) dan [ScreenMap](../ScreenMap.md) sudah diperbarui. Hasil pemeriksaan dan batasannya dicatat terpisah di [OwnershipVerification](OwnershipVerification.md). Bagian urutan kerja/verifikasi berikut mempertahankan rencana yang disepakati; tidak semua skenario di dalamnya otomatis merupakan bukti tes lulus. Panduan pertama tetap menjadi acuan kompatibilitas data/Git/pengujian, tetapi pilihan struktur dan pemisahan pada rencana terbaru ini menggantikan usulan lamanya ketika implementasi diminta.
 
 ## 1. Keputusan penamaan
 
@@ -171,79 +171,79 @@ Semua tujuan di bawah relatif terhadap `PalmOilFarmer/Features/Gardens/`. Label 
 
 | File asal | Tujuan |
 | --- | --- |
-| [Data/CurrentLocationProvider.swift](../PalmOilFarmer/Shared/Gardens/CurrentLocationProvider.swift) | `Shared/CurrentLocationProvider.swift` |
-| [Data/GardenPersistence.swift](../PalmOilFarmer/Shared/Gardens/GardenPersistence.swift) | `Shared/GardenPersistence.swift` |
-| [Data/GardenStore.swift](../PalmOilFarmer/Shared/Gardens/GardenStore.swift) | `Shared/GardenStore.swift` |
-| [Data/LocationSearchService.swift](../PalmOilFarmer/Features/GardenRegistration/LocationSearchService.swift) | `Registration/LocationSearchService.swift` |
-| [Data/MappingDraftStore.swift](../PalmOilFarmer/Features/GardenMapping/MappingDraftStore.swift) | `Mapping/MappingDraftStore.swift` |
-| [Data/PhotoLocationReader.swift](../PalmOilFarmer/Features/GardenRegistration/PhotoLocationReader.swift) | `Registration/PhotoLocationReader.swift` |
-| [Data/ReviewReportDownload.swift](../PalmOilFarmer/Features/GardenReview/ReviewReportDownload.swift) | `Review/ReviewReportDownload.swift` |
-| [Data/ReviewService.swift](../PalmOilFarmer/Features/GardenReview/ReviewService.swift) | `Review/ReviewService.swift` |
-| [Models/FertilizerDraft.swift](../PalmOilFarmer/Features/GardenHistory/FertilizerDraft.swift) | `History/FertilizerDraft.swift` |
-| [Models/FertilizerRecommendationReport.swift](../PalmOilFarmer/Features/FertilizerRecommendations/Models/FertilizerRecommendationReport.swift) | `Recommendations/Models/FertilizerRecommendationReport.swift` |
-| [Models/FertilizerReference.swift](../PalmOilFarmer/Features/FertilizerRecommendations/Models/FertilizerReference.swift) | `Recommendations/Models/FertilizerReference.swift` |
-| [Models/Garden.swift](../PalmOilFarmer/Shared/Gardens/Garden.swift) | `Shared/Garden.swift` |
-| [Models/GardenBoundary.swift](../PalmOilFarmer/Shared/Gardens/GardenBoundary.swift) | `Shared/GardenBoundary.swift` |
-| [Models/GardenDisplayMetrics.swift](../PalmOilFarmer/Shared/Gardens/GardenDisplayMetrics.swift) | `Shared/GardenDisplayMetrics.swift` |
-| [Models/GardenLocalReport.swift](../PalmOilFarmer/Features/FertilizerRecommendations/Models/GardenLocalReport.swift) | `Recommendations/Models/GardenLocalReport.swift` |
-| [Models/GardenLocation.swift](../PalmOilFarmer/Shared/Gardens/GardenLocation.swift) | `Shared/GardenLocation.swift` |
-| [Models/GardenReview.swift](../PalmOilFarmer/Features/GardenReview/GardenReview.swift) | `Review/GardenReview.swift` |
-| [Models/MapDownloadItem.swift](../PalmOilFarmer/Features/MapDownloads/MapDownloadItem.swift) | `MapDownloads/MapDownloadItem.swift` |
-| [Models/MapDownloadState.swift](../PalmOilFarmer/Features/MapDownloads/MapDownloadState.swift) | `MapDownloads/MapDownloadState.swift` |
-| [Models/MappingDraft.swift](../PalmOilFarmer/Features/GardenMapping/MappingDraft.swift) | `Mapping/MappingDraft.swift` |
-| [Models/NutrientReference.swift](../PalmOilFarmer/Features/FertilizerRecommendations/Models/NutrientReference.swift) | `Recommendations/Models/NutrientReference.swift` |
-| [Models/RainfallDay.swift](../PalmOilFarmer/Features/FertilizerRecommendations/Models/RainfallDay.swift) | `Recommendations/Models/RainfallDay.swift` |
-| [Models/RainfallForecast.swift](../PalmOilFarmer/Features/FertilizerRecommendations/Models/RainfallForecast.swift) | `Recommendations/Models/RainfallForecast.swift` |
-| [Models/ReviewContactDetails.swift](../PalmOilFarmer/Features/GardenReview/ReviewContactDetails.swift) | `Review/ReviewContactDetails.swift` |
-| [Models/ReviewStatus.swift](../PalmOilFarmer/Features/GardenReview/ReviewStatus.swift) | `Review/ReviewStatus.swift` |
-| [Models/ReviewTimelineEntry.swift](../PalmOilFarmer/Features/GardenReview/ReviewTimelineEntry.swift) | `Review/ReviewTimelineEntry.swift` |
-| [Views/Components/BoundaryGuideIllustration.swift](../PalmOilFarmer/Features/GardenRegistration/Components/BoundaryGuideIllustration.swift) | `Registration/Components/BoundaryGuideIllustration.swift` |
-| [Views/Components/FertilizerAllocationSection.swift](../PalmOilFarmer/Features/FertilizerRecommendations/Components/FertilizerAllocationSection.swift) | `Recommendations/Components/FertilizerAllocationSection.swift` |
-| [Views/Components/GardenAreaIcon.swift](../PalmOilFarmer/Shared/Gardens/Components/GardenAreaIcon.swift) | `Shared/Components/GardenAreaIcon.swift` |
-| [Views/Components/GardenMapView.swift](../PalmOilFarmer/Shared/Gardens/Components/GardenMapView.swift) | `Shared/Components/GardenMapView.swift` |
-| [Views/Components/GardenSectionHeader.swift](../PalmOilFarmer/Features/GardenProfile/Components/GardenSectionHeader.swift) | `Profile/Components/GardenSectionHeader.swift` |
-| [Views/Components/HistoryValueRow.swift](../PalmOilFarmer/Shared/Gardens/Components/HistoryValueRow.swift) | `Shared/Components/HistoryValueRow.swift` |
-| [Views/Components/LocationMapPreview.swift](../PalmOilFarmer/Shared/Gardens/Components/LocationMapPreview.swift) | `Shared/Components/LocationMapPreview.swift` |
-| [Views/Components/MapDownloadCard.swift](../PalmOilFarmer/Features/MapDownloads/Components/MapDownloadCard.swift) | `MapDownloads/Components/MapDownloadCard.swift` |
-| [Views/Components/MapDownloadProgressView.swift](../PalmOilFarmer/Features/MapDownloads/Components/MapDownloadProgressView.swift) | `MapDownloads/Components/MapDownloadProgressView.swift` |
-| [Views/Components/MapHeroView.swift](../PalmOilFarmer/Features/MapDownloads/Components/MapHeroView.swift) | `MapDownloads/Components/MapHeroView.swift` |
-| [Views/Components/SeedlingIcon.swift](../PalmOilFarmer/Features/GardenList/Components/SeedlingIcon.swift) | `List/Components/SeedlingIcon.swift` |
-| [Views/History/Components/FertilizerEntryCard.swift](../PalmOilFarmer/Features/GardenHistory/Components/FertilizerEntryCard.swift) | `History/Components/FertilizerEntryCard.swift` |
-| [Views/History/Components/GardenHistoryChart.swift](../PalmOilFarmer/Features/GardenHistory/Components/GardenHistoryChart.swift) | `History/Components/GardenHistoryChart.swift` |
-| [Views/History/Components/GardenHistoryViews.swift](../PalmOilFarmer/Features/GardenHistory/Components/GardenHistoryViews.swift) | `History/Components/GardenHistoryViews.swift` |
-| [Views/History/FertilizerHistoryScreen.swift](../PalmOilFarmer/Features/GardenHistory/FertilizerHistoryScreen.swift) | `History/FertilizerHistoryScreen.swift` |
-| [Views/History/HarvestHistoryScreen.swift](../PalmOilFarmer/Features/GardenHistory/HarvestHistoryScreen.swift) | `History/HarvestHistoryScreen.swift` |
-| [Views/List/Components/GardenCard.swift](../PalmOilFarmer/Features/GardenList/Components/GardenCard.swift) | `List/Components/GardenCard.swift` |
-| [Views/List/Components/MappingDraftCard.swift](../PalmOilFarmer/Features/GardenList/Components/MappingDraftCard.swift) | `List/Components/MappingDraftCard.swift` |
-| [Views/List/GardenListScreen.swift](../PalmOilFarmer/Features/GardenList/GardenListScreen.swift) | `List/GardenListScreen.swift` |
-| [Views/Mapping/Components/BoundaryEditorLayout.swift](../PalmOilFarmer/Features/GardenMapping/Components/BoundaryEditorLayout.swift) | `Mapping/Components/BoundaryEditorLayout.swift` |
-| [Views/Mapping/GardenBoundaryScreen.swift](../PalmOilFarmer/Features/GardenMapping/GardenBoundaryScreen.swift) | `Mapping/GardenBoundaryScreen.swift` |
-| [Views/Mapping/MapDownloadScreen.swift](../PalmOilFarmer/Features/MapDownloads/MapDownloadScreen.swift) | `MapDownloads/MapDownloadScreen.swift` |
-| [Views/Profile/Components/GardenFertilizerHistorySection.swift](../PalmOilFarmer/Features/GardenProfile/Components/GardenFertilizerHistorySection.swift) | `Profile/Components/GardenFertilizerHistorySection.swift` |
-| [Views/Profile/Components/GardenHarvestHistorySection.swift](../PalmOilFarmer/Features/GardenProfile/Components/GardenHarvestHistorySection.swift) | `Profile/Components/GardenHarvestHistorySection.swift` |
-| [Views/Profile/Components/GardenProfileProgressView.swift](../PalmOilFarmer/Features/GardenProfile/Components/GardenProfileProgressView.swift) | `Profile/Components/GardenProfileProgressView.swift` |
-| [Views/Profile/Components/GardenSummaryView.swift](../PalmOilFarmer/Features/GardenProfile/Components/GardenSummaryView.swift) | `Profile/Components/GardenSummaryView.swift` |
-| [Views/Profile/GardenProfileScreen.swift](../PalmOilFarmer/Features/GardenProfile/GardenProfileScreen.swift) | `Profile/GardenProfileScreen.swift` |
-| [Views/Recommendations/Components/AllocationOverviewMap.swift](../PalmOilFarmer/Features/FertilizerRecommendations/Components/AllocationOverviewMap.swift) | `Recommendations/Components/AllocationOverviewMap.swift` |
-| [Views/Recommendations/Components/BoundarySilhouette.swift](../PalmOilFarmer/Features/FertilizerRecommendations/Components/BoundarySilhouette.swift) | `Recommendations/Components/BoundarySilhouette.swift` |
-| [Views/Recommendations/Components/FertilizerCostTable.swift](../PalmOilFarmer/Features/FertilizerRecommendations/Components/FertilizerCostTable.swift) | `Recommendations/Components/FertilizerCostTable.swift` |
-| [Views/Recommendations/Components/NutrientProjectionChart.swift](../PalmOilFarmer/Features/FertilizerRecommendations/Components/NutrientProjectionChart.swift) | `Recommendations/Components/NutrientProjectionChart.swift` |
-| [Views/Recommendations/Components/RainfallForecastView.swift](../PalmOilFarmer/Features/FertilizerRecommendations/Components/RainfallForecastView.swift) | `Recommendations/Components/RainfallForecastView.swift` |
-| [Views/Recommendations/FertilizerRecommendationScreen.swift](../PalmOilFarmer/Features/FertilizerRecommendations/FertilizerRecommendationScreen.swift) | `Recommendations/FertilizerRecommendationScreen.swift` |
-| [Views/Recommendations/NutrientReferenceScreen.swift](../PalmOilFarmer/Features/FertilizerRecommendations/NutrientReferenceScreen.swift) | `Recommendations/NutrientReferenceScreen.swift` |
-| [Views/Recommendations/RecommendationAreaMapScreen.swift](../PalmOilFarmer/Features/FertilizerRecommendations/RecommendationAreaMapScreen.swift) | `Recommendations/RecommendationAreaMapScreen.swift` |
-| [Views/Recommendations/RecommendationAreaPickerScreen.swift](../PalmOilFarmer/Features/FertilizerRecommendations/RecommendationAreaPickerScreen.swift) | `Recommendations/RecommendationAreaPickerScreen.swift` |
-| [Views/Registration/Components/GardenPhotoPickerView.swift](../PalmOilFarmer/Features/GardenRegistration/Components/GardenPhotoPickerView.swift) | `Registration/Components/GardenPhotoPickerView.swift` |
-| [Views/Registration/GardenDetailsScreen.swift](../PalmOilFarmer/Features/GardenDetails/GardenDetailsScreen.swift) | `Details/GardenDetailsScreen.swift` |
-| [Views/Registration/LocationSearchScreen.swift](../PalmOilFarmer/Features/GardenRegistration/LocationSearchScreen.swift) | `Registration/LocationSearchScreen.swift` |
-| [Views/Registration/PhotoLocationConfirmationScreen.swift](../PalmOilFarmer/Features/GardenMapping/PhotoLocationConfirmationScreen.swift) | `Mapping/PhotoLocationConfirmationScreen.swift` |
-| [Views/Registration/PlantingDatePickerScreen.swift](../PalmOilFarmer/Features/GardenDetails/PlantingDatePickerScreen.swift) | `Details/PlantingDatePickerScreen.swift` |
-| [Views/Registration/RegistrationFlow.swift](../PalmOilFarmer/Features/GardenRegistration/RegistrationFlow.swift) | `Registration/RegistrationFlow.swift` |
-| [Views/Review/Components/ConsentCheckbox.swift](../PalmOilFarmer/Features/GardenReview/Components/ConsentCheckbox.swift) | `Review/Components/ConsentCheckbox.swift` |
-| [Views/Review/Components/ReviewDownloadProgressCard.swift](../PalmOilFarmer/Features/GardenReview/Components/ReviewDownloadProgressCard.swift) | `Review/Components/ReviewDownloadProgressCard.swift` |
-| [Views/Review/Components/ReviewTimelineRow.swift](../PalmOilFarmer/Features/GardenReview/Components/ReviewTimelineRow.swift) | `Review/Components/ReviewTimelineRow.swift` |
-| [Views/Review/ReviewContactFormScreen.swift](../PalmOilFarmer/Features/GardenReview/ReviewContactFormScreen.swift) | `Review/ReviewContactFormScreen.swift` |
-| [Views/Review/ReviewRequestScreen.swift](../PalmOilFarmer/Features/GardenReview/ReviewRequestScreen.swift) | `Review/ReviewRequestScreen.swift` |
-| [Views/Review/ReviewStatusScreen.swift](../PalmOilFarmer/Features/GardenReview/ReviewStatusScreen.swift) | `Review/ReviewStatusScreen.swift` |
+| [Data/CurrentLocationProvider.swift](../../PalmOilFarmer/Shared/Gardens/CurrentLocationProvider.swift) | `Shared/CurrentLocationProvider.swift` |
+| [Data/GardenPersistence.swift](../../PalmOilFarmer/Shared/Gardens/GardenPersistence.swift) | `Shared/GardenPersistence.swift` |
+| [Data/GardenStore.swift](../../PalmOilFarmer/Shared/Gardens/GardenStore.swift) | `Shared/GardenStore.swift` |
+| [Data/LocationSearchService.swift](../../PalmOilFarmer/Features/GardenRegistration/LocationSearchService.swift) | `Registration/LocationSearchService.swift` |
+| [Data/MappingDraftStore.swift](../../PalmOilFarmer/Features/GardenMapping/MappingDraftStore.swift) | `Mapping/MappingDraftStore.swift` |
+| [Data/PhotoLocationReader.swift](../../PalmOilFarmer/Features/GardenRegistration/PhotoLocationReader.swift) | `Registration/PhotoLocationReader.swift` |
+| [Data/ReviewReportDownload.swift](../../PalmOilFarmer/Features/GardenReview/ReviewReportDownload.swift) | `Review/ReviewReportDownload.swift` |
+| [Data/ReviewService.swift](../../PalmOilFarmer/Features/GardenReview/ReviewService.swift) | `Review/ReviewService.swift` |
+| [Models/FertilizerDraft.swift](../../PalmOilFarmer/Features/GardenHistory/FertilizerDraft.swift) | `History/FertilizerDraft.swift` |
+| [Models/FertilizerRecommendationReport.swift](../../PalmOilFarmer/Features/FertilizerRecommendations/Models/FertilizerRecommendationReport.swift) | `Recommendations/Models/FertilizerRecommendationReport.swift` |
+| [Models/FertilizerReference.swift](../../PalmOilFarmer/Features/FertilizerRecommendations/Models/FertilizerReference.swift) | `Recommendations/Models/FertilizerReference.swift` |
+| [Models/Garden.swift](../../PalmOilFarmer/Shared/Gardens/Garden.swift) | `Shared/Garden.swift` |
+| [Models/GardenBoundary.swift](../../PalmOilFarmer/Shared/Gardens/GardenBoundary.swift) | `Shared/GardenBoundary.swift` |
+| [Models/GardenDisplayMetrics.swift](../../PalmOilFarmer/Shared/Gardens/GardenDisplayMetrics.swift) | `Shared/GardenDisplayMetrics.swift` |
+| [Models/GardenLocalReport.swift](../../PalmOilFarmer/Features/FertilizerRecommendations/Models/GardenLocalReport.swift) | `Recommendations/Models/GardenLocalReport.swift` |
+| [Models/GardenLocation.swift](../../PalmOilFarmer/Shared/Gardens/GardenLocation.swift) | `Shared/GardenLocation.swift` |
+| [Models/GardenReview.swift](../../PalmOilFarmer/Features/GardenReview/GardenReview.swift) | `Review/GardenReview.swift` |
+| [Models/MapDownloadItem.swift](../../PalmOilFarmer/Features/MapDownloads/MapDownloadItem.swift) | `MapDownloads/MapDownloadItem.swift` |
+| [Models/MapDownloadState.swift](../../PalmOilFarmer/Features/MapDownloads/MapDownloadState.swift) | `MapDownloads/MapDownloadState.swift` |
+| [Models/MappingDraft.swift](../../PalmOilFarmer/Features/GardenMapping/MappingDraft.swift) | `Mapping/MappingDraft.swift` |
+| [Models/NutrientReference.swift](../../PalmOilFarmer/Features/FertilizerRecommendations/Models/NutrientReference.swift) | `Recommendations/Models/NutrientReference.swift` |
+| [Models/RainfallDay.swift](../../PalmOilFarmer/Features/FertilizerRecommendations/Models/RainfallDay.swift) | `Recommendations/Models/RainfallDay.swift` |
+| [Models/RainfallForecast.swift](../../PalmOilFarmer/Features/FertilizerRecommendations/Models/RainfallForecast.swift) | `Recommendations/Models/RainfallForecast.swift` |
+| [Models/ReviewContactDetails.swift](../../PalmOilFarmer/Features/GardenReview/ReviewContactDetails.swift) | `Review/ReviewContactDetails.swift` |
+| [Models/ReviewStatus.swift](../../PalmOilFarmer/Features/GardenReview/ReviewStatus.swift) | `Review/ReviewStatus.swift` |
+| [Models/ReviewTimelineEntry.swift](../../PalmOilFarmer/Features/GardenReview/ReviewTimelineEntry.swift) | `Review/ReviewTimelineEntry.swift` |
+| [Views/Components/BoundaryGuideIllustration.swift](../../PalmOilFarmer/Features/GardenRegistration/Components/BoundaryGuideIllustration.swift) | `Registration/Components/BoundaryGuideIllustration.swift` |
+| [Views/Components/FertilizerAllocationSection.swift](../../PalmOilFarmer/Features/FertilizerRecommendations/Components/FertilizerAllocationSection.swift) | `Recommendations/Components/FertilizerAllocationSection.swift` |
+| [Views/Components/GardenAreaIcon.swift](../../PalmOilFarmer/Shared/Gardens/Components/GardenAreaIcon.swift) | `Shared/Components/GardenAreaIcon.swift` |
+| [Views/Components/GardenMapView.swift](../../PalmOilFarmer/Shared/Gardens/Components/GardenMapView.swift) | `Shared/Components/GardenMapView.swift` |
+| [Views/Components/GardenSectionHeader.swift](../../PalmOilFarmer/Features/GardenProfile/Components/GardenSectionHeader.swift) | `Profile/Components/GardenSectionHeader.swift` |
+| [Views/Components/HistoryValueRow.swift](../../PalmOilFarmer/Shared/Gardens/Components/HistoryValueRow.swift) | `Shared/Components/HistoryValueRow.swift` |
+| [Views/Components/LocationMapPreview.swift](../../PalmOilFarmer/Shared/Gardens/Components/LocationMapPreview.swift) | `Shared/Components/LocationMapPreview.swift` |
+| [Views/Components/MapDownloadCard.swift](../../PalmOilFarmer/Features/MapDownloads/Components/MapDownloadCard.swift) | `MapDownloads/Components/MapDownloadCard.swift` |
+| [Views/Components/MapDownloadProgressView.swift](../../PalmOilFarmer/Features/MapDownloads/Components/MapDownloadProgressView.swift) | `MapDownloads/Components/MapDownloadProgressView.swift` |
+| [Views/Components/MapHeroView.swift](../../PalmOilFarmer/Features/MapDownloads/Components/MapHeroView.swift) | `MapDownloads/Components/MapHeroView.swift` |
+| [Views/Components/SeedlingIcon.swift](../../PalmOilFarmer/Features/GardenList/Components/SeedlingIcon.swift) | `List/Components/SeedlingIcon.swift` |
+| [Views/History/Components/FertilizerEntryCard.swift](../../PalmOilFarmer/Features/GardenHistory/Components/FertilizerEntryCard.swift) | `History/Components/FertilizerEntryCard.swift` |
+| [Views/History/Components/GardenHistoryChart.swift](../../PalmOilFarmer/Features/GardenHistory/Components/GardenHistoryChart.swift) | `History/Components/GardenHistoryChart.swift` |
+| [Views/History/Components/GardenHistoryViews.swift](../../PalmOilFarmer/Features/GardenHistory/Components/GardenHistoryViews.swift) | `History/Components/GardenHistoryViews.swift` |
+| [Views/History/FertilizerHistoryScreen.swift](../../PalmOilFarmer/Features/GardenHistory/FertilizerHistoryScreen.swift) | `History/FertilizerHistoryScreen.swift` |
+| [Views/History/HarvestHistoryScreen.swift](../../PalmOilFarmer/Features/GardenHistory/HarvestHistoryScreen.swift) | `History/HarvestHistoryScreen.swift` |
+| [Views/List/Components/GardenCard.swift](../../PalmOilFarmer/Features/GardenList/Components/GardenCard.swift) | `List/Components/GardenCard.swift` |
+| [Views/List/Components/MappingDraftCard.swift](../../PalmOilFarmer/Features/GardenList/Components/MappingDraftCard.swift) | `List/Components/MappingDraftCard.swift` |
+| [Views/List/GardenListScreen.swift](../../PalmOilFarmer/Features/GardenList/GardenListScreen.swift) | `List/GardenListScreen.swift` |
+| [Views/Mapping/Components/BoundaryEditorLayout.swift](../../PalmOilFarmer/Features/GardenMapping/Components/BoundaryEditorLayout.swift) | `Mapping/Components/BoundaryEditorLayout.swift` |
+| [Views/Mapping/GardenBoundaryScreen.swift](../../PalmOilFarmer/Features/GardenMapping/GardenBoundaryScreen.swift) | `Mapping/GardenBoundaryScreen.swift` |
+| [Views/Mapping/MapDownloadScreen.swift](../../PalmOilFarmer/Features/MapDownloads/MapDownloadScreen.swift) | `MapDownloads/MapDownloadScreen.swift` |
+| [Views/Profile/Components/GardenFertilizerHistorySection.swift](../../PalmOilFarmer/Features/GardenProfile/Components/GardenFertilizerHistorySection.swift) | `Profile/Components/GardenFertilizerHistorySection.swift` |
+| [Views/Profile/Components/GardenHarvestHistorySection.swift](../../PalmOilFarmer/Features/GardenProfile/Components/GardenHarvestHistorySection.swift) | `Profile/Components/GardenHarvestHistorySection.swift` |
+| [Views/Profile/Components/GardenProfileProgressView.swift](../../PalmOilFarmer/Features/GardenProfile/Components/GardenProfileProgressView.swift) | `Profile/Components/GardenProfileProgressView.swift` |
+| [Views/Profile/Components/GardenSummaryView.swift](../../PalmOilFarmer/Features/GardenProfile/Components/GardenSummaryView.swift) | `Profile/Components/GardenSummaryView.swift` |
+| [Views/Profile/GardenProfileScreen.swift](../../PalmOilFarmer/Features/GardenProfile/GardenProfileScreen.swift) | `Profile/GardenProfileScreen.swift` |
+| [Views/Recommendations/Components/AllocationOverviewMap.swift](../../PalmOilFarmer/Features/FertilizerRecommendations/Components/AllocationOverviewMap.swift) | `Recommendations/Components/AllocationOverviewMap.swift` |
+| [Views/Recommendations/Components/BoundarySilhouette.swift](../../PalmOilFarmer/Features/FertilizerRecommendations/Components/BoundarySilhouette.swift) | `Recommendations/Components/BoundarySilhouette.swift` |
+| [Views/Recommendations/Components/FertilizerCostTable.swift](../../PalmOilFarmer/Features/FertilizerRecommendations/Components/FertilizerCostTable.swift) | `Recommendations/Components/FertilizerCostTable.swift` |
+| [Views/Recommendations/Components/NutrientProjectionChart.swift](../../PalmOilFarmer/Features/FertilizerRecommendations/Components/NutrientProjectionChart.swift) | `Recommendations/Components/NutrientProjectionChart.swift` |
+| [Views/Recommendations/Components/RainfallForecastView.swift](../../PalmOilFarmer/Features/FertilizerRecommendations/Components/RainfallForecastView.swift) | `Recommendations/Components/RainfallForecastView.swift` |
+| [Views/Recommendations/FertilizerRecommendationScreen.swift](../../PalmOilFarmer/Features/FertilizerRecommendations/FertilizerRecommendationScreen.swift) | `Recommendations/FertilizerRecommendationScreen.swift` |
+| [Views/Recommendations/NutrientReferenceScreen.swift](../../PalmOilFarmer/Features/FertilizerRecommendations/NutrientReferenceScreen.swift) | `Recommendations/NutrientReferenceScreen.swift` |
+| [Views/Recommendations/RecommendationAreaMapScreen.swift](../../PalmOilFarmer/Features/FertilizerRecommendations/RecommendationAreaMapScreen.swift) | `Recommendations/RecommendationAreaMapScreen.swift` |
+| [Views/Recommendations/RecommendationAreaPickerScreen.swift](../../PalmOilFarmer/Features/FertilizerRecommendations/RecommendationAreaPickerScreen.swift) | `Recommendations/RecommendationAreaPickerScreen.swift` |
+| [Views/Registration/Components/GardenPhotoPickerView.swift](../../PalmOilFarmer/Features/GardenRegistration/Components/GardenPhotoPickerView.swift) | `Registration/Components/GardenPhotoPickerView.swift` |
+| [Views/Registration/GardenDetailsScreen.swift](../../PalmOilFarmer/Features/GardenDetails/GardenDetailsScreen.swift) | `Details/GardenDetailsScreen.swift` |
+| [Views/Registration/LocationSearchScreen.swift](../../PalmOilFarmer/Features/GardenRegistration/LocationSearchScreen.swift) | `Registration/LocationSearchScreen.swift` |
+| [Views/Registration/PhotoLocationConfirmationScreen.swift](../../PalmOilFarmer/Features/GardenMapping/PhotoLocationConfirmationScreen.swift) | `Mapping/PhotoLocationConfirmationScreen.swift` |
+| [Views/Registration/PlantingDatePickerScreen.swift](../../PalmOilFarmer/Features/GardenDetails/PlantingDatePickerScreen.swift) | `Details/PlantingDatePickerScreen.swift` |
+| [Views/Registration/RegistrationFlow.swift](../../PalmOilFarmer/Features/GardenRegistration/RegistrationFlow.swift) | `Registration/RegistrationFlow.swift` |
+| [Views/Review/Components/ConsentCheckbox.swift](../../PalmOilFarmer/Features/GardenReview/Components/ConsentCheckbox.swift) | `Review/Components/ConsentCheckbox.swift` |
+| [Views/Review/Components/ReviewDownloadProgressCard.swift](../../PalmOilFarmer/Features/GardenReview/Components/ReviewDownloadProgressCard.swift) | `Review/Components/ReviewDownloadProgressCard.swift` |
+| [Views/Review/Components/ReviewTimelineRow.swift](../../PalmOilFarmer/Features/GardenReview/Components/ReviewTimelineRow.swift) | `Review/Components/ReviewTimelineRow.swift` |
+| [Views/Review/ReviewContactFormScreen.swift](../../PalmOilFarmer/Features/GardenReview/ReviewContactFormScreen.swift) | `Review/ReviewContactFormScreen.swift` |
+| [Views/Review/ReviewRequestScreen.swift](../../PalmOilFarmer/Features/GardenReview/ReviewRequestScreen.swift) | `Review/ReviewRequestScreen.swift` |
+| [Views/Review/ReviewStatusScreen.swift](../../PalmOilFarmer/Features/GardenReview/ReviewStatusScreen.swift) | `Review/ReviewStatusScreen.swift` |
 
 Penyesuaian saat implementasi: GardenSectionHeader dipindahkan ke Profile/Components setelah pemeriksaan seluruh pemakai menunjukkan hanya section profil yang menggunakannya saat runtime.

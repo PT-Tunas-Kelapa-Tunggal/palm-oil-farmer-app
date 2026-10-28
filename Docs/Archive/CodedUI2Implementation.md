@@ -1,6 +1,6 @@
 # Implementasi CodedUI2
 
-Catatan implementasi sebelum refactor struktur. Untuk lokasi file dan status alur terbaru, lihat [ScreenMap](ScreenMap.md); untuk hasil pemeriksaan task ini, lihat [Verification](Verification.md).
+Catatan implementasi sebelum refactor struktur. Untuk lokasi file dan status alur terbaru, lihat [ScreenMap](../ScreenMap.md); untuk hasil pemeriksaan task ini, lihat [Verification](Verification.md).
 
 Sumber: dokumen Sketch KROPS, page CodedUI2 (8DE4612E-1AC7-45FD-ACC8-1812F7C8915C).
 Audit 25 Oktober 2026: struktur frame dan teks seluruh alur diperiksa; screenshot digunakan untuk registrasi, profil, hasil, pilihan area, navigasi, dan unduhan.

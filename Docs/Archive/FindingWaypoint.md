@@ -1,6 +1,6 @@
 # Finding Waypoint — eksperimen
 
-Catatan implementasi sebelum refactor struktur. Untuk lokasi file dan status alur terbaru, lihat [ScreenMap](ScreenMap.md); untuk hasil pemeriksaan task ini, lihat [Verification](Verification.md).
+Catatan implementasi sebelum refactor struktur. Untuk lokasi file dan status alur terbaru, lihat [ScreenMap](../ScreenMap.md); untuk hasil pemeriksaan task ini, lihat [Verification](Verification.md).
 
 Implementasi berada di `PalmOilFarmer/Features/FindingWaypoint/{Models,Data,Views}`; fixture berada di PreviewSupport. Tidak ada perubahan ke app entry point, model Garden, penyimpanan zona, assets, atau target pengujian.
 

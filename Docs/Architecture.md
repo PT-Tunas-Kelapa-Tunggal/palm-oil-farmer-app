@@ -8,7 +8,7 @@ DTO, mapper dan CKRecord adapter yang cocok dengan operator berada di
 khusus app: `CloudKitReviewService` dan `ReviewRecommendationAdapter`. Pengaturan
 akun tidak ditanam dalam repository Swift.
 
-Setiap area pekerjaan langsung terlihat di Features. Shared/Gardens berisi kode domain kebun yang digunakan beberapa fitur, sedangkan Core/DesignSystem berisi UI generik. Struktur diperbarui pada 28 Oktober 2026 dari baseline `075fe49`. Mulai dari [peta halaman](ScreenMap.md); [rencana awal](RefactorPlan.md) menyimpan inventaris baseline, bukan peta source terkini.
+Setiap area pekerjaan langsung terlihat di Features. Shared/Gardens berisi kode domain kebun yang digunakan beberapa fitur, sedangkan Core/DesignSystem berisi UI generik. Struktur diperbarui pada 28 Oktober 2026 dari baseline `075fe49`. Mulai dari [peta halaman](ScreenMap.md); [rencana awal](Archive/RefactorPlan.md) menyimpan inventaris baseline, bukan peta source terkini.
 
 ```text
 PalmOilFarmer/
@@ -72,7 +72,7 @@ Semua tipe yang dipisah mempertahankan implementasinya. Hanya `BlockAreaPickerSc
 
 Fixtures Gardens, Recommendation dan Waypoint berada di PreviewSupport/Fixtures dan dijaga `#if DEBUG`. Komposisi reference berada di PreviewSupport/ReferenceScreens. Preview lokal sederhana boleh berada di file pemilik UI. Preview yang menunjukkan hasil unduhan atau varian profil tidak berarti alur tersebut aktif dari root. Lihat status tiap tujuan di ScreenMap.
 
-Dokumen implementasi [CodedUI2](CodedUI2Implementation.md), [FindingBlock](FindingBlock.md), dan [FindingWaypoint](FindingWaypoint.md) memuat konteks sebelumnya; hasil verifikasi terbaru dicatat di [FeatureFoldersVerification](FeatureFoldersVerification.md).
+Dokumen implementasi [CodedUI2](Archive/CodedUI2Implementation.md), [FindingBlock](Archive/FindingBlock.md), dan [FindingWaypoint](Archive/FindingWaypoint.md) memuat konteks sebelumnya; hasil verifikasi terbaru dicatat di [FeatureFoldersVerification](Archive/FeatureFoldersVerification.md).
 
 ## Kepemilikan di antara fitur
 
@@ -90,7 +90,7 @@ Dokumen implementasi [CodedUI2](CodedUI2Implementation.md), [FindingBlock](Findi
 
 SeedlingIcon milik GardenList, BoundaryGuideIllustration milik GardenRegistration, MapHeroView milik MapDownloads. FertilizerAllocationSection milik FertilizerRecommendations meskipun juga dipakai FindingBlock. Garden sebagai aggregate persistence merujuk model review/laporan di area pemiliknya; folder bukan batas module dan tidak menjamin dependensi satu arah.
 
-[OwnershipVerification](OwnershipVerification.md) menyimpan hasil ekstraksi profil sebelumnya; [Verification](Verification.md) menyimpan hasil refactor 27 Oktober. Kedua laporan tersebut bersifat historis. [FeatureFoldersVerification](FeatureFoldersVerification.md) mencatat pemeriksaan perpindahan folder terbaru.
+[OwnershipVerification](Archive/OwnershipVerification.md) menyimpan hasil ekstraksi profil sebelumnya; [Verification](Archive/Verification.md) menyimpan hasil refactor 27 Oktober. Kedua laporan tersebut bersifat historis. [FeatureFoldersVerification](Archive/FeatureFoldersVerification.md) mencatat pemeriksaan perpindahan folder terbaru.
 
 Penyimpangan kecil dari rencana: GardenSectionHeader berada di GardenProfile/Components karena hanya dua section profil yang memakainya saat runtime. Preview di GardenHistory tidak menjadikannya komponen bersama.
 

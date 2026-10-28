@@ -40,7 +40,7 @@ Catatan berikut berasal dari pembacaan source pada 27 Oktober 2026. Baca ulang k
 
 ## 3. Struktur tujuan dan aturan penempatan
 
-Konvensi penempatan terbaru disetujui pada 28 Oktober 2026: setiap area langsung berada di Features, sedangkan domain kebun bersama ada di Shared/Gardens. Struktur aktual ada di [Architecture](Docs/Architecture.md), peta halaman di [ScreenMap](Docs/ScreenMap.md), bukti perpindahan di [FeatureFoldersVerification](Docs/FeatureFoldersVerification.md). [Rencana ownership sebelumnya](Docs/RefactorOwnershipPlan.md) merupakan catatan historis.
+Konvensi penempatan terbaru disetujui pada 28 Oktober 2026: setiap area langsung berada di Features, sedangkan domain kebun bersama ada di Shared/Gardens. Struktur aktual ada di [Architecture](../Architecture.md), peta halaman di [ScreenMap](../ScreenMap.md), bukti perpindahan di [FeatureFoldersVerification](FeatureFoldersVerification.md). [Rencana ownership sebelumnya](RefactorOwnershipPlan.md) merupakan catatan historis.
 
 - App, Core/DesignSystem, Features, Shared, Resources dan PreviewSupport memiliki peran terpisah.
 - Features berisi GardenList, GardenProfile, GardenDetails, GardenRegistration, GardenMapping, GardenHistory, GardenReview, FertilizerRecommendations, MapDownloads, FindingBlock dan FindingWaypoint. Jangan mengembalikan pembungkus Features/Gardens.

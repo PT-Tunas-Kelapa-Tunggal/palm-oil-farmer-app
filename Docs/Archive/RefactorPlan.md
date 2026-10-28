@@ -1,6 +1,6 @@
 # Rencana refactor SwiftUI — 27 Oktober 2026
 
-Status: inventaris historis sebelum refactor. Pengguna menyetujui baseline dan penyelesaian pada 27 Oktober 2026; baseline tersimpan di `df36f86`. Peta source final ada di [Architecture](Architecture.md) dan [ScreenMap](ScreenMap.md).
+Status: inventaris historis sebelum refactor. Pengguna menyetujui baseline dan penyelesaian pada 27 Oktober 2026; baseline tersimpan di `df36f86`. Peta source final ada di [Architecture](../Architecture.md) dan [ScreenMap](../ScreenMap.md).
 
 ## Baseline yang diusulkan
 
