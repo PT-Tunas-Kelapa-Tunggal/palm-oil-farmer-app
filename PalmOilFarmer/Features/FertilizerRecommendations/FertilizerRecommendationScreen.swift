@@ -1,4 +1,5 @@
 import SwiftUI
+import UIKit
 
 struct FertilizerRecommendationScreen: View {
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
@@ -78,11 +79,13 @@ struct FertilizerRecommendationScreen: View {
                             FertilizerCostTable(lines: report.costs, total: report.totalCost)
                         }
                     case .allocation:
-                        if let garden {
+                        if let garden, isDemo {
                             FindingBlockView(garden: garden, report: report)
                         } else if let area = selectedArea {
                             Group {
-                                if let mapImage = area.mapImage {
+                                if let path = area.mapImage, let image = UIImage(contentsOfFile: path) {
+                                    Image(uiImage: image).resizable().scaledToFill()
+                                } else if let mapImage = area.mapImage, !mapImage.hasPrefix("/") {
                                     Image(mapImage).resizable().scaledToFill()
                                 } else {
                                     AllocationOverviewMap(boundary: report.boundary, areas: report.areas,

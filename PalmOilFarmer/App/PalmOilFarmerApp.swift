@@ -12,6 +12,7 @@ struct PalmOilFarmerApp: App {
     var body: some Scene {
         WindowGroup {
             AppFlow()
+                .environment(\.reviewService, .operatorConnection())
         }
     }
 }

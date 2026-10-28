@@ -6,6 +6,10 @@ xcuserdata/
 /build/
 /DerivedData/
 *.xcuserstate
+/PalmOilFarmer/Resources/OperatorConnection.plist
+/PalmOilFarmer/Resources/CloudKitWeb.local.plist
+/Config/Services.local.xcconfig
+/Config/CloudKit/operator/Developer.local.xcconfig
 
 # Screenshots and reports from local development sessions.
 /DesignReview/

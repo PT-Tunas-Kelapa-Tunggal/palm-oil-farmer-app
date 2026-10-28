@@ -1,5 +1,13 @@
 # Arsitektur SwiftUI
 
+Konfigurasi CloudKit terbaru ada di [panduan layanan](OperatorConnection.md).
+`Config/Services.xcconfig` dan override lokal memasok signing, container serta mode
+layanan. Koneksi native dan Web Services berada di `PalmOilFarmer/Services/CloudKit`;
+DTO, mapper dan CKRecord adapter yang cocok dengan operator berada di
+`PalmOilFarmer/Shared/ReviewContract`. `GardenReview/Data` mempertahankan adapter
+khusus app: `CloudKitReviewService` dan `ReviewRecommendationAdapter`. Pengaturan
+akun tidak ditanam dalam repository Swift.
+
 Setiap area pekerjaan langsung terlihat di Features. Shared/Gardens berisi kode domain kebun yang digunakan beberapa fitur, sedangkan Core/DesignSystem berisi UI generik. Struktur diperbarui pada 28 Oktober 2026 dari baseline `075fe49`. Mulai dari [peta halaman](ScreenMap.md); [rencana awal](RefactorPlan.md) menyimpan inventaris baseline, bukan peta source terkini.
 
 ```text

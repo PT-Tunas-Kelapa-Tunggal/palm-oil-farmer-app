@@ -1,0 +1,7 @@
+// Copy to Services.local.xcconfig, or run Scripts/setup-services.py init.
+KROPS_DEVELOPMENT_TEAM = YOURTEAMID
+KROPS_BUNDLE_IDENTIFIER = com.yourname.KropsFarmer
+KROPS_CLOUDKIT_CONTAINER = iCloud.com.yourname.KropsFarmer
+KROPS_REVIEW_TRANSPORT = native
+KROPS_WEB_ENVIRONMENT = development
+KROPS_SERVICE_ENTITLEMENTS = Config/CloudKit/Native.entitlements

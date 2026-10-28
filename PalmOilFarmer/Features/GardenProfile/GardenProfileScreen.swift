@@ -89,8 +89,10 @@ struct GardenProfileScreen: View {
                 onEditFertilizer: { editor = .fertilizer },
                 onEditHarvest: { editor = .harvest },
                 onReview: {
-                    if currentReviewStatus != nil {
+                    if currentReviewStatus == .completed, currentReport != nil {
                         showsResults = true
+                    } else if currentReviewStatus != nil {
+                        showsReviewStatus = true
                     } else {
                         showsReview = true
                     }
@@ -131,7 +133,7 @@ struct GardenProfileScreen: View {
                 }
             }
         }
-        .task(id: garden.id) { await refreshReview() }
+        .task(id: garden.id) { await refreshReview(reportsErrors: false) }
         .alert("Status peninjauan", isPresented: Binding(
             get: { reviewError != nil }, set: { if !$0 { reviewError = nil } }
         )) {
@@ -184,9 +186,13 @@ struct GardenProfileScreen: View {
             }
         }
         .navigationDestination(isPresented: $showsResults) {
-            FertilizerRecommendationScreen(report: currentReport ?? .local(for: garden),
-                                         initialTab: currentReport?.nutrients.isEmpty == false ? .nutrients : .allocation,
-                                         isDemo: demoReview != nil, garden: garden)
+            if let report = currentReport {
+                FertilizerRecommendationScreen(report: report,
+                                             initialTab: report.nutrients.isEmpty ? .allocation : .nutrients,
+                                             isDemo: demoReview != nil, garden: garden)
+            } else {
+                ContentUnavailableView("Hasil peninjauan belum tersedia", systemImage: "chart.bar.doc.horizontal")
+            }
         }
         .sheet(isPresented: $showsReview, onDismiss: {
             showsReviewForm = false
@@ -245,15 +251,16 @@ struct GardenProfileScreen: View {
     }
 
     @MainActor
-    private func refreshReview() async {
-        guard let savedReview = garden.review, savedReview.isLocalSimulation != true else { return }
+    private func refreshReview(reportsErrors: Bool = true) async {
+        guard garden.review?.isLocalSimulation != true else { return }
         do {
-            guard let review = try await reviewService.refresh(garden) else { return }
+            let refresh = reportsErrors ? (reviewService.refreshInteractively ?? reviewService.refresh) : reviewService.refresh
+            guard let review = try await refresh(garden) else { return }
             if !saveReview(review) {
                 reviewError = "Status terbaru belum tersimpan di perangkat. Coba lagi."
             }
         } catch {
-            guard !Task.isCancelled else { return }
+            guard reportsErrors, !Task.isCancelled else { return }
             reviewError = "Status belum dapat diperbarui. Periksa koneksi dan coba lagi."
         }
     }

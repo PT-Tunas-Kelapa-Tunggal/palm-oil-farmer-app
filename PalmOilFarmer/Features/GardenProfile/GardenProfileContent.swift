@@ -86,7 +86,11 @@ struct GardenProfileContent: View {
     }
 
     private var reviewActionTitle: String {
-        currentReviewStatus == nil ? "Ajukan peninjauan" : "Lihat hasil peninjauan"
+        switch currentReviewStatus {
+        case nil: "Ajukan peninjauan"
+        case .completed: "Lihat hasil peninjauan"
+        default: "Lihat status pengajuan"
+        }
     }
 
     private var reviewActionImage: String {

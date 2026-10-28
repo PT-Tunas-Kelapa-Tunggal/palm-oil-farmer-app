@@ -4,6 +4,7 @@ import SwiftUI
 struct ReviewService {
     var submit: @MainActor (Garden, ReviewContactDetails) async throws -> GardenReview
     var refresh: @MainActor (Garden) async throws -> GardenReview? = { _ in nil }
+    var refreshInteractively: (@MainActor (Garden) async throws -> GardenReview?)? = nil
 
     static let unavailable = ReviewService(submit: { _, _ in
         throw ReviewServiceError.unavailable
