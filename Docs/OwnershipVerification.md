@@ -1,5 +1,8 @@
 # Verifikasi struktur Gardens berdasarkan area
 
+> Catatan historis. Struktur folder telah diperbarui menjadi Features langsung dan Shared/Gardens. Gunakan [Architecture](Architecture.md) untuk struktur saat ini dan [FeatureFoldersVerification](FeatureFoldersVerification.md) untuk pemeriksaan terbaru. Tautan source dalam dokumen ini mengikuti lokasi sekarang; uraian dan hasil tes tetap merujuk iterasi saat itu.
+
+
 Tanggal: 28 Oktober 2026. Baseline: `5245dd4`, setelah refactor pertama. Branch: `codex/refactor-gardens-ownership`. Catatan ini khusus iterasi ownership; [Verification](Verification.md) merupakan hasil historis 27 Oktober.
 
 ## Perubahan

@@ -3,7 +3,7 @@
 An iOS app for oil palm farmers, built with SwiftUI and organized by feature, with one app target and a Swift Testing target.
 Keep the structure small: add folders and abstractions when real code needs them.
 
-Start with the [screen map](Docs/ScreenMap.md) to find a page, its components, data owner, and navigation. See [architecture](Docs/Architecture.md) for placement rules and [verification](Docs/Verification.md) for refactor checks.
+Start with the [screen map](Docs/ScreenMap.md) to find a page, its components, data owner, and navigation. See [architecture](Docs/Architecture.md) for placement rules and [verification](Docs/FeatureFoldersVerification.md) for the latest folder refactor checks.
 
 The app starts at `PalmOilFarmerApp → AppFlow → GardenListScreen`. Screen files name navigation/modal destinations; Flow files connect steps.
 
@@ -24,8 +24,16 @@ The app starts at `PalmOilFarmerApp → AppFlow → GardenListScreen`. Screen fi
 | `PalmOilFarmer/Core/DesignSystem/Components` | Reusable UI with no dependency on garden models or services |
 | `PalmOilFarmer/Core/DesignSystem/Styles` | Button styles and shared presentation modifiers |
 | `PalmOilFarmer/Core/DesignSystem/Catalog` | Light, dark, and accessibility-size component previews |
-| `PalmOilFarmer/Features/Gardens` | List, Profile, Details, Registration, Mapping, History, Review, Recommendations, MapDownloads; screens and supporting data/services live together |
-| `PalmOilFarmer/Features/Gardens/Shared` | Shared garden values, persistence, location access and domain UI components |
+| `PalmOilFarmer/Features/GardenList` | Garden list and cards |
+| `PalmOilFarmer/Features/GardenProfile` | Profile screen, content composition, local sections |
+| `PalmOilFarmer/Features/GardenDetails` | Shared new/edit garden form |
+| `PalmOilFarmer/Features/GardenRegistration` | Location selection, search and photo metadata |
+| `PalmOilFarmer/Features/GardenMapping` | Boundary editor, mapping drafts and draft storage |
+| `PalmOilFarmer/Features/GardenHistory` | Fertilizer/harvest editors, drafts and cards |
+| `PalmOilFarmer/Features/GardenReview` | Review submission, status, models and service |
+| `PalmOilFarmer/Features/FertilizerRecommendations` | Recommendation reports and presentation |
+| `PalmOilFarmer/Features/MapDownloads` | Reference map download screens and cards |
+| `PalmOilFarmer/Shared/Gardens` | Garden values, persistence, location access and shared domain UI |
 | `PalmOilFarmer/Features/FindingBlock` | Allocation section and navigation with Models, Data, Views |
 | `PalmOilFarmer/Features/FindingWaypoint` | Separate waypoint experiment with Models, Data, Views |
 | `PalmOilFarmer/Resources` | Asset catalog; asset names remain unchanged |
@@ -43,7 +51,7 @@ The app starts at `PalmOilFarmerApp → AppFlow → GardenListScreen`. Screen fi
 - Prefer semantic system typography for text. Use shared tokens for repeated visual roles; illustration coordinates and map dimensions can remain local constants.
 - Keep small, closely related types together. Extract a type when its name or responsibility deserves a discoverable file.
 - Keep JSON keys and enum raw values compatible with existing `gardens.json`. Changing persisted types requires an explicit migration and compatibility tests.
-- FindingWaypoint is a separate experimental flow; FindingBlock is embedded in recommendations. Shared garden values remain owned by Gardens.
+- FindingWaypoint is a separate experimental flow; FindingBlock is embedded in recommendations. Shared garden values and persistence live in Shared/Gardens; review and recommendation contracts stay with their respective features.
 
 ## Verification
 
@@ -68,4 +76,4 @@ Open `DesignSystemCatalog.swift` in Canvas to inspect shared controls. Before me
 
 The folder layout is a project convention, not an Apple-mandated architecture.
 
-Latest Gardens ownership refactor: [verification](Docs/OwnershipVerification.md) and [accepted plan](Docs/RefactorOwnershipPlan.md).
+Latest folder refactor: [verification](Docs/FeatureFoldersVerification.md). Previous profile extraction: [verification](Docs/OwnershipVerification.md) and [historical plan](Docs/RefactorOwnershipPlan.md).

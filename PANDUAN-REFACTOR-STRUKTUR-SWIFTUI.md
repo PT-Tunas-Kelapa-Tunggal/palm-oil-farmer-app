@@ -14,7 +14,7 @@ Gunakan pola screenshot pengguna: **App, Core, Features, Resources**, dengan kod
 
 Dokumen ini adalah panduan implementasi untuk coding agent, bukan bukti bahwa refactor sudah dilakukan. Proyek yang diperiksa berada di `/Users/hatamisg/Learning/krops_coded`, dengan `PalmOilFarmer.xcodeproj`, sumber `PalmOilFarmer`, dan pengujian `PalmOilFarmerTests`. Path ini membantu menemukan proyek; jangan hardcode path mesin tersebut dalam kode atau dokumentasi repo.
 
-Saat pengguna meminta menjalankan seluruh panduan, inventarisasi seluruh aplikasi dan terapkan bertahap mulai dari Gardens/List, lalu area Gardens lain dan fitur lainnya. Jika pengguna membatasi task, misalnya hanya Gardens/List, patuhi batas itu; jangan memindahkan seluruh Core atau resource dalam task yang sempit. Saat pengguna hanya meminta audit atau revisi panduan, jangan menjalankan refactor aplikasi atau operasi Git.
+Saat pengguna meminta menjalankan seluruh panduan, inventarisasi seluruh aplikasi dan terapkan bertahap mulai dari GardenList, lalu area Gardens lain dan fitur lainnya. Jika pengguna membatasi task, misalnya hanya GardenList, patuhi batas itu; jangan memindahkan seluruh Core atau resource dalam task yang sempit. Saat pengguna hanya meminta audit atau revisi panduan, jangan menjalankan refactor aplikasi atau operasi Git.
 
 ## 2. Fakta historis baseline awal yang harus diverifikasi ulang
 
@@ -40,15 +40,15 @@ Catatan berikut berasal dari pembacaan source pada 27 Oktober 2026. Baca ulang k
 
 ## 3. Struktur tujuan dan aturan penempatan
 
-Konvensi Gardens diperbarui pada 28 Oktober 2026 sesuai [rencana ownership](Docs/RefactorOwnershipPlan.md). Struktur aktual dan alasan penempatan tersedia di [Architecture](Docs/Architecture.md).
+Konvensi penempatan terbaru disetujui pada 28 Oktober 2026: setiap area langsung berada di Features, sedangkan domain kebun bersama ada di Shared/Gardens. Struktur aktual ada di [Architecture](Docs/Architecture.md), peta halaman di [ScreenMap](Docs/ScreenMap.md), bukti perpindahan di [FeatureFoldersVerification](Docs/FeatureFoldersVerification.md). [Rencana ownership sebelumnya](Docs/RefactorOwnershipPlan.md) merupakan catatan historis.
 
-- App, Core/DesignSystem, Features, Resources dan PreviewSupport tetap dipisahkan.
-- Gardens dikelompokkan per area: List, Profile, Details, Registration, Mapping, History, Review, Recommendations, MapDownloads, Shared.
-- Screen, model dan layanan berada dekat area pemilik. Components menampung UI lokal; Recommendations/Models menampung kontrak laporan. Jangan membuat Models/Data/Views di setiap area secara otomatis.
-- Shared menampung domain, store/persistence, layanan lokasi bersama dan komponen yang benar-benar lintas area. Pemakaian lintas area saja tidak menghapus ownership: draf milik Mapping, laporan milik Recommendations.
-- FindingBlock dan FindingWaypoint mempertahankan struktur yang ada. Jangan memindahkan demi keseragaman.
+- App, Core/DesignSystem, Features, Shared, Resources dan PreviewSupport memiliki peran terpisah.
+- Features berisi GardenList, GardenProfile, GardenDetails, GardenRegistration, GardenMapping, GardenHistory, GardenReview, FertilizerRecommendations, MapDownloads, FindingBlock dan FindingWaypoint. Jangan mengembalikan pembungkus Features/Gardens.
+- Screen, model dan layanan berada dekat fitur pemilik. Components menampung UI lokal; FertilizerRecommendations/Models menampung kontrak laporan. Jangan membuat Models/Data/Views di setiap area secara otomatis.
+- Shared/Gardens menampung nilai kebun, store/persistence, penyedia lokasi bersama dan komponen domain yang benar-benar dipakai lintas fitur. Draf milik GardenMapping, review milik GardenReview, laporan milik FertilizerRecommendations; penggunaan lintas fitur tidak otomatis mengubah pemilik.
+- FindingBlock dan FindingWaypoint mempertahankan struktur internal yang ada. Jangan memindahkan demi keseragaman.
 - Core/DesignSystem berisi UI generik tanpa dependensi fitur, termasuk preview. Jangan membuat Utils/Common atau lapisan repository/ViewModel/coordinator tanpa kebutuhan.
-- Flow adalah penamaan opsional bagi penghubung langkah yang sudah ada. Tidak membuat Flow per area. Nama file mengikuti tipe utama; helper kecil terkait boleh tetap bersama.
+- Flow adalah nama opsional bagi penghubung langkah yang sudah ada. Tidak membuat Flow per fitur. Nama file mengikuti tipe utama; helper kecil terkait boleh tetap bersama.
 - Pertahankan aset, target, konfigurasi dan kontrak data. Tidak ada folder kosong atau source duplikat.
 
 ### Penamaan dan batas UI
@@ -167,4 +167,4 @@ Task baru selesai dalam scope yang ditetapkan jika:
 - [ ] Perubahan pengguna tetap utuh; commit task tidak diam-diam menyertakan atau bergantung pada perubahan lama yang tidak tercakup baseline.
 - [ ] Jika commit/push diotorisasi, branch, commit, dan tujuan pengiriman telah diverifikasi dan hasilnya dilaporkan.
 
-Laporan akhir dalam bahasa Indonesia: masalah dan perubahan utama, tree ringkas setelah refactor, tautan peta halaman, satu contoh cara menelusuri layar, hasil pemeriksaan yang benar-benar dijalankan, batasan/area tersisa, serta branch/commit/push/PR bila dilakukan. Jangan mengklaim seluruh aplikasi selesai jika hanya Gardens/List yang tercakup.
+Laporan akhir dalam bahasa Indonesia: masalah dan perubahan utama, tree ringkas setelah refactor, tautan peta halaman, satu contoh cara menelusuri layar, hasil pemeriksaan yang benar-benar dijalankan, batasan/area tersisa, serta branch/commit/push/PR bila dilakukan. Jangan mengklaim seluruh aplikasi selesai jika hanya GardenList yang tercakup.

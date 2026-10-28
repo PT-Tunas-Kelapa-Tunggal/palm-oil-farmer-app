@@ -1,5 +1,7 @@
 # Peta halaman dan alur
 
+Lokasi file mengikuti struktur Features langsung dan Shared/Gardens; lihat [Architecture](Architecture.md).
+
 Peta source setelah refactor. **Aktif** berarti terhubung dari root; data atau prasyarat tertentu tetap dapat diperlukan. **Reference/preview** tidak terhubung melalui input root saat ini. **Eksperimen** hanya melalui entry point terpisah. Nama tipe di bawah merupakan tautan ke file relatif repo.
 
 ## Alur navigasi (bukan pohon komposisi)
@@ -32,7 +34,7 @@ Reference: daftar dengan downloads → callback supplied preview;
            MapDownloadScreen → onMapBoundary callback (root tidak memasok downloads).
 Reference: rekomendasi tanpa Garden → sheet RecommendationAreaPickerScreen
                                    → full screen RecommendationAreaMapScreen.
-Eksperimen: FindingWaypointFlow → tab Home (alur Gardens) / tab Pemupukan
+Eksperimen: FindingWaypointFlow → tab Home (pengelolaan kebun) / tab Pemupukan
                               → WaypointGardenListScreen → push WaypointMapScreen.
 ```
 
@@ -40,7 +42,7 @@ Alur review mempertahankan perilaku asal: tombol profil setelah ada status membu
 
 ## Komposisi halaman daftar
 
-[GardenListScreen](../PalmOilFarmer/Features/Gardens/List/GardenListScreen.swift)
+[GardenListScreen](../PalmOilFarmer/Features/GardenList/GardenListScreen.swift)
 
 ```text
 Judul Text inline
@@ -54,7 +56,7 @@ Judul Text inline
 └── safeAreaInset → PrimaryActionButton
 ```
 
-File komponennya: [MappingDraftCard](../PalmOilFarmer/Features/Gardens/List/Components/MappingDraftCard.swift), [GardenCard](../PalmOilFarmer/Features/Gardens/List/Components/GardenCard.swift), [GardenMapView](../PalmOilFarmer/Features/Gardens/Shared/Components/GardenMapView.swift), [GardenAreaIcon](../PalmOilFarmer/Features/Gardens/Shared/Components/GardenAreaIcon.swift), [LocationMapPreview](../PalmOilFarmer/Features/Gardens/Shared/Components/LocationMapPreview.swift), [MapDownloadCard](../PalmOilFarmer/Features/Gardens/MapDownloads/Components/MapDownloadCard.swift), [MapDownloadProgressView](../PalmOilFarmer/Features/Gardens/MapDownloads/Components/MapDownloadProgressView.swift), [EmptyStateView](../PalmOilFarmer/Core/DesignSystem/Components/EmptyStateView.swift), [SeedlingIcon](../PalmOilFarmer/Features/Gardens/List/Components/SeedlingIcon.swift), [PrimaryActionButton](../PalmOilFarmer/Core/DesignSystem/Components/PrimaryActionButton.swift).
+File komponennya: [MappingDraftCard](../PalmOilFarmer/Features/GardenList/Components/MappingDraftCard.swift), [GardenCard](../PalmOilFarmer/Features/GardenList/Components/GardenCard.swift), [GardenMapView](../PalmOilFarmer/Shared/Gardens/Components/GardenMapView.swift), [GardenAreaIcon](../PalmOilFarmer/Shared/Gardens/Components/GardenAreaIcon.swift), [LocationMapPreview](../PalmOilFarmer/Shared/Gardens/Components/LocationMapPreview.swift), [MapDownloadCard](../PalmOilFarmer/Features/MapDownloads/Components/MapDownloadCard.swift), [MapDownloadProgressView](../PalmOilFarmer/Features/MapDownloads/Components/MapDownloadProgressView.swift), [EmptyStateView](../PalmOilFarmer/Core/DesignSystem/Components/EmptyStateView.swift), [SeedlingIcon](../PalmOilFarmer/Features/GardenList/Components/SeedlingIcon.swift), [PrimaryActionButton](../PalmOilFarmer/Core/DesignSystem/Components/PrimaryActionButton.swift).
 
 Data: `GardenStore.gardens` dan `MappingDraftStore.drafts` → [AppFlow](../PalmOilFarmer/App/AppFlow.swift) → daftar. [AppFlow](../PalmOilFarmer/App/AppFlow.swift) menyaring draf yang ID-nya sudah menjadi kebun tersimpan. `onSelectGarden`, `onRegisterGarden`, `onResumeDraft` hanya callback; [AppFlow](../PalmOilFarmer/App/AppFlow.swift) memilih presentasi. `downloads` / `onSelectDownload`, reference image dan metrics disediakan API/preview, **tidak dipasok [AppFlow](../PalmOilFarmer/App/AppFlow.swift)**. Empty/loading/failure unduhan adalah state, bukan halaman baru.
 
@@ -68,15 +70,15 @@ Setiap entri memisahkan asal presentasi, komposisi, dan pemilik data. Komponen i
 
 **Asal/status:** Aktif; WindowGroup dari [PalmOilFarmerApp](../PalmOilFarmer/App/PalmOilFarmerApp.swift)
 
-**Komposisi:** NavigationStack dan [GardenListScreen](../PalmOilFarmer/Features/Gardens/List/GardenListScreen.swift); sheet/full screen/alert inline.
+**Komposisi:** NavigationStack dan [GardenListScreen](../PalmOilFarmer/Features/GardenList/GardenListScreen.swift); sheet/full screen/alert inline.
 
-**Data dan output:** Memiliki [GardenStore](../PalmOilFarmer/Features/Gardens/Shared/GardenStore.swift), [MappingDraftStore](../PalmOilFarmer/Features/Gardens/Mapping/MappingDraftStore.swift), selectedGardenID, pendingLocation, mappingDraft, retrySearch. Save kebun → store.add, lalu remove draf; gagal save tetap ditampilkan.
+**Data dan output:** Memiliki [GardenStore](../PalmOilFarmer/Shared/Gardens/GardenStore.swift), [MappingDraftStore](../PalmOilFarmer/Features/GardenMapping/MappingDraftStore.swift), selectedGardenID, pendingLocation, mappingDraft, retrySearch. Save kebun → store.add, lalu remove draf; gagal save tetap ditampilkan.
 
 **Varian/modal:** Push profil; sheet registration; full screen mapping. Bukan screen visual mandiri.
 
 ### Kebun
 
-**File:** [GardenListScreen](../PalmOilFarmer/Features/Gardens/List/GardenListScreen.swift).
+**File:** [GardenListScreen](../PalmOilFarmer/Features/GardenList/GardenListScreen.swift).
 
 **Asal/status:** Aktif; konten NavigationStack [AppFlow](../PalmOilFarmer/App/AppFlow.swift)
 
@@ -88,57 +90,57 @@ Setiap entri memisahkan asal presentasi, komposisi, dan pemilik data. Komponen i
 
 ### Detail Kebun
 
-**File:** [GardenProfileScreen](../PalmOilFarmer/Features/Gardens/Profile/GardenProfileScreen.swift).
+**File:** [GardenProfileScreen](../PalmOilFarmer/Features/GardenProfile/GardenProfileScreen.swift).
 
 **Asal/status:** Aktif; push dari daftar melalui [AppFlow](../PalmOilFarmer/App/AppFlow.swift). Juga dipakai tab Home eksperimen.
 
-**Komposisi:** [GardenSummaryView](../PalmOilFarmer/Features/Gardens/Profile/Components/GardenSummaryView.swift), [GardenFertilizerHistorySection](../PalmOilFarmer/Features/Gardens/Profile/Components/GardenFertilizerHistorySection.swift), [GardenHarvestHistorySection](../PalmOilFarmer/Features/Gardens/Profile/Components/GardenHarvestHistorySection.swift), [GardenProfileProgressView](../PalmOilFarmer/Features/Gardens/Profile/Components/GardenProfileProgressView.swift), [GardenHistoryChart](../PalmOilFarmer/Features/Gardens/History/Components/GardenHistoryChart.swift); [GardenProfileContent](../PalmOilFarmer/Features/Gardens/Profile/GardenProfileContent.swift) menyusun map/gradient, judul, ringkasan, riwayat, review action dan progress. ScrollView, toolbar dan presentasi tetap di screen.
+**Komposisi:** [GardenSummaryView](../PalmOilFarmer/Features/GardenProfile/Components/GardenSummaryView.swift), [GardenFertilizerHistorySection](../PalmOilFarmer/Features/GardenProfile/Components/GardenFertilizerHistorySection.swift), [GardenHarvestHistorySection](../PalmOilFarmer/Features/GardenProfile/Components/GardenHarvestHistorySection.swift), [GardenProfileProgressView](../PalmOilFarmer/Features/GardenProfile/Components/GardenProfileProgressView.swift), [GardenHistoryChart](../PalmOilFarmer/Features/GardenHistory/Components/GardenHistoryChart.swift); [GardenProfileContent](../PalmOilFarmer/Features/GardenProfile/GardenProfileContent.swift) menyusun map/gradient, judul, ringkasan, riwayat, review action dan progress. ScrollView, toolbar dan presentasi tetap di screen.
 
-**Data dan output:** [Garden](../PalmOilFarmer/Features/Gardens/Shared/Garden.swift) terkini milik induk. State modal/editor/review/scroll lokal. onUpdate/onDelete/onUpdateReview diteruskan ke store. [ReviewService](../PalmOilFarmer/Features/Gardens/Review/ReviewService.swift) lewat environment; refresh tidak dipindah.
+**Data dan output:** [Garden](../PalmOilFarmer/Shared/Gardens/Garden.swift) terkini milik induk. State modal/editor/review/scroll lokal. onUpdate/onDelete/onUpdateReview diteruskan ke store. [ReviewService](../PalmOilFarmer/Features/GardenReview/ReviewService.swift) lewat environment; refresh tidak dipindah.
 
-**Varian/modal:** standard aktif; overview/chart reference. Sheet edit, pupuk, panen, [ReviewSubmissionView](../PalmOilFarmer/Features/Gardens/Review/ReviewSubmissionView.swift) (NavigationStack informasi → kontak); push status/hasil; confirmation hapus dan alert kegagalan. Section riwayat memakai [FertilizerHistoryCard](../PalmOilFarmer/Features/Gardens/History/Components/GardenHistoryViews.swift), [HarvestHistoryCard](../PalmOilFarmer/Features/Gardens/History/Components/GardenHistoryViews.swift), [GardenSectionHeader](../PalmOilFarmer/Features/Gardens/Profile/Components/GardenSectionHeader.swift).
+**Varian/modal:** standard aktif; overview/chart reference. Sheet edit, pupuk, panen, [ReviewSubmissionView](../PalmOilFarmer/Features/GardenReview/ReviewSubmissionView.swift) (NavigationStack informasi → kontak); push status/hasil; confirmation hapus dan alert kegagalan. Section riwayat memakai [FertilizerHistoryCard](../PalmOilFarmer/Features/GardenHistory/Components/GardenHistoryViews.swift), [HarvestHistoryCard](../PalmOilFarmer/Features/GardenHistory/Components/GardenHistoryViews.swift), [GardenSectionHeader](../PalmOilFarmer/Features/GardenProfile/Components/GardenSectionHeader.swift).
 
 ### Petakan batas kebun
 
-**File:** [RegistrationFlow](../PalmOilFarmer/Features/Gardens/Registration/RegistrationFlow.swift).
+**File:** [RegistrationFlow](../PalmOilFarmer/Features/GardenRegistration/RegistrationFlow.swift).
 
 **Asal/status:** Aktif; sheet dari [AppFlow](../PalmOilFarmer/App/AppFlow.swift), juga eksperimen Home.
 
-**Komposisi:** Guide inline: Text, [BoundaryGuideIllustration](../PalmOilFarmer/Features/Gardens/Registration/Components/BoundaryGuideIllustration.swift), [StepIndicator](../PalmOilFarmer/Core/DesignSystem/Components/StepIndicator.swift), [PrimaryActionButton](../PalmOilFarmer/Core/DesignSystem/Components/PrimaryActionButton.swift). Cabang lain menampilkan [LocationSearchScreen](../PalmOilFarmer/Features/Gardens/Registration/LocationSearchScreen.swift).
+**Komposisi:** Guide inline: Text, [BoundaryGuideIllustration](../PalmOilFarmer/Features/GardenRegistration/Components/BoundaryGuideIllustration.swift), [StepIndicator](../PalmOilFarmer/Core/DesignSystem/Components/StepIndicator.swift), [PrimaryActionButton](../PalmOilFarmer/Core/DesignSystem/Components/PrimaryActionButton.swift). Cabang lain menampilkan [LocationSearchScreen](../PalmOilFarmer/Features/GardenRegistration/LocationSearchScreen.swift).
 
-**Data dan output:** step milik flow; onLocate mengirim [GardenLocation](../PalmOilFarmer/Features/Gardens/Shared/GardenLocation.swift) ke induk. Initial photo parameters dipertahankan untuk kompatibilitas preview meskipun tidak mengubah alur saat ini.
+**Data dan output:** step milik flow; onLocate mengirim [GardenLocation](../PalmOilFarmer/Shared/Gardens/GardenLocation.swift) ke induk. Initial photo parameters dipertahankan untuk kompatibilitas preview meskipun tidak mengubah alur saat ini.
 
 **Varian/modal:** guide → address melalui pergantian isi. Enum photo historis juga masuk cabang pencarian; bukan screen foto produksi tersendiri.
 
 ### Cari lokasi kebun
 
-**File:** [LocationSearchScreen](../PalmOilFarmer/Features/Gardens/Registration/LocationSearchScreen.swift).
+**File:** [LocationSearchScreen](../PalmOilFarmer/Features/GardenRegistration/LocationSearchScreen.swift).
 
-**Asal/status:** Aktif; pergantian isi [RegistrationFlow](../PalmOilFarmer/Features/Gardens/Registration/RegistrationFlow.swift).
+**Asal/status:** Aktif; pergantian isi [RegistrationFlow](../PalmOilFarmer/Features/GardenRegistration/RegistrationFlow.swift).
 
-**Komposisi:** [ScreenHeader](../PalmOilFarmer/Core/DesignSystem/Components/ScreenHeader.swift), field pencarian, hasil/current-location rows dan pesan inline; [GardenPhotoPickerView](../PalmOilFarmer/Features/Gardens/Registration/Components/GardenPhotoPickerView.swift).
+**Komposisi:** [ScreenHeader](../PalmOilFarmer/Core/DesignSystem/Components/ScreenHeader.swift), field pencarian, hasil/current-location rows dan pesan inline; [GardenPhotoPickerView](../PalmOilFarmer/Features/GardenRegistration/Components/GardenPhotoPickerView.swift).
 
-**Data dan output:** State query/results/focus/photo/loading/error dan [CurrentLocationProvider](../PalmOilFarmer/Features/Gardens/Shared/CurrentLocationProvider.swift) lokal; closure searchLocations default [LocationSearchService](../PalmOilFarmer/Features/Gardens/Registration/LocationSearchService.swift). [PhotoLocationReader](../PalmOilFarmer/Features/Gardens/Registration/PhotoLocationReader.swift) membaca metadata. onSelect mengirim lokasi ke flow.
+**Data dan output:** State query/results/focus/photo/loading/error dan [CurrentLocationProvider](../PalmOilFarmer/Shared/Gardens/CurrentLocationProvider.swift) lokal; closure searchLocations default [LocationSearchService](../PalmOilFarmer/Features/GardenRegistration/LocationSearchService.swift). [PhotoLocationReader](../PalmOilFarmer/Features/GardenRegistration/PhotoLocationReader.swift) membaca metadata. onSelect mengirim lokasi ke flow.
 
 **Varian/modal:** Kosong, mencari, hasil, gagal, GPS dan foto. PhotosPicker sistem dibuka komponen foto; foto tanpa koordinat tetap error di screen yang sama.
 
 ### Petakan batas kebun
 
-**File:** [GardenBoundaryScreen](../PalmOilFarmer/Features/Gardens/Mapping/GardenBoundaryScreen.swift).
+**File:** [GardenBoundaryScreen](../PalmOilFarmer/Features/GardenMapping/GardenBoundaryScreen.swift).
 
 **Asal/status:** Aktif; fullScreenCover [AppFlow](../PalmOilFarmer/App/AppFlow.swift) setelah pemilihan lokasi atau lanjut draf.
 
-**Komposisi:** editor inline: MapReader/Map/annotation, [BoundaryEditorLayout](../PalmOilFarmer/Features/Gardens/Mapping/Components/BoundaryEditorLayout.swift), [BoundaryPointMarker](../PalmOilFarmer/Features/Gardens/Shared/Components/GardenMapView.swift). [PhotoLocationConfirmationScreen](../PalmOilFarmer/Features/Gardens/Mapping/PhotoLocationConfirmationScreen.swift) menjadi cabang isi sebelum editor.
+**Komposisi:** editor inline: MapReader/Map/annotation, [BoundaryEditorLayout](../PalmOilFarmer/Features/GardenMapping/Components/BoundaryEditorLayout.swift), [BoundaryPointMarker](../PalmOilFarmer/Shared/Gardens/Components/GardenMapView.swift). [PhotoLocationConfirmationScreen](../PalmOilFarmer/Features/GardenMapping/PhotoLocationConfirmationScreen.swift) menjadi cabang isi sebelum editor.
 
-**Data dan output:** State boundary, camera, photoConfirmed, lokasi/error dan showsDetails tetap di screen. onSave → [AppFlow](../PalmOilFarmer/App/AppFlow.swift)/store; onDefer → [MappingDraftStore](../PalmOilFarmer/Features/Gardens/Mapping/MappingDraftStore.swift).save; onSearchAgain meminta induk membuka ulang pencarian.
+**Data dan output:** State boundary, camera, photoConfirmed, lokasi/error dan showsDetails tetap di screen. onSave → [AppFlow](../PalmOilFarmer/App/AppFlow.swift)/store; onDefer → [MappingDraftStore](../PalmOilFarmer/Features/GardenMapping/MappingDraftStore.swift).save; onSearchAgain meminta induk membuka ulang pencarian.
 
-**Varian/modal:** Kosong/garis/poligon, overview, resumesDraft, konfirmasi foto. Sheet [GardenDetailsScreen](../PalmOilFarmer/Features/Gardens/Details/GardenDetailsScreen.swift); dialog keluar dan error save/GPS. Task GPS tetap pada editor.
+**Varian/modal:** Kosong/garis/poligon, overview, resumesDraft, konfirmasi foto. Sheet [GardenDetailsScreen](../PalmOilFarmer/Features/GardenDetails/GardenDetailsScreen.swift); dialog keluar dan error save/GPS. Task GPS tetap pada editor.
 
 ### Lokasi Ditemukan dari Foto
 
-**File:** [PhotoLocationConfirmationScreen](../PalmOilFarmer/Features/Gardens/Mapping/PhotoLocationConfirmationScreen.swift).
+**File:** [PhotoLocationConfirmationScreen](../PalmOilFarmer/Features/GardenMapping/PhotoLocationConfirmationScreen.swift).
 
-**Asal/status:** Aktif bersyarat sumber photo; pergantian isi [GardenBoundaryScreen](../PalmOilFarmer/Features/Gardens/Mapping/GardenBoundaryScreen.swift).
+**Asal/status:** Aktif bersyarat sumber photo; pergantian isi [GardenBoundaryScreen](../PalmOilFarmer/Features/GardenMapping/GardenBoundaryScreen.swift).
 
 **Komposisi:** Map/marker dan teks inline; [PrimaryActionButton](../PalmOilFarmer/Core/DesignSystem/Components/PrimaryActionButton.swift), [SheetGlassBackground](../PalmOilFarmer/Core/DesignSystem/Styles/SheetGlassBackground.swift).
 
@@ -148,21 +150,21 @@ Setiap entri memisahkan asal presentasi, komposisi, dan pemilik data. Komponen i
 
 ### Data kebun / Edit kebun
 
-**File:** [GardenDetailsScreen](../PalmOilFarmer/Features/Gardens/Details/GardenDetailsScreen.swift).
+**File:** [GardenDetailsScreen](../PalmOilFarmer/Features/GardenDetails/GardenDetailsScreen.swift).
 
-**Asal/status:** Aktif; sheet dari [GardenBoundaryScreen](../PalmOilFarmer/Features/Gardens/Mapping/GardenBoundaryScreen.swift) atau [GardenProfileScreen](../PalmOilFarmer/Features/Gardens/Profile/GardenProfileScreen.swift).
+**Asal/status:** Aktif; sheet dari [GardenBoundaryScreen](../PalmOilFarmer/Features/GardenMapping/GardenBoundaryScreen.swift) atau [GardenProfileScreen](../PalmOilFarmer/Features/GardenProfile/GardenProfileScreen.swift).
 
-**Komposisi:** [ScreenHeader](../PalmOilFarmer/Core/DesignSystem/Components/ScreenHeader.swift), [GardenMapView](../PalmOilFarmer/Features/Gardens/Shared/Components/GardenMapView.swift), [FormSelectionRow](../PalmOilFarmer/Core/DesignSystem/Components/FormSelectionRow.swift), [PrimaryActionButton](../PalmOilFarmer/Core/DesignSystem/Components/PrimaryActionButton.swift); text field dan detailMetric inline.
+**Komposisi:** [ScreenHeader](../PalmOilFarmer/Core/DesignSystem/Components/ScreenHeader.swift), [GardenMapView](../PalmOilFarmer/Shared/Gardens/Components/GardenMapView.swift), [FormSelectionRow](../PalmOilFarmer/Core/DesignSystem/Components/FormSelectionRow.swift), [PrimaryActionButton](../PalmOilFarmer/Core/DesignSystem/Components/PrimaryActionButton.swift); text field dan detailMetric inline.
 
 **Data dan output:** Draf name/year/month/soil serta focus/error lokal. Mode baru menggunakan location.id, edit mempertahankan originalGarden. onSave Bool menentukan sukses; store dimiliki induk.
 
-**Varian/modal:** Sheet [PlantingDatePickerScreen](../PalmOilFarmer/Features/Gardens/Details/PlantingDatePickerScreen.swift), push [SelectionListScreen](../PalmOilFarmer/Core/DesignSystem/Components/SelectionListScreen.swift) tanah, alert validasi/save, tutup/batal. Dipakai lintas area tetapi satu implementasi di Registration.
+**Varian/modal:** Sheet [PlantingDatePickerScreen](../PalmOilFarmer/Features/GardenDetails/PlantingDatePickerScreen.swift), push [SelectionListScreen](../PalmOilFarmer/Core/DesignSystem/Components/SelectionListScreen.swift) tanah, alert validasi/save, tutup/batal. Dipakai lintas area tetapi satu implementasi di Registration.
 
 ### Tahun Tanam
 
-**File:** [PlantingDatePickerScreen](../PalmOilFarmer/Features/Gardens/Details/PlantingDatePickerScreen.swift).
+**File:** [PlantingDatePickerScreen](../PalmOilFarmer/Features/GardenDetails/PlantingDatePickerScreen.swift).
 
-**Asal/status:** Aktif; sheet dari [GardenDetailsScreen](../PalmOilFarmer/Features/Gardens/Details/GardenDetailsScreen.swift).
+**Asal/status:** Aktif; sheet dari [GardenDetailsScreen](../PalmOilFarmer/Features/GardenDetails/GardenDetailsScreen.swift).
 
 **Komposisi:** [ScreenHeader](../PalmOilFarmer/Core/DesignSystem/Components/ScreenHeader.swift) dan dua wheel Picker inline.
 
@@ -174,81 +176,81 @@ Setiap entri memisahkan asal presentasi, komposisi, dan pemilik data. Komponen i
 
 **File:** [SelectionListScreen](../PalmOilFarmer/Core/DesignSystem/Components/SelectionListScreen.swift).
 
-**Asal/status:** Aktif; push dari [GardenDetailsScreen](../PalmOilFarmer/Features/Gardens/Details/GardenDetailsScreen.swift) atau [FertilizerHistoryScreen](../PalmOilFarmer/Features/Gardens/History/FertilizerHistoryScreen.swift).
+**Asal/status:** Aktif; push dari [GardenDetailsScreen](../PalmOilFarmer/Features/GardenDetails/GardenDetailsScreen.swift) atau [FertilizerHistoryScreen](../PalmOilFarmer/Features/GardenHistory/FertilizerHistoryScreen.swift).
 
 **Komposisi:** [ScreenHeader](../PalmOilFarmer/Core/DesignSystem/Components/ScreenHeader.swift) dan daftar pilihan/checkmark/footer inline di design system.
 
-**Data dan output:** Input strings, pilihan dan onSelect; tidak mengenal [Garden](../PalmOilFarmer/Features/Gardens/Shared/Garden.swift)/[SoilType](../PalmOilFarmer/Features/Gardens/Shared/Garden.swift)/[FertilizerDraft](../PalmOilFarmer/Features/Gardens/History/FertilizerDraft.swift). Induk mengubah draf.
+**Data dan output:** Input strings, pilihan dan onSelect; tidak mengenal [Garden](../PalmOilFarmer/Shared/Gardens/Garden.swift)/[SoilType](../PalmOilFarmer/Shared/Gardens/Garden.swift)/[FertilizerDraft](../PalmOilFarmer/Features/GardenHistory/FertilizerDraft.swift). Induk mengubah draf.
 
 **Varian/modal:** Konten generik berdasarkan caller. Tidak membuat salinan halaman domain hanya untuk nama Screen.
 
 ### Riwayat Pemupukan
 
-**File:** [FertilizerHistoryScreen](../PalmOilFarmer/Features/Gardens/History/FertilizerHistoryScreen.swift).
+**File:** [FertilizerHistoryScreen](../PalmOilFarmer/Features/GardenHistory/FertilizerHistoryScreen.swift).
 
 **Asal/status:** Aktif; sheet dari profil.
 
-**Komposisi:** NavigationStack, [ScreenHeader](../PalmOilFarmer/Core/DesignSystem/Components/ScreenHeader.swift), [FertilizerEntryCard](../PalmOilFarmer/Features/Gardens/History/Components/FertilizerEntryCard.swift), tombol tambah dan context menu inline.
+**Komposisi:** NavigationStack, [ScreenHeader](../PalmOilFarmer/Core/DesignSystem/Components/ScreenHeader.swift), [FertilizerEntryCard](../PalmOilFarmer/Features/GardenHistory/Components/FertilizerEntryCard.swift), tombol tambah dan context menu inline.
 
-**Data dan output:** drafts, selectedDraftID, error lokal. [FertilizerEntryCard](../PalmOilFarmer/Features/Gardens/History/Components/FertilizerEntryCard.swift) memakai binding ke draft. onSave records → profil → [GardenStore](../PalmOilFarmer/Features/Gardens/Shared/GardenStore.swift).update.
+**Data dan output:** drafts, selectedDraftID, error lokal. [FertilizerEntryCard](../PalmOilFarmer/Features/GardenHistory/Components/FertilizerEntryCard.swift) memakai binding ke draft. onSave records → profil → [GardenStore](../PalmOilFarmer/Shared/Gardens/GardenStore.swift).update.
 
 **Varian/modal:** Push [SelectionListScreen](../PalmOilFarmer/Core/DesignSystem/Components/SelectionListScreen.swift) pupuk, tambah/hapus draft, validasi dan gagal save tetap di editor. Preview includesEmptyDraft berada di GardenHistoryPreviews.
 
 ### Riwayat Panen
 
-**File:** [HarvestHistoryScreen](../PalmOilFarmer/Features/Gardens/History/HarvestHistoryScreen.swift).
+**File:** [HarvestHistoryScreen](../PalmOilFarmer/Features/GardenHistory/HarvestHistoryScreen.swift).
 
 **Asal/status:** Aktif; sheet dari profil.
 
 **Komposisi:** [ScreenHeader](../PalmOilFarmer/Core/DesignSystem/Components/ScreenHeader.swift), kartu frekuensi dan berat, Stepper/Picker inline.
 
-**Data dan output:** frequency/weight/error lokal; onSave [HarvestRecord](../PalmOilFarmer/Features/Gardens/Shared/Garden.swift) → profil → store.
+**Data dan output:** frequency/weight/error lokal; onSave [HarvestRecord](../PalmOilFarmer/Shared/Gardens/Garden.swift) → profil → store.
 
 **Varian/modal:** Default atau nilai lama, validasi, batal/simpan. UI tidak ditutup bila save gagal.
 
 ### Permintaan Peninjauan
 
-**File:** [ReviewRequestScreen](../PalmOilFarmer/Features/Gardens/Review/ReviewRequestScreen.swift).
+**File:** [ReviewRequestScreen](../PalmOilFarmer/Features/GardenReview/ReviewRequestScreen.swift).
 
 **Asal/status:** Aktif; root NavigationStack di sheet profil.
 
-**Komposisi:** [ScreenHeader](../PalmOilFarmer/Core/DesignSystem/Components/ScreenHeader.swift), teks penjelasan/persyaratan dan [PrimaryActionButton](../PalmOilFarmer/Core/DesignSystem/Components/PrimaryActionButton.swift) inline; [ConsentCheckbox](../PalmOilFarmer/Features/Gardens/Review/Components/ConsentCheckbox.swift).
+**Komposisi:** [ScreenHeader](../PalmOilFarmer/Core/DesignSystem/Components/ScreenHeader.swift), teks penjelasan/persyaratan dan [PrimaryActionButton](../PalmOilFarmer/Core/DesignSystem/Components/PrimaryActionButton.swift) inline; [ConsentCheckbox](../PalmOilFarmer/Features/GardenReview/Components/ConsentCheckbox.swift).
 
 **Data dan output:** hasConsent dan showsConsentError lokal; onContinue memicu state showsReviewForm di profil setelah persetujuan. Tidak mengirim atau menyimpan permintaan.
 
-**Varian/modal:** Push [ReviewContactFormScreen](../PalmOilFarmer/Features/Gardens/Review/ReviewContactFormScreen.swift); dapat menutup sheet.
+**Varian/modal:** Push [ReviewContactFormScreen](../PalmOilFarmer/Features/GardenReview/ReviewContactFormScreen.swift); dapat menutup sheet.
 
 ### Permintaan Peninjauan — data kontak
 
-**File:** [ReviewContactFormScreen](../PalmOilFarmer/Features/Gardens/Review/ReviewContactFormScreen.swift).
+**File:** [ReviewContactFormScreen](../PalmOilFarmer/Features/GardenReview/ReviewContactFormScreen.swift).
 
 **Asal/status:** Aktif; push di sheet review profil.
 
-**Komposisi:** [ScreenHeader](../PalmOilFarmer/Core/DesignSystem/Components/ScreenHeader.swift), contactField inline, [ConsentCheckbox](../PalmOilFarmer/Features/Gardens/Review/Components/ConsentCheckbox.swift), [PrimaryActionButton](../PalmOilFarmer/Core/DesignSystem/Components/PrimaryActionButton.swift).
+**Komposisi:** [ScreenHeader](../PalmOilFarmer/Core/DesignSystem/Components/ScreenHeader.swift), contactField inline, [ConsentCheckbox](../PalmOilFarmer/Features/GardenReview/Components/ConsentCheckbox.swift), [PrimaryActionButton](../PalmOilFarmer/Core/DesignSystem/Components/PrimaryActionButton.swift).
 
-**Data dan output:** name/phone/address/consent/focus/submitting/error lokal. onSubmit async diteruskan ReviewSubmissionView dari submitReview pada profil, memanggil [ReviewService](../PalmOilFarmer/Features/Gardens/Review/ReviewService.swift) dan saveReview; receivedReview di profil menjaga retry jika persistence gagal.
+**Data dan output:** name/phone/address/consent/focus/submitting/error lokal. onSubmit async diteruskan ReviewSubmissionView dari submitReview pada profil, memanggil [ReviewService](../PalmOilFarmer/Features/GardenReview/ReviewService.swift) dan saveReview; receivedReview di profil menjaga retry jika persistence gagal.
 
 **Varian/modal:** Validasi, submitting, error; interaksi tutup dinonaktifkan saat submit. Berhasil: profil menutup sheet lalu push status.
 
 ### Status Pengajuan
 
-**File:** [ReviewStatusScreen](../PalmOilFarmer/Features/Gardens/Review/ReviewStatusScreen.swift).
+**File:** [ReviewStatusScreen](../PalmOilFarmer/Features/GardenReview/ReviewStatusScreen.swift).
 
 **Asal/status:** Aktif; push profil sesudah submit sukses.
 
-**Komposisi:** [ScreenHeader](../PalmOilFarmer/Core/DesignSystem/Components/ScreenHeader.swift), [ReviewTimelineRow](../PalmOilFarmer/Features/Gardens/Review/Components/ReviewTimelineRow.swift), [ReviewDownloadProgressCard](../PalmOilFarmer/Features/Gardens/Review/Components/ReviewDownloadProgressCard.swift), ShareLink, tombol hasil inline.
+**Komposisi:** [ScreenHeader](../PalmOilFarmer/Core/DesignSystem/Components/ScreenHeader.swift), [ReviewTimelineRow](../PalmOilFarmer/Features/GardenReview/Components/ReviewTimelineRow.swift), [ReviewDownloadProgressCard](../PalmOilFarmer/Features/GardenReview/Components/ReviewDownloadProgressCard.swift), ShareLink, tombol hasil inline.
 
-**Data dan output:** Input status/entries dari [Garden](../PalmOilFarmer/Features/Gardens/Shared/Garden.swift).review atau reference. State menunjuk [ReviewReportDownload](../PalmOilFarmer/Features/Gardens/Review/ReviewReportDownload.swift).shared, onRefresh/onViewResults/onAdvanceDemo callback ke profil.
+**Data dan output:** Input status/entries dari [Garden](../PalmOilFarmer/Shared/Gardens/Garden.swift).review atau reference. State menunjuk [ReviewReportDownload](../PalmOilFarmer/Features/GardenReview/ReviewReportDownload.swift).shared, onRefresh/onViewResults/onAdvanceDemo callback ke profil.
 
 **Varian/modal:** submitted/scheduled/inReview/completed; unduhan progressing/saved/error jika URL tersedia. Simulasi DEBUG dapat maju melalui callback; hasil membuka rekomendasi.
 
 ### Hasil peninjauan / informasi kebun
 
-**File:** [FertilizerRecommendationScreen](../PalmOilFarmer/Features/Gardens/Recommendations/FertilizerRecommendationScreen.swift).
+**File:** [FertilizerRecommendationScreen](../PalmOilFarmer/Features/FertilizerRecommendations/FertilizerRecommendationScreen.swift).
 
 **Asal/status:** Aktif; push profil/status. Reference menyediakan laporan contoh yang lebih lengkap.
 
-**Komposisi:** reportPicker dan susunan tab inline. [BoundarySilhouette](../PalmOilFarmer/Features/Gardens/Recommendations/Components/BoundarySilhouette.swift), [NutrientProjectionChart](../PalmOilFarmer/Features/Gardens/Recommendations/Components/NutrientProjectionChart.swift), [FertilizerCostTable](../PalmOilFarmer/Features/Gardens/Recommendations/Components/FertilizerCostTable.swift), [RainfallForecastView](../PalmOilFarmer/Features/Gardens/Recommendations/Components/RainfallForecastView.swift), [FindingBlockView](../PalmOilFarmer/Features/FindingBlock/Views/FindingBlockView.swift); fallback tanpa [Garden](../PalmOilFarmer/Features/Gardens/Shared/Garden.swift) memakai [AllocationOverviewMap](../PalmOilFarmer/Features/Gardens/Recommendations/Components/AllocationOverviewMap.swift) dan [FertilizerAllocationSection](../PalmOilFarmer/Features/Gardens/Recommendations/Components/FertilizerAllocationSection.swift).
+**Komposisi:** reportPicker dan susunan tab inline. [BoundarySilhouette](../PalmOilFarmer/Features/FertilizerRecommendations/Components/BoundarySilhouette.swift), [NutrientProjectionChart](../PalmOilFarmer/Features/FertilizerRecommendations/Components/NutrientProjectionChart.swift), [FertilizerCostTable](../PalmOilFarmer/Features/FertilizerRecommendations/Components/FertilizerCostTable.swift), [RainfallForecastView](../PalmOilFarmer/Features/FertilizerRecommendations/Components/RainfallForecastView.swift), [FindingBlockView](../PalmOilFarmer/Features/FindingBlock/Views/FindingBlockView.swift); fallback tanpa [Garden](../PalmOilFarmer/Shared/Gardens/Garden.swift) memakai [AllocationOverviewMap](../PalmOilFarmer/Features/FertilizerRecommendations/Components/AllocationOverviewMap.swift) dan [FertilizerAllocationSection](../PalmOilFarmer/Features/FertilizerRecommendations/Components/FertilizerAllocationSection.swift).
 
 **Data dan output:** report dan optional garden input; selectedTab/selectedAreaID/selectedReference lokal. Tidak menyimpan kebun. Report .local tidak mengarang data hara/biaya/cuaca.
 
@@ -256,23 +258,23 @@ Setiap entri memisahkan asal presentasi, komposisi, dan pemilik data. Komponen i
 
 ### Referensi pupuk untuk unsur hara
 
-**File:** [NutrientReferenceScreen](../PalmOilFarmer/Features/Gardens/Recommendations/NutrientReferenceScreen.swift).
+**File:** [NutrientReferenceScreen](../PalmOilFarmer/Features/FertilizerRecommendations/NutrientReferenceScreen.swift).
 
 **Asal/status:** Aktif bersyarat laporan punya nutrientReferences; sheet rekomendasi.
 
 **Komposisi:** Teks referensi, daftar pupuk, divider dan catatan inline.
 
-**Data dan output:** Input [NutrientReference](../PalmOilFarmer/Features/Gardens/Recommendations/Models/NutrientReference.swift) saja; tidak menyimpan atau memiliki store.
+**Data dan output:** Input [NutrientReference](../PalmOilFarmer/Features/FertilizerRecommendations/Models/NutrientReference.swift) saja; tidak menyimpan atau memiliki store.
 
 **Varian/modal:** Detent medium/large; data contoh tersedia di reference preview.
 
 ### Area Kebun — area laporan
 
-**File:** [RecommendationAreaPickerScreen](../PalmOilFarmer/Features/Gardens/Recommendations/RecommendationAreaPickerScreen.swift).
+**File:** [RecommendationAreaPickerScreen](../PalmOilFarmer/Features/FertilizerRecommendations/RecommendationAreaPickerScreen.swift).
 
-**Asal/status:** Reference/preview dari rekomendasi tanpa [Garden](../PalmOilFarmer/Features/Gardens/Shared/Garden.swift); sheet.
+**Asal/status:** Reference/preview dari rekomendasi tanpa [Garden](../PalmOilFarmer/Shared/Gardens/Garden.swift); sheet.
 
-**Komposisi:** [ScreenHeader](../PalmOilFarmer/Core/DesignSystem/Components/ScreenHeader.swift), pencarian, row/thumbnail inline dengan [GardenMapView](../PalmOilFarmer/Features/Gardens/Shared/Components/GardenMapView.swift) atau gambar reference.
+**Komposisi:** [ScreenHeader](../PalmOilFarmer/Core/DesignSystem/Components/ScreenHeader.swift), pencarian, row/thumbnail inline dengan [GardenMapView](../PalmOilFarmer/Shared/Gardens/Components/GardenMapView.swift) atau gambar reference.
 
 **Data dan output:** areas input, binding selectedAreaID, pendingAreaID dan query lokal. Konfirmasi menerbitkan pilihan, batal tidak.
 
@@ -280,9 +282,9 @@ Setiap entri memisahkan asal presentasi, komposisi, dan pemilik data. Komponen i
 
 ### Navigasi — area laporan
 
-**File:** [RecommendationAreaMapScreen](../PalmOilFarmer/Features/Gardens/Recommendations/RecommendationAreaMapScreen.swift).
+**File:** [RecommendationAreaMapScreen](../PalmOilFarmer/Features/FertilizerRecommendations/RecommendationAreaMapScreen.swift).
 
-**Asal/status:** Reference/preview; full screen dari rekomendasi tanpa [Garden](../PalmOilFarmer/Features/Gardens/Shared/Garden.swift).
+**Asal/status:** Reference/preview; full screen dari rekomendasi tanpa [Garden](../PalmOilFarmer/Shared/Gardens/Garden.swift).
 
 **Komposisi:** Map polygon/marker/garis, [ScreenHeader](../PalmOilFarmer/Core/DesignSystem/Components/ScreenHeader.swift), distance/status card inline.
 
@@ -292,11 +294,11 @@ Setiap entri memisahkan asal presentasi, komposisi, dan pemilik data. Komponen i
 
 ### Unduh Peta
 
-**File:** [MapDownloadScreen](../PalmOilFarmer/Features/Gardens/MapDownloads/MapDownloadScreen.swift).
+**File:** [MapDownloadScreen](../PalmOilFarmer/Features/MapDownloads/MapDownloadScreen.swift).
 
 **Asal/status:** Reference/preview; CodedUIFrameCatalog. Tidak dibuka [AppFlow](../PalmOilFarmer/App/AppFlow.swift).
 
-**Komposisi:** [MapHeroView](../PalmOilFarmer/Features/Gardens/MapDownloads/Components/MapHeroView.swift), [LocationMapPreview](../PalmOilFarmer/Features/Gardens/Shared/Components/LocationMapPreview.swift) atau gambar reference, [MapDownloadProgressView](../PalmOilFarmer/Features/Gardens/MapDownloads/Components/MapDownloadProgressView.swift), [PrimaryActionButton](../PalmOilFarmer/Core/DesignSystem/Components/PrimaryActionButton.swift).
+**Komposisi:** [MapHeroView](../PalmOilFarmer/Features/MapDownloads/Components/MapHeroView.swift), [LocationMapPreview](../PalmOilFarmer/Shared/Gardens/Components/LocationMapPreview.swift) atau gambar reference, [MapDownloadProgressView](../PalmOilFarmer/Features/MapDownloads/Components/MapDownloadProgressView.swift), [PrimaryActionButton](../PalmOilFarmer/Core/DesignSystem/Components/PrimaryActionButton.swift).
 
 **Data dan output:** Input location/state/onMapBoundary; tidak ada downloader baru atau persistence. State unduhan disediakan caller.
 
@@ -312,7 +314,7 @@ Setiap entri memisahkan asal presentasi, komposisi, dan pemilik data. Komponen i
 
 **Data dan output:** blocks input; selectedID binding milik [FindingBlockView](../PalmOilFarmer/Features/FindingBlock/Views/FindingBlockView.swift); pendingID/query lokal. Konfirmasi menerbitkan pilihan, batal hanya dismiss.
 
-**Varian/modal:** Filter dan kosong. Tidak menulis [Garden](../PalmOilFarmer/Features/Gardens/Shared/Garden.swift) atau laporan.
+**Varian/modal:** Filter dan kosong. Tidak menulis [Garden](../PalmOilFarmer/Shared/Gardens/Garden.swift) atau laporan.
 
 ### Navigasi — blok kebun
 
@@ -322,7 +324,7 @@ Setiap entri memisahkan asal presentasi, komposisi, dan pemilik data. Komponen i
 
 **Komposisi:** TimelineView/Map, [BlockMapOverlay](../PalmOilFarmer/Features/FindingBlock/Views/Components/BlockMapOverlay.swift), [ScreenHeader](../PalmOilFarmer/Core/DesignSystem/Components/ScreenHeader.swift); distanceCard/marker/accuracy/garis inline.
 
-**Data dan output:** [Garden](../PalmOilFarmer/Features/Gardens/Shared/Garden.swift)/zones input, selectedZoneID binding ke komponen alokasi; camera, [BlockLocationSession](../PalmOilFarmer/Features/FindingBlock/Data/BlockLocationSession.swift), hasFramedLocation lokal. Scene phase mengatur task GPS.
+**Data dan output:** [Garden](../PalmOilFarmer/Shared/Gardens/Garden.swift)/zones input, selectedZoneID binding ke komponen alokasi; camera, [BlockLocationSession](../PalmOilFarmer/Features/FindingBlock/Data/BlockLocationSession.swift), hasFramedLocation lokal. Scene phase mengatur task GPS.
 
 **Varian/modal:** GPS belum tersedia/stale/akurasi rendah/izin; Pengaturan membuka sistem, X menutup. Tidak menyimpan zona atau mengubah batas.
 
@@ -332,11 +334,11 @@ Setiap entri memisahkan asal presentasi, komposisi, dan pemilik data. Komponen i
 
 **Asal/status:** Eksperimen; preview terpisah, bukan WindowGroup aplikasi.
 
-**Komposisi:** TabView dua tab, NavigationStack, [GardenListScreen](../PalmOilFarmer/Features/Gardens/List/GardenListScreen.swift) dan [WaypointGardenListScreen](../PalmOilFarmer/Features/FindingWaypoint/Views/WaypointGardenListScreen.swift).
+**Komposisi:** TabView dua tab, NavigationStack, [GardenListScreen](../PalmOilFarmer/Features/GardenList/GardenListScreen.swift) dan [WaypointGardenListScreen](../PalmOilFarmer/Features/FindingWaypoint/Views/WaypointGardenListScreen.swift).
 
-**Data dan output:** Memiliki [GardenStore](../PalmOilFarmer/Features/Gardens/Shared/GardenStore.swift) sendiri untuk eksperimen, state navigasi/registration/mapping. Store memakai penyimpanan kebun yang sama jika flow sengaja dijalankan.
+**Data dan output:** Memiliki [GardenStore](../PalmOilFarmer/Shared/Gardens/GardenStore.swift) sendiri untuk eksperimen, state navigasi/registration/mapping. Store memakai penyimpanan kebun yang sama jika flow sengaja dijalankan.
 
-**Varian/modal:** Tab Home memakai profil dan registration Gardens; tab Pemupukan membuka daftar zona. Tidak diaktifkan oleh refactor.
+**Varian/modal:** Tab Home memakai GardenProfile dan GardenRegistration; tab Pemupukan membuka daftar zona. Tidak diaktifkan oleh refactor.
 
 ### Pemupukan eksperimen
 
@@ -358,13 +360,13 @@ Setiap entri memisahkan asal presentasi, komposisi, dan pemilik data. Komponen i
 
 **Komposisi:** Map, zone picker, tombol panduan, distance/status controls inline; memakai [WaypointPalette](../PalmOilFarmer/Features/FindingWaypoint/Views/Components/WaypointZoneThumbnail.swift).
 
-**Data dan output:** [Garden](../PalmOilFarmer/Features/Gardens/Shared/Garden.swift)/zones input; pilihan zona/camera/guidance dan [WaypointLocationSession](../PalmOilFarmer/Features/FindingWaypoint/Data/WaypointLocationSession.swift) lokal.
+**Data dan output:** [Garden](../PalmOilFarmer/Shared/Gardens/Garden.swift)/zones input; pilihan zona/camera/guidance dan [WaypointLocationSession](../PalmOilFarmer/Features/FindingWaypoint/Data/WaypointLocationSession.swift) lokal.
 
 **Varian/modal:** Pilih zona 1–6, mulai/hentikan panduan, follow/frame garden, status izin/akurasi. Tidak mengaktifkan tracking latar atau menyimpan hasil.
 
 ## Bagian alokasi bukan halaman
 
-[FindingBlockView](../PalmOilFarmer/Features/FindingBlock/Views/FindingBlockView.swift) ditanam dalam [FertilizerRecommendationScreen](../PalmOilFarmer/Features/Gardens/Recommendations/FertilizerRecommendationScreen.swift). Ia menerima [Garden](../PalmOilFarmer/Features/Gardens/Shared/Garden.swift) dan optional report, menghitung blocks dengan [BlockZoning](../PalmOilFarmer/Features/FindingBlock/Models/BlockZoning.swift), serta memiliki selectedBlockID, camera, loading dan state presentasi. Komposisinya Map + [BlockMapOverlay](../PalmOilFarmer/Features/FindingBlock/Views/Components/BlockMapOverlay.swift), tombol pilih area/Buka Map, [FertilizerAllocationSection](../PalmOilFarmer/Features/Gardens/Recommendations/Components/FertilizerAllocationSection.swift) atau teks periode kosong. Task pembagian blok tetap memakai identity boundary.points. Navigasi picker/map adalah tujuan anak, bukan komponen yang terus terlihat di halaman induk.
+[FindingBlockView](../PalmOilFarmer/Features/FindingBlock/Views/FindingBlockView.swift) ditanam dalam [FertilizerRecommendationScreen](../PalmOilFarmer/Features/FertilizerRecommendations/FertilizerRecommendationScreen.swift). Ia menerima [Garden](../PalmOilFarmer/Shared/Gardens/Garden.swift) dan optional report, menghitung blocks dengan [BlockZoning](../PalmOilFarmer/Features/FindingBlock/Models/BlockZoning.swift), serta memiliki selectedBlockID, camera, loading dan state presentasi. Komposisinya Map + [BlockMapOverlay](../PalmOilFarmer/Features/FindingBlock/Views/Components/BlockMapOverlay.swift), tombol pilih area/Buka Map, [FertilizerAllocationSection](../PalmOilFarmer/Features/FertilizerRecommendations/Components/FertilizerAllocationSection.swift) atau teks periode kosong. Task pembagian blok tetap memakai identity boundary.points. Navigasi picker/map adalah tujuan anak, bukan komponen yang terus terlihat di halaman induk.
 
 ## Reference, fixture, dan komponen generik
 
@@ -377,4 +379,4 @@ Setiap entri memisahkan asal presentasi, komposisi, dan pemilik data. Komponen i
 - [Fixtures](../PalmOilFarmer/PreviewSupport/Fixtures): [GardenPreviewData](../PalmOilFarmer/PreviewSupport/Fixtures/GardenPreviewData.swift), [RecommendationPreviewData](../PalmOilFarmer/PreviewSupport/Fixtures/RecommendationPreviewData.swift), [WaypointPreviewData](../PalmOilFarmer/PreviewSupport/Fixtures/WaypointPreviewData.swift); data contoh DEBUG, bukan sumber produksi.
 - [DesignSystemCatalog](../PalmOilFarmer/Core/DesignSystem/Catalog/DesignSystemCatalog.swift): katalog UI generik light/dark/Dynamic Type; bukan halaman aplikasi.
 
-Contoh penelusuran: cari **Kebun** → [GardenListScreen](../PalmOilFarmer/Features/Gardens/List/GardenListScreen.swift) → [GardenCard](../PalmOilFarmer/Features/Gardens/List/Components/GardenCard.swift) di List/Components → [GardenMapView](../PalmOilFarmer/Features/Gardens/Shared/Components/GardenMapView.swift) di Shared/Components. Untuk klik kartu, kembali ke callback onSelectGarden → [AppFlow](../PalmOilFarmer/App/AppFlow.swift) → [GardenProfileScreen](../PalmOilFarmer/Features/Gardens/Profile/GardenProfileScreen.swift); profil bukan anak komposisi [GardenCard](../PalmOilFarmer/Features/Gardens/List/Components/GardenCard.swift).
+Contoh penelusuran: cari **Kebun** → [GardenListScreen](../PalmOilFarmer/Features/GardenList/GardenListScreen.swift) → [GardenCard](../PalmOilFarmer/Features/GardenList/Components/GardenCard.swift) di GardenList/Components → [GardenMapView](../PalmOilFarmer/Shared/Gardens/Components/GardenMapView.swift) di Shared/Gardens/Components. Untuk klik kartu, kembali ke callback onSelectGarden → [AppFlow](../PalmOilFarmer/App/AppFlow.swift) → [GardenProfileScreen](../PalmOilFarmer/Features/GardenProfile/GardenProfileScreen.swift); profil bukan anak komposisi [GardenCard](../PalmOilFarmer/Features/GardenList/Components/GardenCard.swift).
