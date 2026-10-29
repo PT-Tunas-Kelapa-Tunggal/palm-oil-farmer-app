@@ -34,10 +34,16 @@ struct FertilizerRecommendationsResult: Equatable {
 
     struct ZoneAllocation: Equatable, Identifiable {
         let id: String
+        let centerPoint: CenterPoint?
         let treeCount: Int
         let areaHectares: Double
         let nutrientBoostsKg: [Nutrient: Double]
         let products: [ProductAllocation]
+    }
+
+    struct CenterPoint: Equatable {
+        let normalizedX: Double
+        let normalizedY: Double
     }
 
     struct ProductBoost: Equatable, Identifiable {

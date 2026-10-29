@@ -37,9 +37,7 @@ struct FertilizerRecommendationScreen: View {
         Group {
             if let imageName = report.nutrientMapImageName,
                let image = bundledImage(named: imageName) {
-                Image(uiImage: image)
-                    .resizable()
-                    .scaledToFit()
+                ZoneAnnotatedMap(image: image, areas: report.areas)
                     .accessibilityLabel("Peta kebun dengan batas zona")
             } else {
                 boundaryPreview
@@ -150,7 +148,7 @@ struct FertilizerRecommendationScreen: View {
                             Group {
                                 if let imageName = report.nutrientMapImageName,
                                    let image = bundledImage(named: imageName) {
-                                    Image(uiImage: image).resizable().scaledToFit()
+                                    ZoneAnnotatedMap(image: image, areas: report.areas)
                                 } else if let path = area.mapImage, let image = UIImage(contentsOfFile: path) {
                                     Image(uiImage: image).resizable().scaledToFill()
                                 } else if let mapImage = area.mapImage, !mapImage.hasPrefix("/") {

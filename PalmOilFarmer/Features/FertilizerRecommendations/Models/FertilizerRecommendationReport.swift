@@ -42,8 +42,14 @@ struct FertilizerAllocationArea: Identifiable, Codable {
     let id: String
     let mapImage: String?
     let periods: [FertilizerAllocationPeriod]
+    var mapPoint: FertilizerMapPoint? = nil
     var boundary: GardenBoundary? = nil
     var navigationTarget: GardenCoordinate? = nil
+}
+
+struct FertilizerMapPoint: Codable {
+    let x: Double
+    let y: Double
 }
 
 /// Presentation data comes from a report; the UI does not calculate agronomic recommendations.

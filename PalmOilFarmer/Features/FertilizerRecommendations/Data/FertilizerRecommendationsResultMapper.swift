@@ -27,6 +27,12 @@ enum FertilizerRecommendationsResultMapper {
             zones: payload.areaAllocations.map { zone in
                 .init(
                     id: zone.areaID,
+                    centerPoint: zone.centerPoint.map {
+                        FertilizerRecommendationsResult.CenterPoint(
+                            normalizedX: $0.normalizedX,
+                            normalizedY: $0.normalizedY
+                        )
+                    },
                     treeCount: zone.treeCountForPerPalmCalculation,
                     areaHectares: zone.areaHa,
                     nutrientBoostsKg: nutrientValues(zone.annualNutrientBoostKgPerZone),
@@ -144,16 +150,27 @@ enum FertilizerRecommendationsResultMapper {
 
     struct AreaAllocationDTO: Decodable {
         let areaID: String
+        let centerPoint: CenterPointDTO?
         let treeCountForPerPalmCalculation: Int
         let areaHa: Double
         let annualNutrientBoostKgPerZone: [String: Double]
         let annualProductBoostAllocations: [ProductAllocationDTO]
         enum CodingKeys: String, CodingKey {
             case areaID = "area_id"
+            case centerPoint = "center_point"
             case treeCountForPerPalmCalculation = "tree_count_for_per_palm_calculation"
             case areaHa = "area_ha"
             case annualNutrientBoostKgPerZone = "annual_nutrient_boost_kg_per_zone"
             case annualProductBoostAllocations = "annual_product_boost_allocations"
+        }
+    }
+
+    struct CenterPointDTO: Decodable {
+        let normalizedX: Double
+        let normalizedY: Double
+        enum CodingKeys: String, CodingKey {
+            case normalizedX = "normalized_x"
+            case normalizedY = "normalized_y"
         }
     }
 

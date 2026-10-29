@@ -59,7 +59,10 @@ enum FertilizerRecommendationsResultReportAdapter {
                     title: "Alokasi tahunan · Area \(zone.id)",
                     dateRange: "\(zone.areaHectares.formatted(.number.precision(.fractionLength(0...2)))) ha · \(zone.treeCount) pohon",
                     lines: lines
-                )]
+                )],
+                mapPoint: zone.centerPoint.map {
+                    FertilizerMapPoint(x: $0.normalizedX, y: $0.normalizedY)
+                }
             )
         }
 

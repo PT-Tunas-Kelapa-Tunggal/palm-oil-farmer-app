@@ -38,6 +38,7 @@
   "area_allocations": [
     {
       "area_id": "Z1",
+      "center_point": { "x": 399.28, "y": 497.08, "normalized_x": 0.204759, "normalized_y": 0.298728 },
       "tree_count_for_per_palm_calculation": 7,
       "area_ha": 0.07,
       "annual_nutrient_boost_kg_per_zone": {
@@ -77,6 +78,7 @@
     },
     {
       "area_id": "Z2",
+      "center_point": { "x": 934.45, "y": 445.59, "normalized_x": 0.479206, "normalized_y": 0.267780 },
       "tree_count_for_per_palm_calculation": 9,
       "area_ha": 0.09,
       "annual_nutrient_boost_kg_per_zone": {
@@ -116,6 +118,7 @@
     },
     {
       "area_id": "Z3",
+      "center_point": { "x": 1460.15, "y": 466.2, "normalized_x": 0.748795, "normalized_y": 0.280168 },
       "tree_count_for_per_palm_calculation": 8,
       "area_ha": 0.08,
       "annual_nutrient_boost_kg_per_zone": {
@@ -155,6 +158,7 @@
     },
     {
       "area_id": "Z4",
+      "center_point": { "x": 360.62, "y": 1181.33, "normalized_x": 0.184932, "normalized_y": 0.709932 },
       "tree_count_for_per_palm_calculation": 6,
       "area_ha": 0.06,
       "annual_nutrient_boost_kg_per_zone": {
@@ -194,6 +198,7 @@
     },
     {
       "area_id": "Z5",
+      "center_point": { "x": 895.36, "y": 1310.28, "normalized_x": 0.459159, "normalized_y": 0.787431 },
       "tree_count_for_per_palm_calculation": 9,
       "area_ha": 0.09,
       "annual_nutrient_boost_kg_per_zone": {
@@ -233,6 +238,7 @@
     },
     {
       "area_id": "Z6",
+      "center_point": { "x": 1541.47, "y": 1232.04, "normalized_x": 0.790496, "normalized_y": 0.740411 },
       "tree_count_for_per_palm_calculation": 8,
       "area_ha": 0.08,
       "annual_nutrient_boost_kg_per_zone": {
