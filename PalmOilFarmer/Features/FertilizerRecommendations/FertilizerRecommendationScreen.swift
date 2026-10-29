@@ -8,6 +8,7 @@ struct FertilizerRecommendationScreen: View {
     var garden: Garden? = nil
     @State private var selectedTab: RecommendationTab
     @State private var selectedAreaID: String
+    @State private var selectedProductOptionIDs: [String: String] = [:]
     @State private var showsAreaPicker = false
     @State private var showsAreaMap = false
     @State private var selectedReference: NutrientReference?
@@ -167,8 +168,9 @@ struct FertilizerRecommendationScreen: View {
                                         Text("Area " + area.id)
                                         Image(systemName: "chevron.down").font(.footnote)
                                     }
-                                    .font(.title3.weight(.medium))
-                                    .padding(.horizontal, 16).padding(.vertical, 10)
+                                    .font(.title3.weight(.semibold))
+                                    .padding(.horizontal, 18).padding(.vertical, 14)
+                                    .frame(minHeight: 56)
                                     .glassEffect(.regular.interactive(), in: Capsule())
                                 }
                                 Spacer()
@@ -183,7 +185,11 @@ struct FertilizerRecommendationScreen: View {
                             }
                             .buttonStyle(.plain)
                             ForEach(area.periods) { period in
-                                FertilizerAllocationSection(period: period)
+                                FertilizerAllocationSection(
+                                    period: period,
+                                    areaID: area.id,
+                                    selectedOptionIDs: $selectedProductOptionIDs
+                                )
                             }
                         }
                     case .rainfall:
@@ -237,6 +243,14 @@ struct FertilizerRecommendationScreen: View {
     FertilizerCostTable(lines: RecommendationPreviewData.report.costs, total: "Rp1,435,000").padding(16).frame(width: 402)
 }
 #Preview("Allocation Section", traits: .sizeThatFitsLayout) {
-    FertilizerAllocationSection(period: RecommendationPreviewData.report.areas[0].periods[0]).padding(16).frame(width: 402)
+    @Previewable @State var selectedOptionIDs: [String: String] = [:]
+    let area = RecommendationPreviewData.report.areas[0]
+    FertilizerAllocationSection(
+        period: area.periods[0],
+        areaID: area.id,
+        selectedOptionIDs: $selectedOptionIDs
+    )
+    .padding(16)
+    .frame(width: 402)
 }
 #endif

@@ -5,4 +5,5 @@ struct RainfallForecast: Codable {
     let headline: String
     let days: [RainfallDay]
     let summary: String
+    let heavyThresholdMillimeters: Double
 }

@@ -1,0 +1,44 @@
+{
+  "contract": "krops.rain_view/1",
+  "today": "2026-10-29",
+  "tz": "Asia/Jakarta",
+  "plot": {
+    "name": "kebun denjay",
+    "location_source": "photo_exif"
+  },
+  "forecast": {
+    "source": "weatherkit",
+    "fetched_at": "2026-10-29T05:40:00+07:00",
+    "horizon_end": "2026-11-07",
+    "stale": false
+  },
+  "thresholds": {
+    "heavy_mm_over": 25
+  },
+  "chart": {
+    "start": "2026-10-29",
+    "end": "2026-11-04"
+  },
+  "days": [
+    { "date": "2026-10-29", "mm": 2.0, "kind": "forecast", "icon": "partly_cloudy", "spread": "safe" },
+    { "date": "2026-10-30", "mm": 8.0, "kind": "forecast", "icon": "light_rain", "spread": "safe" },
+    { "date": "2026-10-31", "mm": 1.0, "kind": "forecast", "icon": "partly_cloudy", "spread": "day_before_heavy" },
+    { "date": "2026-11-01", "mm": 28.0, "kind": "forecast", "icon": "heavy_rain", "spread": "heavy" },
+    { "date": "2026-11-02", "mm": 4.0, "kind": "forecast", "icon": "partly_cloudy", "spread": "day_before_heavy" },
+    { "date": "2026-11-03", "mm": 32.0, "kind": "forecast", "icon": "heavy_rain", "spread": "heavy" },
+    { "date": "2026-11-04", "mm": 3.0, "kind": "forecast", "icon": "partly_cloudy", "spread": "safe" }
+  ],
+  "state": "jendela_tabur",
+  "headline": {
+    "code": "heavy_days",
+    "heavy_days": ["2026-11-01", "2026-11-03"]
+  },
+  "advice": {
+    "code": "spread_on",
+    "safe_days": ["2026-10-29", "2026-10-30", "2026-11-04"],
+    "avoid_days": ["2026-10-31", "2026-11-01", "2026-11-02", "2026-11-03"],
+    "heavy_days": ["2026-11-01", "2026-11-03"],
+    "next_check": null,
+    "p30_ok": true
+  }
+}

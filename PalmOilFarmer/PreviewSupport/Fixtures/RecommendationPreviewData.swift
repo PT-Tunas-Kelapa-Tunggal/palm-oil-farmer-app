@@ -48,15 +48,16 @@ enum RecommendationPreviewData {
         rainfall: RainfallForecast(dateRange: "19–25 Oktober",
             headline: "Hujan lebat pada Kamis dan Sabtu",
             days: [
-                RainfallDay(id: "Sen", symbol: "cloud.sun.fill", precipitationMillimeters: 0),
-                RainfallDay(id: "Sel", symbol: "cloud.sun.rain.fill", precipitationMillimeters: 5),
-                RainfallDay(id: "Rab", symbol: "cloud.sun.fill", precipitationMillimeters: 0),
-                RainfallDay(id: "Kam", symbol: "cloud.heavyrain.fill", precipitationMillimeters: 20),
-                RainfallDay(id: "Jum", symbol: "cloud.sun.fill", precipitationMillimeters: 0),
-                RainfallDay(id: "Sab", symbol: "cloud.heavyrain.fill", precipitationMillimeters: 18),
-                RainfallDay(id: "Min", symbol: "cloud.sun.fill", precipitationMillimeters: 0)
+                RainfallDay(id: "day-1", weekday: "Sen", symbol: "cloud.sun.fill", precipitationMillimeters: 0, isHeavy: false, spreadStatus: "Disarankan untuk pemupukan"),
+                RainfallDay(id: "day-2", weekday: "Sel", symbol: "cloud.sun.rain.fill", precipitationMillimeters: 5, isHeavy: false, spreadStatus: "Disarankan untuk pemupukan"),
+                RainfallDay(id: "day-3", weekday: "Rab", symbol: "cloud.sun.fill", precipitationMillimeters: 0, isHeavy: false, spreadStatus: "Disarankan untuk pemupukan"),
+                RainfallDay(id: "day-4", weekday: "Kam", symbol: "cloud.heavyrain.fill", precipitationMillimeters: 28, isHeavy: true, spreadStatus: "Hujan lebat"),
+                RainfallDay(id: "day-5", weekday: "Jum", symbol: "cloud.sun.fill", precipitationMillimeters: 0, isHeavy: false, spreadStatus: "Disarankan untuk pemupukan"),
+                RainfallDay(id: "day-6", weekday: "Sab", symbol: "cloud.heavyrain.fill", precipitationMillimeters: 32, isHeavy: true, spreadStatus: "Hujan lebat"),
+                RainfallDay(id: "day-7", weekday: "Min", symbol: "cloud.sun.fill", precipitationMillimeters: 0, isHeavy: false, spreadStatus: "Disarankan untuk pemupukan")
             ],
-            summary: "Tanah masih lembap setelah hujan ringan Selasa, sehingga pupuk mudah meresap. Hindari memupuk pada Kamis dan Sabtu karena hujan lebat dapat menghanyutkan pupuk.")
+            summary: "Tanah masih lembap setelah hujan ringan Selasa, sehingga pupuk mudah meresap. Hindari memupuk pada Kamis dan Sabtu karena hujan lebat dapat menghanyutkan pupuk.",
+            heavyThresholdMillimeters: 25)
     )
 }
 #endif

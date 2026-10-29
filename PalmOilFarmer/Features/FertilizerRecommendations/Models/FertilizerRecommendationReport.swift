@@ -35,7 +35,23 @@ struct FertilizerAllocationPeriod: Identifiable, Codable {
     let title: String
     let dateRange: String
     let lines: [FertilizerAllocationLine]
+    var choices: [FertilizerAllocationChoice]? = nil
     var id: String { title }
+}
+
+struct FertilizerAllocationChoice: Identifiable, Codable {
+    let id: String
+    let title: String
+    let options: [FertilizerAllocationOption]
+}
+
+struct FertilizerAllocationOption: Identifiable, Codable {
+    let id: String
+    let name: String
+    let priceDescription: String
+    let total: String
+    let dosage: String
+    let isLowerCost: Bool
 }
 
 struct FertilizerAllocationArea: Identifiable, Codable {

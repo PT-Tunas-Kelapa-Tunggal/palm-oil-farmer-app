@@ -41,6 +41,17 @@ struct DummyGardenListRepository: GardenListRepository {
         return try FertilizerRecommendationsResultMapper.decode(Data(json.utf8))
     }
 
+    mutating func add(_ garden: Garden) -> Bool {
+        guard !gardens.contains(where: { $0.id == garden.id }) else { return false }
+        var gardenToAdd = garden
+        if gardenToAdd.analysisResultJSON == nil,
+           let json = try? Self.loadDummyAnalysisJSON() {
+            gardenToAdd.analysisResultJSON = json
+        }
+        gardens.append(gardenToAdd)
+        return true
+    }
+
     mutating func update(_ garden: Garden) -> Bool {
         guard let index = gardens.firstIndex(where: { $0.id == garden.id }) else { return false }
         gardens[index] = garden

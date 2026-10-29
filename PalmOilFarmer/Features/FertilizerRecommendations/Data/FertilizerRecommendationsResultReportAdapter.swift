@@ -45,6 +45,28 @@ enum FertilizerRecommendationsResultReportAdapter {
             }
         } ?? []
         let areas = result.zones.map { zone in
+            let choices: [FertilizerAllocationChoice] = [
+                (FertilizerRecommendationsResult.Nutrient.magnesium, "Magnesium (Mg)"),
+                (FertilizerRecommendationsResult.Nutrient.nitrogen, "Nitrogen (N)")
+            ].compactMap { nutrient, title in
+                let options = zone.products
+                    .filter { $0.nutrient == nutrient }
+                    .map { product in
+                        let productID = product.product.rawValue
+                        let isLowerCost = productID.contains("cheaper")
+                        return FertilizerAllocationOption(
+                            id: productID,
+                            name: allocationProductName(productID),
+                            priceDescription: isLowerCost ? "Pilihan lebih hemat" : "Pilihan harga lebih tinggi",
+                            total: "\(kilograms(product.annualProductMassKg)) kg per area / tahun",
+                            dosage: "\(kilograms(product.annualProductMassKgPerPalm)) kg per pohon / tahun",
+                            isLowerCost: isLowerCost
+                        )
+                    }
+                    .sorted { $0.isLowerCost && !$1.isLowerCost }
+                guard !options.isEmpty else { return nil }
+                return FertilizerAllocationChoice(id: nutrient.rawValue, title: title, options: options)
+            }
             let lines = zone.products.map { product in
                 FertilizerAllocationLine(
                     name: product.product.rawValue.replacingOccurrences(of: "_", with: " "),
@@ -58,7 +80,8 @@ enum FertilizerRecommendationsResultReportAdapter {
                 periods: [FertilizerAllocationPeriod(
                     title: "Alokasi tahunan · Area \(zone.id)",
                     dateRange: "\(zone.areaHectares.formatted(.number.precision(.fractionLength(0...2)))) ha · \(zone.treeCount) pohon",
-                    lines: lines
+                    lines: lines,
+                    choices: choices
                 )],
                 mapPoint: zone.centerPoint.map {
                     FertilizerMapPoint(x: $0.normalizedX, y: $0.normalizedY)
@@ -81,6 +104,7 @@ enum FertilizerRecommendationsResultReportAdapter {
             singleFertilizerSummary: result.singleFertilizerInsight,
             supplementalNutrientProjections: supplementalNutrientComparison,
             nutrientMapImageName: result.zoneImage,
+            rainfall: RainfallForecastMapper.loadBundled(),
             nutrientChartTitle: result.recommendedNPKMg.map { _ in "Komposisi NPK dibanding rekomendasi" },
             nutrientChartEyebrow: result.recommendedNPKMg.map { _ in "Komposisi pupuk majemuk (NPK) · per 50 kg" },
             nutrientChartCaption: result.recommendedNPKMg.map { _ in "Grafik ini membandingkan komposisi NPK pada label dengan formula rekomendasi." },
@@ -88,6 +112,14 @@ enum FertilizerRecommendationsResultReportAdapter {
             targetNutrientLabel: "Rekomendasi NPKMg",
             nutrientRequirementLabel: "Patokan"
         )
+    }
+
+    private static func allocationProductName(_ id: String) -> String {
+        if id.hasPrefix("kieserite") { return "Kieserit" }
+        if id.hasPrefix("dolomite") { return "Dolomit" }
+        if id.hasPrefix("ZA") { return "ZA" }
+        if id.hasPrefix("urea") { return "Urea" }
+        return id.replacingOccurrences(of: "_", with: " ")
     }
 
     private static func historyCompositionPerBag(

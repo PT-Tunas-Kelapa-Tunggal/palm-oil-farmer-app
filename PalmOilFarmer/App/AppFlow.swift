@@ -52,7 +52,7 @@ struct AppFlow: View {
             GardenBoundaryScreen(location: draft.location, initialBoundary: draft.boundary,
                                resumesDraft: draftStore.drafts.contains { $0.id == draft.id },
                                onDefer: draftStore.save, onSearchAgain: { retrySearch = true }) { garden in
-                guard store.add(garden) else { return false }
+                guard dummyRepository.add(garden) else { return false }
                 _ = draftStore.remove(id: draft.id)
                 return true
             }

@@ -8,6 +8,7 @@ struct FindingBlockView: View {
     @State private var selectedBlockID = 1
     @State private var showsMap = false
     @State private var showsAreaPicker = false
+    @State private var selectedProductOptionIDs: [String: String] = [:]
     @State private var camera: MapCameraPosition = .automatic
     @State private var isLoading = true
 
@@ -59,7 +60,11 @@ struct FindingBlockView: View {
                         .background(KropsTheme.tertiaryFill, in: RoundedRectangle(cornerRadius: 24))
                 } else {
                     ForEach(periods) { period in
-                        FertilizerAllocationSection(period: period)
+                        FertilizerAllocationSection(
+                            period: period,
+                            areaID: selectedBlock?.code ?? "",
+                            selectedOptionIDs: $selectedProductOptionIDs
+                        )
                     }
                 }
             } else {
