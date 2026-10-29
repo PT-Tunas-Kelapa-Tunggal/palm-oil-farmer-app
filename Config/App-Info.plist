@@ -2,11 +2,11 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
-    <key>KropsCloudKitContainer</key>
-    <string>$(KROPS_CLOUDKIT_CONTAINER)</string>
-    <key>KropsReviewTransport</key>
-    <string>$(KROPS_REVIEW_TRANSPORT)</string>
-    <key>KropsWebEnvironment</key>
-    <string>$(KROPS_WEB_ENVIRONMENT)</string>
+	<key>KropsCloudKitContainer</key>
+	<string>$(KROPS_CLOUDKIT_CONTAINER)</string>
+	<key>KropsReviewTransport</key>
+	<string>$(KROPS_REVIEW_TRANSPORT)</string>
+	<key>KropsWebEnvironment</key>
+	<string>$(KROPS_WEB_ENVIRONMENT)</string>
 </dict>
 </plist>

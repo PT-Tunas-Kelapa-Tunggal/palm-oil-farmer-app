@@ -8,7 +8,7 @@ struct NutrientProjectionChart: View {
     var currentLabel = "Saat ini"
     var targetLabel = "Setelah pemupukan"
     var requirementLabel = "Kebutuhan"
-    var onReference: (NutrientReference) -> Void = { _ in }
+    var onSelect: (NutrientProjection) -> Void = { _ in }
 
     private let plotHeight: CGFloat = 212
     private let axisWidth: CGFloat = 48
@@ -33,7 +33,8 @@ struct NutrientProjectionChart: View {
                         grid
                         HStack(alignment: .bottom, spacing: 8) {
                             ForEach(values) { value in
-                                HStack(alignment: .bottom, spacing: 5) {
+                                Button { onSelect(value) } label: {
+                                  HStack(alignment: .bottom, spacing: 5) {
                                     if value.currentAvailable {
                                         RoundedRectangle(cornerRadius: 5, style: .continuous)
                                             .fill(currentColor)
@@ -46,7 +47,11 @@ struct NutrientProjectionChart: View {
                                     RoundedRectangle(cornerRadius: 5, style: .continuous)
                                         .fill(targetColor)
                                         .frame(width: barWidth, height: height(value.target))
+                                  }
+                                  .contentShape(Rectangle())
                                 }
+                                .buttonStyle(.plain)
+                                .accessibilityLabel("\(value.name), ketuk untuk melihat detail")
                                 .frame(maxWidth: .infinity, alignment: .center)
                             }
                         }
@@ -69,12 +74,14 @@ struct NutrientProjectionChart: View {
                         ForEach(values) { value in
                             VStack(spacing: 4) {
                                 if let reference = references.first(where: { $0.id == value.name }) {
-                                    Button(value.name) { onReference(reference) }
-                                        .font(.title3.bold())
+                                    Button(value.name) { onSelect(value) }
+                                        .font(.headline.bold())
                                         .buttonStyle(.plain)
                                         .accessibilityHint("Lihat referensi pupuk")
                                 } else {
-                                    Text(value.name).font(.title3.bold())
+                                    Button(value.name) { onSelect(value) }
+                                        .font(.headline.bold())
+                                        .buttonStyle(.plain)
                                 }
                                 Text(statusTitle(value.status))
                                     .font(.caption.weight(.semibold))

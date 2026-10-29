@@ -25,10 +25,10 @@ struct RainfallForecastView: View {
         VStack(spacing: 20) {
             VStack(alignment: .leading, spacing: 12) {
                 Text("Prakiraan hujan · \(forecast.dateRange)")
-                    .font(.body)
+                    .font(.subheadline)
                     .foregroundStyle(.secondary)
                 Text(forecast.headline)
-                    .font(.title2.weight(.bold))
+                    .font(.title3.weight(.bold))
                     .foregroundStyle(.primary)
 
                 HStack(spacing: 8) {
@@ -36,12 +36,12 @@ struct RainfallForecastView: View {
                         .fill(Color(red: 0.10, green: 0.27, blue: 0.46))
                         .frame(width: 26, height: 4)
                     Text("Hujan lebat · lebih dari \(Int(forecast.heavyThresholdMillimeters)) mm")
-                        .font(.body)
+                        .font(.subheadline)
                         .foregroundStyle(.secondary)
                 }
 
                 Text("Curah hujan (mm)")
-                    .font(.body)
+                    .font(.subheadline)
                     .foregroundStyle(.secondary)
                     .padding(.top, 4)
 
@@ -62,7 +62,7 @@ struct RainfallForecastView: View {
                         .annotation(position: .top, spacing: 6) {
                             if day.isHeavy {
                                 Text("\(day.precipitationMillimeters.formatted(.number.precision(.fractionLength(0...1)))) mm")
-                                    .font(.headline)
+                                    .font(.subheadline.weight(.bold))
                                     .foregroundStyle(.primary)
                             }
                         }
@@ -76,7 +76,7 @@ struct RainfallForecastView: View {
                         AxisValueLabel {
                             if let millimeters = value.as(Double.self) {
                                 Text("\(Int(millimeters))")
-                                    .font(.body)
+                                    .font(.footnote)
                             }
                         }
                     }
@@ -95,7 +95,7 @@ struct RainfallForecastView: View {
                                 .symbolRenderingMode(.multicolor)
                                 .font(.title3)
                             Text(day.weekday)
-                                .font(.caption)
+                                .font(.footnote)
                                 .foregroundStyle(.primary)
                         }
                         .frame(maxWidth: .infinity, minHeight: 70)
@@ -112,7 +112,7 @@ struct RainfallForecastView: View {
             .background(.background, in: RoundedRectangle(cornerRadius: 28))
 
             summaryText
-                .font(.title3)
+                .font(.body)
                 .foregroundStyle(.primary)
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .padding(20)

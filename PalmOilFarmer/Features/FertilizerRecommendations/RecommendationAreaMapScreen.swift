@@ -1,10 +1,12 @@
 import SwiftUI
 import MapKit
+import UIKit
 
 struct RecommendationAreaMapScreen: View {
     let boundary: GardenBoundary
     let areas: [FertilizerAllocationArea]
     let selectedArea: FertilizerAllocationArea
+    var mapImageName: String? = nil
     @Environment(\.dismiss) private var dismiss
     @Environment(\.scenePhase) private var scenePhase
     @Environment(\.openURL) private var openURL
@@ -12,6 +14,69 @@ struct RecommendationAreaMapScreen: View {
     @State private var session = WaypointLocationSession()
 
     var body: some View {
+        Group {
+            if let image = bundledImage {
+                simulatedMap(image)
+            } else {
+                liveNavigationMap
+            }
+        }
+    }
+
+    private var bundledImage: UIImage? {
+        guard let mapImageName else { return nil }
+        let file = URL(fileURLWithPath: mapImageName)
+        guard let url = Bundle.main.url(
+            forResource: file.deletingPathExtension().lastPathComponent,
+            withExtension: file.pathExtension
+        ) else { return nil }
+        return UIImage(contentsOfFile: url.path)
+    }
+
+    private func simulatedMap(_ image: UIImage) -> some View {
+        let focus = selectedArea.mapPoint ?? FertilizerMapPoint(x: 0.5, y: 0.5)
+        let simulatedLocation = FertilizerMapPoint(
+            x: min(0.94, focus.x + 0.055),
+            y: min(0.94, focus.y + 0.045)
+        )
+
+        return ZoneAnnotatedMap(
+            image: image,
+            areas: areas,
+            highlightedAreaID: selectedArea.id,
+            locationPoint: simulatedLocation,
+            contentMode: .fill,
+            focusPoint: focus
+        )
+        .ignoresSafeArea()
+        .overlay(alignment: .top) {
+            ScreenHeader(title: "Navigasi", height: 60, onClose: { dismiss() })
+                .foregroundStyle(.white)
+                .environment(\.colorScheme, .dark)
+        }
+        .safeAreaInset(edge: .bottom, spacing: 0) {
+            VStack(spacing: 2) {
+                Text("200 m")
+                    .font(.system(size: 40, weight: .bold, design: .rounded))
+                    .monospacedDigit()
+                Text("Area \(selectedArea.id)")
+                    .font(.title3.weight(.bold))
+                Text("Posisi dan jarak simulasi")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
+            .multilineTextAlignment(.center)
+            .padding(.horizontal, 24)
+            .padding(.vertical, 14)
+            .frame(maxWidth: 290)
+            .glassEffect(.regular, in: RoundedRectangle(cornerRadius: 32))
+            .frame(maxWidth: .infinity)
+            .padding(.bottom, 12)
+        }
+        .toolbar(.hidden, for: .navigationBar)
+    }
+
+    private var liveNavigationMap: some View {
         TimelineView(.periodic(from: .now, by: 1)) { context in
             let fix = session.freshLocation(at: context.date)
             Map(position: $camera) {

@@ -58,8 +58,8 @@ enum FertilizerRecommendationsResultReportAdapter {
                             id: productID,
                             name: allocationProductName(productID),
                             priceDescription: isLowerCost ? "Pilihan lebih hemat" : "Pilihan harga lebih tinggi",
-                            total: "\(kilograms(product.annualProductMassKg)) kg per area / tahun",
-                            dosage: "\(kilograms(product.annualProductMassKgPerPalm)) kg per pohon / tahun",
+                            total: "\(kilograms(product.annualProductMassKg)) per area / tahun",
+                            dosage: "\(kilograms(product.annualProductMassKgPerPalm)) per pohon / tahun",
                             isLowerCost: isLowerCost
                         )
                     }
@@ -198,7 +198,9 @@ enum FertilizerRecommendationsResultReportAdapter {
             let statusText = status(for: ratio)
             return NutrientProjection(name: nutrient.rawValue, current: ratio,
                                       currentAvailable: true, target: 1, requirement: 1,
-                                      status: statusText)
+                                      status: statusText,
+                                      currentAmountKg: actualPerTree,
+                                      targetAmountKg: targetPerTree)
         }
     }
 

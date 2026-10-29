@@ -4,6 +4,7 @@ struct ScreenHeader: View {
     let title: String
     var systemImage = "xmark"
     var subtitle: String? = nil
+    var titleFont: Font = .title3.weight(.semibold)
     var buttonSize: CGFloat = 48
     var height: CGFloat = 72
     var confirmationAction: (() -> Void)? = nil
@@ -15,7 +16,7 @@ struct ScreenHeader: View {
         ZStack {
             VStack(spacing: 2) {
                 Text(title)
-                    .font(.title3.weight(.semibold))
+                    .font(titleFont)
                     .multilineTextAlignment(.center)
                     .fixedSize(horizontal: false, vertical: true)
                     .contentShape(Rectangle())

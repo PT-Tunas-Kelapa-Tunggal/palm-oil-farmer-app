@@ -9,19 +9,19 @@ struct FertilizerAllocationSection: View {
     private var usesLargeLayout: Bool { dynamicTypeSize.isAccessibilitySize }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 16) {
+        VStack(alignment: .leading, spacing: 12) {
             VStack(alignment: .leading, spacing: 4) {
                 Text(period.title)
-                    .font(.title3.weight(.bold))
+                    .font(.headline.weight(.bold))
                 Text(period.dateRange)
-                    .font(.body)
+                    .font(.subheadline)
                     .foregroundStyle(.secondary)
             }
             .frame(maxWidth: .infinity, alignment: .leading)
 
             if let choices = period.choices, !choices.isEmpty {
                 Text("Pilih satu jenis pupuk untuk setiap unsur hara.")
-                    .font(.body)
+                    .font(.subheadline)
                     .foregroundStyle(.secondary)
 
                 ForEach(choices) { choice in
@@ -31,7 +31,7 @@ struct FertilizerAllocationSection: View {
                 legacyLines
             }
         }
-        .padding(16)
+        .padding(12)
         .background(.background, in: RoundedRectangle(cornerRadius: 24))
     }
 
@@ -40,9 +40,9 @@ struct FertilizerAllocationSection: View {
         let defaultOption = choice.options.first(where: \.isLowerCost) ?? choice.options.first
         let selectedID = selectedOptionIDs[selectionKey] ?? defaultOption?.id
 
-        return VStack(alignment: .leading, spacing: 12) {
+        return VStack(alignment: .leading, spacing: 10) {
             Text(choice.title)
-                .font(.title3.weight(.bold))
+                .font(.headline.weight(.bold))
             ForEach(choice.options) { option in
                 let isSelected = selectedID == option.id
                 Button {
@@ -50,22 +50,22 @@ struct FertilizerAllocationSection: View {
                 } label: {
                     HStack(alignment: .top, spacing: 12) {
                         Image(systemName: isSelected ? "checkmark.circle.fill" : "circle")
-                            .font(.title2)
+                            .font(.title3)
                             .foregroundStyle(isSelected ? Color.accentColor : Color.secondary)
                             .accessibilityHidden(true)
 
                         VStack(alignment: .leading, spacing: 5) {
                             optionHeading(option)
                             Text(option.dosage)
-                                .font(.body.weight(.semibold))
+                                .font(.subheadline.weight(.semibold))
                                 .foregroundStyle(.primary)
                             Text("Total: \(option.total)")
-                                .font(.body)
+                                .font(.subheadline)
                                 .foregroundStyle(.secondary)
                         }
                     }
-                    .padding(14)
-                    .frame(maxWidth: .infinity, minHeight: usesLargeLayout ? 96 : 88, alignment: .leading)
+                    .padding(12)
+                    .frame(maxWidth: .infinity, minHeight: usesLargeLayout ? 88 : 76, alignment: .leading)
                     .background(
                         isSelected ? Color.accentColor.opacity(0.12) : KropsTheme.tertiaryFill,
                         in: RoundedRectangle(cornerRadius: 18)
@@ -82,7 +82,7 @@ struct FertilizerAllocationSection: View {
                 .accessibilityAddTraits(isSelected ? .isSelected : [])
             }
         }
-        .padding(14)
+        .padding(12)
         .background(KropsTheme.tertiaryFill.opacity(0.55), in: RoundedRectangle(cornerRadius: 22))
     }
 
@@ -91,20 +91,20 @@ struct FertilizerAllocationSection: View {
         if usesLargeLayout {
             VStack(alignment: .leading, spacing: 3) {
                 Text(option.name)
-                    .font(.headline)
+                    .font(.subheadline.weight(.semibold))
                     .foregroundStyle(.primary)
                 Text(option.priceDescription)
-                    .font(.subheadline.weight(.semibold))
+                    .font(.footnote.weight(.semibold))
                     .foregroundStyle(.primary)
             }
         } else {
             HStack(alignment: .firstTextBaseline) {
                 Text(option.name)
-                    .font(.headline)
+                    .font(.subheadline.weight(.semibold))
                     .foregroundStyle(.primary)
                 Spacer(minLength: 8)
                 Text(option.priceDescription)
-                    .font(.subheadline.weight(.semibold))
+                    .font(.footnote.weight(.semibold))
                     .foregroundStyle(.primary)
                     .multilineTextAlignment(.trailing)
             }
@@ -116,9 +116,9 @@ struct FertilizerAllocationSection: View {
             ForEach(period.lines.indices, id: \.self) { index in
                 let line = period.lines[index]
                 VStack(alignment: .leading, spacing: 6) {
-                    Text(line.name).font(.headline)
-                    Text(line.dosage).font(.body.weight(.semibold))
-                    Text(line.total).font(.body).foregroundStyle(.secondary)
+                    Text(line.name).font(.subheadline.weight(.semibold))
+                    Text(line.dosage).font(.subheadline.weight(.semibold))
+                    Text(line.total).font(.subheadline).foregroundStyle(.secondary)
                 }
                 .frame(maxWidth: .infinity, minHeight: 76, alignment: .leading)
                 .padding(.vertical, 10)

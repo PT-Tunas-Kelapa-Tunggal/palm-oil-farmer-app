@@ -14,6 +14,9 @@ struct NutrientProjection: Identifiable, Codable {
     let target: Double
     var requirement: Double = 0.5
     var status: String? = nil
+    /// Elemental nutrient mass before chart values are normalized to a ratio.
+    var currentAmountKg: Double? = nil
+    var targetAmountKg: Double? = nil
     var id: String { name }
 }
 

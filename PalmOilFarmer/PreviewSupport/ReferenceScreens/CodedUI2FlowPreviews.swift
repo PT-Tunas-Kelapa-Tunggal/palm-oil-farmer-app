@@ -2,8 +2,15 @@
 import SwiftUI
 
 #Preview("CodedUI2 · Referensi Nitrogen") {
-    if let reference = RecommendationPreviewData.report.nutrientReferences.first {
-        NutrientReferenceScreen(reference: reference)
+    let report = RecommendationPreviewData.report
+    if let reference = report.nutrientReferences.first,
+       let projection = report.nutrients.first(where: { $0.name == reference.id }) {
+        NutrientReferenceScreen(
+            reference: reference,
+            projection: projection,
+            currentLabel: report.currentNutrientLabel ?? "NPK riwayat",
+            targetLabel: report.targetNutrientLabel ?? "Rekomendasi NPKMg",
+        )
     }
 }
 

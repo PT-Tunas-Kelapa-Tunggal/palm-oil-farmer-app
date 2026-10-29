@@ -11,7 +11,8 @@ struct FertilizerRecommendationScreen: View {
     @State private var selectedProductOptionIDs: [String: String] = [:]
     @State private var showsAreaPicker = false
     @State private var showsAreaMap = false
-    @State private var selectedReference: NutrientReference?
+    @State private var selectedNutrient: NutrientProjection?
+    @State private var selectedNutrientIsSupplemental = false
     @Environment(\.dismiss) private var dismiss
 
     init(report: FertilizerRecommendationReport, initialTab: RecommendationTab = .nutrients, isDemo: Bool = false, garden: Garden? = nil) {
@@ -28,6 +29,7 @@ struct FertilizerRecommendationScreen: View {
                 Text(tab.rawValue).tag(tab)
             }
         }
+        .font(.subheadline)
     }
 
     private var selectedArea: FertilizerAllocationArea? {
@@ -72,7 +74,8 @@ struct FertilizerRecommendationScreen: View {
     var body: some View {
         VStack(spacing: 0) {
             ScreenHeader(title: report.gardenName, systemImage: "chevron.left",
-                         subtitle: report.locationName, onClose: { dismiss() })
+                         subtitle: report.locationName,
+                         titleFont: .headline.weight(.semibold), onClose: { dismiss() })
             ScrollView {
                 VStack(spacing: 24) {
                     if dynamicTypeSize.isAccessibilitySize {
@@ -95,14 +98,16 @@ struct FertilizerRecommendationScreen: View {
                                     Text(report.nutrientChartEyebrow ?? "Komposisi pupuk · per 50 kg")
                                         .font(.footnote).foregroundStyle(.secondary)
                                     Text(report.nutrientChartTitle ?? "Komposisi NPK dibanding rekomendasi")
-                                        .font(.title2.weight(.semibold))
+                                        .font(.title3.weight(.semibold))
                                     NutrientProjectionChart(values: report.nutrients,
                                                             references: report.nutrientReferences,
                                                             currentLabel: report.currentNutrientLabel ?? "NPK riwayat",
                                                             targetLabel: report.targetNutrientLabel ?? "Rekomendasi NPKMg",
-                                                            requirementLabel: report.nutrientRequirementLabel ?? "Patokan") {
-                                        selectedReference = $0
-                                    }
+                                                            requirementLabel: report.nutrientRequirementLabel ?? "Patokan",
+                                                            onSelect: {
+                                                                selectedNutrientIsSupplemental = false
+                                                                selectedNutrient = $0
+                                                            })
                                     if let caption = report.nutrientChartCaption {
                                         Text(caption).font(.footnote).foregroundStyle(.secondary)
                                     }
@@ -110,7 +115,7 @@ struct FertilizerRecommendationScreen: View {
                                 .padding(16)
                                 .background(.background, in: RoundedRectangle(cornerRadius: 24))
                                 if let summary = report.nutrientSummary {
-                                    insightText(summary).font(.body)
+                                    insightText(summary).font(.callout)
                                         .frame(maxWidth: .infinity, alignment: .leading)
                                         .padding(16)
                                         .background(.background, in: RoundedRectangle(cornerRadius: 24))
@@ -121,18 +126,22 @@ struct FertilizerRecommendationScreen: View {
                                     Text("Rekomendasi dosis pupuk tunggal")
                                         .font(.footnote).foregroundStyle(.secondary)
                                     Text("Pasokan N dan Mg dari pupuk tunggal")
-                                        .font(.title2.weight(.semibold))
+                                        .font(.title3.weight(.semibold))
                                     NutrientProjectionChart(values: report.supplementalNutrientProjections,
                                                             currentLabel: "Dari riwayat",
                                                             targetLabel: "Kebutuhan tahunan",
-                                                            requirementLabel: "Target")
+                                                            requirementLabel: "Target",
+                                                            onSelect: {
+                                                                selectedNutrientIsSupplemental = true
+                                                                selectedNutrient = $0
+                                                            })
                                     Text("Grafik menggabungkan Urea/ZA untuk N, serta Dolomit/Kieserit untuk Mg.")
                                         .font(.footnote).foregroundStyle(.secondary)
                                 }
                                 .padding(16)
                                 .background(.background, in: RoundedRectangle(cornerRadius: 24))
                                 if let summary = report.singleFertilizerSummary {
-                                    insightText(summary).font(.body)
+                                    insightText(summary).font(.callout)
                                         .frame(maxWidth: .infinity, alignment: .leading)
                                         .padding(16)
                                         .background(.background, in: RoundedRectangle(cornerRadius: 24))
@@ -149,7 +158,8 @@ struct FertilizerRecommendationScreen: View {
                             Group {
                                 if let imageName = report.nutrientMapImageName,
                                    let image = bundledImage(named: imageName) {
-                                    ZoneAnnotatedMap(image: image, areas: report.areas)
+                                    ZoneAnnotatedMap(image: image, areas: report.areas,
+                                                     selectedAreaID: $selectedAreaID)
                                 } else if let path = area.mapImage, let image = UIImage(contentsOfFile: path) {
                                     Image(uiImage: image).resizable().scaledToFill()
                                 } else if let mapImage = area.mapImage, !mapImage.hasPrefix("/") {
@@ -168,20 +178,20 @@ struct FertilizerRecommendationScreen: View {
                                         Text("Area " + area.id)
                                         Image(systemName: "chevron.down").font(.footnote)
                                     }
-                                    .font(.title3.weight(.semibold))
-                                    .padding(.horizontal, 18).padding(.vertical, 14)
-                                    .frame(minHeight: 56)
+                                    .font(.headline.weight(.semibold))
+                                    .padding(.horizontal, 16).padding(.vertical, 11)
+                                    .frame(minHeight: 52)
                                     .glassEffect(.regular.interactive(), in: Capsule())
                                 }
                                 Spacer()
-                                if report.nutrientMapImageName == nil {
-                                    Button { showsAreaMap = true } label: {
-                                        Label("Buka Map", systemImage: "figure.walk")
-                                            .font(.title3)
-                                            .padding(.horizontal, 12).padding(.vertical, 8)
-                                            .background(KropsTheme.tertiaryFill, in: Capsule())
-                                    }
+                                Button { showsAreaMap = true } label: {
+                                    Label("Buka Map", systemImage: "figure.walk")
+                                        .font(.headline.weight(.semibold))
+                                        .padding(.horizontal, 14).padding(.vertical, 10)
+                                        .frame(minHeight: 52)
+                                        .background(KropsTheme.tertiaryFill, in: Capsule())
                                 }
+                                .accessibilityHint("Membuka navigasi ke area yang dipilih")
                             }
                             .buttonStyle(.plain)
                             ForEach(area.periods) { period in
@@ -207,8 +217,14 @@ struct FertilizerRecommendationScreen: View {
         }
         .background(KropsTheme.background.ignoresSafeArea())
         .toolbar(.hidden, for: .navigationBar)
-        .sheet(item: $selectedReference) { reference in
-            NutrientReferenceScreen(reference: reference)
+        .sheet(item: $selectedNutrient) { nutrient in
+            NutrientReferenceScreen(
+                reference: report.nutrientReferences.first { $0.id == nutrient.name },
+                projection: nutrient,
+                currentLabel: selectedNutrientIsSupplemental ? "Dari riwayat" : (report.currentNutrientLabel ?? "NPK riwayat"),
+                targetLabel: selectedNutrientIsSupplemental ? "Kebutuhan tahunan" : (report.targetNutrientLabel ?? "Rekomendasi NPKMg"),
+                insight: selectedNutrientIsSupplemental ? report.singleFertilizerSummary : nil
+            )
         }
         .sheet(isPresented: $showsAreaPicker) {
             RecommendationAreaPickerScreen(areas: report.areas, selectedAreaID: $selectedAreaID)
@@ -216,7 +232,8 @@ struct FertilizerRecommendationScreen: View {
         .fullScreenCover(isPresented: $showsAreaMap) {
             if let selectedArea {
                 RecommendationAreaMapScreen(boundary: report.boundary, areas: report.areas,
-                                          selectedArea: selectedArea)
+                                          selectedArea: selectedArea,
+                                          mapImageName: report.nutrientMapImageName)
             }
         }
     }
