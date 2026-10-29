@@ -56,6 +56,13 @@ struct FertilizerRecommendationScreen: View {
         return UIImage(contentsOfFile: imageURL.path)
     }
 
+    private func insightText(_ value: String) -> Text {
+        if let formatted = try? AttributedString(markdown: value) {
+            return Text(formatted)
+        }
+        return Text(value.replacingOccurrences(of: "**", with: ""))
+    }
+
     private var boundaryPreview: some View {
         BoundarySilhouette(points: report.outline)
             .fill(Color(white: 0.77))
@@ -104,7 +111,7 @@ struct FertilizerRecommendationScreen: View {
                                 .padding(16)
                                 .background(.background, in: RoundedRectangle(cornerRadius: 24))
                                 if let summary = report.nutrientSummary {
-                                    Text(summary).font(.title3)
+                                    insightText(summary).font(.body)
                                         .frame(maxWidth: .infinity, alignment: .leading)
                                         .padding(16)
                                         .background(.background, in: RoundedRectangle(cornerRadius: 24))
@@ -126,7 +133,7 @@ struct FertilizerRecommendationScreen: View {
                                 .padding(16)
                                 .background(.background, in: RoundedRectangle(cornerRadius: 24))
                                 if let summary = report.singleFertilizerSummary {
-                                    Text(summary).font(.title3)
+                                    insightText(summary).font(.body)
                                         .frame(maxWidth: .infinity, alignment: .leading)
                                         .padding(16)
                                         .background(.background, in: RoundedRectangle(cornerRadius: 24))

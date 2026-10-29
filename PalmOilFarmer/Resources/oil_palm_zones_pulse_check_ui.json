@@ -281,6 +281,6 @@
     },
     "comparison_basis_bag_weight_kg": 50
   },
-  "compound_npk_insight": "Pada pupuk majemuk, kadar kalium (K) dari komposisi NPK riwayat berada di atas rekomendasi, sedangkan magnesium (Mg) sangat kurang. Kebutuhan Mg dapat dipenuhi melalui rekomendasi pupuk tunggal.",
-  "single_fertilizer_insight": "Dosis pupuk tunggal Urea/ZA masih sangat kurang dari rekomendasi, sementara dosis Dolomit/Kieserit sudah berlebih."
+  "compound_npk_insight": "Komposisi NPK yang digunakan saat ini memiliki **kadar K di atas rekomendasi**. Jika stoknya masih tersedia, petani dapat menghabiskannya terlebih dahulu dengan menyesuaikan dosis agar pasokan K tetap terkendali. Setelah stok habis, petani dapat beralih ke NPK 12-6-22-3 untuk memenuhi standar rekomendasi. **Kandungan Mg dalam NPK bersifat opsional** karena kebutuhan Mg dapat dipenuhi melalui pupuk tunggal sesuai rekomendasi.",
+  "single_fertilizer_insight": "**Dosis Urea/ZA dari riwayat masih sangat kurang dari rekomendasi.** **Pasokan Mg dari Dolomit/Kieserit sudah melebihi rekomendasi**, jadi sesuaikan dosisnya agar pasokan Mg tidak berlebihan. **Mg tetap penting untuk pembentukan klorofil dan fotosintesis tanaman.**"
 }
