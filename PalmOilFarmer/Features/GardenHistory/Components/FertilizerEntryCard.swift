@@ -79,4 +79,5 @@ struct FertilizerEntryCard: View {
         .fontWeight(.regular)
         .frame(maxWidth: .infinity, alignment: .leading)
     }
+
 }

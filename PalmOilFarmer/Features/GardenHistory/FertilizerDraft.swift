@@ -14,17 +14,22 @@ struct FertilizerDraft: Identifiable {
     init(record: FertilizerRecord? = nil) {
         id = record?.id ?? UUID()
         if let composition = record?.npkComposition {
-            name = composition.magnesiumPercent == nil ? FertilizerCatalogue.customNPK : FertilizerCatalogue.customNPKMg
+            if FertilizerCatalogue.isKnownFertilizer(record?.name ?? "") {
+                name = record?.name ?? ""
+            } else {
+                name = composition.magnesiumPercent == nil ? FertilizerCatalogue.customNPK : FertilizerCatalogue.customNPKMg
+            }
         } else {
             name = record?.name ?? ""
         }
         bagWeightKg = record?.bagWeightKg
         bagCount = record?.bagCount
         doseKgPerTree = record?.doseKgPerTree
-        nitrogenPercent = record?.npkComposition?.nitrogenPercent
-        phosphatePercent = record?.npkComposition?.phosphatePercent
-        potashPercent = record?.npkComposition?.potashPercent
-        magnesiumPercent = record?.npkComposition?.magnesiumPercent
+        let composition = record?.npkComposition ?? FertilizerCatalogue.presetCompositions[record?.name ?? ""]
+        nitrogenPercent = composition?.nitrogenPercent
+        phosphatePercent = composition?.phosphatePercent
+        potashPercent = composition?.potashPercent
+        magnesiumPercent = composition?.magnesiumPercent
     }
 
     var isEmpty: Bool {
@@ -36,15 +41,45 @@ struct FertilizerDraft: Identifiable {
         name == FertilizerCatalogue.customNPK || name == FertilizerCatalogue.customNPKMg
     }
 
+    var hasKnownNPKComposition: Bool {
+        usesCustomNPKComposition || FertilizerCatalogue.presetCompositions[name] != nil
+    }
+
     var requiresMagnesiumComposition: Bool { name == FertilizerCatalogue.customNPKMg }
 
     mutating func selectFertilizerType(_ name: String) {
         self.name = name
-        guard name == FertilizerCatalogue.customNPK || name == FertilizerCatalogue.customNPKMg else { return }
-        nitrogenPercent = nil
-        phosphatePercent = nil
-        potashPercent = nil
-        magnesiumPercent = nil
+        if name == FertilizerCatalogue.customNPK || name == FertilizerCatalogue.customNPKMg {
+            nitrogenPercent = nil
+            phosphatePercent = nil
+            potashPercent = nil
+            magnesiumPercent = nil
+        } else if let composition = FertilizerCatalogue.presetCompositions[name] {
+            nitrogenPercent = composition.nitrogenPercent
+            phosphatePercent = composition.phosphatePercent
+            potashPercent = composition.potashPercent
+            magnesiumPercent = composition.magnesiumPercent
+        } else {
+            nitrogenPercent = nil
+            phosphatePercent = nil
+            potashPercent = nil
+            magnesiumPercent = nil
+        }
+    }
+
+    var elementalNutrientsPerBag: ElementalNutrientAmounts? {
+        guard hasKnownNPKComposition,
+              let bagWeightKg, bagWeightKg.isFinite, bagWeightKg > 0,
+              let composition = enteredComposition else { return nil }
+        return composition.elementalAmounts(forBagWeightKg: bagWeightKg)
+    }
+
+    private var enteredComposition: NPKComposition? {
+        if let preset = FertilizerCatalogue.presetCompositions[name] { return preset }
+        guard usesCustomNPKComposition, hasValidNPKComposition,
+              let nitrogenPercent, let phosphatePercent, let potashPercent else { return nil }
+        return NPKComposition(nitrogenPercent: nitrogenPercent, phosphatePercent: phosphatePercent,
+                              potashPercent: potashPercent, magnesiumPercent: magnesiumPercent)
     }
 
     var displayName: String {
@@ -82,10 +117,15 @@ struct FertilizerDraft: Identifiable {
         let composition: NPKComposition?
         let recordName: String
         if usesCustomNPKComposition {
-            guard let nitrogenPercent, let phosphatePercent, let potashPercent else { return nil }
-            composition = NPKComposition(nitrogenPercent: nitrogenPercent, phosphatePercent: phosphatePercent,
-                                         potashPercent: potashPercent, magnesiumPercent: magnesiumPercent)
+            guard let enteredComposition else { return nil }
+            composition = enteredComposition
             recordName = displayName
+        } else if let preset = FertilizerCatalogue.presetCompositions[trimmedName] {
+            composition = preset
+            recordName = trimmedName
+        } else if FertilizerCatalogue.supplementalNutrients[trimmedName] != nil {
+            composition = nil
+            recordName = trimmedName
         } else {
             composition = nil
             recordName = trimmedName
@@ -100,6 +140,37 @@ enum FertilizerCatalogue {
     static let customNPK = "NPK · isi komposisi sendiri"
     static let customNPKMg = "NPKMg · isi komposisi sendiri"
     static let unknownNPK = "NPK · komposisi tidak diketahui"
+
+    enum SupplementalNutrient {
+        case nitrogen
+        case magnesium
+    }
+
+    static let supplementalNutrients: [String: SupplementalNutrient] = [
+        "Urea": .nitrogen,
+        "ZA": .nitrogen,
+        "Dolomit": .magnesium,
+        "Kieserit": .magnesium
+    ]
+
+    static let pulseCheckProductIDs: [(name: String, id: String)] = [
+        ("Urea", "urea_N_expensive"),
+        ("ZA", "ZA_N_cheaper"),
+        ("Dolomit", "dolomite_Mg_cheaper"),
+        ("Kieserit", "kieserite_Mg_expensive")
+    ]
+
+    static func isKnownFertilizer(_ name: String) -> Bool {
+        presetCompositions[name] != nil || supplementalNutrients[name] != nil
+    }
+
+    static let presetCompositions: [String: NPKComposition] = [
+        "NPK 13-6-27-4+0.65B": NPKComposition(nitrogenPercent: 13, phosphatePercent: 6, potashPercent: 27, magnesiumPercent: 4),
+        "NPK 12-6-22-3+TE": NPKComposition(nitrogenPercent: 12, phosphatePercent: 6, potashPercent: 22, magnesiumPercent: 3),
+        "NPK 15-15-6-4": NPKComposition(nitrogenPercent: 15, phosphatePercent: 15, potashPercent: 6, magnesiumPercent: 4),
+        "NPK 12-12-17-2+TE": NPKComposition(nitrogenPercent: 12, phosphatePercent: 12, potashPercent: 17, magnesiumPercent: 2),
+        "NPK 13-8-27-4+0.5B": NPKComposition(nitrogenPercent: 13, phosphatePercent: 8, potashPercent: 27, magnesiumPercent: 4)
+    ]
 
     static let names = [
         "Urea", "ZA", "SP-36", "TSP", "KCl",

@@ -26,8 +26,10 @@ struct AppFlow: View {
             .toolbar(.hidden, for: .navigationBar)
             .navigationDestination(item: $selectedGardenID) { id in
                 if let garden = dummyRepository.gardens.first(where: { $0.id == id }) {
+                    let recommendationResult = try? dummyRepository.loadAnalysisResult(for: id)
                     GardenProfileScreen(
                         garden: garden,
+                        recommendationResult: recommendationResult,
                         onDelete: { dummyRepository.delete($0) },
                         onUpdateReview: { dummyRepository.updateReview($0, for: id) },
                         onUpdate: { dummyRepository.update($0) }

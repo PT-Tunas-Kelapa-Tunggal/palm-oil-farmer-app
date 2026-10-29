@@ -1,0 +1,286 @@
+{
+  "farm": {
+    "name": "kebun denjay",
+    "location_label": "Lokasi dari foto",
+    "source_image": "webodm_new_2nd_flight.jpeg"
+  },
+  "zone_image": "oil_palm_zones_white_separators.jpg",
+  "annual_boost_summary": {
+    "zone_count": 6,
+    "tree_count": 47,
+    "elemental_nutrient_boost_kg": {
+      "Mg": 0.6804696238948418,
+      "N": 4.484913430216003
+    },
+    "product_mass_boost_kg_by_product": [
+      {
+        "product": "kieserite_Mg_expensive",
+        "nutrient": "Mg",
+        "annual_boost_product_mass_kg": 4.425079600575642
+      },
+      {
+        "product": "dolomite_Mg_cheaper",
+        "nutrient": "Mg",
+        "annual_boost_product_mass_kg": 5.129069537030858
+      },
+      {
+        "product": "ZA_N_cheaper",
+        "nutrient": "N",
+        "annual_boost_product_mass_kg": 21.356730620076203
+      },
+      {
+        "product": "urea_N_expensive",
+        "nutrient": "N",
+        "annual_boost_product_mass_kg": 9.749811804817396
+      }
+    ]
+  },
+  "area_allocations": [
+    {
+      "area_id": "Z1",
+      "tree_count_for_per_palm_calculation": 7,
+      "area_ha": 0.07,
+      "annual_nutrient_boost_kg_per_zone": {
+        "Mg": 0.14183306229897347,
+        "N": 0.9348088196977796
+      },
+      "annual_product_boost_allocations": [
+        {
+          "product": "kieserite_Mg_expensive",
+          "nutrient": "Mg",
+          "annual_nutrient_boost_kg_per_zone": 0.14183306229897347,
+          "annual_boost_product_mass_kg_per_zone": 0.9223374102638167,
+          "annual_boost_product_mass_kg_per_palm": 0.13176248718054523
+        },
+        {
+          "product": "dolomite_Mg_cheaper",
+          "nutrient": "Mg",
+          "annual_nutrient_boost_kg_per_zone": 0.14183306229897347,
+          "annual_boost_product_mass_kg_per_zone": 1.069072907351242,
+          "annual_boost_product_mass_kg_per_palm": 0.1527247010501774
+        },
+        {
+          "product": "ZA_N_cheaper",
+          "nutrient": "N",
+          "annual_nutrient_boost_kg_per_zone": 0.9348088196977796,
+          "annual_boost_product_mass_kg_per_zone": 4.451470569989427,
+          "annual_boost_product_mass_kg_per_palm": 0.6359243671413467
+        },
+        {
+          "product": "urea_N_expensive",
+          "nutrient": "N",
+          "annual_nutrient_boost_kg_per_zone": 0.9348088196977796,
+          "annual_boost_product_mass_kg_per_zone": 2.032193086299521,
+          "annual_boost_product_mass_kg_per_palm": 0.29031329804278866
+        }
+      ]
+    },
+    {
+      "area_id": "Z2",
+      "tree_count_for_per_palm_calculation": 9,
+      "area_ha": 0.09,
+      "annual_nutrient_boost_kg_per_zone": {
+        "Mg": 0.057694652124286906,
+        "N": 0.38026020718280007
+      },
+      "annual_product_boost_allocations": [
+        {
+          "product": "kieserite_Mg_expensive",
+          "nutrient": "Mg",
+          "annual_nutrient_boost_kg_per_zone": 0.057694652124286906,
+          "annual_boost_product_mass_kg_per_zone": 0.37518710492350227,
+          "annual_boost_product_mass_kg_per_palm": 0.04168745610261136
+        },
+        {
+          "product": "dolomite_Mg_cheaper",
+          "nutrient": "Mg",
+          "annual_nutrient_boost_kg_per_zone": 0.057694652124286906,
+          "annual_boost_product_mass_kg_per_zone": 0.4348759625249686,
+          "annual_boost_product_mass_kg_per_palm": 0.048319551391663176
+        },
+        {
+          "product": "ZA_N_cheaper",
+          "nutrient": "N",
+          "annual_nutrient_boost_kg_per_zone": 0.38026020718280007,
+          "annual_boost_product_mass_kg_per_zone": 1.8107628913466671,
+          "annual_boost_product_mass_kg_per_palm": 0.20119587681629636
+        },
+        {
+          "product": "urea_N_expensive",
+          "nutrient": "N",
+          "annual_nutrient_boost_kg_per_zone": 0.38026020718280007,
+          "annual_boost_product_mass_kg_per_zone": 0.8266526243104348,
+          "annual_boost_product_mass_kg_per_palm": 0.09185029159004832
+        }
+      ]
+    },
+    {
+      "area_id": "Z3",
+      "tree_count_for_per_palm_calculation": 8,
+      "area_ha": 0.08,
+      "annual_nutrient_boost_kg_per_zone": {
+        "Mg": 0.0857040494909873,
+        "N": 0.5648675989178709
+      },
+      "annual_product_boost_allocations": [
+        {
+          "product": "kieserite_Mg_expensive",
+          "nutrient": "Mg",
+          "annual_nutrient_boost_kg_per_zone": 0.0857040494909873,
+          "annual_boost_product_mass_kg_per_zone": 0.5573316247661059,
+          "annual_boost_product_mass_kg_per_palm": 0.06966645309576323
+        },
+        {
+          "product": "dolomite_Mg_cheaper",
+          "nutrient": "Mg",
+          "annual_nutrient_boost_kg_per_zone": 0.0857040494909873,
+          "annual_boost_product_mass_kg_per_zone": 0.645998019615259,
+          "annual_boost_product_mass_kg_per_palm": 0.08074975245190738
+        },
+        {
+          "product": "ZA_N_cheaper",
+          "nutrient": "N",
+          "annual_nutrient_boost_kg_per_zone": 0.5648675989178709,
+          "annual_boost_product_mass_kg_per_zone": 2.6898457091327184,
+          "annual_boost_product_mass_kg_per_palm": 0.3362307136415898
+        },
+        {
+          "product": "urea_N_expensive",
+          "nutrient": "N",
+          "annual_nutrient_boost_kg_per_zone": 0.5648675989178709,
+          "annual_boost_product_mass_kg_per_zone": 1.227973041125806,
+          "annual_boost_product_mass_kg_per_palm": 0.15349663014072576
+        }
+      ]
+    },
+    {
+      "area_id": "Z4",
+      "tree_count_for_per_palm_calculation": 6,
+      "area_ha": 0.06,
+      "annual_nutrient_boost_kg_per_zone": {
+        "Mg": 0.13489660791728142,
+        "N": 0.8890912794548094
+      },
+      "annual_product_boost_allocations": [
+        {
+          "product": "kieserite_Mg_expensive",
+          "nutrient": "Mg",
+          "annual_nutrient_boost_kg_per_zone": 0.13489660791728142,
+          "annual_boost_product_mass_kg_per_zone": 0.8772297938369996,
+          "annual_boost_product_mass_kg_per_palm": 0.14620496563949995
+        },
+        {
+          "product": "dolomite_Mg_cheaper",
+          "nutrient": "Mg",
+          "annual_nutrient_boost_kg_per_zone": 0.13489660791728142,
+          "annual_boost_product_mass_kg_per_zone": 1.0167890792201586,
+          "annual_boost_product_mass_kg_per_palm": 0.1694648465366931
+        },
+        {
+          "product": "ZA_N_cheaper",
+          "nutrient": "N",
+          "annual_nutrient_boost_kg_per_zone": 0.8890912794548094,
+          "annual_boost_product_mass_kg_per_zone": 4.233767997403854,
+          "annual_boost_product_mass_kg_per_palm": 0.705627999567309
+        },
+        {
+          "product": "urea_N_expensive",
+          "nutrient": "N",
+          "annual_nutrient_boost_kg_per_zone": 0.8890912794548094,
+          "annual_boost_product_mass_kg_per_zone": 1.9328071292495854,
+          "annual_boost_product_mass_kg_per_palm": 0.32213452154159755
+        }
+      ]
+    },
+    {
+      "area_id": "Z5",
+      "tree_count_for_per_palm_calculation": 9,
+      "area_ha": 0.09,
+      "annual_nutrient_boost_kg_per_zone": {
+        "Mg": 0.26034125206331266,
+        "N": 1.7158855249627425
+      },
+      "annual_product_boost_allocations": [
+        {
+          "product": "kieserite_Mg_expensive",
+          "nutrient": "Mg",
+          "annual_nutrient_boost_kg_per_zone": 0.26034125206331266,
+          "annual_boost_product_mass_kg_per_zone": 1.6929936667852177,
+          "annual_boost_product_mass_kg_per_palm": 0.18811040742057974
+        },
+        {
+          "product": "dolomite_Mg_cheaper",
+          "nutrient": "Mg",
+          "annual_nutrient_boost_kg_per_zone": 0.26034125206331266,
+          "annual_boost_product_mass_kg_per_zone": 1.9623335683192296,
+          "annual_boost_product_mass_kg_per_palm": 0.21803706314658106
+        },
+        {
+          "product": "ZA_N_cheaper",
+          "nutrient": "N",
+          "annual_nutrient_boost_kg_per_zone": 1.7158855249627425,
+          "annual_boost_product_mass_kg_per_zone": 8.170883452203537,
+          "annual_boost_product_mass_kg_per_palm": 0.9078759391337263
+        },
+        {
+          "product": "urea_N_expensive",
+          "nutrient": "N",
+          "annual_nutrient_boost_kg_per_zone": 1.7158855249627425,
+          "annual_boost_product_mass_kg_per_zone": 3.7301859238320487,
+          "annual_boost_product_mass_kg_per_palm": 0.4144651026480054
+        }
+      ]
+    },
+    {
+      "area_id": "Z6",
+      "tree_count_for_per_palm_calculation": 8,
+      "area_ha": 0.08,
+      "annual_nutrient_boost_kg_per_zone": {
+        "Mg": 0.0,
+        "N": 0.0
+      },
+      "annual_product_boost_allocations": [
+        {
+          "product": "kieserite_Mg_expensive",
+          "nutrient": "Mg",
+          "annual_nutrient_boost_kg_per_zone": 0.0,
+          "annual_boost_product_mass_kg_per_zone": 0.0,
+          "annual_boost_product_mass_kg_per_palm": 0.0
+        },
+        {
+          "product": "dolomite_Mg_cheaper",
+          "nutrient": "Mg",
+          "annual_nutrient_boost_kg_per_zone": 0.0,
+          "annual_boost_product_mass_kg_per_zone": 0.0,
+          "annual_boost_product_mass_kg_per_palm": 0.0
+        },
+        {
+          "product": "ZA_N_cheaper",
+          "nutrient": "N",
+          "annual_nutrient_boost_kg_per_zone": 0.0,
+          "annual_boost_product_mass_kg_per_zone": 0.0,
+          "annual_boost_product_mass_kg_per_palm": 0.0
+        },
+        {
+          "product": "urea_N_expensive",
+          "nutrient": "N",
+          "annual_nutrient_boost_kg_per_zone": 0.0,
+          "annual_boost_product_mass_kg_per_zone": 0.0,
+          "annual_boost_product_mass_kg_per_palm": 0.0
+        }
+      ]
+    }
+  ],
+  "recommended_npkmg": {
+    "name": "NPKMg 12-6-22-3",
+    "composition_percent": {
+      "N": 12,
+      "P2O5": 6,
+      "K2O": 22,
+      "MgO": 3
+    },
+    "comparison_basis_bag_weight_kg": 50
+  },
+  "compound_npk_insight": "Pada pupuk majemuk, kadar kalium (K) dari komposisi NPK riwayat berada di atas rekomendasi, sedangkan magnesium (Mg) sangat kurang. Kebutuhan Mg dapat dipenuhi melalui rekomendasi pupuk tunggal.",
+  "single_fertilizer_insight": "Dosis pupuk tunggal Urea/ZA masih sangat kurang dari rekomendasi, sementara dosis Dolomit/Kieserit sudah berlebih."
+}

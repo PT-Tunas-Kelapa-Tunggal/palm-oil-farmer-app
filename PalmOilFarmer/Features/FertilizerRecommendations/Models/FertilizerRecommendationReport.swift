@@ -10,6 +10,7 @@ enum RecommendationTab: String, CaseIterable, Identifiable, Codable {
 struct NutrientProjection: Identifiable, Codable {
     let name: String
     let current: Double
+    var currentAvailable: Bool = true
     let target: Double
     var requirement: Double = 0.5
     var status: String? = nil
@@ -56,8 +57,17 @@ struct FertilizerRecommendationReport: Codable {
     let totalCost: String
     let areas: [FertilizerAllocationArea]
     var nutrientSummary: String? = nil
+    var singleFertilizerSummary: String? = nil
+    var supplementalNutrientProjections: [NutrientProjection] = []
+    var nutrientMapImageName: String? = nil
     var nutrientReferences: [NutrientReference] = []
     var rainfall: RainfallForecast? = nil
     var downloadURL: URL? = nil
+    var nutrientChartTitle: String? = nil
+    var nutrientChartEyebrow: String? = nil
+    var nutrientChartCaption: String? = nil
+    var currentNutrientLabel: String? = nil
+    var targetNutrientLabel: String? = nil
+    var nutrientRequirementLabel: String? = nil
 }
 

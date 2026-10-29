@@ -10,8 +10,35 @@ protocol GardenListRepository {
 struct DummyGardenListRepository: GardenListRepository {
     private(set) var gardens: [Garden]
 
-    init(gardens: [Garden] = Self.sampleGardens) {
-        self.gardens = gardens
+    init(gardens: [Garden] = Self.sampleGardens, analysisJSON: String? = nil) {
+        let json = analysisJSON ?? (try? Self.loadDummyAnalysisJSON())
+        self.gardens = gardens.map { garden in
+            guard garden.analysisResultJSON == nil, let json else { return garden }
+            var gardenWithAnalysis = garden
+            gardenWithAnalysis.analysisResultJSON = json
+            return gardenWithAnalysis
+        }
+    }
+
+    static func loadDummyAnalysisJSON(from bundle: Bundle = .main) throws -> String {
+        guard let url = bundle.url(forResource: "oil_palm_zones_pulse_check_ui", withExtension: "json") else {
+            throw DummyAnalysisError.resourceNotFound
+        }
+        let data = try Data(contentsOf: url)
+        guard let json = String(data: data, encoding: .utf8) else {
+            throw DummyAnalysisError.invalidUTF8
+        }
+        return json
+    }
+
+    func loadAnalysisResult(for gardenID: UUID) throws -> FertilizerRecommendationsResult {
+        guard let garden = gardens.first(where: { $0.id == gardenID }) else {
+            throw DummyAnalysisError.gardenNotFound
+        }
+        guard let json = garden.analysisResultJSON else {
+            throw DummyAnalysisError.analysisJSONNotAvailable
+        }
+        return try FertilizerRecommendationsResultMapper.decode(Data(json.utf8))
     }
 
     mutating func update(_ garden: Garden) -> Bool {
@@ -108,4 +135,11 @@ struct DummyGardenListRepository: GardenListRepository {
     }()
 
     static let sampleGardens: [Garden] = [analyzedSampleGarden]
+}
+
+enum DummyAnalysisError: Error {
+    case resourceNotFound
+    case invalidUTF8
+    case gardenNotFound
+    case analysisJSONNotAvailable
 }

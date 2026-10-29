@@ -33,6 +33,36 @@ struct FertilizerRecommendationScreen: View {
         report.areas.first { $0.id == selectedAreaID }
     }
 
+    private var nutrientMapPreview: some View {
+        Group {
+            if let imageName = report.nutrientMapImageName,
+               let image = bundledImage(named: imageName) {
+                Image(uiImage: image)
+                    .resizable()
+                    .scaledToFit()
+                    .accessibilityLabel("Peta kebun dengan batas zona")
+            } else {
+                boundaryPreview
+            }
+        }
+    }
+
+    private func bundledImage(named imageName: String) -> UIImage? {
+        let file = URL(fileURLWithPath: imageName)
+        guard let imageURL = Bundle.main.url(
+            forResource: file.deletingPathExtension().lastPathComponent,
+            withExtension: file.pathExtension
+        ) else { return nil }
+        return UIImage(contentsOfFile: imageURL.path)
+    }
+
+    private var boundaryPreview: some View {
+        BoundarySilhouette(points: report.outline)
+            .fill(Color(white: 0.77))
+            .overlay { BoundarySilhouette(points: report.outline).stroke(Color(white: 0.35), lineWidth: 2) }
+            .frame(width: 134, height: 158)
+    }
+
     var body: some View {
         VStack(spacing: 0) {
             ScreenHeader(title: report.gardenName, systemImage: "chevron.left",
@@ -47,43 +77,74 @@ struct FertilizerRecommendationScreen: View {
 
                     switch selectedTab {
                     case .nutrients:
-                        BoundarySilhouette(points: report.outline)
-                            .fill(Color(white: 0.77))
-                            .overlay { BoundarySilhouette(points: report.outline).stroke(Color(white: 0.35), lineWidth: 2) }
-                            .frame(width: 134, height: 158)
+                        nutrientMapPreview
                             .frame(maxWidth: .infinity)
                             .frame(height: 206)
-                        if report.nutrients.isEmpty {
+                        if report.nutrients.isEmpty && report.supplementalNutrientProjections.isEmpty {
                             ContentUnavailableView("Analisis hara belum tersedia", systemImage: "chart.bar",
                                 description: Text("Hasil pengukuran dan rekomendasi pupuk belum diterima. Pembagian blok dapat digunakan melalui Alokasi pupuk."))
                         } else {
-                            VStack(alignment: .leading, spacing: 8) {
-                                Text("Proyeksi hara · Seluruh kebun")
-                                    .font(.footnote).foregroundStyle(.secondary)
-                                Text("Kadar hara setelah pemupukan").font(.headline)
-                                NutrientProjectionChart(values: report.nutrients,
-                                                        references: report.nutrientReferences) {
-                                    selectedReference = $0
+                            if !report.nutrients.isEmpty {
+                                VStack(alignment: .leading, spacing: 8) {
+                                    Text(report.nutrientChartEyebrow ?? "Komposisi pupuk · per 50 kg")
+                                        .font(.footnote).foregroundStyle(.secondary)
+                                    Text(report.nutrientChartTitle ?? "Komposisi NPK dibanding rekomendasi")
+                                        .font(.title2.weight(.semibold))
+                                    NutrientProjectionChart(values: report.nutrients,
+                                                            references: report.nutrientReferences,
+                                                            currentLabel: report.currentNutrientLabel ?? "NPK riwayat",
+                                                            targetLabel: report.targetNutrientLabel ?? "Rekomendasi NPKMg",
+                                                            requirementLabel: report.nutrientRequirementLabel ?? "Patokan") {
+                                        selectedReference = $0
+                                    }
+                                    if let caption = report.nutrientChartCaption {
+                                        Text(caption).font(.footnote).foregroundStyle(.secondary)
+                                    }
+                                }
+                                .padding(16)
+                                .background(.background, in: RoundedRectangle(cornerRadius: 24))
+                                if let summary = report.nutrientSummary {
+                                    Text(summary).font(.title3)
+                                        .frame(maxWidth: .infinity, alignment: .leading)
+                                        .padding(16)
+                                        .background(.background, in: RoundedRectangle(cornerRadius: 24))
                                 }
                             }
-                            .padding(16)
-                            .background(.background, in: RoundedRectangle(cornerRadius: 24))
-                            if let summary = report.nutrientSummary {
-                                Text(summary).font(.title3)
-                                    .frame(maxWidth: .infinity, alignment: .leading)
-                                    .padding(16)
-                                    .background(.background, in: RoundedRectangle(cornerRadius: 24))
+                            if !report.supplementalNutrientProjections.isEmpty {
+                                VStack(alignment: .leading, spacing: 8) {
+                                    Text("Rekomendasi dosis pupuk tunggal")
+                                        .font(.footnote).foregroundStyle(.secondary)
+                                    Text("Pasokan N dan Mg dari pupuk tunggal")
+                                        .font(.title2.weight(.semibold))
+                                    NutrientProjectionChart(values: report.supplementalNutrientProjections,
+                                                            currentLabel: "Dari riwayat",
+                                                            targetLabel: "Kebutuhan tahunan",
+                                                            requirementLabel: "Target")
+                                    Text("Grafik menggabungkan Urea/ZA untuk N, serta Dolomit/Kieserit untuk Mg.")
+                                        .font(.footnote).foregroundStyle(.secondary)
+                                }
+                                .padding(16)
+                                .background(.background, in: RoundedRectangle(cornerRadius: 24))
+                                if let summary = report.singleFertilizerSummary {
+                                    Text(summary).font(.title3)
+                                        .frame(maxWidth: .infinity, alignment: .leading)
+                                        .padding(16)
+                                        .background(.background, in: RoundedRectangle(cornerRadius: 24))
+                                }
                             }
                         }
                         if !report.costs.isEmpty {
                             FertilizerCostTable(lines: report.costs, total: report.totalCost)
                         }
                     case .allocation:
-                        if let garden, isDemo {
+                        if let garden, isDemo, report.nutrientMapImageName == nil {
                             FindingBlockView(garden: garden, report: report)
                         } else if let area = selectedArea {
                             Group {
-                                if let path = area.mapImage, let image = UIImage(contentsOfFile: path) {
+                                if let imageName = report.nutrientMapImageName,
+                                   let image = bundledImage(named: imageName) {
+                                    Image(uiImage: image).resizable().scaledToFit()
+                                } else if let path = area.mapImage, let image = UIImage(contentsOfFile: path) {
                                     Image(uiImage: image).resizable().scaledToFill()
                                 } else if let mapImage = area.mapImage, !mapImage.hasPrefix("/") {
                                     Image(mapImage).resizable().scaledToFill()
@@ -106,11 +167,13 @@ struct FertilizerRecommendationScreen: View {
                                     .glassEffect(.regular.interactive(), in: Capsule())
                                 }
                                 Spacer()
-                                Button { showsAreaMap = true } label: {
-                                    Label("Buka Map", systemImage: "figure.walk")
-                                        .font(.title3)
-                                        .padding(.horizontal, 12).padding(.vertical, 8)
-                                        .background(KropsTheme.tertiaryFill, in: Capsule())
+                                if report.nutrientMapImageName == nil {
+                                    Button { showsAreaMap = true } label: {
+                                        Label("Buka Map", systemImage: "figure.walk")
+                                            .font(.title3)
+                                            .padding(.horizontal, 12).padding(.vertical, 8)
+                                            .background(KropsTheme.tertiaryFill, in: Capsule())
+                                    }
                                 }
                             }
                             .buttonStyle(.plain)

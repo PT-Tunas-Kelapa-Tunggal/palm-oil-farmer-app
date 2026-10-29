@@ -14,6 +14,7 @@ enum FertilizerRecommendationsResultMapper {
                 locationLabel: payload.farm.locationLabel,
                 sourceImage: payload.farm.sourceImage
             ),
+            zoneImage: payload.zoneImage,
             annualSummary: .init(
                 zoneCount: payload.annualBoostSummary.zoneCount,
                 treeCount: payload.annualBoostSummary.treeCount,
@@ -36,7 +37,22 @@ enum FertilizerRecommendationsResultMapper {
                               annualProductMassKgPerPalm: $0.annualBoostProductMassKgPerPalm)
                     }
                 )
-            }
+            },
+            recommendedNPKMg: payload.recommendedNPKMg.map {
+                FertilizerRecommendationsResult.RecommendedNPKMg(
+                    name: $0.name,
+                    composition: NPKComposition(
+                        nitrogenPercent: $0.compositionPercent.nitrogen,
+                        phosphatePercent: $0.compositionPercent.phosphorusPentoxide,
+                        potashPercent: $0.compositionPercent.potassiumOxide,
+                        magnesiumPercent: $0.compositionPercent.magnesiumOxide
+                    ),
+                    comparisonBasisBagWeightKg: $0.comparisonBasisBagWeightKg
+                )
+            },
+            nutrientComparisonInsight: payload.nutrientComparisonInsight,
+            compoundNPKInsight: payload.compoundNPKInsight,
+            singleFertilizerInsight: payload.singleFertilizerInsight
         )
     }
 
@@ -48,13 +64,47 @@ enum FertilizerRecommendationsResultMapper {
 
     struct Payload: Decodable {
         let farm: FarmDTO
+        let zoneImage: String?
         let annualBoostSummary: AnnualBoostSummaryDTO
         let areaAllocations: [AreaAllocationDTO]
+        let recommendedNPKMg: RecommendedNPKMgDTO?
+        let nutrientComparisonInsight: String?
+        let compoundNPKInsight: String?
+        let singleFertilizerInsight: String?
 
         enum CodingKeys: String, CodingKey {
             case farm
+            case zoneImage = "zone_image"
             case annualBoostSummary = "annual_boost_summary"
             case areaAllocations = "area_allocations"
+            case recommendedNPKMg = "recommended_npkmg"
+            case nutrientComparisonInsight = "nutrient_comparison_insight"
+            case compoundNPKInsight = "compound_npk_insight"
+            case singleFertilizerInsight = "single_fertilizer_insight"
+        }
+    }
+
+    struct RecommendedNPKMgDTO: Decodable {
+        let name: String
+        let compositionPercent: RecommendedNPKMgCompositionDTO
+        let comparisonBasisBagWeightKg: Double
+        enum CodingKeys: String, CodingKey {
+            case name
+            case compositionPercent = "composition_percent"
+            case comparisonBasisBagWeightKg = "comparison_basis_bag_weight_kg"
+        }
+    }
+
+    struct RecommendedNPKMgCompositionDTO: Decodable {
+        let nitrogen: Double
+        let phosphorusPentoxide: Double
+        let potassiumOxide: Double
+        let magnesiumOxide: Double
+        enum CodingKeys: String, CodingKey {
+            case nitrogen = "N"
+            case phosphorusPentoxide = "P2O5"
+            case potassiumOxide = "K2O"
+            case magnesiumOxide = "MgO"
         }
     }
 
@@ -120,4 +170,5 @@ enum FertilizerRecommendationsResultMapper {
             case annualBoostProductMassKgPerPalm = "annual_boost_product_mass_kg_per_palm"
         }
     }
+
 }

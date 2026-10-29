@@ -17,6 +17,7 @@ struct GardenProfileScreen: View {
     var reviewStatus: ReviewStatus? = nil
     var reviewEntries: [ReviewTimelineEntry] = []
     var recommendationReport: FertilizerRecommendationReport? = nil
+    var recommendationResult: FertilizerRecommendationsResult? = nil
 
     @Environment(\.dismiss) private var dismiss
     @State private var editor: HistoryEditor?
@@ -48,6 +49,7 @@ struct GardenProfileScreen: View {
         reviewStatus: ReviewStatus? = nil,
         reviewEntries: [ReviewTimelineEntry] = [],
         recommendationReport: FertilizerRecommendationReport? = nil,
+        recommendationResult: FertilizerRecommendationsResult? = nil,
         onDelete: ((Garden) -> Bool)? = nil,
         onUpdateReview: ((GardenReview) -> Bool)? = nil,
         onUpdate: @escaping (Garden) -> Bool
@@ -61,6 +63,7 @@ struct GardenProfileScreen: View {
         self.reviewStatus = reviewStatus
         self.reviewEntries = reviewEntries
         self.recommendationReport = recommendationReport
+        self.recommendationResult = recommendationResult
         self.onUpdate = onUpdate
         self.onDelete = onDelete
         self.onUpdateReview = onUpdateReview
@@ -186,7 +189,18 @@ struct GardenProfileScreen: View {
             }
         }
         .navigationDestination(isPresented: $showsResults) {
-            if let report = currentReport {
+            if let recommendationResult {
+                let report = FertilizerRecommendationsResultReportAdapter.makeReport(
+                    from: recommendationResult,
+                    for: garden
+                )
+                FertilizerRecommendationScreen(
+                    report: report,
+                    initialTab: .nutrients,
+                    isDemo: true,
+                    garden: garden
+                )
+            } else if let report = currentReport {
                 FertilizerRecommendationScreen(report: report,
                                              initialTab: report.nutrients.isEmpty ? .allocation : .nutrients,
                                              isDemo: demoReview != nil, garden: garden)

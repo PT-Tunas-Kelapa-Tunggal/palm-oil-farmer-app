@@ -5,8 +5,19 @@ import Foundation
 /// values present in the pulse-check payload; it does not infer prices or projections.
 struct FertilizerRecommendationsResult: Equatable {
     let farm: Farm
+    let zoneImage: String?
     let annualSummary: AnnualSummary
     let zones: [ZoneAllocation]
+    let recommendedNPKMg: RecommendedNPKMg?
+    let nutrientComparisonInsight: String?
+    let compoundNPKInsight: String?
+    let singleFertilizerInsight: String?
+
+    struct RecommendedNPKMg: Equatable {
+        let name: String
+        let composition: NPKComposition
+        let comparisonBasisBagWeightKg: Double
+    }
 
     struct Farm: Equatable {
         let name: String
