@@ -114,7 +114,7 @@ struct AreaDoseSheet: View {
 #if DEBUG
 #Preview("Panel Area 2") {
     NavigationStack {
-        AreaAllocationView(result: .sample, allocation: .ureaSample, initialSelectedLine: .ureaAreaTwo)
+        AreaAllocationView(result: .sample, viewModel: .preview(fertilizer: "Urea", selectedLine: .ureaAreaTwo))
     }
 }
 #endif

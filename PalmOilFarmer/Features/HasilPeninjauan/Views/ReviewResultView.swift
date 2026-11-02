@@ -1,6 +1,42 @@
 import SwiftUI
 
+/// Loads the review result, then shows it or the matching empty or error state.
 struct ReviewResultView: View {
+    @State private var viewModel: ReviewResultViewModel
+
+    init(viewModel: ReviewResultViewModel) {
+        _viewModel = State(initialValue: viewModel)
+    }
+
+    var body: some View {
+        Group {
+            switch viewModel.phase {
+            case .loading:
+                ProgressView("Memuat hasil peninjauan")
+            case .loaded(let content):
+                ReviewResultContentView(result: content.result, history: content.history)
+            case .empty:
+                ContentUnavailableView("Hasil peninjauan belum tersedia", systemImage: "chart.bar.doc.horizontal")
+            case .failed(let message):
+                ContentUnavailableView {
+                    Label("Hasil peninjauan belum dapat dimuat", systemImage: "exclamationmark.triangle")
+                } description: {
+                    Text(message)
+                } actions: {
+                    Button("Coba lagi") {
+                        Task { await viewModel.load() }
+                    }
+                }
+            }
+        }
+        .task {
+            // Returning to this screen must not replace loaded content with a spinner.
+            if case .loading = viewModel.phase { await viewModel.load() }
+        }
+    }
+}
+
+struct ReviewResultContentView: View {
     let result: ReviewResult
     let history: ReviewHistory
 
@@ -241,7 +277,7 @@ struct ReviewResultView: View {
 #if DEBUG
 #Preview("Hasil Peninjauan") {
     NavigationStack {
-        ReviewResultView(result: .sample, history: .sample)
+        ReviewResultView(viewModel: .preview)
     }
 }
 #endif

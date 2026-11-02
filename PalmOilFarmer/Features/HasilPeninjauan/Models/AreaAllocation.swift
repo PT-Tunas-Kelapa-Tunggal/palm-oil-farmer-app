@@ -32,7 +32,7 @@ struct AreaAllocation {
         let id: Int
         let kilograms: Int
         let dose: String
-        let status: Status
+        var status: Status
         var photo: String? = nil
     }
 
@@ -46,12 +46,28 @@ struct AreaAllocation {
     /// A fertilizer is either dosed per area or spread evenly across the whole garden.
     enum Distribution {
         case perArea([Line], guidance: Guidance? = nil)
-        case uniform(dose: String, note: String)
+        case uniform(dose: String, note: String, isFertilized: Bool = false)
     }
 
     let fertilizers: [Fertilizer]
     let selectedFertilizer: String
     let distribution: Distribution
+
+    /// A nil `areaID` marks the whole garden, which applies to even spreading.
+    func markingFertilized(areaID: Int?) -> AreaAllocation {
+        let updated: Distribution
+        switch distribution {
+        case .perArea(let lines, let guidance):
+            updated = .perArea(lines.map { line in
+                var line = line
+                if line.id == areaID { line.status = .fertilized }
+                return line
+            }, guidance: guidance)
+        case .uniform(let dose, let note, let isFertilized):
+            updated = .uniform(dose: dose, note: note, isFertilized: isFertilized || areaID == nil)
+        }
+        return AreaAllocation(fertilizers: fertilizers, selectedFertilizer: selectedFertilizer, distribution: updated)
+    }
 }
 
 #if DEBUG

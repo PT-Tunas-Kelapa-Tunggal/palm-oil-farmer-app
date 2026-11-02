@@ -2,29 +2,30 @@ import SwiftUI
 
 struct AreaAllocationView: View {
     let result: ReviewResult
-    let allocation: AreaAllocation
-    let onMarkFertilized: () -> Void
     let onNavigateToArea: (AreaAllocation.Line) -> Void
-    let onMarkAreaFertilized: (AreaAllocation.Line) -> Void
 
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
     @ScaledMetric(relativeTo: .largeTitle) private var doseSize = 52
-    @State private var selectedLine: AreaAllocation.Line?
+    @State private var viewModel: AreaAllocationViewModel
 
     init(
         result: ReviewResult,
-        allocation: AreaAllocation,
-        initialSelectedLine: AreaAllocation.Line? = nil,
-        onMarkFertilized: @escaping () -> Void = {},
-        onNavigateToArea: @escaping (AreaAllocation.Line) -> Void = { _ in },
-        onMarkAreaFertilized: @escaping (AreaAllocation.Line) -> Void = { _ in }
+        viewModel: AreaAllocationViewModel,
+        onNavigateToArea: @escaping (AreaAllocation.Line) -> Void = { _ in }
     ) {
         self.result = result
-        self.allocation = allocation
-        self.onMarkFertilized = onMarkFertilized
         self.onNavigateToArea = onNavigateToArea
-        self.onMarkAreaFertilized = onMarkAreaFertilized
-        _selectedLine = State(initialValue: initialSelectedLine)
+        _viewModel = State(initialValue: viewModel)
+    }
+
+    private var allocation: AreaAllocation { viewModel.allocation }
+
+    /// Alerts belong to the topmost presentation, so the sheet and the screen each show their own.
+    private func hasError(whileSheetIsOpen: Bool) -> Binding<Bool> {
+        Binding(
+            get: { viewModel.errorMessage != nil && (viewModel.selectedLine != nil) == whileSheetIsOpen },
+            set: { if !$0 { viewModel.errorMessage = nil } }
+        )
     }
 
     var body: some View {
@@ -45,8 +46,9 @@ struct AreaAllocationView: View {
             .scrollIndicators(.hidden)
             .ignoresSafeArea(edges: .top)
             .safeAreaInset(edge: .bottom, spacing: 0) {
-                if case .uniform = allocation.distribution, !dynamicTypeSize.isAccessibilitySize {
-                    fertilizedButton
+                if case .uniform(_, _, let isFertilized) = allocation.distribution,
+                   !dynamicTypeSize.isAccessibilitySize {
+                    fertilizedButton(isFertilized: isFertilized)
                         .padding(.horizontal, KropsTheme.Spacing.screen)
                         .padding(.vertical, KropsTheme.Spacing.compact)
                 }
@@ -54,13 +56,23 @@ struct AreaAllocationView: View {
         }
         .background(KropsTheme.background.ignoresSafeArea())
         .toolbar(.hidden, for: .navigationBar)
-        .sheet(item: $selectedLine) { line in
+        .sheet(item: $viewModel.selectedLine) { line in
             AreaDoseSheet(
                 fertilizerName: allocation.selectedFertilizer,
                 line: line,
                 onNavigate: { onNavigateToArea(line) },
-                onMarkFertilized: { onMarkAreaFertilized(line) }
+                onMarkFertilized: { Task { await viewModel.markFertilized(areaID: line.id) } }
             )
+            .alert("Belum tersimpan", isPresented: hasError(whileSheetIsOpen: true)) {
+                Button("Mengerti", role: .cancel) {}
+            } message: {
+                Text(viewModel.errorMessage ?? "")
+            }
+        }
+        .alert("Belum tersimpan", isPresented: hasError(whileSheetIsOpen: false)) {
+            Button("Mengerti", role: .cancel) {}
+        } message: {
+            Text(viewModel.errorMessage ?? "")
         }
     }
 
@@ -76,19 +88,24 @@ struct AreaAllocationView: View {
     }
 
     private func fertilizerCard(_ fertilizer: AreaAllocation.Fertilizer, isSelected: Bool) -> some View {
-        VStack(spacing: KropsTheme.Spacing.field) {
-            Text(fertilizer.name).font(.subheadline.weight(.semibold))
-            Text("\(fertilizer.kilograms) kg").font(.title3.bold())
+        Button {
+            viewModel.selectFertilizer(fertilizer.name)
+        } label: {
+            VStack(spacing: KropsTheme.Spacing.field) {
+                Text(fertilizer.name).font(.subheadline.weight(.semibold))
+                Text("\(fertilizer.kilograms) kg").font(.title3.bold())
+            }
+            .multilineTextAlignment(.center)
+            .foregroundStyle(isSelected ? Color(uiColor: .systemBackground) : .primary)
+            .padding(KropsTheme.Spacing.compact)
+            .frame(maxWidth: .infinity, minHeight: 104)
+            .background {
+                RoundedRectangle(cornerRadius: KropsTheme.Radius.card)
+                    .fill(isSelected ? AnyShapeStyle(.primary) : AnyShapeStyle(.background))
+                    .shadow(color: .black.opacity(isSelected ? 0.3 : 0), radius: 6, y: 3)
+            }
         }
-        .multilineTextAlignment(.center)
-        .foregroundStyle(isSelected ? Color(uiColor: .systemBackground) : .primary)
-        .padding(KropsTheme.Spacing.compact)
-        .frame(maxWidth: .infinity, minHeight: 104)
-        .background {
-            RoundedRectangle(cornerRadius: KropsTheme.Radius.card)
-                .fill(isSelected ? AnyShapeStyle(.primary) : AnyShapeStyle(.background))
-                .shadow(color: .black.opacity(isSelected ? 0.3 : 0), radius: 6, y: 3)
-        }
+        .buttonStyle(.plain)
         .accessibilityElement(children: .combine)
         .accessibilityAddTraits(isSelected ? .isSelected : [])
     }
@@ -113,11 +130,11 @@ struct AreaAllocationView: View {
                         .foregroundStyle(.secondary)
                 }
             }
-        case .uniform(let dose, let note):
+        case .uniform(let dose, let note, let isFertilized):
             VStack(spacing: KropsTheme.Spacing.screen) {
                 uniformCard(dose: dose, note: note)
                 // A pinned button would cover too much of the screen at accessibility text sizes.
-                if dynamicTypeSize.isAccessibilitySize { fertilizedButton }
+                if dynamicTypeSize.isAccessibilitySize { fertilizedButton(isFertilized: isFertilized) }
             }
         }
     }
@@ -149,8 +166,10 @@ struct AreaAllocationView: View {
         .background(.background, in: RoundedRectangle(cornerRadius: KropsTheme.Radius.card))
     }
 
-    private var fertilizedButton: some View {
-        Button(action: onMarkFertilized) {
+    private func fertilizedButton(isFertilized: Bool) -> some View {
+        Button {
+            Task { await viewModel.markFertilized(areaID: nil) }
+        } label: {
             Label("Sudah Dipupuk", systemImage: "checkmark")
                 .labelStyle(.titleAndIcon)
                 .font(.body.weight(.semibold))
@@ -160,6 +179,8 @@ struct AreaAllocationView: View {
                 .background(.background, in: RoundedRectangle(cornerRadius: KropsTheme.Radius.card))
         }
         .buttonStyle(.plain)
+        .disabled(isFertilized)
+        .opacity(isFertilized ? 0.45 : 1)
     }
 
     private func areaList(_ lines: [AreaAllocation.Line]) -> some View {
@@ -253,7 +274,7 @@ struct AreaAllocationView: View {
                 .accessibilityHidden(true)
         } else {
             Button {
-                selectedLine = line
+                viewModel.select(line)
             } label: {
                 rowIcon("arrow.triangle.turn.up.right.diamond.fill")
                     .frame(width: 44, height: 44)
@@ -276,17 +297,17 @@ struct AreaAllocationView: View {
 #if DEBUG
 #Preview("Alokasi per Area") {
     NavigationStack {
-        AreaAllocationView(result: .sample, allocation: .sample)
+        AreaAllocationView(result: .sample, viewModel: .preview())
     }
 }
 #Preview("Tabur Merata") {
     NavigationStack {
-        AreaAllocationView(result: .sample, allocation: .uniformSample)
+        AreaAllocationView(result: .sample, viewModel: .preview(fertilizer: "NPK 15-15-15"))
     }
 }
 #Preview("Urea per Area") {
     NavigationStack {
-        AreaAllocationView(result: .sample, allocation: .ureaSample)
+        AreaAllocationView(result: .sample, viewModel: .preview(fertilizer: "Urea"))
     }
 }
 #endif
