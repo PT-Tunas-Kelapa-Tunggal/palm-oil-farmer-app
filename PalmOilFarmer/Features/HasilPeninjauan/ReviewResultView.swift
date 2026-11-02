@@ -1,0 +1,243 @@
+import SwiftUI
+
+struct ReviewResultView: View {
+    let result: ReviewResult
+    let onShowRecommendation: () -> Void
+
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
+    @ScaledMetric(relativeTo: .largeTitle) private var amountSize = 52
+    @ScaledMetric(relativeTo: .subheadline) private var totalColumnWidth = 96
+    @ScaledMetric(relativeTo: .subheadline) private var priceColumnWidth = 116
+
+    var body: some View {
+        GeometryReader { geometry in
+            ScrollView {
+                VStack(spacing: KropsTheme.Spacing.section) {
+                    hero(topInset: geometry.safeAreaInsets.top)
+                    Group {
+                        VStack(spacing: KropsTheme.Spacing.compact) {
+                            nutrientSection
+                            summaryCard
+                        }
+                        budgetSection
+                    }
+                    .padding(.horizontal, KropsTheme.Spacing.screen)
+                }
+                .padding(.bottom, KropsTheme.Spacing.content)
+            }
+            .scrollIndicators(.hidden)
+            .ignoresSafeArea(edges: .top)
+        }
+        .background(KropsTheme.background.ignoresSafeArea())
+        .toolbar(.hidden, for: .navigationBar)
+    }
+
+    private func hero(topInset: CGFloat) -> some View {
+        VStack(spacing: 0) {
+            ReviewMapHero(result: result, documentIcon: "doc", topInset: topInset)
+            metricRow
+                .padding(.horizontal, KropsTheme.Spacing.screen)
+                .padding(.top, -32)
+        }
+    }
+
+    private var metricRow: some View {
+        let layout = dynamicTypeSize.isAccessibilitySize
+            ? AnyLayout(VStackLayout(spacing: KropsTheme.Spacing.compact))
+            : AnyLayout(HStackLayout(spacing: KropsTheme.Spacing.compact))
+        return layout {
+            ForEach(result.metrics) { metric in
+                VStack(spacing: 2) {
+                    Text(metric.title)
+                        .font(.footnote)
+                        .foregroundStyle(.secondary)
+                    Text(metric.value).font(.headline)
+                }
+                .multilineTextAlignment(.center)
+                .frame(maxWidth: .infinity, minHeight: 72)
+                .padding(.horizontal, 4)
+                .background(.background, in: RoundedRectangle(cornerRadius: KropsTheme.Radius.metric))
+                .accessibilityElement(children: .combine)
+            }
+        }
+    }
+
+    private func sectionHeader(_ title: String, subtitle: String) -> some View {
+        VStack(alignment: .leading, spacing: 2) {
+            Text(title).font(.title3.bold())
+            Text(subtitle)
+                .font(.subheadline)
+                .foregroundStyle(.secondary)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(.horizontal, KropsTheme.Spacing.compact)
+    }
+
+    private var nutrientSection: some View {
+        VStack(spacing: KropsTheme.Spacing.field) {
+            sectionHeader("Kondisi Hara Per Tahun", subtitle: "Kondisi hara dengan perawatan saat ini")
+            LazyVGrid(columns: nutrientColumns, spacing: KropsTheme.Spacing.compact) {
+                ForEach(result.nutrients) { nutrient in
+                    nutrientCard(nutrient)
+                }
+            }
+        }
+    }
+
+    private var nutrientColumns: [GridItem] {
+        dynamicTypeSize.isAccessibilitySize
+            ? [GridItem(.flexible())]
+            : [GridItem(.flexible(), spacing: KropsTheme.Spacing.compact), GridItem(.flexible())]
+    }
+
+    private func nutrientCard(_ nutrient: ReviewResult.Nutrient) -> some View {
+        VStack(alignment: .leading, spacing: KropsTheme.Spacing.compact) {
+            HStack(spacing: 4) {
+                Text("\(nutrient.name) (\(nutrient.symbol))")
+                    .font(.subheadline.weight(.semibold))
+                    .lineLimit(dynamicTypeSize.isAccessibilitySize ? nil : 1)
+                    .minimumScaleFactor(0.8)
+                Spacer(minLength: 0)
+                Image(systemName: "info.circle.fill")
+                    .font(.footnote)
+                    .foregroundStyle(.secondary)
+                    .accessibilityHidden(true)
+            }
+            HStack(alignment: .firstTextBaseline, spacing: 6) {
+                Text("\(nutrient.kilograms)")
+                    .font(.system(size: amountSize, weight: .bold))
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.5)
+                Text("kg").font(.headline)
+            }
+            .foregroundStyle(.secondary)
+            Label(nutrient.status.title, systemImage: nutrient.status.systemImage)
+                .font(.footnote)
+                .foregroundStyle(.secondary)
+        }
+        .padding(KropsTheme.Spacing.screen)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(.background, in: RoundedRectangle(cornerRadius: KropsTheme.Radius.card))
+        .accessibilityElement(children: .combine)
+    }
+
+    private var summaryCard: some View {
+        VStack(alignment: .leading, spacing: KropsTheme.Spacing.section) {
+            Text(result.summary)
+                .font(.title3)
+                .fixedSize(horizontal: false, vertical: true)
+            Button(action: onShowRecommendation) {
+                HStack(spacing: 6) {
+                    Text("Lihat Rekomendasi Pemupukan")
+                    Image(systemName: "arrow.right")
+                }
+                .font(.subheadline.weight(.semibold))
+                .foregroundStyle(Color(uiColor: .systemBackground))
+                .padding(KropsTheme.Spacing.compact)
+                .frame(maxWidth: .infinity, minHeight: 48)
+                .background(.primary, in: RoundedRectangle(cornerRadius: KropsTheme.Radius.card))
+            }
+            .buttonStyle(.plain)
+        }
+        .padding(KropsTheme.Spacing.section)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(.background, in: RoundedRectangle(cornerRadius: KropsTheme.Radius.card))
+    }
+
+    private var budgetSection: some View {
+        VStack(spacing: KropsTheme.Spacing.field) {
+            sectionHeader("Estimasi Anggaran Belanja Pupuk",
+                          subtitle: "Rekomendasi kebutuhan pupuk dan Anggaran belanja untuk memenuhi hara ideal")
+            VStack(spacing: 0) {
+                if !dynamicTypeSize.isAccessibilitySize { budgetHeaderRow }
+                ForEach(result.budgetLines) { line in
+                    if line.id != result.budgetLines.first?.id || !dynamicTypeSize.isAccessibilitySize { Divider() }
+                    if dynamicTypeSize.isAccessibilitySize {
+                        stackedBudgetRow(line)
+                    } else {
+                        budgetRow(line)
+                    }
+                }
+            }
+            .background(.background)
+            .clipShape(RoundedRectangle(cornerRadius: KropsTheme.Spacing.compact))
+        }
+    }
+
+    /// Fixed table columns would push the page wider than the screen at accessibility text sizes.
+    private func stackedBudgetRow(_ line: ReviewResult.BudgetLine) -> some View {
+        VStack(alignment: .leading, spacing: 4) {
+            Text(line.name).fontWeight(.semibold)
+            Text("Total (kg): \(line.kilograms)")
+            Text("Harga: \(line.price)")
+        }
+        .font(.subheadline)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(KropsTheme.Spacing.field)
+    }
+
+    private var budgetHeaderRow: some View {
+        tableRow {
+            Text("Jenis Pupuk").padding(tableCellInsets).frame(maxWidth: .infinity, alignment: .leading)
+        } total: {
+            Text("Total (kg)")
+        } price: {
+            Text("Harga")
+        }
+        .foregroundStyle(.secondary)
+        .background(KropsTheme.secondaryFill)
+    }
+
+    private func budgetRow(_ line: ReviewResult.BudgetLine) -> some View {
+        tableRow {
+            HStack(spacing: 4) {
+                Text(line.name).fontWeight(.semibold)
+                Spacer(minLength: 0)
+                Image(systemName: "arrow.left.arrow.right")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                    .accessibilityHidden(true)
+            }
+            .padding(tableCellInsets)
+            .frame(maxWidth: .infinity)
+        } total: {
+            Text("\(line.kilograms)").fontWeight(.semibold)
+        } price: {
+            Text(line.price).fontWeight(.semibold)
+        }
+    }
+
+    private var tableCellInsets: EdgeInsets {
+        EdgeInsets(top: KropsTheme.Spacing.compact, leading: KropsTheme.Spacing.compact,
+                   bottom: KropsTheme.Spacing.compact, trailing: KropsTheme.Spacing.compact)
+    }
+
+    private func tableRow<Name: View, Total: View, Price: View>(
+        @ViewBuilder name: () -> Name,
+        @ViewBuilder total: () -> Total,
+        @ViewBuilder price: () -> Price
+    ) -> some View {
+        HStack(spacing: 0) {
+            name()
+            Divider()
+            total()
+                .padding(.vertical, KropsTheme.Spacing.compact)
+                .frame(width: totalColumnWidth)
+            Divider()
+            price()
+                .padding(.vertical, KropsTheme.Spacing.compact)
+                .frame(width: priceColumnWidth)
+        }
+        .font(.subheadline)
+        .multilineTextAlignment(.center)
+        .fixedSize(horizontal: false, vertical: true)
+    }
+}
+
+#if DEBUG
+#Preview("Hasil Peninjauan") {
+    NavigationStack {
+        ReviewResultView(result: .sample, onShowRecommendation: {})
+    }
+}
+#endif
