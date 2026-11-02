@@ -12,6 +12,7 @@ struct LocationSearchView: View {
     @State private var locationProvider = CurrentLocationProvider()
     @State private var isLocating = false
     @State private var showsPhotoPicker = false
+    @AppStorage("garden.location.hasSeenPhotoTip") private var hasSeenPhotoTip = false
     @State private var photoStatus: PhotoStatus
     private let searchLocations: (String) async throws -> [GardenLocation]
 
@@ -56,7 +57,21 @@ struct LocationSearchView: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            ScreenHeader(title: "Cari alamat", onClose: { dismiss() })
+            ScreenHeader(title: "Temukan Lokasi Kebun", onClose: { dismiss() })
+                .overlay(alignment: .trailing) {
+                    Button {
+                        hasSeenPhotoTip = true
+                        showsPhotoPicker = true
+                    } label: {
+                        Image(systemName: "photo.on.rectangle")
+                            .font(.title2)
+                            .frame(width: 44, height: 44)
+                    }
+                    .buttonStyle(.plain)
+                    .glassEffect(.regular.interactive(), in: Circle())
+                    .accessibilityLabel("Temukan lokasi dari foto")
+                    .padding(.trailing, 12)
+                }
 
             VStack(alignment: .leading, spacing: 8) {
                 HStack {
@@ -94,7 +109,15 @@ struct LocationSearchView: View {
 
                     if !hasQuery {
                         currentLocationRow
-                        photoCard
+                        if photoStatus == .loading {
+                            ProgressView(photoStatus.message).padding()
+                        } else if photoStatus == .missingLocation || photoStatus == .failed {
+                            VStack(spacing: 12) {
+                                Text(photoStatus.message).foregroundStyle(.secondary)
+                                Button("Pilih foto lain") { showsPhotoPicker = true }
+                            }
+                            .padding(16)
+                        }
                     }
 
                     ForEach(results) { location in
@@ -106,7 +129,7 @@ struct LocationSearchView: View {
                                 Image(systemName: "mappin.and.ellipse")
                                     .font(.title3)
                                     .frame(width: 36, height: 36)
-                                    .background(KropsTheme.cardFill, in: Circle())
+                                    .background(GardenFlowStyle.card, in: Circle())
                                 VStack(alignment: .leading, spacing: 0) {
                                     Text(location.name).font(.headline)
                                     Text(location.subtitle).font(.subheadline).foregroundStyle(.secondary)
@@ -115,7 +138,7 @@ struct LocationSearchView: View {
                             }
                             .padding(16)
                             .frame(minHeight: 74)
-                            .background(KropsTheme.cardFill, in: RoundedRectangle(cornerRadius: KropsTheme.Radius.card))
+                            .background(GardenFlowStyle.card, in: RoundedRectangle(cornerRadius: KropsTheme.Radius.card))
                             .contentShape(RoundedRectangle(cornerRadius: KropsTheme.Radius.card))
                         }
                         .buttonStyle(.plain)
@@ -125,6 +148,15 @@ struct LocationSearchView: View {
                 .padding(.top, 16)
             }
             .scrollDismissesKeyboard(.interactively)
+        }
+        .background(GardenFlowStyle.background)
+        .overlay(alignment: .top) {
+            if !hasSeenPhotoTip && !hasQuery {
+                photoTip.padding(.horizontal, 16).padding(.top, 68)
+            }
+        }
+        .onChange(of: query) { _, value in
+            if !value.isEmpty { hasSeenPhotoTip = true }
         }
         .task { isSearchFocused = true }
         .task(id: query) {
@@ -164,10 +196,10 @@ struct LocationSearchView: View {
                 Image(systemName: "location.fill")
                     .font(.title3)
                     .frame(width: 36, height: 36)
-                    .background(KropsTheme.cardFill, in: Circle())
+                    .background(GardenFlowStyle.card, in: Circle())
                 VStack(alignment: .leading, spacing: 0) {
                     Text("Gunakan lokasi saat ini").font(.headline)
-                    Text(isLocating ? "Mencari lokasi…" : "Lokasi perangkat")
+                    Text(isLocating ? "Mencari lokasi…" : "Jika Anda sedang di kebun")
                         .font(.subheadline)
                         .foregroundStyle(.secondary)
                 }
@@ -176,37 +208,41 @@ struct LocationSearchView: View {
             }
             .padding(16)
             .frame(minHeight: 74)
-            .background(KropsTheme.cardFill, in: RoundedRectangle(cornerRadius: KropsTheme.Radius.card))
+            .background(GardenFlowStyle.card, in: RoundedRectangle(cornerRadius: KropsTheme.Radius.card))
             .contentShape(RoundedRectangle(cornerRadius: KropsTheme.Radius.card))
         }
         .buttonStyle(.plain)
         .disabled(isLocating)
     }
 
-    private var photoCard: some View {
-        Button { showsPhotoPicker = true } label: {
-            VStack(spacing: 8) {
-                if photoStatus == .loading {
-                    ProgressView().controlSize(.large)
-                } else {
-                    Image(systemName: photoStatus.symbol)
-                        .font(.largeTitle)
-                        .foregroundStyle(.secondary)
+    private var photoTip: some View {
+        HStack(alignment: .top, spacing: 8) {
+            Button {
+                hasSeenPhotoTip = true
+                showsPhotoPicker = true
+            } label: {
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("Temukan dari Foto").font(.subheadline.weight(.semibold))
+                    Text("Punya foto yang diambil di kebun? Ketuk di sini untuk langsung menemukan lokasinya.")
+                        .font(.footnote)
+                        .fixedSize(horizontal: false, vertical: true)
                 }
-                Text("Temukan Lokasi Kebun dari Foto").font(.headline)
-                Text(photoStatus.message)
-                    .font(.footnote)
-                    .foregroundStyle(.secondary)
-                    .multilineTextAlignment(.center)
-                    .fixedSize(horizontal: false, vertical: true)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .contentShape(Rectangle())
             }
-            .frame(maxWidth: .infinity)
-            .padding(24)
-            .background(KropsTheme.cardFill, in: RoundedRectangle(cornerRadius: KropsTheme.Radius.card))
-            .contentShape(RoundedRectangle(cornerRadius: KropsTheme.Radius.card))
+            .buttonStyle(.plain)
+            Button {
+                hasSeenPhotoTip = true
+            } label: {
+                Image(systemName: "xmark")
+                    .font(.footnote)
+                    .frame(width: 44, height: 44)
+            }
+            .buttonStyle(.plain)
+            .accessibilityLabel("Tutup petunjuk foto")
         }
-        .buttonStyle(.plain)
-        .disabled(photoStatus == .loading)
+        .padding(12)
+        .glassEffect(.regular, in: RoundedRectangle(cornerRadius: 16))
     }
 
     @MainActor

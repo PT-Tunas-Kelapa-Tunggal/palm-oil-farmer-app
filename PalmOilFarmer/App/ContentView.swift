@@ -8,6 +8,7 @@ struct ContentView: View {
     @State private var registrationStep = RegistrationIntroView.Step.guide
     @State private var pendingLocation: GardenLocation?
     @State private var mappingLocation: GardenLocation?
+    @State private var newlyRegisteredGardenID: UUID?
     @State private var reopensSearch = false
     @State private var showsDeveloperMode = false
 
@@ -57,10 +58,14 @@ struct ContentView: View {
                 showsRegistration = false
             }
         }
-        .fullScreenCover(item: $mappingLocation, onDismiss: reopenSearchIfNeeded) { location in
+        .fullScreenCover(item: $mappingLocation, onDismiss: completeMappingPresentation) { location in
             GardenBoundaryView(
                 location: location,
-                onSave: { store.add($0, completingDraft: location.draftID) },
+                onSave: { garden in
+                    guard store.add(garden, completingDraft: location.draftID) else { return false }
+                    newlyRegisteredGardenID = garden.id
+                    return true
+                },
                 onSaveDraft: { store.addDraft(GardenDraft(location: $0)) },
                 onSearchAgain: { reopensSearch = true }
             )
@@ -90,8 +95,13 @@ struct ContentView: View {
         pendingLocation = nil
     }
 
-    /// "Cari Lagi" on a photo location returns to the address search.
-    private func reopenSearchIfNeeded() {
+    /// Wait for the map to close before opening the saved profile or returning to search.
+    private func completeMappingPresentation() {
+        if let gardenID = newlyRegisteredGardenID {
+            newlyRegisteredGardenID = nil
+            selectedGardenID = gardenID
+            return
+        }
         guard reopensSearch else { return }
         reopensSearch = false
         registrationStep = .search

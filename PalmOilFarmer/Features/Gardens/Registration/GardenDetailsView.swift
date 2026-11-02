@@ -81,16 +81,6 @@ struct GardenDetailsView: View {
                                 isNameFocused = false
                             })
     
-                        TextField("Nama Kebun", text: $name)
-                            .font(.title)
-                            .textInputAutocapitalization(.words)
-                            .focused($isNameFocused)
-                            .submitLabel(.done)
-                            .onSubmit { isNameFocused = false }
-                            .accessibilityIdentifier("gardenName")
-                            .padding(16)
-                            .frame(minHeight: 66)
-    
                         metricsLayout {
                             detailMetric("Luas tanah", value: displayMetrics.area)
                             detailMetric("Perimeter", value: displayMetrics.perimeter)
@@ -101,6 +91,20 @@ struct GardenDetailsView: View {
                         .onTapGesture { isNameFocused = false }
     
                         VStack(spacing: 16) {
+                            VStack(alignment: .leading, spacing: 12) {
+                                Text("Nama Kebun").font(.headline).foregroundStyle(.secondary)
+                                HStack {
+                                    Image(systemName: "mappin.and.ellipse").foregroundStyle(.secondary)
+                                    TextField("cth: Pinggir jalan, Hilir sungai", text: $name)
+                                        .font(.title3)
+                                        .textInputAutocapitalization(.words)
+                                        .focused($isNameFocused)
+                                        .submitLabel(.done)
+                                        .onSubmit { isNameFocused = false }
+                                        .accessibilityIdentifier("gardenName")
+                                }
+                            }
+                            Divider()
                             FormSelectionRow(title: "Tahun Tanam", placeholder: "Pilih tahun tanam",
                                              value: plantingYear.map { "\(PlantingDatePickerView.monthNames[plantingMonth - 1]) \($0)" },
                                              systemImage: "calendar", trailingImage: "chevron.up.chevron.down") {
@@ -115,7 +119,7 @@ struct GardenDetailsView: View {
                             }
                         }
                         .padding(16)
-                        .background(KropsTheme.cardFill, in: RoundedRectangle(cornerRadius: KropsTheme.Radius.card))
+                        .background(GardenFlowStyle.card, in: RoundedRectangle(cornerRadius: KropsTheme.Radius.card))
                         .padding(.horizontal, KropsTheme.Spacing.screen)
                         .padding(.vertical, 8)
                     }
@@ -127,7 +131,7 @@ struct GardenDetailsView: View {
                         .onTapGesture { isNameFocused = false }
                 }
                 .bottomActionBar {
-                    PrimaryActionButton(title: "Simpan", action: save)
+                    GardenFlowActionButton(title: "Simpan", action: save)
                         .padding(.horizontal, 24)
                         .padding(.top, 16)
                         .padding(.bottom, 2)
@@ -152,6 +156,7 @@ struct GardenDetailsView: View {
             }
         }
         .presentationDetents([.large])
+        .presentationBackground(GardenFlowStyle.background)
         .interactiveDismissDisabled(!name.isEmpty)
         .alert("Kebun belum tersimpan", isPresented: $showsSaveError) {
             Button("Mengerti", role: .cancel) {}
@@ -168,7 +173,7 @@ struct GardenDetailsView: View {
         .padding(12)
         .frame(maxWidth: .infinity)
         .frame(minHeight: 72)
-        .background(KropsTheme.cardFill, in: RoundedRectangle(cornerRadius: KropsTheme.Radius.metric))
+        .background(GardenFlowStyle.card, in: RoundedRectangle(cornerRadius: KropsTheme.Radius.metric))
     }
 
     private func save() {

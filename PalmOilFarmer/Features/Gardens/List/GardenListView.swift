@@ -43,10 +43,12 @@ struct GardenListView: View {
                 GeometryReader { geometry in
                     ScrollView {
                         EmptyStateView(
-                            title: GardenListFilter.all.emptyTitle,
-                            message: GardenListFilter.all.emptyMessage
+                            title: "Pahami kebun anda\nlebih baik",
+                            message: "Peninjauan memberikan peta kondisi kebun per area sehingga anda tahu bagian mana yang perlu diprioritaskan dan kapan waktu terbaik untuk merawatnya",
+                            messageFont: .body
                         ) {
-                            SeedlingIcon()
+                            GardenOverviewIllustration()
+                                .frame(width: 216, height: 206)
                         }
                         .frame(maxWidth: .infinity, minHeight: geometry.size.height)
                     }
@@ -121,7 +123,7 @@ struct GardenListView: View {
         }
         .background(KropsTheme.background.ignoresSafeArea())
         .safeAreaInset(edge: .bottom, spacing: 0) {
-            PrimaryActionButton(title: "Daftarkan Kebun", systemImage: "plus", action: onRegisterGarden)
+            GardenFlowActionButton(title: "Daftarkan Kebun", systemImage: "plus", imagePlacement: .leading, action: onRegisterGarden)
                 .padding(.horizontal, 34)
                 .padding(.bottom, 2)
                 .padding(.top, 24)

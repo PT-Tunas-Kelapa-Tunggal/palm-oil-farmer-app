@@ -1,10 +1,10 @@
 import SwiftUI
 
-/// Registration starts with the boundary guide, then grows into the address search in the same sheet.
+/// Location guidance and search share one sheet; boundary guidance is shown on the map.
 struct RegistrationIntroView: View {
     let onLocate: (GardenLocation) -> Void
 
-    @ScaledMetric(relativeTo: .body) private var contentHeight = 141
+    @Environment(\.dismiss) private var dismiss
     @State private var step: Step
 
     enum Step {
@@ -20,43 +20,58 @@ struct RegistrationIntroView: View {
         Group {
             switch step {
             case .guide:
-                guide.fittedSheetHeight()
+                guide.presentationDetents([.large])
             case .search:
                 LocationSearchView(onSelect: onLocate).presentationDetents([.large])
             }
         }
-        .presentationDragIndicator(step == .guide ? .visible : .hidden)
+        .presentationDragIndicator(.hidden)
+        .presentationBackground(GardenFlowStyle.background)
         .presentationBackgroundInteraction(.disabled)
     }
 
     private var guide: some View {
-        VStack(alignment: .leading, spacing: 0) {
-            Text("Petakan batas kebun")
-                .font(.title2.bold())
-                .padding(.bottom, 10)
-
-            Text("Tandai titik titik di sepanjang batas kebun, pastikan seluruh bagian kebun masuk kedalam area pemetaan")
-                .font(.subheadline)
-                .fixedSize(horizontal: false, vertical: true)
-                .frame(minHeight: 60, alignment: .topLeading)
-                .padding(.bottom, 16)
-
-            BoundaryGuideIllustration()
-                .frame(height: contentHeight)
-                .clipShape(RoundedRectangle(cornerRadius: 20))
+        VStack(spacing: 0) {
+            ScreenHeader(title: "", onClose: { dismiss() })
+            ScrollView {
+                VStack(alignment: .leading, spacing: 24) {
+                    Text("Temukan Lokasi Kebun")
+                        .font(.title.bold())
+                        .frame(maxWidth: .infinity, alignment: .center)
+                    Image("CodedUI3LocationGuide")
+                        .resizable()
+                        .scaledToFill()
+                        .frame(height: 185)
+                        .clipped()
+                        .clipShape(RoundedRectangle(cornerRadius: 20))
+                        .accessibilityHidden(true)
+                    guideSection("Gunakan lokasi saat ini",
+                                 message: "Jika sedang berada di kebun, peta langsung menampilkan posisi Anda.")
+                    guideSection("Cari patokan terdekat",
+                                 message: "Ketik nama desa, masjid, sekolah, atau simpang jalan di dekat kebun.")
+                    guideSection("Unggah foto terdekat",
+                                 message: "Lokasi kebun ditemukan dari foto yang pernah diambil di sana.")
+                }
+                .padding(.horizontal, 24)
                 .padding(.bottom, 24)
-
-            PrimaryActionButton(title: "Lanjut") {
+            }
+            GardenFlowActionButton(title: "Cari lokasi kebun") {
                 withAnimation { step = .search }
             }
+            .padding(.horizontal, 32)
+            .padding(.vertical, 16)
         }
-        .padding(.horizontal, 24)
-        .padding(.top, 32)
-        .padding(.bottom, 24)
+    }
+
+    private func guideSection(_ title: String, message: String) -> some View {
+        VStack(alignment: .leading, spacing: 10) {
+            Text(title).font(.title3.weight(.semibold))
+            Text(message).fixedSize(horizontal: false, vertical: true)
+        }
     }
 }
 
-#Preview("02 · Panduan Petakan Batas") {
+#Preview("CodedUI3 · Panduan Temukan Lokasi") {
     RegistrationIntroView(onLocate: { _ in })
 }
 

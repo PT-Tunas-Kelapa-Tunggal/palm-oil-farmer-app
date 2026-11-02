@@ -13,6 +13,7 @@ struct GardenBoundaryView: View {
     @State private var boundary = GardenBoundary()
     @State private var position: MapCameraPosition
     @State private var showsDetails = false
+    @State private var showsBoundaryGuide: Bool
     @State private var showsExitConfirmation = false
     @State private var isRegionOverview = false
     @State private var isConfirmingPhoto: Bool
@@ -29,6 +30,7 @@ struct GardenBoundaryView: View {
         self.onSaveDraft = onSaveDraft
         self.onSearchAgain = onSearchAgain
         _isConfirmingPhoto = State(initialValue: location.source == .photo)
+        _showsBoundaryGuide = State(initialValue: location.source != .photo)
         let region = MKCoordinateRegion(
             center: location.coordinate.mapCoordinate,
             span: MKCoordinateSpan(latitudeDelta: 0.006, longitudeDelta: 0.006)
@@ -44,9 +46,13 @@ struct GardenBoundaryView: View {
             BoundaryEditorLayout(
                 boundary: boundary, isRegionOverview: isRegionOverview,
                 hint: "Ketuk peta untuk menandai sudut-sudut kebun Anda. Geser titik untuk memindahkannya.",
-                showsControls: !isConfirmingPhoto,
+                showsControls: !isConfirmingPhoto && !showsBoundaryGuide,
                 onClose: close,
                 onSkip: skipAction,
+                onSearch: onSearchAgain.map { action in {
+                    dismiss()
+                    action()
+                } },
                 onRecenter: recenter,
                 onUndo: { _ = boundary.points.popLast() },
                 onClear: { boundary.points.removeAll() },
@@ -61,7 +67,7 @@ struct GardenBoundaryView: View {
                     isRegionOverview = context.region.span.latitudeDelta > 0.03
                 }
                 .simultaneousGesture(SpatialTapGesture().onEnded { tap in
-                    guard !isConfirmingPhoto, !isOnMarker(tap.location, proxy: proxy),
+                    guard !isConfirmingPhoto, !showsBoundaryGuide, !isOnMarker(tap.location, proxy: proxy),
                           let coordinate = proxy.convert(tap.location, from: .local) else { return }
                     let point = GardenCoordinate(coordinate)
                     guard !boundary.points.contains(point) else { return }
@@ -70,7 +76,11 @@ struct GardenBoundaryView: View {
             }
         }
         .overlay(alignment: .bottom) {
-            if isConfirmingPhoto { photoConfirmation }
+            if isConfirmingPhoto {
+                photoConfirmation
+            } else if showsBoundaryGuide {
+                boundaryGuide
+            }
         }
         .onAppear { locationManager.requestWhenInUseAuthorization() }
         .sheet(isPresented: $showsDetails) {
@@ -170,13 +180,21 @@ struct GardenBoundaryView: View {
 
     private var photoConfirmation: some View {
         VStack(alignment: .leading, spacing: 8) {
-            Text("Lokasi Ditemukan dari Foto").font(.title3.weight(.semibold))
+            Text("Lokasi Ditemukan dari Foto").font(.title.bold())
             Text("Pastikan titik yang ditampilkan di peta adalah lokasi kebun Anda.")
                 .font(.subheadline)
                 .fixedSize(horizontal: false, vertical: true)
                 .padding(.bottom, 8)
-            PrimaryActionButton(title: "Ya, Ini kebun saya") {
-                withAnimation { isConfirmingPhoto = false }
+            Image(systemName: "checkmark.seal.fill")
+                .font(.system(size: 92))
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 24)
+                .accessibilityHidden(true)
+            GardenFlowActionButton(title: "Ya, Ini kebun saya") {
+                withAnimation {
+                    isConfirmingPhoto = false
+                    showsBoundaryGuide = true
+                }
             }
             Button("Cari Lagi") {
                 dismiss()
@@ -187,7 +205,26 @@ struct GardenBoundaryView: View {
             .frame(maxWidth: .infinity, minHeight: 44)
         }
         .padding(20)
-        .glassEffect(.regular, in: RoundedRectangle(cornerRadius: 32))
+        .background(GardenFlowStyle.background, in: RoundedRectangle(cornerRadius: 32))
+        .padding(.horizontal, 8)
+        .padding(.bottom, 4)
+    }
+
+    private var boundaryGuide: some View {
+        VStack(alignment: .leading, spacing: 16) {
+            Text("Petakan batas kebun").font(.title.bold())
+            Text("Tandai titik di sepanjang batas kebun, pastikan seluruh bagian kebun masuk ke dalam area pemetaan.")
+                .fixedSize(horizontal: false, vertical: true)
+            BoundaryGuideIllustration()
+                .frame(height: 141)
+                .clipShape(RoundedRectangle(cornerRadius: 20))
+                .accessibilityHidden(true)
+            GardenFlowActionButton(title: "Lanjut") {
+                withAnimation { showsBoundaryGuide = false }
+            }
+        }
+        .padding(24)
+        .background(GardenFlowStyle.background, in: RoundedRectangle(cornerRadius: 32))
         .padding(.horizontal, 8)
         .padding(.bottom, 4)
     }
