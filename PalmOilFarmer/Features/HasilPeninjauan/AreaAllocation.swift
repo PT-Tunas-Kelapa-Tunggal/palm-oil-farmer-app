@@ -33,11 +33,19 @@ struct AreaAllocation {
         let kilograms: Int
         let dose: String
         let status: Status
+        var photo: String? = nil
+    }
+
+    /// Extra explanation for a fertilizer that only some areas receive.
+    struct Guidance {
+        let title: String
+        let message: String
+        let footnote: String
     }
 
     /// A fertilizer is either dosed per area or spread evenly across the whole garden.
     enum Distribution {
-        case perArea([Line])
+        case perArea([Line], guidance: Guidance? = nil)
         case uniform(dose: String, note: String)
     }
 
@@ -71,10 +79,33 @@ extension AreaAllocation {
         )
     )
 
+    /// The four areas add up to the 135 kg of Urea.
+    static let ureaSample = AreaAllocation(
+        fertilizers: sampleFertilizers,
+        selectedFertilizer: "Urea",
+        distribution: .perArea(
+            [
+                Line(id: 1, kilograms: 41, dose: "0,75", status: .fertilized),
+                .ureaAreaTwo,
+                Line(id: 4, kilograms: 45, dose: "0,75", status: .increased),
+                Line(id: 5, kilograms: 25, dose: "0,5", status: .sameDose)
+            ],
+            guidance: Guidance(
+                title: "Pupuk sesuai kondisi area",
+                message: "Setiap area mendapat jenis dan dosis pupuk yang berbeda. Tandai setelah selesai dipupuk.",
+                footnote: "Area 3 dan 6 tidak perlu pupuk tambahan."
+            )
+        )
+    )
+
     private static let sampleFertilizers = [
         Fertilizer(name: "Dolomit", kilograms: 371),
         Fertilizer(name: "NPK 15-15-15", kilograms: 391),
         Fertilizer(name: "Urea", kilograms: 135)
     ]
+}
+
+extension AreaAllocation.Line {
+    static let ureaAreaTwo = AreaAllocation.Line(id: 2, kilograms: 24, dose: "0,5", status: .sameDose)
 }
 #endif

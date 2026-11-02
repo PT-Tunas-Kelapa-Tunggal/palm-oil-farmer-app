@@ -5,10 +5,11 @@ struct NutrientDetailView: View {
     let detail: NutrientDetail
     let currentKg: Double
     let needKg: Double
-    let onShowRecommendation: () -> Void
+    let history: ReviewHistory
 
     @Environment(\.dismiss) private var dismiss
     @ScaledMetric(relativeTo: .largeTitle) private var amountSize = 52
+    @State private var showsHistory = false
 
     private var status: NutrientDetail.Status {
         NutrientDetail.Status(currentKg: currentKg, needKg: needKg)
@@ -25,6 +26,9 @@ struct NutrientDetailView: View {
         .scrollIndicators(.hidden)
         .background(KropsTheme.background.ignoresSafeArea())
         .toolbar(.hidden, for: .navigationBar)
+        .sheet(isPresented: $showsHistory) {
+            ReviewHistorySheet(history: history)
+        }
     }
 
     private var backButton: some View {
@@ -102,7 +106,7 @@ struct NutrientDetailView: View {
     }
 
     private var recommendationButton: some View {
-        Button(action: onShowRecommendation) {
+        Button { showsHistory = true } label: {
             HStack(spacing: 6) {
                 Text("Lihat Rekomendasi Pemupukan")
                 Image(systemName: "arrow.right")
@@ -119,27 +123,27 @@ struct NutrientDetailView: View {
 #if DEBUG
 #Preview("Nitrogen · Kurang") {
     NavigationStack {
-        NutrientDetailView(detail: .nitrogen, currentKg: 30, needKg: 50, onShowRecommendation: {})
+        NutrientDetailView(detail: .nitrogen, currentKg: 30, needKg: 50, history: .sample)
     }
 }
 #Preview("Fosfor · Sesuai") {
     NavigationStack {
-        NutrientDetailView(detail: .phosphorus, currentKg: 6, needKg: 6, onShowRecommendation: {})
+        NutrientDetailView(detail: .phosphorus, currentKg: 6, needKg: 6, history: .sample)
     }
 }
 #Preview("Kalium · Contoh") {
     NavigationStack {
-        NutrientDetailView(detail: .potassium, currentKg: 20, needKg: 35, onShowRecommendation: {})
+        NutrientDetailView(detail: .potassium, currentKg: 20, needKg: 35, history: .sample)
     }
 }
 #Preview("Magnesium · Contoh") {
     NavigationStack {
-        NutrientDetailView(detail: .magnesium, currentKg: 8, needKg: 25, onShowRecommendation: {})
+        NutrientDetailView(detail: .magnesium, currentKg: 8, needKg: 25, history: .sample)
     }
 }
 #Preview("Fosfor · Berlebih") {
     NavigationStack {
-        NutrientDetailView(detail: .phosphorus, currentKg: 10, needKg: 6, onShowRecommendation: {})
+        NutrientDetailView(detail: .phosphorus, currentKg: 10, needKg: 6, history: .sample)
     }
 }
 #endif

@@ -74,7 +74,7 @@ struct ReviewMapHero: View {
     }
 }
 
-private struct AreaOutline: Shape {
+struct AreaOutline: Shape {
     let points: [CGPoint]
 
     func path(in rect: CGRect) -> Path {

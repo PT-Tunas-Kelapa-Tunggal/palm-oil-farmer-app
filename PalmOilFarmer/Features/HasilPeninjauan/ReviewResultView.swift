@@ -2,12 +2,13 @@ import SwiftUI
 
 struct ReviewResultView: View {
     let result: ReviewResult
-    let onShowRecommendation: () -> Void
+    let history: ReviewHistory
 
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
     @ScaledMetric(relativeTo: .largeTitle) private var amountSize = 52
     @ScaledMetric(relativeTo: .subheadline) private var totalColumnWidth = 96
     @ScaledMetric(relativeTo: .subheadline) private var priceColumnWidth = 116
+    @State private var showsHistory = false
 
     var body: some View {
         GeometryReader { geometry in
@@ -30,6 +31,9 @@ struct ReviewResultView: View {
         }
         .background(KropsTheme.background.ignoresSafeArea())
         .toolbar(.hidden, for: .navigationBar)
+        .sheet(isPresented: $showsHistory) {
+            ReviewHistorySheet(history: history)
+        }
     }
 
     private func hero(topInset: CGFloat) -> some View {
@@ -126,7 +130,7 @@ struct ReviewResultView: View {
             Text(result.summary)
                 .font(.title3)
                 .fixedSize(horizontal: false, vertical: true)
-            Button(action: onShowRecommendation) {
+            Button { showsHistory = true } label: {
                 HStack(spacing: 6) {
                     Text("Lihat Rekomendasi Pemupukan")
                     Image(systemName: "arrow.right")
@@ -237,7 +241,7 @@ struct ReviewResultView: View {
 #if DEBUG
 #Preview("Hasil Peninjauan") {
     NavigationStack {
-        ReviewResultView(result: .sample, onShowRecommendation: {})
+        ReviewResultView(result: .sample, history: .sample)
     }
 }
 #endif

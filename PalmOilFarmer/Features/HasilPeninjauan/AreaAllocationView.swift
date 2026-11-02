@@ -3,10 +3,29 @@ import SwiftUI
 struct AreaAllocationView: View {
     let result: ReviewResult
     let allocation: AreaAllocation
-    var onMarkFertilized: () -> Void = {}
+    let onMarkFertilized: () -> Void
+    let onNavigateToArea: (AreaAllocation.Line) -> Void
+    let onMarkAreaFertilized: (AreaAllocation.Line) -> Void
 
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
     @ScaledMetric(relativeTo: .largeTitle) private var doseSize = 52
+    @State private var selectedLine: AreaAllocation.Line?
+
+    init(
+        result: ReviewResult,
+        allocation: AreaAllocation,
+        initialSelectedLine: AreaAllocation.Line? = nil,
+        onMarkFertilized: @escaping () -> Void = {},
+        onNavigateToArea: @escaping (AreaAllocation.Line) -> Void = { _ in },
+        onMarkAreaFertilized: @escaping (AreaAllocation.Line) -> Void = { _ in }
+    ) {
+        self.result = result
+        self.allocation = allocation
+        self.onMarkFertilized = onMarkFertilized
+        self.onNavigateToArea = onNavigateToArea
+        self.onMarkAreaFertilized = onMarkAreaFertilized
+        _selectedLine = State(initialValue: initialSelectedLine)
+    }
 
     var body: some View {
         GeometryReader { geometry in
@@ -35,6 +54,14 @@ struct AreaAllocationView: View {
         }
         .background(KropsTheme.background.ignoresSafeArea())
         .toolbar(.hidden, for: .navigationBar)
+        .sheet(item: $selectedLine) { line in
+            AreaDoseSheet(
+                fertilizerName: allocation.selectedFertilizer,
+                line: line,
+                onNavigate: { onNavigateToArea(line) },
+                onMarkFertilized: { onMarkAreaFertilized(line) }
+            )
+        }
     }
 
     private var fertilizerRow: some View {
@@ -69,8 +96,23 @@ struct AreaAllocationView: View {
     @ViewBuilder
     private var distributionContent: some View {
         switch allocation.distribution {
-        case .perArea(let lines):
-            areaList(lines)
+        case .perArea(let lines, let guidance):
+            VStack(alignment: .leading, spacing: KropsTheme.Spacing.screen) {
+                if let guidance {
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text(guidance.title).font(.title3.bold())
+                        Text(guidance.message)
+                            .font(.subheadline)
+                            .foregroundStyle(.secondary)
+                    }
+                }
+                areaList(lines)
+                if let guidance {
+                    Text(guidance.footnote)
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
+                }
+            }
         case .uniform(let dose, let note):
             VStack(spacing: KropsTheme.Spacing.screen) {
                 uniformCard(dose: dose, note: note)
@@ -186,6 +228,8 @@ struct AreaAllocationView: View {
         Label(line.status.title, systemImage: line.status.systemImage)
             .labelStyle(.titleAndIcon)
             .font(.caption)
+            .lineLimit(1)
+            .minimumScaleFactor(0.75)
             .foregroundStyle(line.status == .fertilized ? .primary : .secondary)
     }
 
@@ -202,14 +246,30 @@ struct AreaAllocationView: View {
         .opacity(line.status == .fertilized ? 0.45 : 1)
     }
 
+    @ViewBuilder
     private func actionIcon(_ line: AreaAllocation.Line) -> some View {
-        Image(systemName: line.status == .fertilized
-              ? "checkmark.circle.fill"
-              : "arrow.triangle.turn.up.right.diamond.fill")
+        if line.status == .fertilized {
+            rowIcon("checkmark.circle.fill")
+                .accessibilityHidden(true)
+        } else {
+            Button {
+                selectedLine = line
+            } label: {
+                rowIcon("arrow.triangle.turn.up.right.diamond.fill")
+                    .frame(width: 44, height: 44)
+                    .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+            .padding(.horizontal, -8)
+            .accessibilityLabel("Arahkan ke Area \(line.id)")
+        }
+    }
+
+    private func rowIcon(_ systemImage: String) -> some View {
+        Image(systemName: systemImage)
             .font(.title2)
             .dynamicTypeSize(...DynamicTypeSize.xxLarge)
             .frame(width: 28)
-            .accessibilityHidden(true)
     }
 }
 
@@ -222,6 +282,11 @@ struct AreaAllocationView: View {
 #Preview("Tabur Merata") {
     NavigationStack {
         AreaAllocationView(result: .sample, allocation: .uniformSample)
+    }
+}
+#Preview("Urea per Area") {
+    NavigationStack {
+        AreaAllocationView(result: .sample, allocation: .ureaSample)
     }
 }
 #endif
