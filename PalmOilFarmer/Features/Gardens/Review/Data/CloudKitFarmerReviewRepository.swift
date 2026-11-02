@@ -55,6 +55,18 @@ public final class CloudKitFarmerReviewRepository: FarmerReviewRepository, @unch
         return requests
     }
 
+    /// Fetches all submitted requests mapped to Garden domain models for display.
+    func fetchMyGardens() async throws -> [Garden] {
+        let requests = try await fetchMyRequests()
+        return requests.map { domainMapper.toGarden(from: $0) }
+    }
+
+    /// Fetches a specific garden's latest submitted review state from CloudKit.
+    func fetchGarden(for gardenID: UUID) async throws -> Garden? {
+        guard let request = try await fetchRequest(for: gardenID) else { return nil }
+        return domainMapper.toGarden(from: request)
+    }
+
     public func observeRequestUpdates(for gardenID: UUID) -> AsyncStream<PlantationReviewRequest> {
         AsyncStream { continuation in
             let task = Task {

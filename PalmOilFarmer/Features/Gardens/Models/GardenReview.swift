@@ -14,6 +14,13 @@ struct GardenReview: Codable {
         stageDates = [submittedAt]
     }
 
+    init(status: ReviewStatus, contact: ReviewContactDetails, stageDates: [Date], resultsDownloaded: Bool = false) {
+        self.status = status
+        self.contact = contact
+        self.stageDates = stageDates
+        self.resultsDownloaded = resultsDownloaded
+    }
+
     var isInProgress: Bool { status != .completed }
 
     /// The officer visit is planned for the day after scheduling.

@@ -1,6 +1,7 @@
 import Foundation
 import CoreLocation
 import Testing
+import SwiftData
 @testable import PalmOilFarmer
 
 @MainActor
@@ -10,53 +11,23 @@ struct PalmOilFarmerTests {
                boundary: GardenBoundary(), plantingYear: 2016, soilType: .peat)
     }
 
-    private func temporaryDirectory() throws -> URL {
-        let url = FileManager.default.temporaryDirectory.appending(path: UUID().uuidString)
-        try FileManager.default.createDirectory(at: url, withIntermediateDirectories: true)
-        return url
+    private func makeContainer() -> ModelContainer {
+        AppConfiguration.makeModelContainer(inMemory: true)
     }
 
     @Test func storePersistsUpdatesAndDeletion() throws {
-        let directory = try temporaryDirectory()
-        defer { try? FileManager.default.removeItem(at: directory) }
-        let file = directory.appending(path: "gardens.json")
-        let store = GardenStore(fileURL: file)
+        let container = makeContainer()
+        let store = GardenStore(modelContainer: container)
         var value = garden()
         #expect(store.gardens.isEmpty)
         #expect(store.add(value))
         value.harvestRecord = HarvestRecord(frequencyPerMonth: 2, latestWeightKg: 420)
         #expect(store.update(value))
-        let reloaded = GardenStore(fileURL: file)
+        let reloaded = GardenStore(modelContainer: container)
         #expect(reloaded.gardens.first?.id == value.id)
         #expect(reloaded.gardens.first?.harvestRecord?.latestWeightKg == 420)
         #expect(store.delete(value))
-        #expect(GardenStore(fileURL: file).gardens.isEmpty)
-    }
-
-    @Test func failedWriteKeepsPublishedStateAndRecoveryClearsError() throws {
-        let directory = try temporaryDirectory()
-        defer { try? FileManager.default.removeItem(at: directory) }
-        let parent = directory.appending(path: "not-created")
-        let store = GardenStore(fileURL: parent.appending(path: "gardens.json"))
-        let value = garden()
-        #expect(!store.add(value))
-        #expect(store.gardens.isEmpty)
-        #expect(store.errorMessage != nil)
-        try FileManager.default.createDirectory(at: parent, withIntermediateDirectories: true)
-        #expect(store.add(value))
-        #expect(store.gardens.count == 1)
-        #expect(store.errorMessage == nil)
-    }
-
-    @Test func corruptFileReportsLoadFailure() throws {
-        let directory = try temporaryDirectory()
-        defer { try? FileManager.default.removeItem(at: directory) }
-        let file = directory.appending(path: "gardens.json")
-        try Data("not JSON".utf8).write(to: file)
-        let store = GardenStore(fileURL: file)
-        #expect(store.gardens.isEmpty)
-        #expect(store.errorMessage != nil)
-        #expect(try Data(contentsOf: file) == Data("not JSON".utf8))
+        #expect(GardenStore(modelContainer: container).gardens.isEmpty)
     }
 
     @Test func legacyGardenWithoutOptionalHistoryStillLoads() throws {
@@ -70,9 +41,8 @@ struct PalmOilFarmerTests {
     }
 
     @Test func unknownGardenCannotBeUpdatedOrDeleted() throws {
-        let directory = try temporaryDirectory()
-        defer { try? FileManager.default.removeItem(at: directory) }
-        let store = GardenStore(fileURL: directory.appending(path: "gardens.json"))
+        let container = makeContainer()
+        let store = GardenStore(modelContainer: container)
         let existing = garden()
         #expect(store.add(existing))
         #expect(!store.update(garden()))

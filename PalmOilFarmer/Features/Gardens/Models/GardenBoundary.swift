@@ -5,6 +5,11 @@ struct GardenCoordinate: Codable, Hashable {
     let latitude: Double
     let longitude: Double
 
+    init(latitude: Double, longitude: Double) {
+        self.latitude = latitude
+        self.longitude = longitude
+    }
+
     init(_ coordinate: CLLocationCoordinate2D) {
         latitude = coordinate.latitude
         longitude = coordinate.longitude

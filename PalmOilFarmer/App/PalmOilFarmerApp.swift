@@ -6,13 +6,17 @@
 //
 
 import SwiftUI
+import SwiftData
 
 @main
 struct PalmOilFarmerApp: App {
+    private let modelContainer = AppConfiguration.makeModelContainer()
+
     var body: some Scene {
         WindowGroup {
-            ContentView()
+            ContentView(modelContainer: modelContainer)
                 .tint(KropsTheme.primaryText)
         }
+        .modelContainer(modelContainer)
     }
 }

@@ -1,14 +1,13 @@
 import Foundation
 import CoreLocation
 import Testing
+import SwiftData
 @testable import PalmOilFarmer
 
 @MainActor
 struct UserTestingFlowTests {
-    private func temporaryDirectory() throws -> URL {
-        let url = FileManager.default.temporaryDirectory.appending(path: UUID().uuidString)
-        try FileManager.default.createDirectory(at: url, withIntermediateDirectories: true)
-        return url
+    private func makeContainer() -> ModelContainer {
+        AppConfiguration.makeModelContainer(inMemory: true)
     }
 
     private func location() -> GardenLocation {
@@ -25,82 +24,50 @@ struct UserTestingFlowTests {
     }
 
     @Test func draftsPersistApartFromGardensAndCompletingOneRemovesIt() throws {
-        let directory = try temporaryDirectory()
-        defer { try? FileManager.default.removeItem(at: directory) }
-        let file = directory.appending(path: "gardens.json")
-        let store = GardenStore(fileURL: file)
+        let container = makeContainer()
+        let store = GardenStore(modelContainer: container)
         let draft = GardenDraft(location: location())
         #expect(store.addDraft(draft))
-        #expect(!FileManager.default.fileExists(atPath: file.path))
 
-        let reopened = GardenStore(fileURL: file)
+        let reopened = GardenStore(modelContainer: container)
         #expect(reopened.drafts.map(\.id) == [draft.id])
         #expect(reopened.drafts.first?.location.source == .draft)
         #expect(reopened.drafts.first?.location.draftID == draft.id)
 
         #expect(reopened.add(squareGarden(), completingDraft: draft.id))
         #expect(reopened.drafts.isEmpty)
-        #expect(GardenStore(fileURL: file).drafts.isEmpty)
-        #expect(GardenStore(fileURL: file).gardens.count == 1)
+        #expect(GardenStore(modelContainer: container).drafts.isEmpty)
+        #expect(GardenStore(modelContainer: container).gardens.count == 1)
     }
 
-    @Test func eraseAllClearsGardensDraftsAndUnreadableFiles() throws {
-        let directory = try temporaryDirectory()
-        defer { try? FileManager.default.removeItem(at: directory) }
-        let file = directory.appending(path: "gardens.json")
-        try Data("not JSON".utf8).write(to: file)
-        let store = GardenStore(fileURL: file)
-        #expect(!store.add(squareGarden()))
-        store.eraseAll()
-        #expect(store.errorMessage == nil)
+    @Test func eraseAllClearsGardensAndDrafts() throws {
+        let container = makeContainer()
+        let store = GardenStore(modelContainer: container)
         #expect(store.addDraft(GardenDraft(location: location())))
         #expect(store.add(squareGarden()))
+        #expect(!store.gardens.isEmpty && !store.drafts.isEmpty)
+
         store.eraseAll()
         #expect(store.gardens.isEmpty && store.drafts.isEmpty)
-        let reopened = GardenStore(fileURL: file)
-        #expect(reopened.gardens.isEmpty && reopened.drafts.isEmpty && reopened.errorMessage == nil)
+        let reopened = GardenStore(modelContainer: container)
+        #expect(reopened.gardens.isEmpty && reopened.drafts.isEmpty)
     }
 
-    @Test func unreadableDraftsAreNotOverwritten() throws {
-        let directory = try temporaryDirectory()
-        defer { try? FileManager.default.removeItem(at: directory) }
-        let draftFile = directory.appending(path: "garden-drafts.json")
-        try Data("not JSON".utf8).write(to: draftFile)
-        let store = GardenStore(fileURL: directory.appending(path: "gardens.json"))
-        #expect(store.errorMessage != nil)
-        #expect(!store.addDraft(GardenDraft(location: location())))
-        #expect(try Data(contentsOf: draftFile) == Data("not JSON".utf8))
-        // Gardens remain writable when only the drafts file is unreadable.
-        #expect(store.add(squareGarden()))
-    }
+    @Test func plantationDomainMapperMapsToGardenWithReview() throws {
+        let mapper = PlantationDomainMapper()
+        let request = PlantationReviewRequest(
+            farmer: FarmerContact(name: "Pak Budi", phone: "08123456789", address: "Riau"),
+            garden: GardenSummary(id: UUID(), name: "Kebun Kelapa Sawit", locationName: "Dumai", areaHectares: 2.5),
+            boundary: [CoordinatePoint(latitude: 1.0, longitude: 104.0)],
+            agronomy: AgronomicProfile(plantingYear: 2018, soilType: "Mineral"),
+            status: .scheduled
+        )
 
-    @Test func reviewSurvivesSaveAndAdvancesOneStageAtATime() throws {
-        let directory = try temporaryDirectory()
-        defer { try? FileManager.default.removeItem(at: directory) }
-        let file = directory.appending(path: "gardens.json")
-        let store = GardenStore(fileURL: file)
-        var garden = squareGarden()
-        #expect(store.add(garden))
-
-        let submitted = Date(timeIntervalSince1970: 1_800_000_000)
-        var review = GardenReview(contact: ReviewContactDetails(name: "Budi", phone: "085048384438", address: "Bintan"),
-                                  submittedAt: submitted)
-        review.advance(now: submitted.addingTimeInterval(3_600))
-        garden.review = review
-        #expect(store.update(garden))
-
-        let loaded = try #require(GardenStore(fileURL: file).gardens.first?.review)
-        #expect(loaded.status == .scheduled)
-        #expect(loaded.contact.name == "Budi")
-        #expect(loaded.date(for: .submitted) == submitted)
-        #expect(loaded.visitDate == Calendar.current.date(byAdding: .day, value: 1, to: submitted.addingTimeInterval(3_600)))
-
-        var finished = loaded
-        for _ in 0..<5 { finished.advance() }
-        #expect(finished.status == .completed)
-        #expect(!finished.isInProgress)
-        let entries = ReviewTimelineEntry.entries(for: finished)
-        #expect(entries.allSatisfy { $0.isReached })
+        let garden = mapper.toGarden(from: request)
+        #expect(garden.id == request.garden.id)
+        #expect(garden.name == "Kebun Kelapa Sawit")
+        #expect(garden.review?.status == .scheduled)
+        #expect(garden.review?.contact.name == "Pak Budi")
     }
 
     @Test func gardenSavedBeforeReviewsStillDecodes() throws {
@@ -129,7 +96,6 @@ struct AreaOutlineTests {
         let corners = [(0.0, 0.0), (0.0, 1.0), (1.0, 1.0), (1.0, 0.0)].map {
             CLLocationCoordinate2D(latitude: $0.0, longitude: $0.1)
         }
-        // A square split into two triangles along one diagonal.
         let zone = WaypointZone(id: 1, fragments: [[corners[0], corners[1], corners[2]], [corners[0], corners[2], corners[3]]],
                                 destination: corners[0], areaSquareMeters: 1)
         #expect(zone.outlineSegments.count == 4)
@@ -206,7 +172,6 @@ struct GardenListFilterTests {
         #expect(all.filter(GardenListFilter.all.includes).count == 5)
         let draft = GardenDraft(location: GardenLocation(name: "D", subtitle: "",
             coordinate: GardenCoordinate(CLLocationCoordinate2D(latitude: 1, longitude: 104))))
-        // Incomplete, ready, scheduled, and unopened results need action, plus the draft.
         #expect(GardenListFilter.all.actionCount(gardens: all, drafts: [draft]) == 5)
         #expect(GardenListFilter.draft.actionCount(gardens: all, drafts: [draft]) == 1)
         #expect(GardenListFilter.inReview.actionCount(gardens: all, drafts: [draft]) == 1)

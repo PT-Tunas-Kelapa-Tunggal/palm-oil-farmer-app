@@ -46,7 +46,7 @@ struct ReviewContactFormView: View {
                             }
                             contactField("Alamat Rumah", id: .address) {
                                 TextField("Contoh: Dusun Sido Mulyo RT 02/RW 01, Desa Pangkalan Lesung, Kec. Pangkalan Lesung",
-                                          text: $address, axis: .vertical)
+                                          text: self.$address, axis: .vertical)
                                     .textContentType(.fullStreetAddress)
                                     .lineLimit(3...5)
                                     .focused($focusedField, equals: .address)

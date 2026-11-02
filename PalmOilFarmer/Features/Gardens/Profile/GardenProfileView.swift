@@ -18,10 +18,10 @@ struct GardenProfileView: View {
     var recommendationReport: FertilizerRecommendationReport? = nil
 
     @Environment(\.dismiss) private var dismiss
+    @Environment(GardenStore.self) private var store: GardenStore?
     @State private var editor: HistoryEditor?
     @State private var showsReview = false
     @State private var showsReviewStatus = false
-    @State private var opensStatusAfterReview = false
     @State private var showsResults = false
     @State private var showsGardenEditor = false
     @State private var showsDeleteConfirmation = false
@@ -168,18 +168,15 @@ struct GardenProfileView: View {
                 ContentUnavailableView("Hasil peninjauan belum tersedia", systemImage: "chart.bar.doc.horizontal")
             }
         }
-        .sheet(isPresented: $showsReview, onDismiss: {
-            if opensStatusAfterReview {
-                opensStatusAfterReview = false
-                showsReviewStatus = true
-            }
-        }) {
+        .sheet(isPresented: $showsReview) {
             ReviewRequestView { contact in
-                try await submitReview(details: contact)
-                var updated = garden
-                updated.review = GardenReview(contact: contact)
-                guard onUpdate(updated) else { throw ReviewSaveError() }
-                opensStatusAfterReview = true
+                if let store {
+                    let saved = try await store.submitReview(for: garden, contact: contact)
+                    activeReviewStatus = saved.status
+                    activeReviewEntries = saved.timeline.entries(for: saved.status)
+                } else {
+                    try await submitReview(details: contact)
+                }
                 showsReview = false
             }
         }

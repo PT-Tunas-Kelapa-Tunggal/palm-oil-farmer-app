@@ -1,7 +1,8 @@
 import SwiftUI
+import SwiftData
 
 struct ContentView: View {
-    @State private var store = GardenStore()
+    @State private var store: GardenStore
     @State private var selectedGardenID: UUID?
     @State private var showsRegistration = false
     @State private var registrationStep = RegistrationIntroView.Step.guide
@@ -9,6 +10,10 @@ struct ContentView: View {
     @State private var mappingLocation: GardenLocation?
     @State private var reopensSearch = false
     @State private var showsDeveloperMode = false
+
+    init(modelContainer: ModelContainer = AppConfiguration.makeModelContainer()) {
+        _store = State(initialValue: GardenStore(modelContainer: modelContainer))
+    }
 
     var body: some View {
         NavigationStack {
@@ -38,6 +43,12 @@ struct ContentView: View {
                     GardenProfileView(garden: garden, onDelete: store.delete, onUpdate: store.update)
                 }
             }
+            .refreshable {
+                await store.refreshRemote()
+            }
+        }
+        .task {
+            await store.refreshRemote()
         }
         .environment(store)
         .sheet(isPresented: $showsRegistration, onDismiss: openMappingIfNeeded) {

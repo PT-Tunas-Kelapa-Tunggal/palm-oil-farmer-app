@@ -74,12 +74,12 @@ Open `PalmOilFarmer.xcodeproj` and build the `PalmOilFarmer` scheme. Run its `Pa
 
 Open `DesignSystemCatalog.swift` in Canvas to inspect shared controls. Before merging UI changes, check light/dark appearance, long labels, larger Dynamic Type, Reduce Motion, and Reduce Transparency. For navigation or save-flow changes, also exercise registration, editing, cancellation, and deletion in the simulator. Unit tests do not replace these UI checks.
 
-## Deliberate limits
+## Data Architecture & Persistence
 
-- Persistence is still synchronous and atomic. The extracted `GardenPersistence` isolates the file format, but does not claim a performance improvement. Move I/O off the main actor when measurement warrants it; serialize writes and preserve save-failure behavior when making that change.
-- The refactor retains existing layouts and custom glass appearance. Semantic typography is introduced in shared form controls; fixed-size typography elsewhere still needs a dedicated visual/accessibility review.
-- Reference layout variants remain supported in the profile. They have not been removed or redesigned.
-- No database, dependency-injection framework, or extra production modules are required at this stage. Profile performance before adding caching or changing storage.
+- **Local Drafts (Offline First)**: Unsubmitted drafts (unmapped locations from "Lakukan Nanti" and mapped gardens awaiting review) are stored locally in **SwiftData** via `DraftPlantationRequest`. The store file is physically partitioned by CloudKit container and environment (`AppConfiguration.swiftDataStoreURL`).
+- **CloudKit as Single Source of Truth**: Once a farmer submits a scan request, the record is uploaded to CloudKit Public Database. Upon confirmation, the local draft is evicted from SwiftData.
+- **Environment Isolation**: Debug builds connect to CloudKit `Development` and isolate drafts to the `Development` directory; Release / TestFlight builds connect to CloudKit `Production` and isolate drafts to the `Production` directory. Stale Development test data does not leak into Production builds.
+- **Server-Side Access Control**: CloudKit's record-type ACL (`schema.ckdb`) grants `READ, WRITE` to `_creator` and `"Drone Operator"`. The farmer app natively only receives the authenticated user's records.
 
 ## Apple references
 
