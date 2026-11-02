@@ -44,11 +44,8 @@ struct ReviewMapHero: View {
 
     private var header: some View {
         HStack(alignment: .top, spacing: KropsTheme.Spacing.field) {
-            Button { dismiss() } label: {
-                icon("chevron.left")
-            }
-            .buttonStyle(.plain)
-            .accessibilityLabel("Kembali")
+            ReviewIconButton(systemImage: "chevron.left", accessibilityLabel: "Kembali", style: .onPhoto,
+                             font: .body.weight(.medium)) { dismiss() }
 
             VStack(alignment: .leading, spacing: 2) {
                 Text(result.gardenName).font(.title2.bold())
@@ -58,19 +55,10 @@ struct ReviewMapHero: View {
             .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
             .frame(maxWidth: .infinity, alignment: .leading)
 
-            icon(documentIcon)
+            ReviewCircleIcon(systemImage: documentIcon, style: .onPhoto, font: .body.weight(.medium))
                 .accessibilityHidden(true)
         }
         .padding(.horizontal, KropsTheme.Spacing.screen)
-    }
-
-    private func icon(_ systemImage: String) -> some View {
-        Image(systemName: systemImage)
-            .font(.body.weight(.medium))
-            .dynamicTypeSize(...DynamicTypeSize.xxLarge)
-            .foregroundStyle(.white)
-            .frame(width: 44, height: 44)
-            .background(.black.opacity(0.35), in: Circle())
     }
 }
 

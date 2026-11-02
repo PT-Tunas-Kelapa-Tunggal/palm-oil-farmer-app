@@ -41,7 +41,6 @@ struct ReviewResultContentView: View {
     let history: ReviewHistory
 
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
-    @ScaledMetric(relativeTo: .largeTitle) private var amountSize = 52
     @ScaledMetric(relativeTo: .subheadline) private var totalColumnWidth = 96
     @ScaledMetric(relativeTo: .subheadline) private var priceColumnWidth = 116
     @State private var showsHistory = false
@@ -96,26 +95,15 @@ struct ReviewResultContentView: View {
                 .multilineTextAlignment(.center)
                 .frame(maxWidth: .infinity, minHeight: 72)
                 .padding(.horizontal, 4)
-                .background(.background, in: RoundedRectangle(cornerRadius: KropsTheme.Radius.metric))
+                .reviewCard(padding: 0, cornerRadius: KropsTheme.Radius.metric)
                 .accessibilityElement(children: .combine)
             }
         }
     }
 
-    private func sectionHeader(_ title: String, subtitle: String) -> some View {
-        VStack(alignment: .leading, spacing: 2) {
-            Text(title).font(.title3.bold())
-            Text(subtitle)
-                .font(.subheadline)
-                .foregroundStyle(.secondary)
-        }
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .padding(.horizontal, KropsTheme.Spacing.compact)
-    }
-
     private var nutrientSection: some View {
         VStack(spacing: KropsTheme.Spacing.field) {
-            sectionHeader("Kondisi Hara Per Tahun", subtitle: "Kondisi hara dengan perawatan saat ini")
+            ReviewSectionHeader(title: "Kondisi Hara Per Tahun", subtitle: "Kondisi hara dengan perawatan saat ini")
             LazyVGrid(columns: nutrientColumns, spacing: KropsTheme.Spacing.compact) {
                 ForEach(result.nutrients) { nutrient in
                     nutrientCard(nutrient)
@@ -143,21 +131,13 @@ struct ReviewResultContentView: View {
                     .foregroundStyle(.secondary)
                     .accessibilityHidden(true)
             }
-            HStack(alignment: .firstTextBaseline, spacing: 6) {
-                Text("\(nutrient.kilograms)")
-                    .font(.system(size: amountSize, weight: .bold))
-                    .lineLimit(1)
-                    .minimumScaleFactor(0.5)
-                Text("kg").font(.headline)
-            }
-            .foregroundStyle(.secondary)
+            ReviewAmountText(value: "\(nutrient.kilograms)", unit: "kg")
+                .foregroundStyle(.secondary)
             Label(nutrient.status.title, systemImage: nutrient.status.systemImage)
                 .font(.footnote)
                 .foregroundStyle(.secondary)
         }
-        .padding(KropsTheme.Spacing.screen)
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .background(.background, in: RoundedRectangle(cornerRadius: KropsTheme.Radius.card))
+        .reviewCard(padding: KropsTheme.Spacing.screen)
         .accessibilityElement(children: .combine)
     }
 
@@ -166,28 +146,16 @@ struct ReviewResultContentView: View {
             Text(result.summary)
                 .font(.title3)
                 .fixedSize(horizontal: false, vertical: true)
-            Button { showsHistory = true } label: {
-                HStack(spacing: 6) {
-                    Text("Lihat Rekomendasi Pemupukan")
-                    Image(systemName: "arrow.right")
-                }
-                .font(.subheadline.weight(.semibold))
-                .foregroundStyle(Color(uiColor: .systemBackground))
-                .padding(KropsTheme.Spacing.compact)
-                .frame(maxWidth: .infinity, minHeight: 48)
-                .background(.primary, in: RoundedRectangle(cornerRadius: KropsTheme.Radius.card))
-            }
-            .buttonStyle(.plain)
+            ReviewActionButton(title: "Lihat Rekomendasi Pemupukan", systemImage: "arrow.right",
+                               font: .subheadline.weight(.semibold), minHeight: 48) { showsHistory = true }
         }
-        .padding(KropsTheme.Spacing.section)
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .background(.background, in: RoundedRectangle(cornerRadius: KropsTheme.Radius.card))
+        .reviewCard()
     }
 
     private var budgetSection: some View {
         VStack(spacing: KropsTheme.Spacing.field) {
-            sectionHeader("Estimasi Anggaran Belanja Pupuk",
-                          subtitle: "Rekomendasi kebutuhan pupuk dan Anggaran belanja untuk memenuhi hara ideal")
+            ReviewSectionHeader(title: "Estimasi Anggaran Belanja Pupuk",
+                                subtitle: "Rekomendasi kebutuhan pupuk dan Anggaran belanja untuk memenuhi hara ideal")
             VStack(spacing: 0) {
                 if !dynamicTypeSize.isAccessibilitySize { budgetHeaderRow }
                 ForEach(result.budgetLines) { line in

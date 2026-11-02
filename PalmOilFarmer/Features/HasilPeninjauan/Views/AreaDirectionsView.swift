@@ -4,7 +4,6 @@ struct AreaDirectionsView: View {
     let directions: AreaDirections
 
     @Environment(\.dismiss) private var dismiss
-    @ScaledMetric(relativeTo: .largeTitle) private var distanceSize = 48
 
     var body: some View {
         GeometryReader { geometry in
@@ -65,16 +64,7 @@ struct AreaDirectionsView: View {
                 .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
                 .accessibilityAddTraits(.isHeader)
             HStack {
-                Button { dismiss() } label: {
-                    Image(systemName: "xmark")
-                        .font(.body.weight(.semibold))
-                        .dynamicTypeSize(...DynamicTypeSize.xxLarge)
-                        .foregroundStyle(.white)
-                        .frame(width: 44, height: 44)
-                        .background(.black.opacity(0.35), in: Circle())
-                }
-                .buttonStyle(.plain)
-                .accessibilityLabel("Tutup")
+                ReviewIconButton(systemImage: "xmark", accessibilityLabel: "Tutup", style: .onPhoto) { dismiss() }
                 Spacer()
             }
         }
@@ -84,10 +74,7 @@ struct AreaDirectionsView: View {
 
     private var distanceCard: some View {
         VStack(spacing: 0) {
-            Text(directions.distance)
-                .font(.system(size: distanceSize, weight: .bold))
-                .lineLimit(1)
-                .minimumScaleFactor(0.5)
+            ReviewAmountText(value: directions.distance, size: 48)
             Text("Area \(directions.area.id)").font(.title3.weight(.semibold))
         }
         .dynamicTypeSize(...DynamicTypeSize.accessibility1)

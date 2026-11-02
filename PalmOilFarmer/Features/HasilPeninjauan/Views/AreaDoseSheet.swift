@@ -8,7 +8,6 @@ struct AreaDoseSheet: View {
     let onMarkFertilized: () -> Void
 
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
-    @ScaledMetric(relativeTo: .title) private var doseSize = 30
 
     var body: some View {
         ScrollView {
@@ -46,16 +45,9 @@ struct AreaDoseSheet: View {
 
     private var dose: some View {
         VStack(spacing: KropsTheme.Spacing.compact) {
-            HStack(alignment: .firstTextBaseline, spacing: 6) {
-                Text(line.dose).font(.system(size: doseSize, weight: .bold))
-                Text("kg/pohon")
-                    .font(.subheadline)
-                    .foregroundStyle(.secondary)
-            }
-            Label(line.status.title, systemImage: line.status.systemImage)
-                .labelStyle(.titleAndIcon)
-                .font(.caption)
-                .foregroundStyle(.secondary)
+            ReviewAmountText(value: line.dose, unit: "kg/pohon", size: 30, relativeTo: .title,
+                             unitFont: .subheadline, unitIsSecondary: true)
+            ReviewStatusLabel(status: line.status)
         }
         .accessibilityElement(children: .combine)
     }
@@ -84,29 +76,10 @@ struct AreaDoseSheet: View {
 
     private var actions: some View {
         VStack(spacing: KropsTheme.Spacing.compact) {
-            Button(action: onNavigate) {
-                HStack(spacing: 6) {
-                    Text("Arahkan ke Area \(line.id)")
-                    Image(systemName: "arrow.triangle.turn.up.right.diamond.fill")
-                }
-                .font(.body.weight(.semibold))
-                .foregroundStyle(Color(uiColor: .systemBackground))
-                .padding(KropsTheme.Spacing.compact)
-                .frame(maxWidth: .infinity, minHeight: 52)
-                .background(.primary, in: RoundedRectangle(cornerRadius: KropsTheme.Radius.card))
-            }
-            .buttonStyle(.plain)
-
-            Button(action: onMarkFertilized) {
-                Label("Sudah Dipupuk", systemImage: "checkmark")
-                    .labelStyle(.titleAndIcon)
-                    .font(.body.weight(.semibold))
-                    .foregroundStyle(.primary)
-                    .padding(KropsTheme.Spacing.compact)
-                    .frame(maxWidth: .infinity, minHeight: 52)
-                    .background(KropsTheme.secondaryFill, in: RoundedRectangle(cornerRadius: KropsTheme.Radius.card))
-            }
-            .buttonStyle(.plain)
+            ReviewActionButton(title: "Arahkan ke Area \(line.id)",
+                               systemImage: "arrow.triangle.turn.up.right.diamond.fill", action: onNavigate)
+            ReviewActionButton(title: "Sudah Dipupuk", systemImage: "checkmark", iconLeads: true,
+                               style: .muted, action: onMarkFertilized)
         }
     }
 }

@@ -8,7 +8,6 @@ struct NutrientDetailView: View {
     let history: ReviewHistory
 
     @Environment(\.dismiss) private var dismiss
-    @ScaledMetric(relativeTo: .largeTitle) private var amountSize = 52
     @State private var showsHistory = false
 
     private var status: NutrientDetail.Status {
@@ -18,7 +17,8 @@ struct NutrientDetailView: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: KropsTheme.Spacing.screen) {
-                backButton
+                ReviewIconButton(systemImage: "chevron.left", accessibilityLabel: "Kembali",
+                                 font: .title3.weight(.medium), size: 48) { dismiss() }
                 card
             }
             .padding(KropsTheme.Spacing.screen)
@@ -29,19 +29,6 @@ struct NutrientDetailView: View {
         .sheet(isPresented: $showsHistory) {
             ReviewHistorySheet(history: history)
         }
-    }
-
-    private var backButton: some View {
-        Button { dismiss() } label: {
-            Image(systemName: "chevron.left")
-                .font(.title3.weight(.medium))
-                .dynamicTypeSize(...DynamicTypeSize.xxLarge)
-                .foregroundStyle(.primary)
-                .frame(width: 48, height: 48)
-                .background(KropsTheme.secondaryFill, in: Circle())
-        }
-        .buttonStyle(.plain)
-        .accessibilityLabel("Kembali")
     }
 
     private var card: some View {
@@ -62,11 +49,10 @@ struct NutrientDetailView: View {
             }
 
             fertilizerList
-            recommendationButton
+            ReviewActionButton(title: "Lihat Rekomendasi Pemupukan", systemImage: "arrow.right", style: .muted,
+                               font: .subheadline.weight(.semibold), minHeight: 44) { showsHistory = true }
         }
-        .padding(KropsTheme.Spacing.section)
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .background(.background, in: RoundedRectangle(cornerRadius: KropsTheme.Radius.card))
+        .reviewCard()
     }
 
     private func amountColumn(_ title: String, kilograms: Double, color: Color) -> some View {
@@ -74,14 +60,8 @@ struct NutrientDetailView: View {
             Text(title)
                 .font(.footnote.weight(.semibold))
                 .foregroundStyle(.secondary)
-            HStack(alignment: .firstTextBaseline, spacing: 6) {
-                Text(kilograms.formatted())
-                    .font(.system(size: amountSize, weight: .bold))
-                    .lineLimit(1)
-                    .minimumScaleFactor(0.5)
-                Text("kg").font(.headline)
-            }
-            .foregroundStyle(color)
+            ReviewAmountText(value: kilograms.formatted(), unit: "kg")
+                .foregroundStyle(color)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .accessibilityElement(children: .combine)
@@ -105,19 +85,6 @@ struct NutrientDetailView: View {
         }
     }
 
-    private var recommendationButton: some View {
-        Button { showsHistory = true } label: {
-            HStack(spacing: 6) {
-                Text("Lihat Rekomendasi Pemupukan")
-                Image(systemName: "arrow.right")
-            }
-            .font(.subheadline.weight(.semibold))
-            .foregroundStyle(.primary)
-            .frame(maxWidth: .infinity, minHeight: 44)
-            .background(KropsTheme.secondaryFill, in: Capsule())
-        }
-        .buttonStyle(.plain)
-    }
 }
 
 #if DEBUG

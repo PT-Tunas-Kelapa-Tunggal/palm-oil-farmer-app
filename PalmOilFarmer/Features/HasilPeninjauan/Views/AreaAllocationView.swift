@@ -5,7 +5,6 @@ struct AreaAllocationView: View {
     let onNavigateToArea: (AreaAllocation.Line) -> Void
 
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
-    @ScaledMetric(relativeTo: .largeTitle) private var doseSize = 52
     @State private var viewModel: AreaAllocationViewModel
 
     init(
@@ -149,36 +148,19 @@ struct AreaAllocationView: View {
                 .padding(.horizontal, KropsTheme.Spacing.field)
                 .padding(.vertical, 4)
                 .background(.primary, in: Capsule())
-            HStack(alignment: .firstTextBaseline, spacing: 6) {
-                Text(dose)
-                    .font(.system(size: doseSize, weight: .bold))
-                    .lineLimit(1)
-                    .minimumScaleFactor(0.5)
-                Text("kg / pohon").font(.headline)
-            }
+            ReviewAmountText(value: dose, unit: "kg / pohon")
             Text(note)
                 .font(.body)
                 .foregroundStyle(.secondary)
                 .fixedSize(horizontal: false, vertical: true)
         }
-        .padding(KropsTheme.Spacing.section)
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .background(.background, in: RoundedRectangle(cornerRadius: KropsTheme.Radius.card))
+        .reviewCard()
     }
 
     private func fertilizedButton(isFertilized: Bool) -> some View {
-        Button {
+        ReviewActionButton(title: "Sudah Dipupuk", systemImage: "checkmark", iconLeads: true, style: .surface) {
             Task { await viewModel.markFertilized(areaID: nil) }
-        } label: {
-            Label("Sudah Dipupuk", systemImage: "checkmark")
-                .labelStyle(.titleAndIcon)
-                .font(.body.weight(.semibold))
-                .foregroundStyle(.primary)
-                .padding(KropsTheme.Spacing.compact)
-                .frame(maxWidth: .infinity, minHeight: 52)
-                .background(.background, in: RoundedRectangle(cornerRadius: KropsTheme.Radius.card))
         }
-        .buttonStyle(.plain)
         .disabled(isFertilized)
         .opacity(isFertilized ? 0.45 : 1)
     }
@@ -200,7 +182,7 @@ struct AreaAllocationView: View {
                     areaThumbnail
                     areaTitle(line)
                 }
-                statusLabel(line)
+                ReviewStatusLabel(status: line.status)
                 HStack {
                     doseText(line)
                     Spacer(minLength: 0)
@@ -212,7 +194,7 @@ struct AreaAllocationView: View {
                 areaThumbnail
                 areaTitle(line)
                 Spacer(minLength: 0)
-                statusLabel(line)
+                ReviewStatusLabel(status: line.status)
                 doseText(line)
                 actionIcon(line)
             }
@@ -243,15 +225,6 @@ struct AreaAllocationView: View {
                 .foregroundStyle(.secondary)
         }
         .opacity(line.status == .fertilized ? 0.45 : 1)
-    }
-
-    private func statusLabel(_ line: AreaAllocation.Line) -> some View {
-        Label(line.status.title, systemImage: line.status.systemImage)
-            .labelStyle(.titleAndIcon)
-            .font(.caption)
-            .lineLimit(1)
-            .minimumScaleFactor(0.75)
-            .foregroundStyle(line.status == .fertilized ? .primary : .secondary)
     }
 
     private func doseText(_ line: AreaAllocation.Line) -> some View {

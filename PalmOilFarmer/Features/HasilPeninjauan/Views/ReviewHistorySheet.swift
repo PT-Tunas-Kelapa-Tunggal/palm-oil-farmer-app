@@ -33,16 +33,7 @@ struct ReviewHistorySheet: View {
                 .accessibilityAddTraits(.isHeader)
                 .padding(.horizontal, 52)
             HStack {
-                Button { dismiss() } label: {
-                    Image(systemName: "xmark")
-                        .font(.body.weight(.semibold))
-                        .dynamicTypeSize(...DynamicTypeSize.xxLarge)
-                        .foregroundStyle(.primary)
-                        .frame(width: 44, height: 44)
-                        .background(KropsTheme.secondaryFill, in: Circle())
-                }
-                .buttonStyle(.plain)
-                .accessibilityLabel("Tutup")
+                ReviewIconButton(systemImage: "xmark", accessibilityLabel: "Tutup") { dismiss() }
                 Spacer()
             }
         }
@@ -52,7 +43,8 @@ struct ReviewHistorySheet: View {
 
     private var fertilizerSection: some View {
         VStack(spacing: KropsTheme.Spacing.compact) {
-            sectionHeader("Riwayat pupuk", accessibilityLabel: "Ubah riwayat pupuk", action: onEditFertilizers)
+            ReviewSectionHeader(title: "Riwayat pupuk", titleFont: .title3.weight(.semibold),
+                                editAccessibilityLabel: "Ubah riwayat pupuk", onEdit: onEditFertilizers)
             ForEach(history.fertilizers) { fertilizer in
                 card {
                     Text(fertilizer.name)
@@ -82,7 +74,8 @@ struct ReviewHistorySheet: View {
 
     private var harvestSection: some View {
         VStack(spacing: KropsTheme.Spacing.compact) {
-            sectionHeader("Riwayat Panen", accessibilityLabel: "Ubah riwayat panen", action: onEditHarvest)
+            ReviewSectionHeader(title: "Riwayat Panen", titleFont: .title3.weight(.semibold),
+                                editAccessibilityLabel: "Ubah riwayat panen", onEdit: onEditHarvest)
             card {
                 valueRow("Frekuensi panen", value: history.harvestFrequency)
                 valueRow("Rata-rata berat panen per bulan", value: history.averageHarvest)
@@ -90,39 +83,12 @@ struct ReviewHistorySheet: View {
         }
     }
 
-    private func sectionHeader(_ title: String, accessibilityLabel: String, action: @escaping () -> Void) -> some View {
-        let layout = dynamicTypeSize.isAccessibilitySize
-            ? AnyLayout(VStackLayout(alignment: .leading, spacing: 0))
-            : AnyLayout(HStackLayout())
-        return layout {
-            Text(title)
-                .font(.title3.weight(.semibold))
-                .accessibilityAddTraits(.isHeader)
-            if !dynamicTypeSize.isAccessibilitySize {
-                Spacer(minLength: KropsTheme.Spacing.compact)
-            }
-            Button(action: action) {
-                Label("Ubah", systemImage: "pencil.line")
-                    .labelStyle(.titleAndIcon)
-                    .font(.caption)
-                    .foregroundStyle(.primary)
-                    .frame(minHeight: 44)
-                    .contentShape(Rectangle())
-            }
-            .buttonStyle(.plain)
-            .accessibilityLabel(accessibilityLabel)
-        }
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .padding(.horizontal, KropsTheme.Spacing.compact)
-    }
-
     private func card<Content: View>(@ViewBuilder content: () -> Content) -> some View {
         VStack(spacing: KropsTheme.Spacing.compact) {
             content()
         }
-        .padding(KropsTheme.Spacing.screen)
-        .frame(maxWidth: .infinity)
-        .background(KropsTheme.secondaryFill, in: RoundedRectangle(cornerRadius: KropsTheme.Radius.metric))
+        .reviewCard(padding: KropsTheme.Spacing.screen, fill: KropsTheme.secondaryFill,
+                    cornerRadius: KropsTheme.Radius.metric)
     }
 
     @ViewBuilder
