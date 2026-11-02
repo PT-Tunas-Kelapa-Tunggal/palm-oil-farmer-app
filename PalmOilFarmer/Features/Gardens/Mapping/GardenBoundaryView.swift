@@ -75,11 +75,23 @@ struct GardenBoundaryView: View {
                 })
             }
         }
-        .overlay(alignment: .bottom) {
-            if isConfirmingPhoto {
-                photoConfirmation
-            } else if showsBoundaryGuide {
-                boundaryGuide
+        .overlay {
+            if isConfirmingPhoto || showsBoundaryGuide {
+                VStack(spacing: 0) {
+                    Spacer(minLength: 16)
+                    ViewThatFits(in: .vertical) {
+                        guidanceCard
+                            .fixedSize(horizontal: false, vertical: true)
+                        ScrollView {
+                            guidanceCard
+                        }
+                        .scrollBounceBehavior(.basedOnSize)
+                    }
+                }
+                // The floating card ends 8 pt from the physical screen edge, as in Sketch.
+                .padding(.horizontal, 8)
+                .padding(.bottom, 8)
+                .ignoresSafeArea(.container, edges: .bottom)
             }
         }
         .onAppear { locationManager.requestWhenInUseAuthorization() }
@@ -178,17 +190,29 @@ struct GardenBoundaryView: View {
         }
     }
 
+    @ViewBuilder
+    private var guidanceCard: some View {
+        if isConfirmingPhoto {
+            photoConfirmation
+        } else if showsBoundaryGuide {
+            boundaryGuide
+        }
+    }
+
     private var photoConfirmation: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            Text("Lokasi Ditemukan dari Foto").font(.title.bold())
-            Text("Pastikan titik yang ditampilkan di peta adalah lokasi kebun Anda.")
-                .font(.subheadline)
+        VStack(alignment: .leading, spacing: 0) {
+            Text("Lokasi Ditemukan dari Foto")
+                .font(.title.bold())
                 .fixedSize(horizontal: false, vertical: true)
                 .padding(.bottom, 8)
+            Text("Pastikan titik yang ditampilkan di peta adalah lokasi kebun Anda.")
+                .font(.body)
+                .fixedSize(horizontal: false, vertical: true)
+                .padding(.bottom, 16)
             Image(systemName: "checkmark.seal.fill")
                 .font(.system(size: 92))
                 .frame(maxWidth: .infinity)
-                .padding(.vertical, 24)
+                .frame(height: 157)
                 .accessibilityHidden(true)
             GardenFlowActionButton(title: "Ya, Ini kebun saya") {
                 withAnimation {
@@ -203,11 +227,10 @@ struct GardenBoundaryView: View {
             .font(.body)
             .foregroundStyle(.secondary)
             .frame(maxWidth: .infinity, minHeight: 44)
+            .padding(.top, 8)
         }
-        .padding(20)
+        .padding(24)
         .background(GardenFlowStyle.background, in: RoundedRectangle(cornerRadius: 32))
-        .padding(.horizontal, 8)
-        .padding(.bottom, 4)
     }
 
     private var boundaryGuide: some View {
@@ -225,8 +248,6 @@ struct GardenBoundaryView: View {
         }
         .padding(24)
         .background(GardenFlowStyle.background, in: RoundedRectangle(cornerRadius: 32))
-        .padding(.horizontal, 8)
-        .padding(.bottom, 4)
     }
 
     private var skipAction: (() -> Void)? {
