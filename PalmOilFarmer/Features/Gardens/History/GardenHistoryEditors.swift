@@ -9,33 +9,38 @@ struct FertilizerField: Hashable {
 
 struct FertilizerHistoryEditor: View {
     @State private var drafts: [FertilizerDraft]
-    @State private var selectedDraftID: UUID?
     @State private var errorMessage: String?
     @FocusState private var focusedField: FertilizerField?
     let onSave: ([FertilizerRecord]) -> Bool
+    var onContinue: (() -> Void)? = nil
     @Environment(\.dismiss) private var dismiss
 
     init(records: [FertilizerRecord], includesEmptyDraft: Bool = false,
+         onContinue: (() -> Void)? = nil,
          onSave: @escaping ([FertilizerRecord]) -> Bool) {
         var drafts = records.map { FertilizerDraft(record: $0) }
         if drafts.isEmpty || includesEmptyDraft { drafts.append(FertilizerDraft()) }
         _drafts = State(initialValue: drafts)
         self.onSave = onSave
+        self.onContinue = onContinue
     }
 
     var body: some View {
         NavigationStack {
             VStack(spacing: 0) {
-                ScreenHeader(title: "Riwayat Pemupukan",
-                             confirmationAction: save, onClose: { dismiss() })
+                GardenHistoryFormHeader(step: 1, onBack: { dismiss() }, onConfirm: save,
+                                        confirmationTitle: onContinue == nil ? "Simpan" : "Lanjut")
                 ScrollViewReader { reader in
                     ScrollView {
-                        VStack(spacing: 16) {
+                        VStack(alignment: .leading, spacing: 16) {
+                            Text("Riwayat Pemupukan").font(.title.bold())
+                            VStack(alignment: .leading, spacing: 4) {
+                                Text("Jenis Pupuk").font(.headline)
+                                Text("Data pupuk yang diaplikasikan di kebun ini dalam periode pemupukan terakhir.")
+                                    .foregroundStyle(.secondary)
+                            }
                             ForEach($drafts) { $draft in
-                                FertilizerEntryCard(draft: $draft, focusedField: $focusedField) {
-                                    focusedField = nil
-                                    selectedDraftID = draft.id
-                                }
+                                FertilizerEntryCard(draft: $draft, focusedField: $focusedField)
                                 .contextMenu {
                                     Button("Hapus jenis pupuk", role: .destructive) {
                                         drafts.removeAll { $0.id == draft.id }
@@ -76,16 +81,6 @@ struct FertilizerHistoryEditor: View {
             .animation(.easeOut(duration: 0.2), value: focusedField == nil)
             .containerBackground(.clear, for: .navigation)
             .toolbar(.hidden, for: .navigationBar)
-            .navigationDestination(item: $selectedDraftID) { id in
-                SelectionListView(
-                    title: "Jenis Pupuk", options: FertilizerCatalogue.names,
-                    selected: drafts.first(where: { $0.id == id })?.name,
-                    footer: "Pilih sesuai nama pupuk yang tertera pada karung. Jika tidak ada dalam daftar, pilih Lainnya."
-                ) { name in
-                    guard let index = drafts.firstIndex(where: { $0.id == id }) else { return }
-                    drafts[index].name = name
-                }
-            }
             .alert("Riwayat belum tersimpan", isPresented: Binding(
                 get: { errorMessage != nil }, set: { if !$0 { errorMessage = nil } }
             )) {
@@ -93,6 +88,8 @@ struct FertilizerHistoryEditor: View {
             } message: { Text(errorMessage ?? "") }
         }
         .presentationDetents([.large])
+        .presentationDragIndicator(.hidden)
+        .presentationBackground(GardenFlowStyle.background)
     }
 
     private var nextField: FertilizerField? {
@@ -109,7 +106,10 @@ struct FertilizerHistoryEditor: View {
             errorMessage = "Lengkapi jenis pupuk, berat, jumlah karung, dan dosis dengan nilai lebih dari nol."
             return
         }
-        if onSave(records) { dismiss() } else {
+        if onSave(records) {
+            onContinue?()
+            dismiss()
+        } else {
             errorMessage = "Data tidak dapat disimpan di perangkat. Coba lagi."
         }
     }
@@ -118,14 +118,35 @@ struct FertilizerHistoryEditor: View {
 struct FertilizerEntryCard: View {
     @Binding var draft: FertilizerDraft
     var focusedField: FocusState<FertilizerField?>.Binding? = nil
-    let onSelectType: () -> Void
 
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
-            FormSelectionRow(
-                title: "Jenis Pupuk", placeholder: "Pilih jenis pupuk",
-                value: draft.name.isEmpty ? nil : draft.name, action: onSelectType
-            )
+            Menu {
+                ForEach(FertilizerCatalogue.names, id: \.self) { name in
+                    Button {
+                        focusedField?.wrappedValue = nil
+                        draft.name = name
+                    } label: {
+                        if draft.name == name {
+                            Label(name, systemImage: "checkmark")
+                        } else {
+                            Text(name)
+                        }
+                    }
+                }
+            } label: {
+                VStack(alignment: .leading, spacing: 12) {
+                    Text("Jenis pupuk").font(.headline).foregroundStyle(.secondary)
+                    HStack {
+                        Text(draft.name.isEmpty ? "Pilih jenis pupuk" : draft.name)
+                            .foregroundStyle(draft.name.isEmpty ? Color.secondary : Color.primary)
+                        Spacer()
+                        Image(systemName: "chevron.down").font(.footnote).foregroundStyle(.secondary)
+                    }
+                }
+                .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
             .id(draft.id)
             Divider()
             numberField("Berat per karung", unit: "kg", kind: .bagWeight,
@@ -145,7 +166,7 @@ struct FertilizerEntryCard: View {
         }
         .font(.title3.weight(.semibold))
         .padding(16)
-        .background(KropsTheme.cardFill, in: RoundedRectangle(cornerRadius: 24))
+        .background(GardenFlowStyle.card, in: RoundedRectangle(cornerRadius: 24))
     }
 
     @ViewBuilder
@@ -171,78 +192,89 @@ struct FertilizerEntryCard: View {
 
 struct HarvestHistoryEditor: View {
     let onSave: (HarvestRecord) -> Bool
+    var onBack: (() -> Void)? = nil
     @State private var frequency: Int
-    @State private var weight: Double
+    @State private var weight: Double?
     @State private var showsError = false
     @Environment(\.dismiss) private var dismiss
 
     static let frequencyRange = 1...31
 
-    init(record: HarvestRecord?, onSave: @escaping (HarvestRecord) -> Bool) {
+    init(record: HarvestRecord?, onBack: (() -> Void)? = nil, onSave: @escaping (HarvestRecord) -> Bool) {
         self.onSave = onSave
+        self.onBack = onBack
         _frequency = State(initialValue: min(max(record?.frequencyPerMonth ?? 2, Self.frequencyRange.lowerBound),
                                              Self.frequencyRange.upperBound))
-        _weight = State(initialValue: record?.latestWeightKg ?? 450)
+        _weight = State(initialValue: record?.latestWeightKg)
     }
 
-    private var weightOptions: [Double] {
-        Array(Set(stride(from: 50.0, through: 5000.0, by: 50) + [weight])).sorted()
-    }
+    @FocusState private var isWeightFocused: Bool
 
     var body: some View {
         VStack(spacing: 0) {
-            ScreenHeader(title: "Riwayat Panen", confirmationAction: save, onClose: { dismiss() })
-            VStack(spacing: 16) {
-                HarvestCard(title: "Frekuensi Panen",
-                            message: "Jumlah panen yang biasanya dilakukan di kebun ini",
-                            footer: "dalam satu bulan") {
-                    HarvestFrequencyStepper(value: $frequency, range: Self.frequencyRange)
+            GardenHistoryFormHeader(step: 2, onBack: {
+                onBack?()
+                dismiss()
+            }, onConfirm: save)
+            ScrollView {
+                VStack(alignment: .leading, spacing: 8) {
+                    Text("Riwayat Panen")
+                        .font(.title.bold())
+                        .padding(.horizontal, 8)
+                        .padding(.bottom, 8)
+                    HStack {
+                        Text("Frekuensi Panen dalam Sebulan")
+                            .font(.headline)
+                            .fixedSize(horizontal: false, vertical: true)
+                        Spacer(minLength: 12)
+                        HarvestFrequencyStepper(value: $frequency, range: Self.frequencyRange)
+                    }
+                    .padding(16)
+                    .frame(minHeight: 76)
+                    .background(GardenFlowStyle.card, in: RoundedRectangle(cornerRadius: 24))
+
+                    HStack {
+                        Text("Rata-rata berat per panen")
+                            .font(.headline)
+                            .fixedSize(horizontal: false, vertical: true)
+                        Spacer(minLength: 12)
+                        TextField("0", value: $weight, format: .number)
+                            .keyboardType(.decimalPad)
+                            .focused($isWeightFocused)
+                            .font(.title.bold())
+                            .multilineTextAlignment(.center)
+                            .frame(minWidth: 70, maxWidth: 110)
+                            .accessibilityLabel("Rata-rata berat per panen, kilogram")
+                        Text("kg").font(.title2.bold())
+                    }
+                    .padding(16)
+                    .frame(minHeight: 76)
+                    .background(GardenFlowStyle.card, in: RoundedRectangle(cornerRadius: 24))
                 }
-                HarvestCard(title: "Rata-rata berat per panen",
-                            message: "Perkiraan berat TBS yang didapat setiap kali panen",
-                            footer: "setiap kali panen") {
-                    HarvestWeightWheel(selection: $weight, options: weightOptions)
+                .padding(16)
+            }
+            .scrollDismissesKeyboard(.interactively)
+            .safeAreaInset(edge: .bottom) {
+                if isWeightFocused {
+                    KeyboardActionBar(onNext: nil, onDone: { isWeightFocused = false })
                 }
             }
-            .padding(.horizontal, 16)
-            .padding(.bottom, 16)
         }
-        .fittedSheetHeight()
-        .presentationBackground(Color(uiColor: .systemBackground))
+        .background(GardenFlowStyle.background)
+        .presentationDetents([.large])
+        .presentationDragIndicator(.hidden)
+        .presentationBackground(GardenFlowStyle.background)
         .alert("Riwayat belum tersimpan", isPresented: $showsError) {
             Button("Mengerti", role: .cancel) {}
         }
     }
 
     private func save() {
-        guard Self.frequencyRange.contains(frequency), weight.isFinite, weight > 0 else { showsError = true; return }
+        isWeightFocused = false
+        guard let weight, Self.frequencyRange.contains(frequency), weight.isFinite, weight > 0 else { showsError = true; return }
         if onSave(HarvestRecord(frequencyPerMonth: frequency, latestWeightKg: weight)) {
             dismiss()
         } else { showsError = true }
-    }
-}
-
-/// A rounded card with a centred title, explanation, control, and unit line, as in the Sketch form.
-private struct HarvestCard<Control: View>: View {
-    let title: String
-    let message: String
-    let footer: String
-    @ViewBuilder let control: () -> Control
-
-    var body: some View {
-        VStack(spacing: 16) {
-            VStack(spacing: 0) {
-                Text(title).font(.title2.bold())
-                Text(message).font(.body).foregroundStyle(.secondary)
-            }
-            .multilineTextAlignment(.center)
-            .padding(.horizontal, 32)
-            control()
-            Text(footer).font(.body)
-        }
-        .frame(maxWidth: .infinity)
-        .padding(.vertical, 32)
-        .background(Color(uiColor: .quaternarySystemFill), in: RoundedRectangle(cornerRadius: 40))
     }
 }
 
@@ -251,22 +283,15 @@ struct HarvestFrequencyStepper: View {
     let range: ClosedRange<Int>
 
     var body: some View {
-        HStack(spacing: 24) {
+        HStack(spacing: 0) {
             stepButton("minus", label: "Kurangi", isEnabled: value > range.lowerBound) { value -= 1 }
-            VStack(spacing: 8) {
-                HStack(alignment: .firstTextBaseline, spacing: 8) {
-                    Text("\(value)")
-                        .font(.largeTitle.bold())
-                        .monospacedDigit()
-                        .contentTransition(.numericText(value: Double(value)))
-                    Text("kali").font(.headline)
-                }
-                Rectangle().fill(.separator).frame(width: 57, height: 1)
-            }
-            .frame(minWidth: 57)
+            Text("\(value)")
+                .font(.title2.bold())
+                .monospacedDigit()
+                .frame(minWidth: 32)
+                .contentTransition(.numericText(value: Double(value)))
             stepButton("plus", label: "Tambah", isEnabled: value < range.upperBound) { value += 1 }
         }
-        .frame(minHeight: 64)
         .animation(.snappy, value: value)
         .sensoryFeedback(.selection, trigger: value)
         .accessibilityElement(children: .ignore)
@@ -285,76 +310,14 @@ struct HarvestFrequencyStepper: View {
                             action: @escaping () -> Void) -> some View {
         Button(action: action) {
             Image(systemName: symbol)
-                .font(.system(size: 30, weight: .regular))
-                .frame(width: 44, height: 64)
+                .font(.title2)
+                .frame(width: 44, height: 44)
                 .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
         .foregroundStyle(isEnabled ? Color.primary : Color.secondary.opacity(0.4))
         .disabled(!isEnabled)
         .accessibilityLabel(label)
-    }
-}
-
-/// Five visible rows: the centred value is large inside a capsule; rows fade with distance.
-struct HarvestWeightWheel: View {
-    @Binding var selection: Double
-    let options: [Double]
-    @State private var centred: Double?
-
-    private static let rowHeight: CGFloat = 35
-
-    var body: some View {
-        ScrollView(.vertical) {
-            LazyVStack(spacing: 0) {
-                ForEach(options, id: \.self) { option in
-                    row(option)
-                        .frame(height: Self.rowHeight)
-                        .id(option)
-                }
-            }
-            .scrollTargetLayout()
-        }
-        .scrollIndicators(.hidden)
-        .scrollTargetBehavior(.viewAligned)
-        .scrollPosition(id: $centred, anchor: .center)
-        .contentMargins(.vertical, Self.rowHeight * 2, for: .scrollContent)
-        .frame(width: 140, height: Self.rowHeight * 5)
-        .background {
-            Capsule()
-                .fill(Color(uiColor: .quaternarySystemFill))
-                .frame(width: 83, height: 41)
-        }
-        .overlay {
-            Text("kg")
-                .font(.headline)
-                .offset(x: 58)
-                .allowsHitTesting(false)
-        }
-        .onAppear { centred = selection }
-        .onChange(of: centred) { _, value in
-            if let value { selection = value }
-        }
-        .sensoryFeedback(.selection, trigger: centred)
-        .accessibilityElement(children: .ignore)
-        .accessibilityLabel("Rata-rata berat per panen")
-        .accessibilityValue("\(selection.formatted()) kilogram")
-        .accessibilityAdjustableAction { direction in
-            guard let index = options.firstIndex(of: selection) else { return }
-            let next = direction == .increment ? index + 1 : index - 1
-            if options.indices.contains(next) { centred = options[next] }
-        }
-    }
-
-    private func row(_ option: Double) -> some View {
-        let distance = abs((options.firstIndex(of: option) ?? 0) - (options.firstIndex(of: centred ?? selection) ?? 0))
-        return Text(option.formatted())
-            .font(distance == 0 ? .largeTitle.bold() : distance == 1 ? .title2.bold() : .headline)
-            .monospacedDigit()
-            .foregroundStyle(Color.primary.opacity(distance == 0 ? 1 : distance == 1 ? 0.6 : 0.3))
-            .frame(maxWidth: .infinity)
-            .contentShape(Rectangle())
-            .onTapGesture { withAnimation { centred = option } }
     }
 }
 
@@ -367,11 +330,9 @@ struct HarvestWeightWheel: View {
 }
 #Preview("Fertilizer Entry", traits: .sizeThatFitsLayout) {
     @Previewable @State var draft = FertilizerDraft(record: GardenPreviewData.fertilizers[0])
-    FertilizerEntryCard(draft: $draft, onSelectType: {}).padding().frame(width: 402)
+    FertilizerEntryCard(draft: $draft).padding().frame(width: 402)
 }
 #Preview("Panen · Default") {
-    Color.clear.sheet(isPresented: .constant(true)) {
-        HarvestHistoryEditor(record: nil, onSave: { _ in true })
-    }
+    HarvestHistoryEditor(record: nil, onSave: { _ in true })
 }
 #endif

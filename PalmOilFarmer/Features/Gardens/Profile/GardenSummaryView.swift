@@ -15,9 +15,9 @@ struct GardenSummaryView: View {
             ? AnyLayout(VStackLayout(spacing: 7))
             : AnyLayout(HStackLayout(spacing: 7))
         layout {
-            GardenMetricTile(title: "Luas", value: displayMetrics.area, kind: .area)
+            GardenMetricTile(title: "Luas tanah", value: displayMetrics.area, kind: .area)
             GardenMetricTile(title: "Perimeter", value: displayMetrics.perimeter, kind: .perimeter)
-            GardenMetricTile(title: "Tahun tanam", value: String(garden.plantingYear), kind: .year)
+            GardenMetricTile(title: "Tahun Tanam", value: String(garden.plantingYear), kind: .year)
         }
     }
 }
@@ -48,26 +48,13 @@ struct GardenMetricTile: View {
     let kind: Kind
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 10) {
-            Group {
-                switch kind {
-                case .area: GardenAreaIcon().scaleEffect(1.1)
-                case .perimeter: Image(systemName: "rectangle.dashed")
-                case .year: Image(systemName: "calendar")
-                }
-            }
-            .font(.subheadline.weight(.semibold))
-            .foregroundStyle(kind.ink)
-            .frame(width: 32, height: 32)
-            .background(kind.ink.opacity(0.14), in: Circle())
-            VStack(alignment: .leading, spacing: 0) {
-                Text(value).font(.headline).foregroundStyle(.primary)
-                Text(title).font(.caption).foregroundStyle(.secondary)
-            }
+        VStack(spacing: 3) {
+            Text(title).font(.caption)
+            Text(value).font(.headline)
         }
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .padding(12)
-        .background(kind.fill, in: RoundedRectangle(cornerRadius: 16))
+        .frame(maxWidth: .infinity, minHeight: 72)
+        .padding(.horizontal, 8)
+        .background(Color(uiColor: .secondarySystemBackground), in: RoundedRectangle(cornerRadius: 16))
         .accessibilityElement(children: .combine)
     }
 }

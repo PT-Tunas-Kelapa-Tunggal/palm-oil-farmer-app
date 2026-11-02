@@ -13,7 +13,7 @@ struct FertilizerHistoryCard: View {
         .padding(.horizontal, 16)
         .padding(.vertical, 12)
         .frame(maxWidth: .infinity, minHeight: 130, alignment: .leading)
-        .background(KropsTheme.cardFill, in: RoundedRectangle(cornerRadius: 18))
+        .background(GardenFlowStyle.card, in: RoundedRectangle(cornerRadius: 18))
     }
 }
 
@@ -23,11 +23,11 @@ struct HarvestHistoryCard: View {
     var body: some View {
         VStack(spacing: 8) {
             HistoryValueRow(title: "Frekuensi panen", value: "\(record.frequencyPerMonth) kali per bulan")
-            HistoryValueRow(title: "Rata rata berat (terakhir panen)", value: record.latestWeightKg.formatted() + "kg")
+            HistoryValueRow(title: "Rata-rata berat per panen", value: record.latestWeightKg.formatted() + "kg")
         }
         .padding(.horizontal, 16)
         .padding(.vertical, 12)
-        .background(KropsTheme.cardFill, in: RoundedRectangle(cornerRadius: 18))
+        .background(GardenFlowStyle.card, in: RoundedRectangle(cornerRadius: 18))
     }
 }
 

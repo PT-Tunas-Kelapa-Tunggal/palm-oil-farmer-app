@@ -40,6 +40,7 @@ struct MapHeroView<MapContent: View>: View {
 /// once the content scrolls under it (`isOverContent`) it switches to a material bar with standard text.
 struct HeroToolbar: View {
     let title: String
+    var subtitle: String? = nil
     let onBack: () -> Void
     var onEdit: (() -> Void)? = nil
     var onDelete: (() -> Void)? = nil
@@ -47,7 +48,18 @@ struct HeroToolbar: View {
     var isOverContent = false
 
     var body: some View {
-        ScreenHeader(title: title, systemImage: "chevron.left", onClose: onBack)
+        ScreenHeader(title: subtitle == nil ? title : "", systemImage: "chevron.left", onClose: onBack)
+            .overlay(alignment: .leading) {
+                if let subtitle {
+                    VStack(alignment: .leading, spacing: 3) {
+                        Text(title).font(.title2.bold()).lineLimit(1)
+                        Text(subtitle).font(.caption).lineLimit(2)
+                    }
+                    .padding(.leading, 76)
+                    .padding(.trailing, 64)
+                    .allowsHitTesting(false)
+                }
+            }
             .overlay(alignment: .trailing) {
                 if onEdit != nil || onDelete != nil {
                     Menu {

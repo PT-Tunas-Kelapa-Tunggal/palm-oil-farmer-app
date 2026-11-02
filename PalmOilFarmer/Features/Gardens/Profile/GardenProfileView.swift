@@ -20,6 +20,12 @@ struct GardenProfileView: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(GardenStore.self) private var store: GardenStore?
     @State private var editor: HistoryEditor?
+    @State private var pendingEditor: HistoryEditor?
+    @State private var showsProfileGuide = false
+    @State private var hasShownProfileGuide = false
+    @State private var showsReadyPrompt = false
+    @State private var opensReadyPromptAfterSave = false
+    @State private var opensReviewAfterPrompt = false
     @State private var showsReview = false
     @State private var showsReviewStatus = false
     @State private var showsResults = false
@@ -89,7 +95,8 @@ struct GardenProfileView: View {
             .overlay(alignment: .top) {
                 if hasHero {
                     HeroToolbar(
-                        title: "Detail Kebun",
+                        title: garden.name,
+                        subtitle: garden.locationName,
                         onBack: { dismiss() },
                         onEdit: { showsGardenEditor = true },
                         onDelete: onDelete == nil ? nil : { showsDeleteConfirmation = true },
@@ -105,7 +112,7 @@ struct GardenProfileView: View {
                 }
             }
         }
-        .background(KropsTheme.background.ignoresSafeArea())
+        .background(GardenFlowStyle.background.ignoresSafeArea())
         .toolbar(.hidden, for: .navigationBar)
         .sheet(isPresented: $showsGardenEditor) {
             GardenDetailsView(editing: garden, referenceMapImage: referenceMapImage, metrics: metrics, onSave: onUpdate)
@@ -128,19 +135,47 @@ struct GardenProfileView: View {
         } message: {
             Text("Data tidak dapat dihapus dari perangkat. Coba lagi.")
         }
-        .sheet(item: $editor) { editor in
+        .sheet(isPresented: $showsProfileGuide, onDismiss: openPendingEditor) {
+            GardenProfileGuideView {
+                pendingEditor = fertilizers.isEmpty ? .fertilizer : .harvest
+                showsProfileGuide = false
+            }
+        }
+        .sheet(isPresented: $showsReadyPrompt, onDismiss: {
+            if opensReviewAfterPrompt {
+                opensReviewAfterPrompt = false
+                showsReview = true
+            }
+        }) {
+            GardenProfileGuideView(isReadyForReview: true) {
+                opensReviewAfterPrompt = true
+                showsReadyPrompt = false
+            }
+        }
+        .sheet(item: $editor, onDismiss: {
+            if pendingEditor != nil {
+                openPendingEditor()
+            } else if opensReadyPromptAfterSave {
+                opensReadyPromptAfterSave = false
+                showsReadyPrompt = true
+            }
+        }) { editor in
             switch editor {
             case .fertilizer:
-                FertilizerHistoryEditor(records: fertilizers) { records in
+                FertilizerHistoryEditor(records: fertilizers, onContinue: { pendingEditor = .harvest }) { records in
                     var updated = garden
                     updated.fertilizerRecords = records
                     return onUpdate(updated)
                 }
             case .harvest:
-                HarvestHistoryEditor(record: garden.harvestRecord) { record in
+                HarvestHistoryEditor(record: garden.harvestRecord, onBack: { pendingEditor = .fertilizer }) { record in
                     var updated = garden
                     updated.harvestRecord = record
-                    return onUpdate(updated)
+                    let saved = onUpdate(updated)
+                    if saved && !isComplete && updated.isProfileComplete && currentReviewStatus == nil {
+                        opensReadyPromptAfterSave = true
+                    }
+                    return saved
                 }
             }
         }
@@ -181,6 +216,10 @@ struct GardenProfileView: View {
             }
         }
         .task {
+            if !hasShownProfileGuide && !isComplete && currentReviewStatus == nil && hasHero {
+                hasShownProfileGuide = true
+                showsProfileGuide = true
+            }
             await loadReview()
         }
     }
@@ -208,14 +247,16 @@ struct GardenProfileView: View {
                 } else {
                     map
                 }
-                Text(garden.name)
-                    .font(.title)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .padding(16)
-
+                if !hasHero {
+                    Text(garden.name)
+                        .font(.title)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .padding(16)
+                }
                 GardenSummaryView(garden: garden, metrics: metrics)
                     .padding(.horizontal, KropsTheme.Spacing.screen)
-                    .padding(.vertical, 8)
+                    .padding(.top, hasHero ? -43 : 8)
+                    .padding(.bottom, 14)
 
                 if layout == .chart {
                     GardenHistoryChart(values: chartValues) { editor = .harvest }
@@ -224,8 +265,7 @@ struct GardenProfileView: View {
                     profileProgress(step: .harvest)
                 } else {
                     if isComplete {
-                        PrimaryActionButton(title: reviewActionTitle, systemImage: reviewActionImage,
-                                            imagePlacement: .trailing,
+                        GardenFlowActionButton(title: reviewActionTitle, systemImage: reviewActionImage,
                                             isProminent: currentReviewStatus == nil || currentReviewStatus == .completed) {
                             switch currentReviewStatus {
                             case nil:
@@ -335,6 +375,12 @@ struct GardenProfileView: View {
         .padding(.horizontal, KropsTheme.Spacing.screen)
         .padding(.top, 8)
         .padding(.bottom, garden.harvestRecord == nil ? 24 : 8)
+    }
+
+    private func openPendingEditor() {
+        guard let next = pendingEditor else { return }
+        pendingEditor = nil
+        editor = next
     }
 
     private func profileProgress(step: GardenProfileStep) -> some View {
