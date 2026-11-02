@@ -1,5 +1,6 @@
 # Xcode settings specific to each developer.
 xcuserdata/
+Developer.xcconfig
 
 # Local build products and macOS metadata.
 .DS_Store

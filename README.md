@@ -11,6 +11,25 @@ Keep the structure small: add folders and abstractions when real code needs them
 - Repository slug, if needed: `palm-oil-farmer`.
 - The existing bundle identifiers are retained to preserve app identity and access to existing saved gardens.
 
+## Developer Setup & Configuration
+
+This project uses a central `Developer.xcconfig` file for developer-specific credentials (gitignored).
+
+1. Copy the configuration template:
+   ```bash
+   cp Developer.xcconfig.example Developer.xcconfig
+   ```
+2. Open `Developer.xcconfig` and fill in your individual Apple Developer account details:
+   - `DEVELOPMENT_TEAM`: Your 10-character Apple Developer Team ID.
+   - `PRODUCT_BUNDLE_IDENTIFIER`: Your app bundle identifier.
+   - `CLOUDKIT_CONTAINER_ID`: Your CloudKit container identifier.
+
+> **CloudKit Environment Handling**:
+> - **Local Development / Run (`⌘R`)**: Xcode automatically builds in **Debug** mode and uses the CloudKit **`Development`** sandbox.
+> - **TestFlight / Archive (`Product → Archive`)**: Xcode automatically builds in **Release** mode and uses the CloudKit **`Production`** environment.
+> - All required configuration keys are enforced at runtime via `AppConfiguration`; missing keys trigger an explicit panic (`fatalError`) rather than falling back to hardcoded defaults.
+
+
 ## Where code belongs
 
 | Folder | Responsibility |

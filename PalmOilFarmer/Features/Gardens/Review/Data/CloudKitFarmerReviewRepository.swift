@@ -4,15 +4,16 @@ import Foundation
 public final class CloudKitFarmerReviewRepository: FarmerReviewRepository, @unchecked Sendable {
     public static let shared = CloudKitFarmerReviewRepository()
 
-    private let containerIdentifier = "iCloud.com.hata.Krops"
+    private let containerIdentifier: String
     private let database: CKDatabase
     private let domainMapper = PlantationDomainMapper()
 
-    public init(database: CKDatabase? = nil) {
+    public init(database: CKDatabase? = nil, containerIdentifier: String = AppConfiguration.cloudKitContainerIdentifier) {
+        self.containerIdentifier = containerIdentifier
         if let database {
             self.database = database
         } else {
-            let container = CKContainer(identifier: "iCloud.com.hata.Krops")
+            let container = CKContainer(identifier: containerIdentifier)
             self.database = container.publicCloudDatabase
         }
     }
