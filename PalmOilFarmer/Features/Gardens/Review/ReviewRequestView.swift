@@ -25,8 +25,6 @@ struct ConsentCheckbox: View {
 struct ReviewRequestView: View {
     let onSubmit: (ReviewContactDetails) async throws -> Void
     @Environment(\.dismiss) private var dismiss
-    @State private var hasConsent = false
-    @State private var showsConsentError = false
     @State private var showsForm = false
 
     var body: some View {
@@ -34,54 +32,55 @@ struct ReviewRequestView: View {
             information
                 .toolbar(.hidden, for: .navigationBar)
                 .navigationDestination(isPresented: $showsForm) {
-                    ReviewContactFormView(onClose: { dismiss() }, onSubmit: onSubmit)
+                    ReviewContactFormView(onSubmit: onSubmit)
                         .toolbar(.hidden, for: .navigationBar)
                 }
         }
         .presentationDetents([.large])
-        .alert("Persetujuan diperlukan", isPresented: $showsConsentError) {
-            Button("Mengerti", role: .cancel) {}
-        } message: { Text("Baca informasi dan setujui program peninjauan sebelum melanjutkan.") }
+        .presentationDragIndicator(.hidden)
+        .presentationBackground(GardenFlowStyle.background)
     }
 
     private var information: some View {
         VStack(spacing: 0) {
-            ScreenHeader(title: "Permintaan Peninjauan", onClose: { dismiss() })
+            ScreenHeader(title: "Peninjauan Kebun", systemImage: "chevron.left", onClose: { dismiss() })
             ScrollView {
-                VStack(alignment: .leading, spacing: 16) {
-                    Text("Setelah batas kebun selesai dipetakan, ajukan peninjauan agar petugas dapat mengambil gambar kebun menggunakan drone dan menganalisis kondisi kebunmu. Hasil peninjauan akan membantu kamu memahami kondisi kebun dan kebutuhan pemupukannya.")
-                    Text("Informasi proses peninjauan").fontWeight(.semibold)
-                    processStep("1. Ajukan peninjauan", message: "Kirim permintaan peninjauan untuk kebun yang sudah kamu petakan.")
-                    processStep("2. Pengambilan gambar kebun", message: "Petugas akan menjadwalkan kunjungan untuk mengambil gambar kebun menggunakan drone.")
-                    processStep("3. Analisis kondisi kebun", message: "Gambar kebun akan diproses untuk menghasilkan informasi mengenai kondisi kebun dan variasi kebutuhan hara.")
-                    processStep("4. Lihat hasil peninjauan", message: "Setelah analisis selesai, kamu dapat melihat hasilnya untuk membantu merencanakan pemupukan.")
+                VStack(alignment: .leading, spacing: 20) {
+                    processStep("Kenali kebutuhan setiap bagian kebun", symbol: "leaf.fill",
+                                message: "Petugas memeriksa kondisi tanaman di seluruh kebun Anda. Dari pemeriksaan ini, Anda dapat mengetahui bagian kebun yang sehat dan bagian yang perlu diperhatikan.")
+                    processStep("Pengambilan gambar dengan drone", symbol: "camera.fill",
+                                message: "Petugas datang sesuai jadwal yang disepakati dan mengambil gambar kebun dari udara. Gambar tersebut diolah untuk melihat tingkat kehijauan daun di setiap area.")
+                    processStep("Rekomendasi pupuk per area", symbol: "chart.xyaxis.line",
+                                message: "Anda akan menerima peta kondisi kebun beserta dosis pupuk yang sesuai untuk setiap area. Pemupukan menjadi lebih tepat sehingga pupuk tidak terbuang.")
+                    GardenFlowActionButton(title: "Ajukan Sekarang") { showsForm = true }
+                        .padding(.top, 12)
                 }
-                .font(.body)
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .padding(.horizontal, 24)
-                .padding(.top, 16)
+                .padding(24)
             }
-
-            VStack(spacing: 16) {
-                ConsentCheckbox(isChecked: $hasConsent,
-                                message: "Saya memahami dan menyetujui program peninjauan kebun.")
-                    .padding(.horizontal, 8)
-                PrimaryActionButton(title: "Lanjutkan") {
-                    if hasConsent { showsForm = true } else { showsConsentError = true }
-                }
-            }
-            .padding(.horizontal, 24)
-            .padding(.top, 16)
-            .padding(.bottom, 2)
+            .scrollIndicators(.hidden)
         }
+        .background(GardenFlowStyle.background)
     }
 
-    private func processStep(_ title: String, message: String) -> some View {
-        VStack(alignment: .leading, spacing: 0) {
-            Text(title).fontWeight(.semibold)
-            Text(message)
+    private func processStep(_ title: String, symbol: String, message: String) -> some View {
+        VStack(alignment: .leading, spacing: 16) {
+            Group {
+                if symbol == "camera.fill" {
+                    Image("CodedUI3ReviewDrone")
+                        .resizable()
+                        .scaledToFit()
+                        .frame(width: 167, height: 140)
+                } else {
+                    Image(systemName: symbol)
+                        .font(.system(size: 84, weight: .semibold))
+                }
+            }
+                .frame(maxWidth: .infinity, minHeight: 157)
+                .background(Color(uiColor: .systemGray5), in: RoundedRectangle(cornerRadius: 20))
+                .accessibilityHidden(true)
+            Text(title).font(.headline)
+            Text(message).fixedSize(horizontal: false, vertical: true)
         }
-        .fixedSize(horizontal: false, vertical: true)
     }
 }
 

@@ -24,7 +24,7 @@ struct ReviewContactFormView: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            ScreenHeader(title: "Permintaan Peninjauan", onClose: { (onClose ?? { dismiss() })() })
+            ScreenHeader(title: "Permintaan Peninjauan", systemImage: "chevron.left", onClose: { (onClose ?? { dismiss() })() })
             ScrollViewReader { reader in
                 ScrollView {
                     VStack(alignment: .leading, spacing: 24) {
@@ -77,8 +77,8 @@ struct ReviewContactFormView: View {
                     ConsentCheckbox(isChecked: $hasConsent,
                                     message: "Saya memastikan nomor telepon dan alamat di atas sudah benar.")
                         .padding(.horizontal, 8)
-                    PrimaryActionButton(title: isSubmitting ? "Mengirim…" : "Ajukan Sekarang",
-                                        systemImage: "paperplane.fill", imagePlacement: .trailing) {
+                    GardenFlowActionButton(title: isSubmitting ? "Mengirim…" : "Kirim",
+                                           systemImage: "paperplane.fill") {
                         Task { await submit() }
                     }
                     .disabled(isSubmitting)
@@ -88,6 +88,7 @@ struct ReviewContactFormView: View {
                 .padding(.bottom, 2)
             }
         }
+        .background(GardenFlowStyle.background)
         .alert("Pengajuan belum dikirim", isPresented: Binding(
             get: { errorMessage != nil }, set: { if !$0 { errorMessage = nil } }
         )) {
@@ -97,7 +98,7 @@ struct ReviewContactFormView: View {
 
     private func contactField<Content: View>(_ title: String, id: Field,
                                              @ViewBuilder content: () -> Content) -> some View {
-        VStack(alignment: .leading, spacing: 24) {
+        VStack(alignment: .leading, spacing: 16) {
             Text(title).font(.headline)
             content().font(.body)
             Divider()
