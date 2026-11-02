@@ -6,6 +6,9 @@ struct FertilizerDraft: Identifiable {
     var bagWeightKg: Double?
     var bagCount: Int?
     var doseKgPerTree: Double?
+    var composition = FertilizerComposition()
+
+    var isNPK: Bool { name.trimmingCharacters(in: .whitespaces).uppercased().hasPrefix("NPK") }
 
     init(record: FertilizerRecord? = nil) {
         id = record?.id ?? UUID()
@@ -13,6 +16,7 @@ struct FertilizerDraft: Identifiable {
         bagWeightKg = record?.bagWeightKg
         bagCount = record?.bagCount
         doseKgPerTree = record?.doseKgPerTree
+        composition = record?.composition ?? FertilizerComposition.fromLabel(name)
     }
 
     var isEmpty: Bool {
@@ -22,11 +26,15 @@ struct FertilizerDraft: Identifiable {
     var record: FertilizerRecord? {
         let trimmedName = name.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmedName.isEmpty,
-              let bagWeightKg, bagWeightKg.isFinite, bagWeightKg > 0,
-              let bagCount, bagCount > 0,
               let doseKgPerTree, doseKgPerTree.isFinite, doseKgPerTree > 0 else { return nil }
+        if let bagWeightKg, !bagWeightKg.isFinite || bagWeightKg <= 0 { return nil }
+        if let bagCount, bagCount <= 0 { return nil }
+        if isNPK && !composition.isValid { return nil }
+        var savedComposition = composition
+        savedComposition.magnesium = composition.magnesium ?? 0
         return FertilizerRecord(id: id, name: trimmedName, bagWeightKg: bagWeightKg,
-                                bagCount: bagCount, doseKgPerTree: doseKgPerTree)
+                                bagCount: bagCount, doseKgPerTree: doseKgPerTree,
+                                composition: isNPK ? savedComposition : nil)
     }
 }
 

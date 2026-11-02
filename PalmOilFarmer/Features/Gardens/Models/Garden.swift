@@ -13,14 +13,16 @@ struct Garden: Identifiable, Codable {
     var review: GardenReview? = nil
     /// When the garden was registered. Gardens saved before this field have none.
     var createdAt: Date? = nil
+    var fertilizationFrequencyPerYear: Int? = nil
 }
 
 struct FertilizerRecord: Identifiable, Codable {
     var id = UUID()
     var name: String
-    var bagWeightKg: Double
-    var bagCount: Int
+    var bagWeightKg: Double? = nil
+    var bagCount: Int? = nil
     var doseKgPerTree: Double
+    var composition: FertilizerComposition? = nil
 }
 
 struct HarvestRecord: Codable {

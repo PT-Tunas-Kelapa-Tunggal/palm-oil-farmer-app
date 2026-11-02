@@ -21,12 +21,14 @@ public struct PlantationDomainMapper {
                     name: $0.name,
                     bagKg: $0.bagWeightKg,
                     bags: $0.bagCount,
-                    dosePerTree: $0.doseKgPerTree
+                    dosePerTree: $0.doseKgPerTree,
+                    composition: $0.composition
                 )
             },
             harvest: domain.agronomy.harvestRecord.map {
                 HarvestYieldDTO(freq: $0.frequencyPerMonth, weightKg: $0.latestWeightKg)
-            }
+            },
+            fertilizationFrequencyPerYear: domain.agronomy.fertilizationFrequencyPerYear
         )
         let agroData = try encoder.encode(agroDTO)
         let agronomicJSON = String(decoding: agroData, as: UTF8.self)
@@ -102,12 +104,14 @@ public struct PlantationDomainMapper {
                     name: $0.name,
                     bagWeightKg: $0.bagKg,
                     bagCount: $0.bags,
-                    doseKgPerTree: $0.dosePerTree
+                    doseKgPerTree: $0.dosePerTree,
+                    composition: $0.composition
                 )
             },
             harvestRecord: agroDTO.harvest.map {
                 HarvestYield(frequencyPerMonth: $0.freq, latestWeightKg: $0.weightKg)
-            }
+            },
+            fertilizationFrequencyPerYear: agroDTO.fertilizationFrequencyPerYear
         )
 
         var result: PlantationReviewResult?
@@ -166,7 +170,8 @@ public struct PlantationDomainMapper {
                 name: $0.name,
                 bagWeightKg: $0.bagWeightKg,
                 bagCount: $0.bagCount,
-                doseKgPerTree: $0.doseKgPerTree
+                doseKgPerTree: $0.doseKgPerTree,
+                composition: $0.composition
             )
         }
 
@@ -206,7 +211,8 @@ public struct PlantationDomainMapper {
             fertilizerRecords: fertilizers.isEmpty ? nil : fertilizers,
             harvestRecord: harvest,
             review: review,
-            createdAt: request.timeline.submittedAt
+            createdAt: request.timeline.submittedAt,
+            fertilizationFrequencyPerYear: request.agronomy.fertilizationFrequencyPerYear
         )
     }
 }

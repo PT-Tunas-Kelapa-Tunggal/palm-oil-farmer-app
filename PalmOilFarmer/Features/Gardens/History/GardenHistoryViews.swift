@@ -6,8 +6,12 @@ struct FertilizerHistoryCard: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
             Text(record.name).font(.headline)
-            HistoryValueRow(title: "Berat per karung", value: record.bagWeightKg.formatted() + "kg")
-            HistoryValueRow(title: "Jumlah karung", value: "\(record.bagCount) karung")
+            if let bagWeight = record.bagWeightKg {
+                HistoryValueRow(title: "Berat per karung", value: bagWeight.formatted() + "kg")
+            }
+            if let bagCount = record.bagCount {
+                HistoryValueRow(title: "Jumlah karung", value: "\(bagCount) karung")
+            }
             HistoryValueRow(title: "Dosis", value: record.doseKgPerTree.formatted() + " kg / pohon")
         }
         .padding(.horizontal, 16)

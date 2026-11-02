@@ -162,9 +162,12 @@ struct GardenProfileView: View {
         }) { editor in
             switch editor {
             case .fertilizer:
-                FertilizerHistoryEditor(records: fertilizers, onContinue: { pendingEditor = .harvest }) { records in
+                FertilizerHistoryEditor(records: fertilizers, gardenID: garden.id,
+                                        frequencyPerYear: garden.fertilizationFrequencyPerYear,
+                                        onContinue: { pendingEditor = .harvest }) { records, frequency in
                     var updated = garden
                     updated.fertilizerRecords = records
+                    updated.fertilizationFrequencyPerYear = frequency
                     return onUpdate(updated)
                 }
             case .harvest:
@@ -334,7 +337,7 @@ struct GardenProfileView: View {
     private func submitReview(details: ReviewContactDetails) async throws {
         let boundaryPoints = garden.boundary.points.map { CoordinatePoint(latitude: $0.latitude, longitude: $0.longitude) }
         let usages = (garden.fertilizerRecords ?? []).map {
-            FertilizerUsage(id: $0.id, name: $0.name, bagWeightKg: $0.bagWeightKg, bagCount: $0.bagCount, doseKgPerTree: $0.doseKgPerTree)
+            FertilizerUsage(id: $0.id, name: $0.name, bagWeightKg: $0.bagWeightKg, bagCount: $0.bagCount, doseKgPerTree: $0.doseKgPerTree, composition: $0.composition)
         }
         let harvest = garden.harvestRecord.map {
             HarvestYield(frequencyPerMonth: $0.frequencyPerMonth, latestWeightKg: $0.latestWeightKg)
@@ -348,7 +351,8 @@ struct GardenProfileView: View {
                 plantingMonth: garden.plantingMonth,
                 soilType: garden.soilType.rawValue,
                 fertilizerRecords: usages,
-                harvestRecord: harvest
+                harvestRecord: harvest,
+                fertilizationFrequencyPerYear: garden.fertilizationFrequencyPerYear
             )
         )
         let saved = try await CloudKitFarmerReviewRepository.shared.submitRequest(request)

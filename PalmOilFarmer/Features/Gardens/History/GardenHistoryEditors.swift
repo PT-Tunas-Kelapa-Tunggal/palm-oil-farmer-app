@@ -2,7 +2,7 @@ import SwiftUI
 
 /// A numeric field in one fertilizer card; used for focus and scrolling.
 struct FertilizerField: Hashable {
-    enum Kind: CaseIterable { case bagWeight, bagCount, dose }
+    enum Kind: CaseIterable { case nitrogen, phosphorus, potassium, magnesium, dose }
     let draftID: UUID
     let kind: Kind
 }
@@ -10,19 +10,45 @@ struct FertilizerField: Hashable {
 struct FertilizerHistoryEditor: View {
     @State private var drafts: [FertilizerDraft]
     @State private var errorMessage: String?
+    @State private var frequency: Int
+    private let gardenID: UUID?
+    private let detailsStore: LocalFertilizerFormStore
     @FocusState private var focusedField: FertilizerField?
-    let onSave: ([FertilizerRecord]) -> Bool
+    let onSave: ([FertilizerRecord], Int) -> Bool
     var onContinue: (() -> Void)? = nil
     @Environment(\.dismiss) private var dismiss
 
     init(records: [FertilizerRecord], includesEmptyDraft: Bool = false,
+         gardenID: UUID? = nil, frequencyPerYear: Int? = nil, detailsStore: LocalFertilizerFormStore = LocalFertilizerFormStore(),
          onContinue: (() -> Void)? = nil,
-         onSave: @escaping ([FertilizerRecord]) -> Bool) {
-        var drafts = records.map { FertilizerDraft(record: $0) }
+         onSave: @escaping ([FertilizerRecord], Int) -> Bool) {
+        self.gardenID = gardenID
+        self.detailsStore = detailsStore
+        let details = gardenID.map { detailsStore.load(gardenID: $0) } ?? FertilizerFormDetails()
+        _frequency = State(initialValue: min(max(frequencyPerYear ?? details.frequencyPerYear, 1), 12))
+        var drafts = records.map { record in
+            var draft = FertilizerDraft(record: record)
+            if record.composition == nil, let composition = details.compositions[record.id] {
+                draft.composition = composition
+            }
+            return draft
+        }
         if drafts.isEmpty || includesEmptyDraft { drafts.append(FertilizerDraft()) }
         _drafts = State(initialValue: drafts)
         self.onSave = onSave
         self.onContinue = onContinue
+    }
+
+    /// Existing preview callers can keep using the records-only callback.
+    init(records: [FertilizerRecord], includesEmptyDraft: Bool = false,
+         gardenID: UUID? = nil, frequencyPerYear: Int? = nil,
+         detailsStore: LocalFertilizerFormStore = LocalFertilizerFormStore(),
+         onContinue: (() -> Void)? = nil,
+         onSave: @escaping ([FertilizerRecord]) -> Bool) {
+        self.init(records: records, includesEmptyDraft: includesEmptyDraft,
+                  gardenID: gardenID, frequencyPerYear: frequencyPerYear,
+                  detailsStore: detailsStore, onContinue: onContinue,
+                  onSave: { records, _ in onSave(records) })
     }
 
     var body: some View {
@@ -33,12 +59,24 @@ struct FertilizerHistoryEditor: View {
                 ScrollViewReader { reader in
                     ScrollView {
                         VStack(alignment: .leading, spacing: 16) {
-                            Text("Riwayat Pemupukan").font(.title.bold())
+                            Text("Riwayat Pemupukan").font(.title.bold()).padding(.horizontal, 8)
+                            HStack {
+                                Text("Frekuensi Pemupukan\ndalam setahun")
+                                    .font(.headline)
+                                    .fixedSize(horizontal: false, vertical: true)
+                                Spacer(minLength: 8)
+                                HarvestFrequencyStepper(value: $frequency, range: 1...12,
+                                                        accessibilityTitle: "Frekuensi pemupukan", period: "satu tahun")
+                            }
+                            .padding(16)
+                            .frame(minHeight: 76)
+                            .background(GardenFlowStyle.card, in: RoundedRectangle(cornerRadius: 24))
                             VStack(alignment: .leading, spacing: 4) {
                                 Text("Jenis Pupuk").font(.headline)
                                 Text("Data pupuk yang diaplikasikan di kebun ini dalam periode pemupukan terakhir.")
                                     .foregroundStyle(.secondary)
                             }
+                            .padding(.horizontal, 8)
                             ForEach($drafts) { $draft in
                                 FertilizerEntryCard(draft: $draft, focusedField: $focusedField)
                                 .contextMenu {
@@ -93,7 +131,12 @@ struct FertilizerHistoryEditor: View {
     }
 
     private var nextField: FertilizerField? {
-        let order = drafts.flatMap { draft in FertilizerField.Kind.allCases.map { FertilizerField(draftID: draft.id, kind: $0) } }
+        let order = drafts.flatMap { draft in
+            let kinds: [FertilizerField.Kind] = draft.isNPK
+                ? [.nitrogen, .phosphorus, .potassium, .magnesium, .dose]
+                : [.dose]
+            return kinds.map { FertilizerField(draftID: draft.id, kind: $0) }
+        }
         guard let focusedField, let index = order.firstIndex(of: focusedField), index + 1 < order.count else { return nil }
         return order[index + 1]
     }
@@ -101,12 +144,17 @@ struct FertilizerHistoryEditor: View {
     private func save() {
         focusedField = nil
         let filled = drafts.filter { !$0.isEmpty }
-        let records = filled.compactMap(\.record)
-        guard records.count == filled.count else {
-            errorMessage = "Lengkapi jenis pupuk, berat, jumlah karung, dan dosis dengan nilai lebih dari nol."
+        guard filled.filter(\.isNPK).allSatisfy({ $0.composition.isValid }) else {
+            errorMessage = "Isi komposisi N, P, dan K sesuai kemasan. Setiap nilai harus 0–100% dan total tidak boleh melebihi 100%."
             return
         }
-        if onSave(records) {
+        let records = filled.compactMap(\.record)
+        guard records.count == filled.count else {
+            errorMessage = "Pastikan jenis pupuk dan dosis sudah diisi dengan benar."
+            return
+        }
+        if onSave(records, frequency) {
+            if let gardenID { detailsStore.remove(gardenID: gardenID) }
             onContinue?()
             dismiss()
         } else {
@@ -138,10 +186,11 @@ struct FertilizerEntryCard: View {
                 VStack(alignment: .leading, spacing: 12) {
                     Text("Jenis pupuk").font(.headline).foregroundStyle(.secondary)
                     HStack {
-                        Text(draft.name.isEmpty ? "Pilih jenis pupuk" : draft.name)
+                        Text(draft.name.isEmpty ? "Pilih jenis pupuk" : draft.isNPK ? "NPK" : draft.name)
+                            .font(.title3.weight(draft.isNPK ? .semibold : .regular))
                             .foregroundStyle(draft.name.isEmpty ? Color.secondary : Color.primary)
                         Spacer()
-                        Image(systemName: "chevron.down").font(.footnote).foregroundStyle(.secondary)
+                        Image(systemName: "chevron.right").font(.footnote).foregroundStyle(.secondary)
                     }
                 }
                 .contentShape(Rectangle())
@@ -149,20 +198,16 @@ struct FertilizerEntryCard: View {
             .buttonStyle(.plain)
             .id(draft.id)
             Divider()
-            numberField("Berat per karung", unit: "kg", kind: .bagWeight,
-                        accessibility: "Berat per karung, kilogram") {
-                TextField("cth: 50", value: $draft.bagWeightKg, format: .number).keyboardType(.decimalPad)
+            if draft.isNPK {
+                FertilizerCompositionFields(composition: $draft.composition, draftID: draft.id,
+                                            focusedField: focusedField)
+                    .padding(.bottom, 16)
             }
-            Divider()
-            numberField("Jumlah karung", unit: "sak", kind: .bagCount,
-                        accessibility: "Jumlah karung") {
-                TextField("cth: 6", value: $draft.bagCount, format: .number).keyboardType(.numberPad)
-            }
-            Divider()
             numberField("Dosis per pohon", unit: "kg", kind: .dose,
                         accessibility: "Dosis per pohon, kilogram") {
-                TextField("cth: 1.5", value: $draft.doseKgPerTree, format: .number).keyboardType(.decimalPad)
+                TextField("cth: 0,5", value: $draft.doseKgPerTree, format: .number).keyboardType(.decimalPad)
             }
+
         }
         .font(.title3.weight(.semibold))
         .padding(16)
@@ -281,6 +326,8 @@ struct HarvestHistoryEditor: View {
 struct HarvestFrequencyStepper: View {
     @Binding var value: Int
     let range: ClosedRange<Int>
+    var accessibilityTitle = "Frekuensi panen"
+    var period = "satu bulan"
 
     var body: some View {
         HStack(spacing: 0) {
@@ -295,8 +342,8 @@ struct HarvestFrequencyStepper: View {
         .animation(.snappy, value: value)
         .sensoryFeedback(.selection, trigger: value)
         .accessibilityElement(children: .ignore)
-        .accessibilityLabel("Frekuensi panen")
-        .accessibilityValue("\(value) kali dalam satu bulan")
+        .accessibilityLabel(accessibilityTitle)
+        .accessibilityValue("\(value) kali dalam \(period)")
         .accessibilityAdjustableAction { direction in
             switch direction {
             case .increment where value < range.upperBound: value += 1
@@ -322,10 +369,12 @@ struct HarvestFrequencyStepper: View {
 }
 
 #if DEBUG
-#Preview("Pemupukan · Filled", traits: .fixedLayout(width: 402, height: 918)) {
+#Preview("Pemupukan · Filled", traits: .fixedLayout(width: 402, height: 1034)) {
     FertilizerHistoryEditor(
-        records: [FertilizerRecord(name: "Dolomit Super", bagWeightKg: 50, bagCount: 6, doseKgPerTree: 1.5)],
-        includesEmptyDraft: true, onSave: { _ in true }
+        records: [FertilizerRecord(name: "NPK", doseKgPerTree: 0.5,
+                                   composition: FertilizerComposition(nitrogen: 15, phosphorus: 15, potassium: 15)),
+                  FertilizerRecord(name: "Dolomit", doseKgPerTree: 0.5)],
+        onContinue: {}, onSave: { _ in true }
     )
 }
 #Preview("Fertilizer Entry", traits: .sizeThatFitsLayout) {

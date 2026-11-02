@@ -14,6 +14,7 @@ final class GardenStore {
     private let modelContext: ModelContext
     private let repository: CloudKitFarmerReviewRepository
     private let domainMapper = PlantationDomainMapper()
+    private let legacyFertilizerDetails = LocalFertilizerFormStore()
 
     private var localDraftGardens: [Garden] = []
     private var submittedGardens: [Garden] = []
@@ -37,7 +38,7 @@ final class GardenStore {
         do {
             let requests = try modelContext.fetch(descriptor)
             drafts = requests.filter { !$0.isBoundaryMapped }.map { $0.toGardenDraft() }
-            localDraftGardens = requests.filter { $0.isBoundaryMapped }.map { $0.toGarden() }
+            localDraftGardens = requests.filter { $0.isBoundaryMapped }.map { legacyFertilizerDetails.applyingLegacyDetails(to: $0.toGarden()) }
             combineGardens()
         } catch {
             errorMessage = "Draf lokal tidak dapat dimuat: \(error.localizedDescription)"
@@ -51,7 +52,7 @@ final class GardenStore {
         defer { isLoading = false }
         do {
             let remoteGardens = try await repository.fetchMyGardens()
-            submittedGardens = remoteGardens
+            submittedGardens = remoteGardens.map { legacyFertilizerDetails.applyingLegacyDetails(to: $0) }
             combineGardens()
         } catch {
             print("[GardenStore] CloudKit fetch status: \(error.localizedDescription)")
@@ -144,6 +145,7 @@ final class GardenStore {
             existing.soilType = garden.soilType
             existing.boundary = garden.boundary
             existing.fertilizerRecords = garden.fertilizerRecords ?? []
+            existing.fertilizationFrequencyPerYear = garden.fertilizationFrequencyPerYear
             existing.harvestRecord = garden.harvestRecord
             do {
                 try modelContext.save()
@@ -195,7 +197,7 @@ final class GardenStore {
     func submitReview(for garden: Garden, contact: ReviewContactDetails) async throws -> PlantationReviewRequest {
         let boundaryPoints = garden.boundary.points.map { CoordinatePoint(latitude: $0.latitude, longitude: $0.longitude) }
         let usages = (garden.fertilizerRecords ?? []).map {
-            FertilizerUsage(id: $0.id, name: $0.name, bagWeightKg: $0.bagWeightKg, bagCount: $0.bagCount, doseKgPerTree: $0.doseKgPerTree)
+            FertilizerUsage(id: $0.id, name: $0.name, bagWeightKg: $0.bagWeightKg, bagCount: $0.bagCount, doseKgPerTree: $0.doseKgPerTree, composition: $0.composition)
         }
         let harvest = garden.harvestRecord.map {
             HarvestYield(frequencyPerMonth: $0.frequencyPerMonth, latestWeightKg: $0.latestWeightKg)
@@ -209,7 +211,8 @@ final class GardenStore {
                 plantingMonth: garden.plantingMonth,
                 soilType: garden.soilType.rawValue,
                 fertilizerRecords: usages,
-                harvestRecord: harvest
+                harvestRecord: harvest,
+                fertilizationFrequencyPerYear: garden.fertilizationFrequencyPerYear
             )
         )
 
