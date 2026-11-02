@@ -3,8 +3,10 @@ import SwiftUI
 struct AreaAllocationView: View {
     let result: ReviewResult
     let allocation: AreaAllocation
+    var onMarkFertilized: () -> Void = {}
 
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
+    @ScaledMetric(relativeTo: .largeTitle) private var doseSize = 52
 
     var body: some View {
         GeometryReader { geometry in
@@ -16,13 +18,20 @@ struct AreaAllocationView: View {
                             .padding(.horizontal, KropsTheme.Spacing.screen)
                             .padding(.top, -52)
                     }
-                    areaList
+                    distributionContent
                         .padding(.horizontal, KropsTheme.Spacing.screen)
                 }
                 .padding(.bottom, KropsTheme.Spacing.content)
             }
             .scrollIndicators(.hidden)
             .ignoresSafeArea(edges: .top)
+            .safeAreaInset(edge: .bottom, spacing: 0) {
+                if case .uniform = allocation.distribution, !dynamicTypeSize.isAccessibilitySize {
+                    fertilizedButton
+                        .padding(.horizontal, KropsTheme.Spacing.screen)
+                        .padding(.vertical, KropsTheme.Spacing.compact)
+                }
+            }
         }
         .background(KropsTheme.background.ignoresSafeArea())
         .toolbar(.hidden, for: .navigationBar)
@@ -57,9 +66,63 @@ struct AreaAllocationView: View {
         .accessibilityAddTraits(isSelected ? .isSelected : [])
     }
 
-    private var areaList: some View {
+    @ViewBuilder
+    private var distributionContent: some View {
+        switch allocation.distribution {
+        case .perArea(let lines):
+            areaList(lines)
+        case .uniform(let dose, let note):
+            VStack(spacing: KropsTheme.Spacing.screen) {
+                uniformCard(dose: dose, note: note)
+                // A pinned button would cover too much of the screen at accessibility text sizes.
+                if dynamicTypeSize.isAccessibilitySize { fertilizedButton }
+            }
+        }
+    }
+
+    private func uniformCard(dose: String, note: String) -> some View {
+        VStack(alignment: .leading, spacing: KropsTheme.Spacing.field) {
+            Text("TABUR MERATA")
+                .font(.caption.weight(.semibold))
+                .lineLimit(1)
+                .minimumScaleFactor(0.6)
+                .foregroundStyle(Color(uiColor: .systemBackground))
+                .padding(.horizontal, KropsTheme.Spacing.field)
+                .padding(.vertical, 4)
+                .background(.primary, in: Capsule())
+            HStack(alignment: .firstTextBaseline, spacing: 6) {
+                Text(dose)
+                    .font(.system(size: doseSize, weight: .bold))
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.5)
+                Text("kg / pohon").font(.headline)
+            }
+            Text(note)
+                .font(.body)
+                .foregroundStyle(.secondary)
+                .fixedSize(horizontal: false, vertical: true)
+        }
+        .padding(KropsTheme.Spacing.section)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(.background, in: RoundedRectangle(cornerRadius: KropsTheme.Radius.card))
+    }
+
+    private var fertilizedButton: some View {
+        Button(action: onMarkFertilized) {
+            Label("Sudah Dipupuk", systemImage: "checkmark")
+                .labelStyle(.titleAndIcon)
+                .font(.body.weight(.semibold))
+                .foregroundStyle(.primary)
+                .padding(KropsTheme.Spacing.compact)
+                .frame(maxWidth: .infinity, minHeight: 52)
+                .background(.background, in: RoundedRectangle(cornerRadius: KropsTheme.Radius.card))
+        }
+        .buttonStyle(.plain)
+    }
+
+    private func areaList(_ lines: [AreaAllocation.Line]) -> some View {
         VStack(spacing: KropsTheme.Spacing.screen) {
-            ForEach(allocation.lines) { line in
+            ForEach(lines) { line in
                 areaRow(line)
                     .accessibilityElement(children: .combine)
             }
@@ -154,6 +217,11 @@ struct AreaAllocationView: View {
 #Preview("Alokasi per Area") {
     NavigationStack {
         AreaAllocationView(result: .sample, allocation: .sample)
+    }
+}
+#Preview("Tabur Merata") {
+    NavigationStack {
+        AreaAllocationView(result: .sample, allocation: .uniformSample)
     }
 }
 #endif

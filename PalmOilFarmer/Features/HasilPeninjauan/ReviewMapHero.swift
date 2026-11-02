@@ -31,6 +31,7 @@ struct ReviewMapHero: View {
                     .stroke(.white.opacity(0.85), lineWidth: 1.5)
                 Text("\(area.id)")
                     .font(.caption2.weight(.semibold))
+                    .dynamicTypeSize(...DynamicTypeSize.xxLarge)
                     .foregroundStyle(.white)
                     .frame(width: 22, height: 22)
                     .background(.black.opacity(0.35), in: Circle())
