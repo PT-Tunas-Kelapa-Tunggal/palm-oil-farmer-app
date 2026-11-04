@@ -204,7 +204,7 @@ Gunakan data uji untuk pemeriksaan yang membuat kebun atau pengajuan. Jalur Run 
 
 3. **Baca perpindahan data lokal ke remote.**
 
-   Buka [GardenStore.swift](../../PalmOilFarmer/Data/Gardens/GardenStore.swift). Temukan `addDraft`, `add`, `update`, `refreshRemote`, dan `submitReview`.
+   Buka [GardenStore.swift](../../PalmOilFarmer/App/State/GardenStore.swift). Temukan `addDraft`, `add`, `update`, `refreshRemote`, dan `submitReview`.
 
    Kemudian lihat [DraftPlantationRequest.swift](../../PalmOilFarmer/Data/Gardens/DraftPlantationRequest.swift) dan [CloudKitFarmerReviewRepository.swift](../../PalmOilFarmer/Data/Reviews/CloudKitFarmerReviewRepository.swift).
 
