@@ -2,30 +2,25 @@ import SwiftUI
 
 /// Registration starts with the boundary guide, then grows into the address search in the same sheet.
 struct RegistrationIntroView: View {
-    let onLocate: (GardenLocation) -> Void
-
     @ScaledMetric(relativeTo: .body) private var contentHeight = 141
-    @State private var step: Step
+    @State private var flow: GardenRegistrationFlow
 
-    enum Step {
-        case guide, search
-    }
+    typealias Step = GardenRegistrationStep
 
-    init(initialStep: Step = .guide, onLocate: @escaping (GardenLocation) -> Void) {
-        self.onLocate = onLocate
-        _step = State(initialValue: initialStep)
+    init(flow: GardenRegistrationFlow) {
+        _flow = State(initialValue: flow)
     }
 
     var body: some View {
         Group {
-            switch step {
+            switch flow.coordinator.step {
             case .guide:
                 guide.fittedSheetHeight()
             case .search:
-                LocationSearchView(onSelect: onLocate).presentationDetents([.large])
+                LocationSearchView(flow: flow).presentationDetents([.large])
             }
         }
-        .presentationDragIndicator(step == .guide ? .visible : .hidden)
+        .presentationDragIndicator(flow.coordinator.step == .guide ? .visible : .hidden)
         .presentationBackgroundInteraction(.disabled)
     }
 
@@ -47,7 +42,7 @@ struct RegistrationIntroView: View {
                 .padding(.bottom, 24)
 
             PrimaryActionButton(title: "Lanjut") {
-                withAnimation { step = .search }
+                withAnimation { flow.coordinator.continueToSearch() }
             }
         }
         .padding(.horizontal, 24)

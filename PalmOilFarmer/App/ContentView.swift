@@ -4,11 +4,14 @@ struct ContentView: View {
     @State private var store: GardenStore
     @State private var listViewModel: GardenListViewModel
     @State private var coordinator: AppCoordinator
+    private let registrationFactory: GardenRegistrationFactory
 
-    init(store: GardenStore, listViewModel: GardenListViewModel, coordinator: AppCoordinator) {
+    init(store: GardenStore, listViewModel: GardenListViewModel, coordinator: AppCoordinator,
+         registrationFactory: GardenRegistrationFactory) {
         _store = State(initialValue: store)
         _listViewModel = State(initialValue: listViewModel)
         _coordinator = State(initialValue: coordinator)
+        self.registrationFactory = registrationFactory
     }
 
     var body: some View {
@@ -25,8 +28,10 @@ struct ContentView: View {
         }
         .environment(store)
         .sheet(item: $coordinator.registrationSheet, onDismiss: coordinator.registrationDidDismiss) { sheet in
-            RegistrationIntroView(initialStep: sheet == .guide ? .guide : .search,
-                                  onLocate: coordinator.locatedGarden)
+            RegistrationIntroView(flow: registrationFactory.makeFlow(
+                initialStep: sheet == .guide ? .guide : .search,
+                onLocate: coordinator.locatedGarden, onCancel: coordinator.cancelRegistration
+            ))
         }
         .fullScreenCover(item: $coordinator.mappingLocation, onDismiss: coordinator.mappingDidDismiss) { location in
             GardenBoundaryView(
@@ -69,7 +74,8 @@ struct ContentView: View {
     let dependencies = AppDependencies.preview()
     ContentView(store: dependencies.gardenStore,
                 listViewModel: dependencies.gardenListViewModel,
-                coordinator: dependencies.coordinator)
+                coordinator: dependencies.coordinator,
+                registrationFactory: dependencies.registrationFactory)
         .environment(\.farmerReviewRepository, dependencies.reviewRepository)
 }
 #endif

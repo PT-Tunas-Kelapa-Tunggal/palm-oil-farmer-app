@@ -5,9 +5,24 @@ extension AppDependencies {
     static func preview() -> AppDependencies {
         AppDependencies(
             modelContainer: AppConfiguration.makeModelContainer(inMemory: true),
-            reviewRepository: PreviewFarmerReviewRepository()
+            reviewRepository: PreviewFarmerReviewRepository(),
+            registrationServices: {
+                GardenRegistrationServices(locations: PreviewLocationRepository(), photos: PreviewPhotoRepository())
+            }
         )
     }
+}
+
+private struct PreviewLocationRepository: GardenLocationRepository {
+    func search(_ query: String) async throws -> [GardenLocation] { [] }
+    func currentLocation() async throws -> GardenLocation { throw ReviewServiceError.unavailable }
+}
+
+private struct PreviewPhotoRepository: GardenPhotoRepository {
+    func loadPhotos() async -> GardenPhotoLibrarySnapshot {
+        GardenPhotoLibrarySnapshot(access: .allowed, photos: [])
+    }
+    func thumbnails(for photoID: String) -> AsyncStream<Data> { AsyncStream { $0.finish() } }
 }
 
 private struct PreviewFarmerReviewRepository: FarmerReviewRepository {

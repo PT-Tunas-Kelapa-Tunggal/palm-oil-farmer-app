@@ -98,7 +98,8 @@ struct GardenStoreDependencyTests {
     @Test func compositionSharesInjectedReviewRepositoryAndUsesSuppliedContainer() async throws {
         let container = AppConfiguration.makeModelContainer(inMemory: true)
         let reviewRepository = RecordingReviewRepository()
-        let dependencies = AppDependencies(modelContainer: container, reviewRepository: reviewRepository)
+        let dependencies = AppDependencies(modelContainer: container, reviewRepository: reviewRepository,
+                                           registrationServices: makeTestRegistrationServices)
         let local = garden()
         #expect(dependencies.modelContainer === container)
         #expect(dependencies.reviewRepository as? RecordingReviewRepository === reviewRepository)

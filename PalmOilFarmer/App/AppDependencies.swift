@@ -8,8 +8,10 @@ struct AppDependencies {
     let gardenStore: GardenStore
     let coordinator: AppCoordinator
     let gardenListViewModel: GardenListViewModel
+    let registrationFactory: GardenRegistrationFactory
 
-    init(modelContainer: ModelContainer, reviewRepository: any FarmerReviewRepository) {
+    init(modelContainer: ModelContainer, reviewRepository: any FarmerReviewRepository,
+         registrationServices: @escaping () -> GardenRegistrationServices) {
         self.modelContainer = modelContainer
         self.reviewRepository = reviewRepository
         let gardenStore = GardenStore(
@@ -20,6 +22,7 @@ struct AppDependencies {
         self.gardenStore = gardenStore
         self.coordinator = coordinator
         gardenListViewModel = GardenListViewModel(source: gardenStore, onEvent: coordinator.handle)
+        registrationFactory = GardenRegistrationFactory(services: registrationServices)
     }
 
     static func live() -> AppDependencies {
@@ -27,7 +30,8 @@ struct AppDependencies {
             modelContainer: AppConfiguration.makeModelContainer(),
             reviewRepository: CloudKitFarmerReviewRepository(
                 containerIdentifier: AppConfiguration.cloudKitContainerIdentifier
-            )
+            ),
+            registrationServices: GardenRegistrationFactory.liveServices
         )
     }
 }

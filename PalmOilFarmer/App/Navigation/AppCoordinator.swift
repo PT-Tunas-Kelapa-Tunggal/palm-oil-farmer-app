@@ -48,6 +48,11 @@ final class AppCoordinator {
         registrationSheet = nil
     }
 
+    func cancelRegistration() {
+        pendingLocation = nil
+        registrationSheet = nil
+    }
+
     /// The map is presented only after the registration sheet finishes closing.
     func registrationDidDismiss() {
         guard let location = pendingLocation else { return }
