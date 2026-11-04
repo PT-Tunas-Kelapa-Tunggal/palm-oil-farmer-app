@@ -1,52 +1,37 @@
 import SwiftUI
 
-/// A numeric field in one fertilizer card; used for focus and scrolling.
-struct FertilizerField: Hashable {
-    enum Kind: CaseIterable { case bagWeight, bagCount, dose }
-    let draftID: UUID
-    let kind: Kind
-}
-
 struct FertilizerHistoryEditor: View {
-    @State private var drafts: [FertilizerDraft]
-    @State private var selectedDraftID: UUID?
-    @State private var errorMessage: String?
+    @State private var flow: FertilizerHistoryFlow
     @FocusState private var focusedField: FertilizerField?
-    let onSave: ([FertilizerRecord]) -> Bool
     @Environment(\.dismiss) private var dismiss
 
-    init(records: [FertilizerRecord], includesEmptyDraft: Bool = false,
-         onSave: @escaping ([FertilizerRecord]) -> Bool) {
-        var drafts = records.map { FertilizerDraft(record: $0) }
-        if drafts.isEmpty || includesEmptyDraft { drafts.append(FertilizerDraft()) }
-        _drafts = State(initialValue: drafts)
-        self.onSave = onSave
-    }
+    init(flow: FertilizerHistoryFlow) { _flow = State(initialValue: flow) }
 
     var body: some View {
+        @Bindable var model = flow.viewModel
+        @Bindable var coordinator = flow.coordinator
         NavigationStack {
             VStack(spacing: 0) {
                 ScreenHeader(title: "Riwayat Pemupukan",
-                             confirmationAction: save, onClose: { dismiss() })
+                             confirmationAction: save, onClose: coordinator.close)
                 ScrollViewReader { reader in
                     ScrollView {
                         VStack(spacing: 16) {
-                            ForEach($drafts) { $draft in
+                            ForEach($model.drafts) { $draft in
                                 FertilizerEntryCard(draft: $draft, focusedField: $focusedField) {
                                     focusedField = nil
-                                    selectedDraftID = draft.id
+                                    coordinator.selectType(for: draft.id)
                                 }
                                 .contextMenu {
                                     Button("Hapus jenis pupuk", role: .destructive) {
-                                        drafts.removeAll { $0.id == draft.id }
+                                        model.removeDraft(id: draft.id)
                                     }
                                 }
                             }
                             Button {
-                                let draft = FertilizerDraft()
-                                drafts.append(draft)
+                                guard let id = model.addDraft() else { return }
                                 focusedField = nil
-                                withAnimation { reader.scrollTo(draft.id, anchor: .top) }
+                                withAnimation { reader.scrollTo(id, anchor: .top) }
                             } label: {
                                 Label("Tambah jenis pupuk", systemImage: "plus")
                                     .frame(maxWidth: .infinity, minHeight: 52)
@@ -76,42 +61,32 @@ struct FertilizerHistoryEditor: View {
             .animation(.easeOut(duration: 0.2), value: focusedField == nil)
             .containerBackground(.clear, for: .navigation)
             .toolbar(.hidden, for: .navigationBar)
-            .navigationDestination(item: $selectedDraftID) { id in
+            .navigationDestination(item: $coordinator.selectedDraftID) { id in
                 SelectionListView(
                     title: "Jenis Pupuk", options: FertilizerCatalogue.names,
-                    selected: drafts.first(where: { $0.id == id })?.name,
+                    selected: model.drafts.first(where: { $0.id == id })?.name,
                     footer: "Pilih sesuai nama pupuk yang tertera pada karung. Jika tidak ada dalam daftar, pilih Lainnya."
                 ) { name in
-                    guard let index = drafts.firstIndex(where: { $0.id == id }) else { return }
-                    drafts[index].name = name
+                    model.selectType(name, for: id)
                 }
             }
             .alert("Riwayat belum tersimpan", isPresented: Binding(
-                get: { errorMessage != nil }, set: { if !$0 { errorMessage = nil } }
+                get: { model.errorMessage != nil }, set: { if !$0 { model.errorMessage = nil } }
             )) {
                 Button("Mengerti", role: .cancel) {}
-            } message: { Text(errorMessage ?? "") }
+            } message: { Text(model.errorMessage ?? "") }
+        }
+        .onChange(of: coordinator.isFinished) { _, finished in
+            if finished { dismiss() }
         }
         .presentationDetents([.large])
     }
 
-    private var nextField: FertilizerField? {
-        let order = drafts.flatMap { draft in FertilizerField.Kind.allCases.map { FertilizerField(draftID: draft.id, kind: $0) } }
-        guard let focusedField, let index = order.firstIndex(of: focusedField), index + 1 < order.count else { return nil }
-        return order[index + 1]
-    }
+    private var nextField: FertilizerField? { flow.viewModel.nextField(after: focusedField) }
 
     private func save() {
         focusedField = nil
-        let filled = drafts.filter { !$0.isEmpty }
-        let records = filled.compactMap(\.record)
-        guard records.count == filled.count else {
-            errorMessage = "Lengkapi jenis pupuk, berat, jumlah karung, dan dosis dengan nilai lebih dari nol."
-            return
-        }
-        if onSave(records) { dismiss() } else {
-            errorMessage = "Data tidak dapat disimpan di perangkat. Coba lagi."
-        }
+        _ = flow.viewModel.save()
     }
 }
 
@@ -170,59 +145,44 @@ struct FertilizerEntryCard: View {
 }
 
 struct HarvestHistoryEditor: View {
-    let onSave: (HarvestRecord) -> Bool
-    @State private var frequency: Int
-    @State private var weight: Double
-    @State private var showsError = false
+    @State private var flow: HarvestHistoryFlow
     @Environment(\.dismiss) private var dismiss
-
     static let frequencyRange = HarvestRecord.frequencyRange
 
-    init(record: HarvestRecord?, onSave: @escaping (HarvestRecord) -> Bool) {
-        self.onSave = onSave
-        _frequency = State(initialValue: min(max(record?.frequencyPerMonth ?? 2, Self.frequencyRange.lowerBound),
-                                             Self.frequencyRange.upperBound))
-        _weight = State(initialValue: record?.latestWeightKg ?? 450)
-    }
-
-    private var weightOptions: [Double] {
-        Array(Set(stride(from: 50.0, through: 5000.0, by: 50) + [weight])).sorted()
-    }
+    init(flow: HarvestHistoryFlow) { _flow = State(initialValue: flow) }
 
     var body: some View {
+        @Bindable var model = flow.viewModel
+        let coordinator = flow.coordinator
         VStack(spacing: 0) {
-            ScreenHeader(title: "Riwayat Panen", confirmationAction: save, onClose: { dismiss() })
+            ScreenHeader(title: "Riwayat Panen", confirmationAction: save, onClose: coordinator.close)
             VStack(spacing: 16) {
                 HarvestCard(title: "Frekuensi Panen",
                             message: "Jumlah panen yang biasanya dilakukan di kebun ini",
                             footer: "dalam satu bulan") {
-                    HarvestFrequencyStepper(value: $frequency, range: Self.frequencyRange)
+                    HarvestFrequencyStepper(value: $model.frequency, range: Self.frequencyRange)
                 }
                 HarvestCard(title: "Rata-rata berat per panen",
                             message: "Perkiraan berat TBS yang didapat setiap kali panen",
                             footer: "setiap kali panen") {
-                    HarvestWeightWheel(selection: $weight, options: weightOptions)
+                    HarvestWeightWheel(selection: $model.weight, options: model.weightOptions)
                 }
             }
             .padding(.horizontal, 16)
             .padding(.bottom, 16)
         }
+        .onChange(of: coordinator.isFinished) { _, finished in
+            if finished { dismiss() }
+        }
+        .onDisappear { coordinator.close() }
         .fittedSheetHeight()
         .presentationBackground(Color(uiColor: .systemBackground))
-        .alert("Riwayat belum tersimpan", isPresented: $showsError) {
+        .alert("Riwayat belum tersimpan", isPresented: $model.showsError) {
             Button("Mengerti", role: .cancel) {}
         }
     }
 
-    private func save() {
-        guard let record = HarvestRecord.validated(frequencyPerMonth: frequency, latestWeightKg: weight) else {
-            showsError = true
-            return
-        }
-        if onSave(record) {
-            dismiss()
-        } else { showsError = true }
-    }
+    private func save() { _ = flow.viewModel.save() }
 }
 
 /// A rounded card with a centred title, explanation, control, and unit line, as in the Sketch form.

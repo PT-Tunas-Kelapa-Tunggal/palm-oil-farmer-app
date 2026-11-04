@@ -27,8 +27,6 @@ struct GardenProfileView: View {
     @State private var showsGardenEditor = false
     @State private var showsDeleteConfirmation = false
     @State private var showsDeleteError = false
-    /// True once the map has scrolled under the pinned toolbar.
-    @State private var isToolbarOverContent = false
     @State private var activeReviewStatus: ReviewStatus?
     @State private var activeReviewEntries: [ReviewTimelineEntry] = []
     @State private var activeReport: FertilizerRecommendationReport?
@@ -70,44 +68,24 @@ struct GardenProfileView: View {
     private var currentReport: FertilizerRecommendationReport? {
         activeReport ?? recommendationReport ?? (currentReviewStatus == .completed ? DemoReviewReport.make(for: garden) : nil)
     }
-    private var hasHero: Bool { showsHeader && layout == .standard }
-    private var isComplete: Bool { garden.isProfileComplete }
 
     var body: some View {
-        GeometryReader { geometry in
-            ScrollView {
-                profileContent(topInset: geometry.safeAreaInsets.top)
-                    .padding(.bottom, 32)
-            }
-            .scrollIndicators(.hidden)
-            .ignoresSafeArea(edges: hasHero ? .top : [])
-            .onScrollGeometryChange(for: Bool.self) { scroll in
-                // The hero is 380 pt tall; the toolbar bottom sits about 68 pt below the safe area.
-                scroll.contentOffset.y + scroll.contentInsets.top > 380 - geometry.safeAreaInsets.top - 68
-            } action: { _, isOver in
-                isToolbarOverContent = isOver
-            }
-            .overlay(alignment: .top) {
-                if hasHero {
-                    HeroToolbar(
-                        title: "Detail Kebun",
-                        onBack: { dismiss() },
-                        onEdit: { showsGardenEditor = true },
-                        onDelete: onDelete == nil ? nil : { showsDeleteConfirmation = true },
-                        lockedReason: currentReviewStatus == nil ? nil : "Sudah diajukan untuk peninjauan",
-                        isOverContent: isToolbarOverContent
-                    )
-                    .background {
-                        Rectangle()
-                            .fill(.bar)
-                            .ignoresSafeArea(edges: .top)
-                            .opacity(isToolbarOverContent ? 1 : 0)
-                    }
+        GardenProfileContent(
+            garden: garden, referenceMapImage: referenceMapImage, metrics: metrics,
+            showsHeader: showsHeader, layout: layout, chartValues: chartValues,
+            currentReviewStatus: currentReviewStatus, isComplete: garden.isProfileComplete,
+            onBack: { dismiss() }, onEditGarden: { showsGardenEditor = true },
+            onEditFertilizer: { editor = .fertilizer }, onEditHarvest: { editor = .harvest },
+            onReviewAction: {
+                switch currentReviewStatus {
+                case nil: showsReview = true
+                case .completed where (activeReviewStatus == .completed) || (garden.review?.resultsDownloaded ?? (reviewStatus != nil)):
+                    showsResults = true
+                default: showsReviewStatus = true
                 }
-            }
-        }
-        .background(KropsTheme.background.ignoresSafeArea())
-        .toolbar(.hidden, for: .navigationBar)
+            },
+            onDelete: onDelete == nil ? nil : { showsDeleteConfirmation = true }
+        )
         .sheet(isPresented: $showsGardenEditor) {
             GardenDetailsView(editing: garden, referenceMapImage: referenceMapImage, metrics: metrics, onSave: onUpdate)
         }
@@ -186,94 +164,6 @@ struct GardenProfileView: View {
         }
     }
 
-    @ViewBuilder
-    private func profileContent(topInset: CGFloat) -> some View {
-        if layout == .overview {
-            VStack(spacing: 12) {
-                map.clipShape(RoundedRectangle(cornerRadius: 16))
-                VStack(alignment: .leading, spacing: 8) {
-                    Text(garden.name).font(.title)
-                    GardenSummaryView(garden: garden, metrics: metrics)
-                }
-                .padding(10)
-                .background(.background, in: RoundedRectangle(cornerRadius: KropsTheme.Radius.card))
-            }
-            .padding(.horizontal, KropsTheme.Spacing.screen)
-        } else {
-            VStack(spacing: 0) {
-                if hasHero {
-                    MapHeroView(title: "Detail Kebun", topInset: topInset, onBack: { dismiss() },
-                                showsToolbar: false) {
-                        GardenMapView(boundary: garden.boundary, referenceImage: referenceMapImage)
-                    }
-                } else {
-                    map
-                }
-                Text(garden.name)
-                    .font(.title)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .padding(16)
-
-                GardenSummaryView(garden: garden, metrics: metrics)
-                    .padding(.horizontal, KropsTheme.Spacing.screen)
-                    .padding(.vertical, 8)
-
-                if layout == .chart {
-                    GardenHistoryChart(values: chartValues) { editor = .harvest }
-                        .padding(.horizontal, KropsTheme.Spacing.screen)
-                        .padding(.top, 8)
-                    profileProgress(step: .harvest)
-                } else {
-                    if isComplete {
-                        PrimaryActionButton(title: reviewActionTitle, systemImage: reviewActionImage,
-                                            imagePlacement: .trailing,
-                                            isProminent: currentReviewStatus == nil || currentReviewStatus == .completed) {
-                            switch currentReviewStatus {
-                            case nil:
-                                showsReview = true
-                            case .completed where (activeReviewStatus == .completed) || (garden.review?.resultsDownloaded ?? (reviewStatus != nil)):
-                                showsResults = true
-                            default:
-                                showsReviewStatus = true
-                            }
-                        }
-                        .padding(.horizontal, KropsTheme.Spacing.screen)
-                        .padding(.vertical, 8)
-                    }
-
-                    if !fertilizers.isEmpty {
-                        fertilizerHistory
-                    }
-
-                    if let harvest = garden.harvestRecord {
-                        VStack(spacing: 16) {
-                            GardenSectionHeader(title: "Riwayat Panen") { editor = .harvest }
-                            HarvestHistoryCard(record: harvest)
-                        }
-                        .padding(.horizontal, KropsTheme.Spacing.screen)
-                        .padding(.vertical, 8)
-                    }
-
-                    if !isComplete {
-                        profileProgress(step: fertilizers.isEmpty ? .fertilizer : .harvest)
-                    }
-                }
-            }
-        }
-    }
-
-    private var reviewActionTitle: String {
-        switch currentReviewStatus {
-        case nil: "Ajukan peninjauan"
-        case .completed: "Lihat hasil peninjauan"
-        default: "Lihat status peninjauan"
-        }
-    }
-
-    private var reviewActionImage: String {
-        currentReviewStatus == nil ? "paperplane.fill" : "chevron.right"
-    }
-
     private func updateReview(of garden: Garden, _ change: (inout GardenReview) -> Void) {
         guard var review = garden.review else { return }
         change(&review)
@@ -302,30 +192,6 @@ struct GardenProfileView: View {
         }
     }
 
-    private var map: some View {
-        GardenMapView(boundary: garden.boundary, referenceImage: referenceMapImage)
-            .frame(height: 201)
-    }
-
-    private var fertilizerHistory: some View {
-        VStack(spacing: 16) {
-            GardenSectionHeader(title: "Riwayat pupuk") { editor = .fertilizer }
-            VStack(spacing: 8) {
-                ForEach(fertilizers) { record in
-                    FertilizerHistoryCard(record: record)
-                }
-            }
-        }
-        .padding(.horizontal, KropsTheme.Spacing.screen)
-        .padding(.top, 8)
-        .padding(.bottom, garden.harvestRecord == nil ? 24 : 8)
-    }
-
-    private func profileProgress(step: GardenProfileStep) -> some View {
-        GardenProfileProgressView(step: step) {
-            editor = step == .fertilizer ? .fertilizer : .harvest
-        }
-    }
 
 }
 

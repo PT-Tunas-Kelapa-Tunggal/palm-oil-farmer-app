@@ -6,14 +6,17 @@ struct ContentView: View {
     @State private var coordinator: AppCoordinator
     private let registrationFactory: GardenRegistrationFactory
     private let mappingFactory: GardenMappingFactory
+    private let profileFactory: GardenProfileFactory
 
     init(store: GardenStore, listViewModel: GardenListViewModel, coordinator: AppCoordinator,
-         registrationFactory: GardenRegistrationFactory, mappingFactory: GardenMappingFactory) {
+         registrationFactory: GardenRegistrationFactory, mappingFactory: GardenMappingFactory,
+         profileFactory: GardenProfileFactory) {
         _store = State(initialValue: store)
         _listViewModel = State(initialValue: listViewModel)
         _coordinator = State(initialValue: coordinator)
         self.registrationFactory = registrationFactory
         self.mappingFactory = mappingFactory
+        self.profileFactory = profileFactory
     }
 
     var body: some View {
@@ -53,7 +56,7 @@ struct ContentView: View {
         switch route {
         case .gardenProfile(let id):
             if let garden = store.gardens.first(where: { $0.id == id }) {
-                GardenProfileView(garden: garden, onDelete: store.delete, onUpdate: store.update)
+                GardenProfileScreen(flow: profileFactory.makeFlow(garden: garden))
             }
         #if DEBUG
         case .developerMode:
@@ -73,7 +76,8 @@ struct ContentView: View {
                 listViewModel: dependencies.gardenListViewModel,
                 coordinator: dependencies.coordinator,
                 registrationFactory: dependencies.registrationFactory,
-                mappingFactory: dependencies.mappingFactory)
+                mappingFactory: dependencies.mappingFactory,
+                profileFactory: dependencies.profileFactory)
         .environment(\.farmerReviewRepository, dependencies.reviewRepository)
 }
 #endif

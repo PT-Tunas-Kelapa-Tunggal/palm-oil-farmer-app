@@ -10,6 +10,7 @@ struct AppDependencies {
     let gardenListViewModel: GardenListViewModel
     let registrationFactory: GardenRegistrationFactory
     let mappingFactory: GardenMappingFactory
+    let profileFactory: GardenProfileFactory
 
     init(modelContainer: ModelContainer, reviewRepository: any FarmerReviewRepository,
          registrationServices: @escaping () -> GardenRegistrationServices,
@@ -26,6 +27,8 @@ struct AppDependencies {
         gardenListViewModel = GardenListViewModel(source: gardenStore, onEvent: coordinator.handle)
         registrationFactory = GardenRegistrationFactory(services: registrationServices)
         mappingFactory = GardenMappingFactory(saving: gardenStore, authorization: mappingAuthorization)
+        profileFactory = GardenProfileFactory(source: gardenStore, reviewRepository: reviewRepository,
+                                               submitReview: gardenStore.submitReview)
     }
 
     static func live() -> AppDependencies {
