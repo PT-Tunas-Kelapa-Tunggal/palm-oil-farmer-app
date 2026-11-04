@@ -2,33 +2,22 @@ import SwiftUI
 import MapKit
 
 struct GardenBoundaryView: View {
-    let location: GardenLocation
-    let onSave: (Garden) -> Bool
-    /// Saves the location as a draft for "Lakukan Nanti".
-    var onSaveDraft: ((GardenLocation) -> Bool)? = nil
-    /// Returns to the address search when a photo location is wrong.
-    var onSearchAgain: (() -> Void)? = nil
+    @State private var flow: GardenMappingFlow
+    private var location: GardenLocation { flow.viewModel.location }
+    private var boundary: GardenBoundary { flow.viewModel.boundary }
+    private var isConfirmingPhoto: Bool { flow.viewModel.isConfirmingPhoto }
 
     @Environment(\.dismiss) private var dismiss
-    @State private var boundary = GardenBoundary()
     @State private var position: MapCameraPosition
-    @State private var showsDetails = false
-    @State private var showsExitConfirmation = false
     @State private var isRegionOverview = false
-    @State private var isConfirmingPhoto: Bool
-    @State private var locationManager = CLLocationManager()
     /// Finger position minus the dragged marker's tip, so a point does not jump under the finger.
     /// Drags use the global space: annotation views are hosted apart from the map's own hierarchy.
     @State private var dragOffset: CGSize?
     @State private var draggingIndex: Int?
 
-    init(location: GardenLocation, onSave: @escaping (Garden) -> Bool,
-         onSaveDraft: ((GardenLocation) -> Bool)? = nil, onSearchAgain: (() -> Void)? = nil) {
-        self.location = location
-        self.onSave = onSave
-        self.onSaveDraft = onSaveDraft
-        self.onSearchAgain = onSearchAgain
-        _isConfirmingPhoto = State(initialValue: location.source == .photo)
+    init(flow: GardenMappingFlow) {
+        _flow = State(initialValue: flow)
+        let location = flow.viewModel.location
         let region = MKCoordinateRegion(
             center: location.coordinate.mapCoordinate,
             span: MKCoordinateSpan(latitudeDelta: 0.006, longitudeDelta: 0.006)
@@ -40,17 +29,18 @@ struct GardenBoundaryView: View {
     }
 
     var body: some View {
+        @Bindable var coordinator = flow.coordinator
         MapReader { proxy in
             BoundaryEditorLayout(
                 boundary: boundary, isRegionOverview: isRegionOverview,
                 hint: "Ketuk peta untuk menandai sudut-sudut kebun Anda. Geser titik untuk memindahkannya.",
                 showsControls: !isConfirmingPhoto,
-                onClose: close,
+                onClose: flow.viewModel.close,
                 onSkip: skipAction,
                 onRecenter: recenter,
-                onUndo: { _ = boundary.points.popLast() },
-                onClear: { boundary.points.removeAll() },
-                onConfirm: { showsDetails = true }
+                onUndo: flow.viewModel.undo,
+                onClear: flow.viewModel.clear,
+                onConfirm: flow.viewModel.confirmBoundary
             ) {
                 Map(position: $position) {
                     mapContent(proxy)
@@ -63,27 +53,23 @@ struct GardenBoundaryView: View {
                 .simultaneousGesture(SpatialTapGesture().onEnded { tap in
                     guard !isConfirmingPhoto, !isOnMarker(tap.location, proxy: proxy),
                           let coordinate = proxy.convert(tap.location, from: .local) else { return }
-                    let point = GardenCoordinate(coordinate)
-                    guard !boundary.points.contains(point) else { return }
-                    boundary.points.append(point)
+                    flow.viewModel.addPoint(GardenCoordinate(coordinate))
                 })
             }
         }
         .overlay(alignment: .bottom) {
             if isConfirmingPhoto { photoConfirmation }
         }
-        .onAppear { locationManager.requestWhenInUseAuthorization() }
-        .sheet(isPresented: $showsDetails) {
-            GardenDetailsView(location: location, boundary: boundary) { garden in
-                guard onSave(garden) else { return false }
-                showsDetails = false
-                dismiss()
-                return true
-            }
+        .onAppear { flow.viewModel.requestLocationAuthorization() }
+        .sheet(isPresented: $coordinator.showsDetails, onDismiss: coordinator.detailsDidDismiss) {
+            GardenDetailsView(flow: flow.makeDetailsFlow())
         }
-        .confirmationDialog("Keluar dari pemetaan?", isPresented: $showsExitConfirmation, titleVisibility: .visible) {
-            Button("Keluar tanpa menyimpan", role: .destructive) { dismiss() }
-            Button("Lanjutkan pemetaan", role: .cancel) {}
+        .onChange(of: coordinator.outcome) { _, outcome in
+            if outcome != nil { dismiss() }
+        }
+        .confirmationDialog("Keluar dari pemetaan?", isPresented: $coordinator.showsExitConfirmation, titleVisibility: .visible) {
+            Button("Keluar tanpa menyimpan", role: .destructive, action: coordinator.discardAndClose)
+            Button("Lanjutkan pemetaan", role: .cancel, action: coordinator.continueMapping)
         } message: {
             Text("Batas yang belum disimpan perlu dipetakan ulang saat kamu kembali.")
         }
@@ -152,7 +138,7 @@ struct GardenBoundaryView: View {
                 let offset = dragOffset ?? .zero
                 let tip = CGPoint(x: drag.location.x - offset.width, y: drag.location.y - offset.height)
                 guard let coordinate = proxy.convert(tip, from: .global) else { return }
-                boundary.points[index] = GardenCoordinate(coordinate)
+                flow.viewModel.movePoint(at: index, to: GardenCoordinate(coordinate))
             }
             .onEnded { _ in
                 dragOffset = nil
@@ -176,11 +162,10 @@ struct GardenBoundaryView: View {
                 .fixedSize(horizontal: false, vertical: true)
                 .padding(.bottom, 8)
             PrimaryActionButton(title: "Ya, Ini kebun saya") {
-                withAnimation { isConfirmingPhoto = false }
+                withAnimation { flow.viewModel.confirmPhoto() }
             }
             Button("Cari Lagi") {
-                dismiss()
-                onSearchAgain?()
+                flow.viewModel.searchAgain()
             }
             .font(.body)
             .foregroundStyle(.secondary)
@@ -193,17 +178,8 @@ struct GardenBoundaryView: View {
     }
 
     private var skipAction: (() -> Void)? {
-        guard location.source == .search, onSaveDraft != nil else { return nil }
-        return saveDraft
-    }
-
-    private func saveDraft() {
-        guard let onSaveDraft, onSaveDraft(location) else { return }
-        dismiss()
-    }
-
-    private func close() {
-        if boundary.points.isEmpty { dismiss() } else { showsExitConfirmation = true }
+        guard flow.viewModel.canSaveLocationDraft else { return nil }
+        return { _ = flow.viewModel.saveDraft() }
     }
 
     private func recenter() {

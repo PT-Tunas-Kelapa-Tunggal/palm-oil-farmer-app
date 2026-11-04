@@ -99,7 +99,8 @@ struct GardenStoreDependencyTests {
         let container = AppConfiguration.makeModelContainer(inMemory: true)
         let reviewRepository = RecordingReviewRepository()
         let dependencies = AppDependencies(modelContainer: container, reviewRepository: reviewRepository,
-                                           registrationServices: makeTestRegistrationServices)
+                                           registrationServices: makeTestRegistrationServices,
+                                           mappingAuthorization: makeTestMappingAuthorization)
         let local = garden()
         #expect(dependencies.modelContainer === container)
         #expect(dependencies.reviewRepository as? RecordingReviewRepository === reviewRepository)

@@ -5,13 +5,15 @@ struct ContentView: View {
     @State private var listViewModel: GardenListViewModel
     @State private var coordinator: AppCoordinator
     private let registrationFactory: GardenRegistrationFactory
+    private let mappingFactory: GardenMappingFactory
 
     init(store: GardenStore, listViewModel: GardenListViewModel, coordinator: AppCoordinator,
-         registrationFactory: GardenRegistrationFactory) {
+         registrationFactory: GardenRegistrationFactory, mappingFactory: GardenMappingFactory) {
         _store = State(initialValue: store)
         _listViewModel = State(initialValue: listViewModel)
         _coordinator = State(initialValue: coordinator)
         self.registrationFactory = registrationFactory
+        self.mappingFactory = mappingFactory
     }
 
     var body: some View {
@@ -34,12 +36,7 @@ struct ContentView: View {
             ))
         }
         .fullScreenCover(item: $coordinator.mappingLocation, onDismiss: coordinator.mappingDidDismiss) { location in
-            GardenBoundaryView(
-                location: location,
-                onSave: { store.add($0, completingDraft: location.draftID) },
-                onSaveDraft: { store.addDraft(GardenDraft(location: $0)) },
-                onSearchAgain: coordinator.searchAgain
-            )
+            GardenBoundaryView(flow: mappingFactory.makeFlow(location: location, onFinish: coordinator.mappingFinished))
         }
         .alert("Data kebun", isPresented: Binding(
             get: { store.errorMessage != nil && coordinator.mappingLocation == nil },
@@ -75,7 +72,8 @@ struct ContentView: View {
     ContentView(store: dependencies.gardenStore,
                 listViewModel: dependencies.gardenListViewModel,
                 coordinator: dependencies.coordinator,
-                registrationFactory: dependencies.registrationFactory)
+                registrationFactory: dependencies.registrationFactory,
+                mappingFactory: dependencies.mappingFactory)
         .environment(\.farmerReviewRepository, dependencies.reviewRepository)
 }
 #endif

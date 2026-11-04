@@ -18,7 +18,8 @@ struct PalmOilFarmerApp: App {
                 store: dependencies.gardenStore,
                 listViewModel: dependencies.gardenListViewModel,
                 coordinator: dependencies.coordinator,
-                registrationFactory: dependencies.registrationFactory
+                registrationFactory: dependencies.registrationFactory,
+                mappingFactory: dependencies.mappingFactory
             )
                 .environment(\.farmerReviewRepository, dependencies.reviewRepository)
                 .tint(KropsTheme.primaryText)

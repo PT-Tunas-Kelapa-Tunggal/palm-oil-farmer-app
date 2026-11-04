@@ -8,9 +8,14 @@ extension AppDependencies {
             reviewRepository: PreviewFarmerReviewRepository(),
             registrationServices: {
                 GardenRegistrationServices(locations: PreviewLocationRepository(), photos: PreviewPhotoRepository())
-            }
+            },
+            mappingAuthorization: { PreviewMappingAuthorization() }
         )
     }
+}
+
+private struct PreviewMappingAuthorization: GardenLocationAuthorizing {
+    func requestAuthorization() {}
 }
 
 private struct PreviewLocationRepository: GardenLocationRepository {

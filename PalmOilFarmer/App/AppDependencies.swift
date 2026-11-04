@@ -9,9 +9,11 @@ struct AppDependencies {
     let coordinator: AppCoordinator
     let gardenListViewModel: GardenListViewModel
     let registrationFactory: GardenRegistrationFactory
+    let mappingFactory: GardenMappingFactory
 
     init(modelContainer: ModelContainer, reviewRepository: any FarmerReviewRepository,
-         registrationServices: @escaping () -> GardenRegistrationServices) {
+         registrationServices: @escaping () -> GardenRegistrationServices,
+         mappingAuthorization: @escaping () -> any GardenLocationAuthorizing) {
         self.modelContainer = modelContainer
         self.reviewRepository = reviewRepository
         let gardenStore = GardenStore(
@@ -23,6 +25,7 @@ struct AppDependencies {
         self.coordinator = coordinator
         gardenListViewModel = GardenListViewModel(source: gardenStore, onEvent: coordinator.handle)
         registrationFactory = GardenRegistrationFactory(services: registrationServices)
+        mappingFactory = GardenMappingFactory(saving: gardenStore, authorization: mappingAuthorization)
     }
 
     static func live() -> AppDependencies {
@@ -31,7 +34,8 @@ struct AppDependencies {
             reviewRepository: CloudKitFarmerReviewRepository(
                 containerIdentifier: AppConfiguration.cloudKitContainerIdentifier
             ),
-            registrationServices: GardenRegistrationFactory.liveServices
+            registrationServices: GardenRegistrationFactory.liveServices,
+            mappingAuthorization: { MappingLocationAuthorization() }
         )
     }
 }

@@ -94,7 +94,8 @@ struct GardenRegistrationFlowTests {
                 repository.currentResult = value
                 locations.append(repository)
                 return GardenRegistrationServices(locations: repository, photos: PhotoRepositoryStub())
-            }
+            },
+            mappingAuthorization: makeTestMappingAuthorization
         )
         #expect(locations.isEmpty)
         dependencies.coordinator.handle(.registerGarden)
@@ -119,7 +120,8 @@ struct GardenRegistrationFlowTests {
         repository.snapshot = GardenPhotoLibrarySnapshot(access: .allowed, photos: [photo])
         let dependencies = AppDependencies(
             modelContainer: AppConfiguration.makeModelContainer(inMemory: true), reviewRepository: ReviewRepositoryStub(),
-            registrationServices: { GardenRegistrationServices(locations: LocationRepositoryStub(), photos: repository) }
+            registrationServices: { GardenRegistrationServices(locations: LocationRepositoryStub(), photos: repository) },
+            mappingAuthorization: makeTestMappingAuthorization
         )
         dependencies.coordinator.handle(.registerGarden)
         let flow = dependencies.registrationFactory.makeFlow(
@@ -143,7 +145,8 @@ struct GardenRegistrationFlowTests {
         let repository = ControlledLocationRepository()
         let dependencies = AppDependencies(
             modelContainer: AppConfiguration.makeModelContainer(inMemory: true), reviewRepository: ReviewRepositoryStub(),
-            registrationServices: { GardenRegistrationServices(locations: repository, photos: PhotoRepositoryStub()) }
+            registrationServices: { GardenRegistrationServices(locations: repository, photos: PhotoRepositoryStub()) },
+            mappingAuthorization: makeTestMappingAuthorization
         )
         dependencies.coordinator.handle(.registerGarden)
         let flow = dependencies.registrationFactory.makeFlow(

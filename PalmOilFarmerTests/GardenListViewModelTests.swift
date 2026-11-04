@@ -145,7 +145,8 @@ struct GardenListViewModelTests {
         let dependencies = AppDependencies(
             modelContainer: AppConfiguration.makeModelContainer(inMemory: true),
             reviewRepository: ReviewRepositoryStub(requests: [PlantationReviewRequest(garden: remote, contact: contact)]),
-            registrationServices: makeTestRegistrationServices
+            registrationServices: makeTestRegistrationServices,
+            mappingAuthorization: makeTestMappingAuthorization
         )
         let location = draft()
         #expect(dependencies.gardenStore.addDraft(location))

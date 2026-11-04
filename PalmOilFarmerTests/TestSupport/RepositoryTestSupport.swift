@@ -10,8 +10,18 @@ func makeTestGardenStore(
     AppDependencies(
         modelContainer: container,
         reviewRepository: repository ?? ReviewRepositoryStub(),
-        registrationServices: makeTestRegistrationServices
+        registrationServices: makeTestRegistrationServices,
+        mappingAuthorization: makeTestMappingAuthorization
     ).gardenStore
+}
+
+@MainActor
+func makeTestMappingAuthorization() -> any GardenLocationAuthorizing { MappingAuthorizationStub() }
+
+@MainActor
+final class MappingAuthorizationStub: GardenLocationAuthorizing {
+    var requestCount = 0
+    func requestAuthorization() { requestCount += 1 }
 }
 
 @MainActor

@@ -65,6 +65,10 @@ final class AppCoordinator {
         reopensSearch = true
     }
 
+    func mappingFinished(_ outcome: GardenMappingOutcome) {
+        if outcome == .searchAgain { searchAgain() }
+    }
+
     func mappingDidDismiss() {
         mappingLocation = nil
         guard reopensSearch else { return }

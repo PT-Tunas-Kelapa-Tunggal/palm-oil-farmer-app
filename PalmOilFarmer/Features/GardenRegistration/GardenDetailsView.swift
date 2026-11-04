@@ -2,57 +2,17 @@ import SwiftUI
 
 struct GardenDetailsView: View {
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
-    private let locationName: String
-    private let originalGarden: Garden?
-    let boundary: GardenBoundary
-    let onSave: (Garden) -> Bool
+    @State private var flow: GardenDetailsFlow
     var referenceMapImage: String? = nil
     var metrics: GardenDisplayMetrics? = nil
-
+    private var boundary: GardenBoundary { flow.viewModel.boundary }
     @Environment(\.dismiss) private var dismiss
-    @State private var name = ""
     @FocusState private var isNameFocused: Bool
-    @State private var plantingYear: Int?
-    @State private var plantingMonth = 10
-    @State private var showsPlantingDate = false
-    @State private var showsSoilTypes = false
-    @State private var soilType: SoilType?
-    @State private var showsSaveError = false
-    @State private var errorMessage = ""
 
-    init(
-        location: GardenLocation,
-        boundary: GardenBoundary,
-        onSave: @escaping (Garden) -> Bool,
-        referenceMapImage: String? = nil,
-        metrics: GardenDisplayMetrics? = nil
-    ) {
-        locationName = location.name
-        originalGarden = nil
-        self.boundary = boundary
-        self.onSave = onSave
+    init(flow: GardenDetailsFlow, referenceMapImage: String? = nil, metrics: GardenDisplayMetrics? = nil) {
+        _flow = State(initialValue: flow)
         self.referenceMapImage = referenceMapImage
         self.metrics = metrics
-    }
-
-    init(
-        editing garden: Garden,
-        referenceMapImage: String? = nil,
-        metrics: GardenDisplayMetrics? = nil,
-        onSave: @escaping (Garden) -> Bool
-    ) {
-        locationName = garden.locationName
-        originalGarden = garden
-        boundary = garden.boundary
-        self.onSave = onSave
-        self.referenceMapImage = referenceMapImage
-        self.metrics = metrics
-        _name = State(initialValue: garden.name)
-        _plantingYear = State(initialValue: garden.plantingYear)
-        // Older or externally edited files may contain a month outside the picker range.
-        let storedMonth = garden.plantingMonth ?? 10
-        _plantingMonth = State(initialValue: (1...12).contains(storedMonth) ? storedMonth : 10)
-        _soilType = State(initialValue: garden.soilType)
     }
 
     private var displayMetrics: GardenDisplayMetrics {
@@ -60,15 +20,17 @@ struct GardenDetailsView: View {
     }
 
     var body: some View {
+        @Bindable var model = flow.viewModel
+        @Bindable var coordinator = flow.coordinator
         let displayMetrics = displayMetrics
         let metricsLayout = dynamicTypeSize.isAccessibilitySize
             ? AnyLayout(VStackLayout(spacing: 7))
             : AnyLayout(HStackLayout(spacing: 7))
-        NavigationStack {
+        NavigationStack(path: $coordinator.path) {
             VStack(spacing: 0) {
-                ScreenHeader(title: originalGarden == nil ? "Data kebun" : "Edit kebun", onClose: {
+                ScreenHeader(title: !model.isEditing ? "Data kebun" : "Edit kebun", onClose: {
                     isNameFocused = false
-                    dismiss()
+                    coordinator.close()
                 })
                 .simultaneousGesture(TapGesture().onEnded {
                     isNameFocused = false
@@ -81,7 +43,7 @@ struct GardenDetailsView: View {
                                 isNameFocused = false
                             })
     
-                        TextField("Nama Kebun", text: $name)
+                        TextField("Nama Kebun", text: $model.name)
                             .font(.title)
                             .textInputAutocapitalization(.words)
                             .focused($isNameFocused)
@@ -102,16 +64,16 @@ struct GardenDetailsView: View {
     
                         VStack(spacing: 16) {
                             FormSelectionRow(title: "Tahun Tanam", placeholder: "Pilih tahun tanam",
-                                             value: plantingYear.map { "\(PlantingDatePickerView.monthNames[plantingMonth - 1]) \($0)" },
+                                             value: model.plantingYear.map { "\(PlantingDatePickerView.monthNames[model.plantingMonth - 1]) \($0)" },
                                              systemImage: "calendar", trailingImage: "chevron.up.chevron.down") {
                                 isNameFocused = false
-                                showsPlantingDate = true
+                                coordinator.openPlantingDate()
                             }
                             Divider()
                             FormSelectionRow(title: "Jenis Tanah", placeholder: "Pilih jenis tanah",
-                                             value: soilType?.displayName, systemImage: "leaf.fill") {
+                                             value: model.soilType?.displayName, systemImage: "leaf.fill") {
                                 isNameFocused = false
-                                showsSoilTypes = true
+                                coordinator.openSoilTypes()
                             }
                         }
                         .padding(16)
@@ -135,28 +97,31 @@ struct GardenDetailsView: View {
             }
             .containerBackground(.clear, for: .navigation)
             .toolbar(.hidden, for: .navigationBar)
-            .navigationDestination(isPresented: $showsSoilTypes) {
+            .navigationDestination(for: GardenDetailsRoute.self) { _ in
                 SelectionListView(
                     title: "Jenis Tanah", options: SoilType.allCases.map(\.displayName),
-                    selected: soilType?.displayName,
+                    selected: model.soilType?.displayName,
                     footer: "Jenis tanah membantu kami memahami kondisi kebun Anda. Pilih yang paling mendekati."
                 ) { selected in
-                    soilType = SoilType.allCases.first { $0.displayName == selected }
+                    model.soilType = SoilType.allCases.first { $0.displayName == selected }
                 }
             }
-            .sheet(isPresented: $showsPlantingDate) {
-                PlantingDatePickerView(month: plantingMonth, year: plantingYear ?? 2016) { month, year in
-                    plantingMonth = month
-                    plantingYear = year
+            .sheet(isPresented: $coordinator.showsPlantingDate) {
+                PlantingDatePickerView(month: model.plantingMonth, year: model.plantingYear ?? 2016) { month, year in
+                    model.plantingMonth = month
+                    model.plantingYear = year
                 }
             }
         }
+        .onChange(of: coordinator.isFinished) { _, finished in
+            if finished { dismiss() }
+        }
         .presentationDetents([.large])
-        .interactiveDismissDisabled(!name.isEmpty)
-        .alert("Kebun belum tersimpan", isPresented: $showsSaveError) {
+        .interactiveDismissDisabled(!model.name.isEmpty)
+        .alert("Kebun belum tersimpan", isPresented: $model.showsSaveError) {
             Button("Mengerti", role: .cancel) {}
         } message: {
-            Text(errorMessage)
+            Text(model.errorMessage)
         }
     }
 
@@ -173,26 +138,7 @@ struct GardenDetailsView: View {
 
     private func save() {
         isNameFocused = false
-        guard let details = GardenDetails(name: name, plantingYear: plantingYear, soilType: soilType) else {
-            errorMessage = "Lengkapi nama kebun, tahun tanam, dan jenis tanah terlebih dahulu."
-            showsSaveError = true
-            return
-        }
-        errorMessage = "Data tidak dapat disimpan di perangkat. Coba lagi."
-        var garden = Garden(
-            id: originalGarden?.id ?? UUID(), name: details.name,
-            locationName: locationName, boundary: boundary,
-            plantingYear: details.plantingYear, soilType: details.soilType
-        )
-        garden.plantingMonth = plantingMonth
-        garden.fertilizerRecords = originalGarden?.fertilizerRecords
-        garden.harvestRecord = originalGarden?.harvestRecord
-        garden.review = originalGarden?.review
-        garden.createdAt = originalGarden == nil ? .now : originalGarden?.createdAt
-        showsSaveError = !onSave(garden)
-        if !showsSaveError && originalGarden != nil {
-            dismiss()
-        }
+        _ = flow.viewModel.save()
     }
 }
 
