@@ -7,9 +7,9 @@ struct GardenProfileScreen: View {
 
     @Environment(\.dismiss) private var dismiss
     private var garden: Garden { flow.viewModel.garden }
-    private var currentReviewStatus: ReviewStatus? { flow.reviewBridge.activeStatus ?? garden.review?.status }
+    private var currentReviewStatus: ReviewStatus? { flow.reviewPresentation.activeStatus ?? garden.review?.status }
     private var currentReport: FertilizerRecommendationReport? {
-        flow.reviewBridge.activeReport ?? (currentReviewStatus == .completed ? DemoReviewReport.make(for: garden) : nil)
+        flow.reviewPresentation.activeReport ?? (currentReviewStatus == .completed ? DemoReviewReport.make(for: garden) : nil)
     }
 
     var body: some View {
@@ -39,7 +39,7 @@ struct GardenProfileScreen: View {
         .onChange(of: coordinator.isFinished) { _, finished in
             if finished { dismiss() }
         }
-        .task { await flow.reviewBridge.load(for: model.gardenID, repository: flow.reviewRepository) }
+        .task { await flow.reviewPresentation.load(for: model.gardenID, repository: flow.reviewRepository) }
     }
 
     private var deleteAction: (() -> Void)? {
@@ -54,7 +54,7 @@ struct GardenProfileScreen: View {
             onEditFertilizer: { flow.coordinator.open(.fertilizer) }, onEditHarvest: { flow.coordinator.open(.harvest) },
             onReviewAction: {
                 guard flow.viewModel.isComplete else { return }
-                flow.coordinator.reviewAction(flow.reviewBridge.action(for: garden))
+                flow.coordinator.reviewAction(flow.reviewPresentation.action(for: garden))
             },
             onDelete: deleteAction
         )
@@ -70,9 +70,7 @@ struct GardenProfileScreen: View {
         case .harvest:
             HarvestHistoryEditor(flow: flow.makeHarvestEditor(presentation))
         case .review:
-            ReviewRequestView { contact in
-                try await submitReview(contact, from: presentation)
-            }
+            ReviewRequestView(flow: flow.makeReviewRequest(presentation))
         }
     }
 
@@ -81,9 +79,9 @@ struct GardenProfileScreen: View {
         if let status = currentReviewStatus {
             ReviewStatusView(
                 gardenName: garden.name, status: status,
-                entries: !flow.reviewBridge.activeEntries.isEmpty ? flow.reviewBridge.activeEntries
+                entries: !flow.reviewPresentation.activeEntries.isEmpty ? flow.reviewPresentation.activeEntries
                     : garden.review.map { ReviewTimelineEntry.entries(for: $0) } ?? [],
-                resultsDownloaded: flow.reviewBridge.activeStatus == .completed || (garden.review?.resultsDownloaded ?? false),
+                resultsDownloaded: flow.reviewPresentation.activeStatus == .completed || (garden.review?.resultsDownloaded ?? false),
                 onAdvance: advanceAction,
                 onDownloaded: { flow.viewModel.updateReview { $0.resultsDownloaded = true } },
                 onViewResults: flow.coordinator.openResults
@@ -105,12 +103,4 @@ struct GardenProfileScreen: View {
         }
     }
 
-    // Consent/contact and asynchronous submission remain the existing Part 9 boundary.
-    private func submitReview(_ contact: ReviewContactDetails, from presentation: GardenProfileSheet) async throws {
-        guard flow.coordinator.isCurrent(presentation), flow.viewModel.isAvailable else { throw ReviewServiceError.unavailable }
-        let saved = try await flow.submitReview(garden, contact)
-        guard flow.coordinator.isCurrent(presentation) else { return }
-        flow.reviewBridge.submitted(saved)
-        flow.coordinator.closeSheet(presentation)
-    }
 }

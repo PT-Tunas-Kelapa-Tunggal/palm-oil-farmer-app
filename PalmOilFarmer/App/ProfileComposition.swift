@@ -4,15 +4,23 @@ import Foundation
 struct GardenProfileFactory {
     let source: any GardenProfileDataSource
     let reviewRepository: any FarmerReviewRepository
-    let submitReview: (Garden, ReviewContactDetails) async throws -> PlantationReviewRequest
+    let reviewRequestFactory: ReviewRequestFactory
 
     func makeFlow(garden: Garden) -> GardenProfileFlow {
         let coordinator = GardenProfileCoordinator()
+        let presentation = GardenProfileReviewPresentation()
         let model = GardenProfileViewModel(garden: garden, source: source,
             isActive: { !coordinator.isFinished }, canDeleteNow: { coordinator.canDeleteNow }, onDeleted: coordinator.close)
         return GardenProfileFlow(
-            viewModel: model, coordinator: coordinator, reviewBridge: GardenProfileReviewBridge(),
-            reviewRepository: reviewRepository, submitReview: submitReview,
+            viewModel: model, coordinator: coordinator, reviewPresentation: presentation,
+            reviewRepository: reviewRepository,
+            makeReviewRequest: { sheet in
+                reviewRequestFactory.makeFlow(gardenID: model.gardenID,
+                    isActive: { sheet.kind == .review && coordinator.isCurrent(sheet) },
+                    onSubmitted: { saved in
+                        if coordinator.isCurrent(sheet) { presentation.submitted(saved) }
+                    }, onClose: { coordinator.closeSheet(sheet) })
+            },
             makeDetailsEditor: { sheet in
                 let editor = GardenDetailsCoordinator()
                 let latest = model.garden

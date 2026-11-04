@@ -11,6 +11,8 @@ struct AppDependencies {
     let registrationFactory: GardenRegistrationFactory
     let mappingFactory: GardenMappingFactory
     let profileFactory: GardenProfileFactory
+    let submitGardenReview: SubmitGardenReview
+    let reviewRequestFactory: ReviewRequestFactory
 
     init(modelContainer: ModelContainer, reviewRepository: any FarmerReviewRepository,
          registrationServices: @escaping () -> GardenRegistrationServices,
@@ -27,8 +29,12 @@ struct AppDependencies {
         gardenListViewModel = GardenListViewModel(source: gardenStore, onEvent: coordinator.handle)
         registrationFactory = GardenRegistrationFactory(services: registrationServices)
         mappingFactory = GardenMappingFactory(saving: gardenStore, authorization: mappingAuthorization)
+        let submitGardenReview = SubmitGardenReview(gateway: gardenStore)
+        self.submitGardenReview = submitGardenReview
+        let reviewRequestFactory = ReviewRequestFactory(submission: submitGardenReview)
+        self.reviewRequestFactory = reviewRequestFactory
         profileFactory = GardenProfileFactory(source: gardenStore, reviewRepository: reviewRepository,
-                                               submitReview: gardenStore.submitReview)
+                                               reviewRequestFactory: reviewRequestFactory)
     }
 
     static func live() -> AppDependencies {

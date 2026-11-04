@@ -43,7 +43,19 @@ final class ProfileSourceSpy: GardenProfileDataSource {
 @MainActor
 func makeProfileTestFlow(garden: Garden, source: any GardenProfileDataSource) -> GardenProfileFlow {
     GardenProfileFactory(source: source, reviewRepository: ReviewRepositoryStub(),
-        submitReview: { PlantationReviewRequest(garden: $0, contact: $1) }).makeFlow(garden: garden)
+        reviewRequestFactory: ReviewRequestFactory(submission: SubmitGardenReview(gateway: ProfileTestReviewGateway(source: source))))
+        .makeFlow(garden: garden)
+}
+
+@MainActor
+private struct ProfileTestReviewGateway: ReviewSubmissionGateway {
+    let source: any GardenProfileDataSource
+    func garden(for id: UUID) -> Garden? { source.gardens.first { $0.id == id } }
+    func submitReview(for garden: Garden, contact: ReviewContactDetails) async throws -> PlantationReviewRequest {
+        let saved = PlantationReviewRequest(garden: garden, contact: contact)
+        _ = source.update(Garden(reviewRequest: saved))
+        return saved
+    }
 }
 
 @MainActor

@@ -23,30 +23,38 @@ struct ConsentCheckbox: View {
 
 /// Program information first, then the contact form, in one sheet.
 struct ReviewRequestView: View {
-    let onSubmit: (ReviewContactDetails) async throws -> Void
+    @State private var flow: ReviewRequestFlow
     @Environment(\.dismiss) private var dismiss
-    @State private var hasConsent = false
-    @State private var showsConsentError = false
-    @State private var showsForm = false
+
+    init(flow: ReviewRequestFlow) { _flow = State(initialValue: flow) }
 
     var body: some View {
-        NavigationStack {
+        @Bindable var coordinator = flow.coordinator
+        @Bindable var model = flow.viewModel
+        NavigationStack(path: $coordinator.path) {
             information
                 .toolbar(.hidden, for: .navigationBar)
-                .navigationDestination(isPresented: $showsForm) {
-                    ReviewContactFormView(onClose: { dismiss() }, onSubmit: onSubmit)
-                        .toolbar(.hidden, for: .navigationBar)
+                .navigationDestination(for: ReviewRequestRoute.self) { route in
+                    switch route {
+                    case .contact(let id):
+                        ReviewContactFormView(flow: flow.makeContactFlow(id))
+                            .toolbar(.hidden, for: .navigationBar)
+                    }
                 }
         }
+        .onChange(of: coordinator.isFinished) { _, finished in
+            if finished { dismiss() }
+        }
         .presentationDetents([.large])
-        .alert("Persetujuan diperlukan", isPresented: $showsConsentError) {
+        .alert("Persetujuan diperlukan", isPresented: $model.showsConsentError) {
             Button("Mengerti", role: .cancel) {}
         } message: { Text("Baca informasi dan setujui program peninjauan sebelum melanjutkan.") }
     }
 
     private var information: some View {
-        VStack(spacing: 0) {
-            ScreenHeader(title: "Permintaan Peninjauan", onClose: { dismiss() })
+        @Bindable var model = flow.viewModel
+        return VStack(spacing: 0) {
+            ScreenHeader(title: "Permintaan Peninjauan", onClose: flow.coordinator.close)
             ScrollView {
                 VStack(alignment: .leading, spacing: 16) {
                     Text("Setelah batas kebun selesai dipetakan, ajukan peninjauan agar petugas dapat mengambil gambar kebun menggunakan drone dan menganalisis kondisi kebunmu. Hasil peninjauan akan membantu kamu memahami kondisi kebun dan kebutuhan pemupukannya.")
@@ -63,11 +71,11 @@ struct ReviewRequestView: View {
             }
 
             VStack(spacing: 16) {
-                ConsentCheckbox(isChecked: $hasConsent,
+                ConsentCheckbox(isChecked: $model.hasConsent,
                                 message: "Saya memahami dan menyetujui program peninjauan kebun.")
                     .padding(.horizontal, 8)
                 PrimaryActionButton(title: "Lanjutkan") {
-                    if hasConsent { showsForm = true } else { showsConsentError = true }
+                    model.continueToContact()
                 }
             }
             .padding(.horizontal, 24)

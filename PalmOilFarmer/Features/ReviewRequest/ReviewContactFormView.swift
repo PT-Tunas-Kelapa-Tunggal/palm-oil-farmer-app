@@ -1,30 +1,20 @@
 import SwiftUI
 
 struct ReviewContactFormView: View {
-    var onClose: (() -> Void)? = nil
-    let onSubmit: (ReviewContactDetails) async throws -> Void
+    @State private var flow: ReviewContactFlow
     @Environment(\.dismiss) private var dismiss
-    @State private var name = ""
-    @State private var phone = ""
-    @State private var address = ""
-    @State private var hasConsent = false
-    @State private var isSubmitting = false
-    @State private var errorMessage: String?
-    @FocusState private var focusedField: Field?
+    @FocusState private var focusedField: ReviewContactField?
+    private typealias Field = ReviewContactField
 
-    private enum Field: CaseIterable {
-        case name, phone, address
-
-        var next: Field? {
-            let all = Self.allCases
-            guard let index = all.firstIndex(of: self), index + 1 < all.count else { return nil }
-            return all[index + 1]
-        }
-    }
+    init(flow: ReviewContactFlow) { _flow = State(initialValue: flow) }
 
     var body: some View {
+        @Bindable var model = flow.viewModel
         VStack(spacing: 0) {
-            ScreenHeader(title: "Permintaan Peninjauan", onClose: { (onClose ?? { dismiss() })() })
+            ScreenHeader(title: "Permintaan Peninjauan", onClose: {
+                flow.close()
+                if flow.dismissOnClose { dismiss() }
+            })
             ScrollViewReader { reader in
                 ScrollView {
                     VStack(alignment: .leading, spacing: 24) {
@@ -32,7 +22,7 @@ struct ReviewContactFormView: View {
                             .font(.body)
                         VStack(spacing: 16) {
                             contactField("Nama", id: .name) {
-                                TextField("Masukkan Nama Lengkap", text: $name)
+                                TextField("Masukkan Nama Lengkap", text: $model.name)
                                     .textContentType(.name)
                                     .textInputAutocapitalization(.words)
                                     .focused($focusedField, equals: .name)
@@ -40,13 +30,13 @@ struct ReviewContactFormView: View {
                                     .onSubmit { focusedField = .phone }
                             }
                             contactField("Nomor Telepon", id: .phone) {
-                                TextField("cth: 085048384438", text: $phone)
+                                TextField("cth: 085048384438", text: $model.phone)
                                     .textContentType(.telephoneNumber).keyboardType(.phonePad)
                                     .focused($focusedField, equals: .phone)
                             }
                             contactField("Alamat Rumah", id: .address) {
                                 TextField("Contoh: Dusun Sido Mulyo RT 02/RW 01, Desa Pangkalan Lesung, Kec. Pangkalan Lesung",
-                                          text: self.$address, axis: .vertical)
+                                          text: $model.address, axis: .vertical)
                                     .textContentType(.fullStreetAddress)
                                     .lineLimit(3...5)
                                     .focused($focusedField, equals: .address)
@@ -74,14 +64,17 @@ struct ReviewContactFormView: View {
             .animation(.easeOut(duration: 0.2), value: focusedField == nil)
             .bottomActionBar {
                 VStack(spacing: 16) {
-                    ConsentCheckbox(isChecked: $hasConsent,
+                    ConsentCheckbox(isChecked: $model.hasConsent,
                                     message: "Saya memastikan nomor telepon dan alamat di atas sudah benar.")
                         .padding(.horizontal, 8)
-                    PrimaryActionButton(title: isSubmitting ? "Mengirim…" : "Ajukan Sekarang",
+                    PrimaryActionButton(title: model.isSubmitting ? "Mengirim…" : "Ajukan Sekarang",
                                         systemImage: "paperplane.fill", imagePlacement: .trailing) {
-                        Task { await submit() }
+                        Task {
+                            focusedField = nil
+                            await model.submit()
+                        }
                     }
-                    .disabled(isSubmitting)
+                    .disabled(model.isSubmitting)
                 }
                 .padding(.horizontal, 24)
                 .padding(.top, 16)
@@ -89,10 +82,10 @@ struct ReviewContactFormView: View {
             }
         }
         .alert("Pengajuan belum dikirim", isPresented: Binding(
-            get: { errorMessage != nil }, set: { if !$0 { errorMessage = nil } }
+            get: { model.errorMessage != nil }, set: { if !$0 { model.errorMessage = nil } }
         )) {
             Button("Mengerti", role: .cancel) {}
-        } message: { Text(errorMessage ?? "") }
+        } message: { Text(model.errorMessage ?? "") }
     }
 
     private func contactField<Content: View>(_ title: String, id: Field,
@@ -103,25 +96,6 @@ struct ReviewContactFormView: View {
             Divider()
         }
         .id(id)
-    }
-
-    @MainActor
-    private func submit() async {
-        guard !isSubmitting else { return }
-        focusedField = nil
-        guard let contact = ReviewContactDetails.validated(
-            name: name, phone: phone, address: address, hasConfirmedContact: hasConsent
-        ) else {
-            errorMessage = "Lengkapi nama, nomor telepon, alamat rumah, dan persetujuan terlebih dahulu."
-            return
-        }
-        isSubmitting = true
-        defer { isSubmitting = false }
-        do {
-            try await onSubmit(contact)
-        } catch {
-            errorMessage = error.localizedDescription
-        }
     }
 }
 

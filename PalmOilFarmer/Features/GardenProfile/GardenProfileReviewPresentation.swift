@@ -1,10 +1,10 @@
 import Foundation
 import Observation
 
-/// Existing review presentation while consent/contact/submission migrate in Part 9.
+/// Timeline/report presentation shared by the production profile and submission flow.
 @MainActor
 @Observable
-final class GardenProfileReviewBridge {
+final class GardenProfileReviewPresentation {
     private(set) var activeStatus: ReviewStatus?
     private(set) var activeEntries: [ReviewTimelineEntry] = []
     private(set) var activeReport: FertilizerRecommendationReport?

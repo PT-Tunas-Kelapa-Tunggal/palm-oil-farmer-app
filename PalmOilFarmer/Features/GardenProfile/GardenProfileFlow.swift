@@ -4,9 +4,9 @@ import Foundation
 struct GardenProfileFlow {
     let viewModel: GardenProfileViewModel
     let coordinator: GardenProfileCoordinator
-    let reviewBridge: GardenProfileReviewBridge
+    let reviewPresentation: GardenProfileReviewPresentation
     let reviewRepository: any FarmerReviewRepository
-    let submitReview: (Garden, ReviewContactDetails) async throws -> PlantationReviewRequest
+    let makeReviewRequest: (GardenProfileSheet) -> ReviewRequestFlow
     let makeDetailsEditor: (GardenProfileSheet) -> GardenDetailsFlow
     let makeFertilizerEditor: (GardenProfileSheet) -> FertilizerHistoryFlow
     let makeHarvestEditor: (GardenProfileSheet) -> HarvestHistoryFlow
