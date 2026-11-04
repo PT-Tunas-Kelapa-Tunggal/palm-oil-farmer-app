@@ -6,14 +6,20 @@ struct AppDependencies {
     let modelContainer: ModelContainer
     let reviewRepository: any FarmerReviewRepository
     let gardenStore: GardenStore
+    let coordinator: AppCoordinator
+    let gardenListViewModel: GardenListViewModel
 
     init(modelContainer: ModelContainer, reviewRepository: any FarmerReviewRepository) {
         self.modelContainer = modelContainer
         self.reviewRepository = reviewRepository
-        gardenStore = GardenStore(
+        let gardenStore = GardenStore(
             draftRepository: SwiftDataGardenDraftRepository(modelContainer: modelContainer),
             repository: reviewRepository
         )
+        let coordinator = AppCoordinator()
+        self.gardenStore = gardenStore
+        self.coordinator = coordinator
+        gardenListViewModel = GardenListViewModel(source: gardenStore, onEvent: coordinator.handle)
     }
 
     static func live() -> AppDependencies {

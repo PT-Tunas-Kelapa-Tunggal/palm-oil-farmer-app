@@ -14,7 +14,11 @@ struct PalmOilFarmerApp: App {
 
     var body: some Scene {
         WindowGroup {
-            ContentView(store: dependencies.gardenStore)
+            ContentView(
+                store: dependencies.gardenStore,
+                listViewModel: dependencies.gardenListViewModel,
+                coordinator: dependencies.coordinator
+            )
                 .environment(\.farmerReviewRepository, dependencies.reviewRepository)
                 .tint(KropsTheme.primaryText)
         }
