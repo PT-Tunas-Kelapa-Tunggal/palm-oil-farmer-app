@@ -17,12 +17,12 @@ struct GardenStressTests {
 
     @Test func duplicateGardenIDIsRejected() throws {
         let container = makeContainer()
-        let store = GardenStore(modelContainer: container)
+        let store = makeTestGardenStore(in: container)
         let value = garden()
         #expect(store.add(value))
         #expect(!store.add(value))
         #expect(store.gardens.count == 1)
-        #expect(GardenStore(modelContainer: container).gardens.count == 1)
+        #expect(makeTestGardenStore(in: container).gardens.count == 1)
     }
 
     @Test func invalidCoordinatesAreRejected() {

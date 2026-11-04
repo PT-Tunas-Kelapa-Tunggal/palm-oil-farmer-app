@@ -2,13 +2,11 @@ import CloudKit
 import Foundation
 
 public final class CloudKitFarmerReviewRepository: FarmerReviewRepository, @unchecked Sendable {
-    public static let shared = CloudKitFarmerReviewRepository()
-
     private let containerIdentifier: String
     private let database: CKDatabase
     private let domainMapper = PlantationDomainMapper()
 
-    public init(database: CKDatabase? = nil, containerIdentifier: String = AppConfiguration.cloudKitContainerIdentifier) {
+    public init(database: CKDatabase? = nil, containerIdentifier: String) {
         self.containerIdentifier = containerIdentifier
         if let database {
             self.database = database

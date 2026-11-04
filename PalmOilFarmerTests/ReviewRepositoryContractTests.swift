@@ -18,7 +18,7 @@ struct ReviewRepositoryContractTests {
             boundary: [], agronomy: AgronomicProfile(plantingYear: 2016, soilType: "Gambut")
         )
         let repository = ReviewRepositoryStub(requests: [remote])
-        let store = GardenStore(modelContainer: container, repository: repository)
+        let store = makeTestGardenStore(in: container, repository: repository)
         #expect(store.add(local))
         await store.refreshRemote()
         #expect(store.gardens.count == 1)
@@ -31,7 +31,7 @@ struct ReviewRepositoryContractTests {
     @Test func successfulSubmissionPreservesPromotionAndDraftEviction() async throws {
         let container = AppConfiguration.makeModelContainer(inMemory: true)
         let repository = ReviewRepositoryStub()
-        let store = GardenStore(modelContainer: container, repository: repository)
+        let store = makeTestGardenStore(in: container, repository: repository)
         let value = garden()
         #expect(store.add(value))
         let saved = try await store.submitReview(
@@ -40,14 +40,14 @@ struct ReviewRepositoryContractTests {
         #expect(saved.garden.id == value.id)
         #expect(store.gardens.count == 1 && store.gardens.first?.review?.status == .submitted)
         // Current product policy: submitted data has no persistent local cache.
-        let reopened = GardenStore(modelContainer: container, repository: repository)
+        let reopened = makeTestGardenStore(in: container, repository: repository)
         #expect(reopened.gardens.isEmpty)
     }
 
     @Test func rejectedSubmissionRetainsPersistentLocalDraft() async {
         let container = AppConfiguration.makeModelContainer(inMemory: true)
         let repository = ReviewRepositoryStub(rejectsSubmission: true)
-        let store = GardenStore(modelContainer: container, repository: repository)
+        let store = makeTestGardenStore(in: container, repository: repository)
         let value = garden()
         #expect(store.add(value))
         do {
@@ -59,32 +59,8 @@ struct ReviewRepositoryContractTests {
             #expect(error is ReviewRepositoryStub.Failure)
         }
         #expect(store.gardens.first?.review == nil)
-        let reopened = GardenStore(modelContainer: container, repository: repository)
+        let reopened = makeTestGardenStore(in: container, repository: repository)
         #expect(reopened.gardens.map(\.id) == [value.id])
         #expect(reopened.gardens.first?.review == nil)
-    }
-}
-
-@MainActor
-private struct ReviewRepositoryStub: FarmerReviewRepository {
-    enum Failure: Error { case rejected }
-    var requests: [PlantationReviewRequest] = []
-    var rejectsSubmission = false
-
-    func submitRequest(_ request: PlantationReviewRequest) async throws -> PlantationReviewRequest {
-        if rejectsSubmission { throw Failure.rejected }
-        return request
-    }
-
-    func fetchRequest(for gardenID: UUID) async throws -> PlantationReviewRequest? {
-        requests.first { $0.garden.id == gardenID }
-    }
-
-    func fetchMyRequests() async throws -> [PlantationReviewRequest] {
-        requests
-    }
-
-    nonisolated func observeRequestUpdates(for gardenID: UUID) -> AsyncStream<PlantationReviewRequest> {
-        AsyncStream { $0.finish() }
     }
 }

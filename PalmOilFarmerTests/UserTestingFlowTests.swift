@@ -25,31 +25,31 @@ struct UserTestingFlowTests {
 
     @Test func draftsPersistApartFromGardensAndCompletingOneRemovesIt() throws {
         let container = makeContainer()
-        let store = GardenStore(modelContainer: container)
+        let store = makeTestGardenStore(in: container)
         let draft = GardenDraft(location: location())
         #expect(store.addDraft(draft))
 
-        let reopened = GardenStore(modelContainer: container)
+        let reopened = makeTestGardenStore(in: container)
         #expect(reopened.drafts.map(\.id) == [draft.id])
         #expect(reopened.drafts.first?.location.source == .draft)
         #expect(reopened.drafts.first?.location.draftID == draft.id)
 
         #expect(reopened.add(squareGarden(), completingDraft: draft.id))
         #expect(reopened.drafts.isEmpty)
-        #expect(GardenStore(modelContainer: container).drafts.isEmpty)
-        #expect(GardenStore(modelContainer: container).gardens.count == 1)
+        #expect(makeTestGardenStore(in: container).drafts.isEmpty)
+        #expect(makeTestGardenStore(in: container).gardens.count == 1)
     }
 
     @Test func eraseAllClearsGardensAndDrafts() throws {
         let container = makeContainer()
-        let store = GardenStore(modelContainer: container)
+        let store = makeTestGardenStore(in: container)
         #expect(store.addDraft(GardenDraft(location: location())))
         #expect(store.add(squareGarden()))
         #expect(!store.gardens.isEmpty && !store.drafts.isEmpty)
 
         store.eraseAll()
         #expect(store.gardens.isEmpty && store.drafts.isEmpty)
-        let reopened = GardenStore(modelContainer: container)
+        let reopened = makeTestGardenStore(in: container)
         #expect(reopened.gardens.isEmpty && reopened.drafts.isEmpty)
     }
 

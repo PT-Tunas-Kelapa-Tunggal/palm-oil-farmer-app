@@ -1,5 +1,4 @@
 import SwiftUI
-import SwiftData
 
 struct ContentView: View {
     @State private var store: GardenStore
@@ -11,8 +10,8 @@ struct ContentView: View {
     @State private var reopensSearch = false
     @State private var showsDeveloperMode = false
 
-    init(modelContainer: ModelContainer = AppConfiguration.makeModelContainer()) {
-        _store = State(initialValue: GardenStore(modelContainer: modelContainer))
+    init(store: GardenStore) {
+        _store = State(initialValue: store)
     }
 
     var body: some View {
@@ -99,6 +98,10 @@ struct ContentView: View {
     }
 }
 
+#if DEBUG
 #Preview {
-    ContentView()
+    let dependencies = AppDependencies.preview()
+    ContentView(store: dependencies.gardenStore)
+        .environment(\.farmerReviewRepository, dependencies.reviewRepository)
 }
+#endif

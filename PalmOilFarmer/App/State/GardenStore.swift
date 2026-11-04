@@ -1,6 +1,5 @@
 import Foundation
 import Observation
-import SwiftData
 
 @MainActor
 @Observable
@@ -10,34 +9,28 @@ final class GardenStore {
     var errorMessage: String?
     var isLoading = false
 
-    private let modelContainer: ModelContainer
-    private let modelContext: ModelContext
+    private let draftRepository: any GardenDraftRepository
     private let repository: any FarmerReviewRepository
-    private let domainMapper = PlantationDomainMapper()
 
     private var localDraftGardens: [Garden] = []
     private var submittedGardens: [Garden] = []
 
     init(
-        modelContainer: ModelContainer = AppConfiguration.makeModelContainer(),
-        repository: any FarmerReviewRepository = CloudKitFarmerReviewRepository.shared
+        draftRepository: any GardenDraftRepository,
+        repository: any FarmerReviewRepository
     ) {
-        self.modelContainer = modelContainer
-        self.modelContext = ModelContext(modelContainer)
+        self.draftRepository = draftRepository
         self.repository = repository
 
         loadLocalDrafts()
     }
 
-    /// Reloads all local drafts stored in SwiftData.
+    /// Reloads the unsubmitted local snapshot.
     func loadLocalDrafts() {
-        let descriptor = FetchDescriptor<DraftPlantationRequest>(
-            sortBy: [SortDescriptor(\.createdAt, order: .reverse)]
-        )
         do {
-            let requests = try modelContext.fetch(descriptor)
-            drafts = requests.filter { !$0.isBoundaryMapped }.map { $0.toGardenDraft() }
-            localDraftGardens = requests.filter { $0.isBoundaryMapped }.map { $0.toGarden() }
+            let snapshot = try draftRepository.loadDrafts()
+            drafts = snapshot.locations
+            localDraftGardens = snapshot.gardens
             combineGardens()
         } catch {
             errorMessage = "Draf lokal tidak dapat dimuat: \(error.localizedDescription)"
@@ -51,7 +44,7 @@ final class GardenStore {
         defer { isLoading = false }
         do {
             let requests = try await repository.fetchMyRequests()
-            submittedGardens = requests.map { domainMapper.toGarden(from: $0) }
+            submittedGardens = requests.map { Garden(reviewRequest: $0) }
             combineGardens()
         } catch {
             print("[GardenStore] CloudKit fetch status: \(error.localizedDescription)")
@@ -74,20 +67,8 @@ final class GardenStore {
             return false
         }
 
-        let draftModel = DraftPlantationRequest.from(garden: garden)
-        modelContext.insert(draftModel)
-
-        if let draftID {
-            let fetchDraft = FetchDescriptor<DraftPlantationRequest>(
-                predicate: #Predicate { $0.id == draftID }
-            )
-            if let existing = try? modelContext.fetch(fetchDraft).first {
-                modelContext.delete(existing)
-            }
-        }
-
         do {
-            try modelContext.save()
+            try draftRepository.add(garden, completingDraft: draftID)
             loadLocalDrafts()
             return true
         } catch {
@@ -99,10 +80,8 @@ final class GardenStore {
     /// Saves an unmapped location as a draft ("Lakukan Nanti") in SwiftData.
     @discardableResult
     func addDraft(_ draft: GardenDraft) -> Bool {
-        let draftModel = DraftPlantationRequest.from(draft: draft)
-        modelContext.insert(draftModel)
         do {
-            try modelContext.save()
+            try draftRepository.addDraft(draft)
             loadLocalDrafts()
             return true
         } catch {
@@ -114,14 +93,8 @@ final class GardenStore {
     /// Deletes an unmapped draft from SwiftData.
     @discardableResult
     func deleteDraft(_ draft: GardenDraft) -> Bool {
-        let draftID = draft.id
-        let fetchDraft = FetchDescriptor<DraftPlantationRequest>(
-            predicate: #Predicate { $0.id == draftID }
-        )
-        guard let existing = try? modelContext.fetch(fetchDraft).first else { return false }
-        modelContext.delete(existing)
         do {
-            try modelContext.save()
+            guard try draftRepository.deleteDraft(id: draft.id) else { return false }
             loadLocalDrafts()
             return true
         } catch {
@@ -133,26 +106,14 @@ final class GardenStore {
     /// Updates a local unsubmitted garden in SwiftData.
     @discardableResult
     func update(_ garden: Garden) -> Bool {
-        let gardenID = garden.id
-        let fetchDraft = FetchDescriptor<DraftPlantationRequest>(
-            predicate: #Predicate { $0.id == gardenID }
-        )
-        if let existing = try? modelContext.fetch(fetchDraft).first {
-            existing.name = garden.name
-            existing.plantingYear = garden.plantingYear
-            existing.plantingMonth = garden.plantingMonth
-            existing.soilType = garden.soilType
-            existing.boundary = garden.boundary
-            existing.fertilizerRecords = garden.fertilizerRecords ?? []
-            existing.harvestRecord = garden.harvestRecord
-            do {
-                try modelContext.save()
+        do {
+            if try draftRepository.update(garden) {
                 loadLocalDrafts()
                 return true
-            } catch {
-                errorMessage = "Gagal memperbarui draf: \(error.localizedDescription)"
-                return false
             }
+        } catch {
+            errorMessage = "Gagal memperbarui draf: \(error.localizedDescription)"
+            return false
         }
 
         // If it's already a submitted garden in CloudKit, update in local in-memory representation
@@ -169,13 +130,14 @@ final class GardenStore {
     /// Deletes a garden. If local draft, removes from SwiftData.
     @discardableResult
     func delete(_ garden: Garden) -> Bool {
-        let gardenID = garden.id
-        let fetchDraft = FetchDescriptor<DraftPlantationRequest>(
-            predicate: #Predicate { $0.id == gardenID }
-        )
-        if let existing = try? modelContext.fetch(fetchDraft).first {
-            modelContext.delete(existing)
-            _ = try? modelContext.save()
+        do {
+            if try draftRepository.deleteDraft(id: garden.id) {
+                loadLocalDrafts()
+                return true
+            }
+        } catch {
+            // Existing garden deletion swallows a save failure after finding a
+            // local draft. Preserve that policy during dependency extraction.
             loadLocalDrafts()
             return true
         }
@@ -197,19 +159,17 @@ final class GardenStore {
 
         let saved = try await repository.submitRequest(request)
 
-        // Evict from local SwiftData drafts
-        let gardenID = garden.id
-        let fetchDraft = FetchDescriptor<DraftPlantationRequest>(
-            predicate: #Predicate { $0.id == gardenID }
-        )
-        if let existing = try? modelContext.fetch(fetchDraft).first {
-            modelContext.delete(existing)
-            try? modelContext.save()
+        // Keep remote success authoritative even if local cleanup cannot save.
+        do {
+            if try draftRepository.deleteDraft(id: garden.id) {
+                loadLocalDrafts()
+            }
+        } catch {
             loadLocalDrafts()
         }
 
         // Immediately promote the saved CloudKit record into submittedGardens
-        let submittedGarden = domainMapper.toGarden(from: saved)
+        let submittedGarden = Garden(reviewRequest: saved)
         submittedGardens.removeAll { $0.id == garden.id }
         submittedGardens.append(submittedGarden)
         combineGardens()
@@ -220,11 +180,7 @@ final class GardenStore {
     #if DEBUG
     /// Developer mode: clears all SwiftData local drafts.
     func eraseAll() {
-        let fetchAll = FetchDescriptor<DraftPlantationRequest>()
-        if let all = try? modelContext.fetch(fetchAll) {
-            for item in all { modelContext.delete(item) }
-            try? modelContext.save()
-        }
+        try? draftRepository.eraseAll()
         drafts = []
         localDraftGardens = []
         submittedGardens = []

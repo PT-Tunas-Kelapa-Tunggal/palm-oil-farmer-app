@@ -19,6 +19,7 @@ struct GardenProfileView: View {
 
     @Environment(\.dismiss) private var dismiss
     @Environment(GardenStore.self) private var store: GardenStore?
+    @Environment(\.farmerReviewRepository) private var reviewRepository
     @State private var editor: HistoryEditor?
     @State private var showsReview = false
     @State private var showsReviewStatus = false
@@ -282,7 +283,7 @@ struct GardenProfileView: View {
     }
 
     private func loadReview() async {
-        if let existing = try? await CloudKitFarmerReviewRepository.shared.fetchRequest(for: garden.id) {
+        if let existing = try? await reviewRepository.fetchRequest(for: garden.id) {
             await MainActor.run {
                 activeReviewStatus = existing.status
                 activeReviewEntries = existing.timeline.entries(for: existing.status)
@@ -294,7 +295,7 @@ struct GardenProfileView: View {
     private func submitReview(details: ReviewContactDetails) async throws {
         let request = PlantationReviewRequest(garden: garden, contact: details)
 
-        let saved = try await CloudKitFarmerReviewRepository.shared.submitRequest(request)
+        let saved = try await reviewRepository.submitRequest(request)
         await MainActor.run {
             activeReviewStatus = saved.status
             activeReviewEntries = saved.timeline.entries(for: saved.status)
