@@ -1,7 +1,7 @@
 # Palm Oil Farmer
 
 An iOS app for oil palm farmers, built with SwiftUI and organized by feature, with one app target and a Swift Testing target.
-The project is being migrated incrementally to Clean Architecture with MVVM-C and SwiftUI NavigationStack. Part 2 organizes files without changing Swift implementations; use cases, ViewModels, and Coordinators follow in later parts.
+The project is being migrated incrementally to Clean Architecture with MVVM-C and SwiftUI NavigationStack. Part 2 organized files; Part 3 separates Foundation-only Domain values/rules from framework and presentation helpers and makes the existing review repository contract injectable into GardenStore. Use cases, full dependency composition, ViewModels, and Coordinators follow in later parts.
 Keep the structure small: add folders and abstractions when real code needs them.
 
 ## Naming
@@ -40,11 +40,11 @@ This project uses a central `Developer.xcconfig` file for developer-specific cre
 | `PalmOilFarmer/DesignSystem/Components` | Reusable UI with no dependency on garden models or services |
 | `PalmOilFarmer/DesignSystem/Styles` | Button styles and shared presentation modifiers |
 | `PalmOilFarmer/DesignSystem/Catalog` | Light, dark, and accessibility-size component previews |
-| `PalmOilFarmer/Domain/Gardens` | Garden, boundary, location, draft, and persisted history values |
-| `PalmOilFarmer/Domain/Reviews` | Review/contact values, statuses, and the existing repository contract |
+| `PalmOilFarmer/Domain/Gardens` | Foundation-only garden/history values, required details, validation, and profile readiness |
+| `PalmOilFarmer/Domain/Reviews` | Review/contact values, contact validation, request snapshot construction, and repository contract |
 | `PalmOilFarmer/Data/Gardens` | SwiftData draft model and the transitional GardenStore |
 | `PalmOilFarmer/Data/Reviews` | CloudKit repository, DTOs, domain mapper, and CKRecord adapter |
-| `PalmOilFarmer/Data/Location` | Current location, MapKit search, and waypoint location session |
+| `PalmOilFarmer/Data/Location` | Current location, MapKit search, waypoint session, and CoreLocation geometry adapters |
 | `PalmOilFarmer/Features/GardenList` | Home list, cards, filters, and list illustration |
 | `PalmOilFarmer/Features/GardenRegistration` | Guide, location/photo selection, details, and boundary mapping |
 | `PalmOilFarmer/Features/GardenProfile` | Profile, summary, and profile progress |
@@ -56,19 +56,21 @@ This project uses a central `Developer.xcconfig` file for developer-specific cre
 | `PalmOilFarmer/Features/MapDownload` | Existing download presentation; no download service added |
 | `PalmOilFarmer/SharedUI/Maps` | Reused map views and map hero UI |
 | `PalmOilFarmer/SharedUI/Gardens` | Reused garden UI, display metrics, and transitional LiveGardenReader |
+| `PalmOilFarmer/SharedUI/Reviews` | Existing review titles and timeline presentation helpers |
 | `PalmOilFarmer/Experiments/FindingWaypoint` | Standalone experimental entry point, map, thumbnail, and preview data |
 | `PalmOilFarmer/PreviewSupport` | Debug fixtures and reference-screen compositions |
 | `PalmOilFarmerTests` | Swift Testing checks for persistence, validation, and geometry |
 
-This layout is transitional. GardenStore still combines observable state, persistence, and submission; some Domain values still depend on CoreLocation or presentation types. Moving their files does not complete dependency separation. Related types stay together until their implementation is deliberately refactored.
+This layout is transitional. Domain now compiles independently with Foundation: CoreLocation conversions/measurements live in Data, and titles/timeline formatting live in SharedUI. GardenStore consumes `FarmerReviewRepository` but still combines observable state, SwiftData, mapping, and submission and defaults to the concrete CloudKit implementation. The profile still has a direct CloudKit fallback. Full composition and screen orchestration remain later migration work.
 
-The implementation scope runs from Home through successful review submission. Status/timeline, results, recommendations, guidance, and experiments retain their Swift implementations and are only relocated in Part 2. See [the baseline](docs/refactor/baseline.md) and [Part 2 results](docs/refactor/part-02-structure.md).
+The implementation scope runs from Home through successful review submission. Existing status/results/guidance/experiment files remain unchanged in Part 3; their shared timeline/title helpers were relocated from Domain without changing the helper bodies. See [the baseline](docs/refactor/baseline.md), [Part 2 results](docs/refactor/part-02-structure.md), and [Part 3 verification](docs/refactor/part-03-domain-contracts.md).
 
 ## Rules for changes
 
 - Keep transient UI state in the view. `GardenStore` owns saved gardens; profile views receive the latest value from their parent. Editors own local drafts and publish them only after a successful save.
 - A profile's `onUpdate` must update the parent's source of truth. Static reference previews intentionally use fixed input; use a stateful parent for interactive editing previews.
 - Put calculations and validation in value types. Introduce use cases, ViewModels, and flow Coordinators incrementally; simple controls do not require a ViewModel or Coordinator of their own.
+- Keep Domain independent of Data, Features, SharedUI, and Apple UI/location/persistence frameworks. Presentation keeps form drafts and messages; existing input rules live in Domain. Persisted decoding and model fields remain compatible rather than being retroactively rejected by new initializers.
 - Keep framework access at the data boundary. `LocationSearchView` accepts a search closure for deterministic results. Existing `initialResults` is a convenience for fixed reference previews.
 - Design system components must not depend on `Garden`, `GardenStore`, or preview fixtures. `GardenPickerField` currently has a historical name but takes only generic labels, values, and content.
 - Prefer semantic system typography for text. Use shared tokens for repeated visual roles; illustration coordinates and map dimensions can remain local constants.

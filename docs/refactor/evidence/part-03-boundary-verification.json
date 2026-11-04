@@ -1,0 +1,62 @@
+{
+  "baseline_commit": "5972ac9",
+  "branch": "refactor/03-domain-contracts",
+  "domain_module_name_for_verification_only": "PalmOilDomain",
+  "domain_source_files": [
+    "PalmOilFarmer/Domain/Gardens/Garden.swift",
+    "PalmOilFarmer/Domain/Gardens/GardenBoundary.swift",
+    "PalmOilFarmer/Domain/Gardens/GardenDetails.swift",
+    "PalmOilFarmer/Domain/Gardens/GardenDraft.swift",
+    "PalmOilFarmer/Domain/Gardens/GardenHistoryValidation.swift",
+    "PalmOilFarmer/Domain/Gardens/GardenLocation.swift",
+    "PalmOilFarmer/Domain/Gardens/GardenProfileReadiness.swift",
+    "PalmOilFarmer/Domain/Gardens/GardenReview.swift",
+    "PalmOilFarmer/Domain/Reviews/FarmerReviewRepository.swift",
+    "PalmOilFarmer/Domain/Reviews/PlantationReviewModels.swift",
+    "PalmOilFarmer/Domain/Reviews/PlantationReviewRequest+Garden.swift",
+    "PalmOilFarmer/Domain/Reviews/ReviewContactDetails.swift",
+    "PalmOilFarmer/Domain/Reviews/ReviewContactValidation.swift",
+    "PalmOilFarmer/Domain/Reviews/ReviewStatus.swift"
+  ],
+  "domain_standalone_compile": "passed",
+  "domain_imports": [
+    "Foundation"
+  ],
+  "protected_files_unchanged": {
+    "Configurations/Info.plist": "84a7b8bf6733149d6eb3b8c380534a05014b0afad8e1d1601bf8c8e0c7861bd2",
+    "PalmOilFarmer.xcodeproj/project.pbxproj": "9679a1e9cab9bc10b4ece11ce588a5dff5f567d39d4491523116350dc565189b",
+    "PalmOilFarmer.xcodeproj/project.xcworkspace/contents.xcworkspacedata": "7f3b00b5c3fdb45242d7b87e1e5c4e25d1fa8129a16c94295ecc4e8ea2235c5f",
+    "PalmOilFarmer.xcodeproj/xcshareddata/xcschemes/PalmOilFarmer.xcscheme": "6ade9734efc933a3a773601e6edb1aa0dbdf12357ea1a92d1c32fd28e36fd4d9",
+    "PalmOilFarmer/App/AppConfiguration.swift": "0396aeff16b5347aac48b50b095d760b298267b29c0d7a943925c85f8458f76a",
+    "PalmOilFarmer/App/PalmOilFarmerApp.swift": "c96462ece60b3e9f42b580ce8c2f01046649f2fdb6ef3845d6781eca91a37771",
+    "PalmOilFarmer/Data/Gardens/DraftPlantationRequest.swift": "aef5fffdb6c5084085f5b05f5fe47a37de44550d62bcffcf1eb175f80b9f9529",
+    "PalmOilFarmer/Data/Reviews/CloudKitFarmerReviewRepository.swift": "5ba714330636fb513288a1abaed23a68b52df9144050ffb2e36badfcb9fec2e8",
+    "PalmOilFarmer/Data/Reviews/PlantationDomainMapper.swift": "02eea74c8f4d8a489419ed17ec2aafbe1b6d5625e0ea0120922b6f227d2f3421",
+    "PalmOilFarmer/Data/Reviews/PlantationRecordCKAdapter.swift": "929ce7098babd7e0f6e584ae7b47e40fad8749fcdd401ad03fedab9dec440f18",
+    "PalmOilFarmer/Data/Reviews/PlantationReviewDTOs.swift": "3497bfbf66ca51151cc79b32efeca0e0df79a15c8ec89e0147b0e2cc5d2531bc",
+    "PalmOilFarmer/Experiments/FindingWaypoint/FindingWaypointView.swift": "5c0a9c478d35fa2a83d49d6bb335b342774d5cab38e23f27cff5f11af8a8d3f0",
+    "PalmOilFarmer/Experiments/FindingWaypoint/WaypointMapView.swift": "3f7fdc652601e907b9c54e2cfa99a070d77461e4ab1bbc912231251a449904ec",
+    "PalmOilFarmer/Experiments/FindingWaypoint/WaypointZoneThumbnail.swift": "beb5a04a5b53b16555acf442861d6b61350038fcd0be115898dc22fd72d94e41",
+    "PalmOilFarmer/Features/AreaGuidance/AreaViews.swift": "740b439f62ec3e0251b84920553b8b1f43ed4a3bf1d446b38af2eccf9bad17e6",
+    "PalmOilFarmer/Features/AreaGuidance/Geometry/WaypointZoning.swift": "df5866fca60d1b6f204dc4a2b1e9da7f0bec58051e9eeaefd8cbdcb95d71167a",
+    "PalmOilFarmer/Features/MapDownload/MapDownloadView.swift": "cc657bcd9ef03866fbdbf856d377c7eb2b4db97b8bd503d6ebe1b16a94b2119f",
+    "PalmOilFarmer/Features/Recommendations/DemoReviewReport.swift": "d98e7b00c467a5c9449e2b5e77226ef59c42a8b29973a07107c4779c37d836c3",
+    "PalmOilFarmer/Features/Recommendations/FertilizerRecommendationReport.swift": "59443f71d0ea36cfa94f8d8b69b0078dbeb67a5fd96971351cf3e51314e8e45d",
+    "PalmOilFarmer/Features/Recommendations/FertilizerRecommendationView.swift": "0e2f4e7a8e4180cf94610d444bbc40afe702efa4b08db07ebecc55691e7cc179",
+    "PalmOilFarmer/Features/Recommendations/Mappers/ReviewRecommendationAdapter.swift": "3eb8397cf6df3b292492f6b0d0176d83c84aef370f865af4ebee9ecb58a37b9f",
+    "PalmOilFarmer/Features/Recommendations/NutrientNeedChart.swift": "afcba31ac4d3a50f395b93277b654ac3e45cfd19262d64e9010733ec5d8c24b1",
+    "PalmOilFarmer/Features/Recommendations/NutrientReferenceView.swift": "4c351751abd4b028514cae4d9c49b8f5ce9267a947d92da5b0d8241505765890",
+    "PalmOilFarmer/Features/Recommendations/RainfallChart.swift": "de4efaf1e60b0f55e5a7442c5a5bc31acb899886eaf8c058fb67a048d0a6b1d9",
+    "PalmOilFarmer/Features/ReviewStatus/ReviewStatusView.swift": "098aa4d4dba664b58f417b989229066d5ce66d88bba322908ba3268b9841b974",
+    "PalmOilFarmer/PalmOilFarmer.entitlements": "0042343d1c60a8995a85bb7a312adc8894fe79ccd04a8da76c1f1f4a147c52e8",
+    "PalmOilFarmer/PalmOilFarmerRelease.entitlements": "0042343d1c60a8995a85bb7a312adc8894fe79ccd04a8da76c1f1f4a147c52e8"
+  },
+  "relocated_helper_sha256": {
+    "coordinateAdapter": "5229b539ef47e521d58c9d51d16841c3b96f7e34d8a0ec83ecbee73af16ed1b1",
+    "boundaryAdapter": "0824e7f42ff1f48fb891edf69c9cb545d644b0891d194659e95938e5cbfbbdd2",
+    "reviewTimeline": "f419c29cb87d59f883dbacd09919d9def620e8ab6c8e36363f56a9d0ae55945e",
+    "reviewStatusTitle": "a02c18fc22a30cce26f114a5955aab9581a2a7ad5c651fe85c5653ca0fa36351"
+  },
+  "ui_smoke_tests": "not run; computer use excluded",
+  "archive_and_testflight_upgrade": "not run"
+}
