@@ -1,0 +1,58 @@
+{
+  "actionTitle": "Testing project PalmOilFarmer with scheme PalmOilFarmer",
+  "analyzerWarningCount": 0,
+  "analyzerWarnings": [],
+  "destination": {
+    "architecture": "arm64",
+    "deviceId": "BD8D68EA-DE49-4AF3-A283-69D78F6984C3",
+    "deviceName": "iPhone 18 Pro",
+    "modelName": "iPhone 18 Pro",
+    "osBuildNumber": "24A434",
+    "osVersion": "27.0",
+    "platform": "iOS Simulator"
+  },
+  "endTime": 1793798483.365,
+  "errorCount": 0,
+  "errors": [],
+  "startTime": 1793798466.909,
+  "status": "succeeded",
+  "warningCount": 6,
+  "warnings": [
+    {
+      "className": "DVTTextDocumentLocation",
+      "issueType": "ActorIsolatedCall",
+      "message": "Call to main actor-isolated initializer 'init(_:)' in a synchronous nonisolated context",
+      "sourceURL": "file:///Users/hatamisg/Learning/Project/palm-oil/PalmOilFarmer/Experiments/FindingWaypoint/WaypointZoneThumbnail.swift#EndingColumnNumber=71&EndingLineNumber=65&StartingColumnNumber=71&StartingLineNumber=65&Timestamp=815491266.94525"
+    },
+    {
+      "className": "DVTTextDocumentLocation",
+      "issueType": "IsolatedConformances",
+      "message": "Main actor-isolated conformance of 'HarvestRecord' to 'Decodable' cannot be used in nonisolated context; this is an error in the Swift 6 language mode",
+      "sourceURL": "file:///Users/hatamisg/Learning/Project/palm-oil/PalmOilFarmer/Data/Gardens/DraftPlantationRequest.swift#EndingColumnNumber=38&EndingLineNumber=94&StartingColumnNumber=38&StartingLineNumber=94&Timestamp=815491266.94525"
+    },
+    {
+      "className": "DVTTextDocumentLocation",
+      "issueType": "IsolatedConformances",
+      "message": "Main actor-isolated conformance of 'GardenStage' to 'Equatable' cannot be used in nonisolated context; this is an error in the Swift 6 language mode",
+      "sourceURL": "file:///var/folders/kp/dq7fvdlj00q84c_fr0v_j5kr0000gn/T/swift-generated-sources/@__swiftmacro_18PalmOilFarmerTests0031UserTestingFlowTestsswift_yFFIifMX165_8_6expectfMf_.swift#EndingColumnNumber=53&EndingLineNumber=0&StartingColumnNumber=53&StartingLineNumber=0&Timestamp=815491266.94525"
+    },
+    {
+      "className": "DVTTextDocumentLocation",
+      "issueType": "IsolatedConformances",
+      "message": "Main actor-isolated conformance of 'GardenStage' to 'Equatable' cannot be used in nonisolated context; this is an error in the Swift 6 language mode",
+      "sourceURL": "file:///var/folders/kp/dq7fvdlj00q84c_fr0v_j5kr0000gn/T/swift-generated-sources/@__swiftmacro_18PalmOilFarmerTests0031UserTestingFlowTestsswift_yFFIifMX166_8_6expectfMf0_.swift#EndingColumnNumber=48&EndingLineNumber=0&StartingColumnNumber=48&StartingLineNumber=0&Timestamp=815491266.94525"
+    },
+    {
+      "className": "DVTTextDocumentLocation",
+      "issueType": "IsolatedConformances",
+      "message": "Main actor-isolated conformance of 'GardenStage' to 'Equatable' cannot be used in nonisolated context; this is an error in the Swift 6 language mode",
+      "sourceURL": "file:///var/folders/kp/dq7fvdlj00q84c_fr0v_j5kr0000gn/T/swift-generated-sources/@__swiftmacro_18PalmOilFarmerTests0031UserTestingFlowTestsswift_yFFIifMX167_8_6expectfMf1_.swift#EndingColumnNumber=52&EndingLineNumber=0&StartingColumnNumber=52&StartingLineNumber=0&Timestamp=815491266.94525"
+    },
+    {
+      "className": "DVTTextDocumentLocation",
+      "issueType": "IsolatedConformances",
+      "message": "Main actor-isolated conformance of 'GardenStage' to 'Equatable' cannot be used in nonisolated context; this is an error in the Swift 6 language mode",
+      "sourceURL": "file:///var/folders/kp/dq7fvdlj00q84c_fr0v_j5kr0000gn/T/swift-generated-sources/@__swiftmacro_18PalmOilFarmerTests0031UserTestingFlowTestsswift_yFFIifMX168_8_6expectfMf2_.swift#EndingColumnNumber=47&EndingLineNumber=0&StartingColumnNumber=47&StartingLineNumber=0&Timestamp=815491266.94525"
+    }
+  ]
+}

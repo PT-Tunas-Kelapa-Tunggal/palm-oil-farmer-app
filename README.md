@@ -1,7 +1,7 @@
 # Palm Oil Farmer
 
 An iOS app for oil palm farmers, built with SwiftUI and organized by feature, with one app target and a Swift Testing target.
-The project is being migrated incrementally to Clean Architecture with MVVM-C and SwiftUI NavigationStack. Parts 2–3 organized files and separated Foundation-only Domain values/rules. Part 4 isolates local persistence behind a repository and manually composes the main data dependencies in App. Screen orchestration, ViewModels, and Coordinators follow in later parts.
+The project is being migrated incrementally to Clean Architecture with MVVM-C and SwiftUI NavigationStack. Parts 2–4 organized files, separated Foundation-only Domain values/rules, and composed data dependencies manually. Part 5 introduces AppCoordinator for root navigation and GardenListViewModel for the production home screen. Registration, profile/history, and review submission migrate in the following parts.
 Keep the structure small: add folders and abstractions when real code needs them.
 
 ## Naming
@@ -36,6 +36,7 @@ This project uses a central `Developer.xcconfig` file for developer-specific cre
 | Folder | Responsibility |
 | --- | --- |
 | `PalmOilFarmer/App` | Entry point, manual dependency composition, top-level navigation, and legacy composition bridges |
+| `PalmOilFarmer/App/Navigation` | AppCoordinator, typed root routes, and registration-to-map presentation transitions |
 | `PalmOilFarmer/App/State` | Transitional observable GardenStore; consumes Domain contracts without SwiftData or CloudKit types |
 | `PalmOilFarmer/DesignSystem/Tokens` | Shared colors, spacing, typography, corner radii, control dimensions |
 | `PalmOilFarmer/DesignSystem/Components` | Reusable UI with no dependency on garden models or services |
@@ -46,7 +47,7 @@ This project uses a central `Developer.xcconfig` file for developer-specific cre
 | `PalmOilFarmer/Data/Gardens` | Existing SwiftData draft model and SwiftDataGardenDraftRepository |
 | `PalmOilFarmer/Data/Reviews` | CloudKit repository, DTOs, domain mapper, and CKRecord adapter |
 | `PalmOilFarmer/Data/Location` | Current location, MapKit search, waypoint session, and CoreLocation geometry adapters |
-| `PalmOilFarmer/Features/GardenList` | Home list, cards, filters, and list illustration |
+| `PalmOilFarmer/Features/GardenList` | Production screen/ViewModel, list data-source contract, presentation values, shared layout, cards, filters, and list illustration |
 | `PalmOilFarmer/Features/GardenRegistration` | Guide, location/photo selection, details, and boundary mapping |
 | `PalmOilFarmer/Features/GardenProfile` | Profile, summary, and profile progress |
 | `PalmOilFarmer/Features/GardenHistory` | Fertilizer and harvest editors and history UI |
@@ -64,13 +65,16 @@ This project uses a central `Developer.xcconfig` file for developer-specific cre
 
 This layout is transitional. Domain compiles independently with Foundation. GardenStore consumes `GardenDraftRepository` and `FarmerReviewRepository`; SwiftData fetches and writes belong to Data. `AppDependencies` creates the main store and gives the same review repository to the profile through SwiftUI's environment. Data no longer reads AppConfiguration, and the profile no longer names CloudKit's concrete repository. The request-to-Garden projection is a Domain conversion; DTO/CKRecord mapping remains in Data.
 
+The production home uses `GardenListScreen` with `GardenListViewModel`. The ViewModel reads the shared store through the feature's `GardenListDataSource` contract, owns the selected filter, derives the list presentation, and forwards user navigation events. AppCoordinator receives those events and owns the typed NavigationStack path and root modal transitions. ContentView renders the destinations and binds SwiftUI's Back/dismiss behavior to the coordinator. AppDependencies assembles the store, ViewModel, and coordinator without a DI framework. The existing `GardenListView` value/callback API remains for reference screens and the experiment; both entry points use the same layout and presentation rules.
+
 `App/LegacyComposition.swift` retains the no-argument GardenStore initializer and default review repository for unchanged standalone/reference screens and the team-owned experiment. These compatibility defaults still use live storage/CloudKit; the main app injects dependencies explicitly, and its root preview uses an in-memory store with an unavailable submission stub. GardenStore still coordinates state and submission pending feature-level MVVM-C migration. There is still one app module.
 
-The implementation scope runs from Home through successful review submission. Existing status/results/guidance/experiment implementations remain unchanged. See [the baseline](docs/refactor/baseline.md), [Part 2 results](docs/refactor/part-02-structure.md), [Part 3 verification](docs/refactor/part-03-domain-contracts.md), and [Part 4 verification](docs/refactor/part-04-data-composition.md).
+The implementation scope runs from Home through successful review submission. Existing status/results/guidance/experiment implementations remain unchanged. See [the baseline](docs/refactor/baseline.md), [Part 2 results](docs/refactor/part-02-structure.md), [Part 3 verification](docs/refactor/part-03-domain-contracts.md), [Part 4 verification](docs/refactor/part-04-data-composition.md), and [Part 5 verification](docs/refactor/part-05-mvvm-coordinator.md).
 
 ## Rules for changes
 
 - Keep transient UI state in the view. `GardenStore` owns saved gardens; profile views receive the latest value from their parent. Editors own local drafts and publish them only after a successful save.
+- The production list ViewModel owns filter state and emits navigation events; AppCoordinator owns root routes and modal sequencing. Read current shared garden values rather than copying them into a second list cache. Registration and profile internal presentation state remains transitional until those features migrate.
 - A profile's `onUpdate` must update the parent's source of truth. Static reference previews intentionally use fixed input; use a stateful parent for interactive editing previews.
 - Put calculations and validation in value types. Introduce use cases, ViewModels, and flow Coordinators incrementally; simple controls do not require a ViewModel or Coordinator of their own.
 - Keep Domain independent of Data, Features, SharedUI, and Apple UI/location/persistence frameworks. Presentation keeps form drafts and messages; existing input rules live in Domain. Persisted decoding and model fields remain compatible rather than being retroactively rejected by new initializers.
