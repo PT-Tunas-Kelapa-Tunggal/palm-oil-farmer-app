@@ -4,7 +4,7 @@ Ketika hampir semua pekerjaan berada di dalam folder `Gardens`, nama folder itu 
 
 Pada part ini, kita memindahkan file tanpa mengubah isi Swift. Cara ini membuat perubahan mudah diperiksa: satu file yang berpindah seharusnya tetap mempunyai isi yang sama. Setelah strukturnya jelas, kita akan mulai memisahkan aturan bisnis dan menghubungkan MVVM-C pada part berikutnya.
 
-Kamu mengerjakan langkah-langkah ini secara manual. Perintah di bawah adalah panduan untuk dijalankan satu kelompok demi satu kelompok; tidak ada pemindahan source yang sudah dilakukan oleh assistant.
+Perintah di bawah merupakan panduan manual untuk dijalankan satu kelompok demi satu kelompok. Sesudah tutorial dibuat, pengguna mendelegasikan pelaksanaan Part 2 kepada assistant. Pemindahan telah dilakukan pada branch `refactor/02-feature-folders`; hasil aktual tersedia di [catatan Part 2](../refactor/part-02-structure.md). Jangan mengulang perintah pemindahan pada checkout yang sudah selesai.
 
 ## Tujuan part ini
 

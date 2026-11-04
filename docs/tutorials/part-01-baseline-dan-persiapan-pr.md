@@ -26,6 +26,8 @@ Pada part ini, source Swift, struktur folder aplikasi, schema penyimpanan, dan k
 2. Membaca flow serta memeriksa aplikasi sebelum refactor.
 3. Menulis baseline dan menyiapkan PR pertama.
 
+> **Lokasi file setelah Part 2:** link source pada materi ini sudah mengarah ke struktur baru. Tabel dan uraian path lama tetap menjadi penjelasan keadaan baseline sebelum pemindahan.
+
 ## Persiapan teknis
 
 Siapkan repository yang sudah kamu pull, Xcode, satu iOS Simulator yang didukung project, dan editor Markdown. Kamu bisa memakai editor yang biasa kamu gunakan untuk membaca file ini.
@@ -202,9 +204,9 @@ Gunakan data uji untuk pemeriksaan yang membuat kebun atau pengajuan. Jalur Run 
 
 3. **Baca perpindahan data lokal ke remote.**
 
-   Buka [GardenStore.swift](../../PalmOilFarmer/Features/Gardens/Data/GardenStore.swift). Temukan `addDraft`, `add`, `update`, `refreshRemote`, dan `submitReview`.
+   Buka [GardenStore.swift](../../PalmOilFarmer/Data/Gardens/GardenStore.swift). Temukan `addDraft`, `add`, `update`, `refreshRemote`, dan `submitReview`.
 
-   Kemudian lihat [DraftPlantationRequest.swift](../../PalmOilFarmer/Features/Gardens/Data/DraftPlantationRequest.swift) dan [CloudKitFarmerReviewRepository.swift](../../PalmOilFarmer/Features/Gardens/Review/Data/CloudKitFarmerReviewRepository.swift).
+   Kemudian lihat [DraftPlantationRequest.swift](../../PalmOilFarmer/Data/Gardens/DraftPlantationRequest.swift) dan [CloudKitFarmerReviewRepository.swift](../../PalmOilFarmer/Data/Reviews/CloudKitFarmerReviewRepository.swift).
 
    Catat alur yang dipertahankan sepanjang seri:
 

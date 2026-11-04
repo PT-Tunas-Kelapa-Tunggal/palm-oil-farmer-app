@@ -1,6 +1,14 @@
 # Finding Waypoint — eksperimen
 
-Seluruh implementasi berada di folder ini. Tidak ada perubahan ke app entry point, model Garden, penyimpanan zona, assets, atau target pengujian.
+Folder ini menyimpan entry point eksperimen (`FindingWaypointView.swift`), layar peta (`WaypointMapView.swift`), serta thumbnail/palette/preview data (`WaypointZoneThumbnail.swift`). Pada Part 2, file dipindahkan tanpa mengubah implementasi Swift, app entry point, model Garden, penyimpanan zona, assets, atau target pengujian.
+
+Kemampuan yang dipakai ulang oleh flow produksi berada di lokasi berikut:
+
+- Session GPS: `PalmOilFarmer/Data/Location/WaypointLocationSession.swift`.
+- Geometri pembagian zona: `PalmOilFarmer/Features/AreaGuidance/Geometry/WaypointZoning.swift`.
+- Peta/picker/navigasi area produksi: `PalmOilFarmer/Features/AreaGuidance/AreaViews.swift`.
+
+Semua file masih dikompilasi dalam module app yang sama. Pemindahan folder tidak mengaktifkan eksperimen sebagai root app atau mengubah perilaku hasil peninjauan.
 
 ## Menjalankan
 
