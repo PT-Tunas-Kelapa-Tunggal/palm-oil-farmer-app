@@ -1,7 +1,7 @@
 # Palm Oil Farmer
 
 An iOS app for oil palm farmers, built with SwiftUI and organized by feature, with one app target and a Swift Testing target.
-The project is being migrated incrementally to Clean Architecture with MVVM-C and SwiftUI NavigationStack. Parts 2–4 organized files, separated Foundation-only Domain values/rules, and composed data dependencies manually. Part 5 introduced AppCoordinator and the list ViewModel. Part 6 separates location/photo registration into ViewModels, a child flow Coordinator, and injected repositories. Mapping/details/drafts, profile/history, and review submission follow in Parts 7–9.
+The project is being migrated incrementally to Clean Architecture with MVVM-C and SwiftUI NavigationStack. Parts 2–4 organized files, separated Foundation-only Domain values/rules, and composed data dependencies manually. Parts 5–6 introduced the home and location/photo flows. Part 7 migrates boundary mapping, garden details, and draft completion to ViewModels and flow Coordinators. Profile/history and review submission follow in Parts 8–9.
 Keep the structure small: add folders and abstractions when real code needs them.
 
 ## Naming
@@ -42,14 +42,15 @@ This project uses a central `Developer.xcconfig` file for developer-specific cre
 | `PalmOilFarmer/DesignSystem/Components` | Reusable UI with no dependency on garden models or services |
 | `PalmOilFarmer/DesignSystem/Styles` | Button styles and shared presentation modifiers |
 | `PalmOilFarmer/DesignSystem/Catalog` | Light, dark, and accessibility-size component previews |
-| `PalmOilFarmer/Domain/Gardens` | Foundation-only garden/history values, validation, review projection, and local draft repository contract |
+| `PalmOilFarmer/Domain/Gardens` | Foundation-only garden/history values, validation, review projection, and draft/location/photo/authorization contracts |
 | `PalmOilFarmer/Domain/Reviews` | Review/contact values, contact validation, request snapshot construction, and repository contract |
 | `PalmOilFarmer/Data/Gardens` | Existing SwiftData draft model and SwiftDataGardenDraftRepository |
 | `PalmOilFarmer/Data/Reviews` | CloudKit repository, DTOs, domain mapper, and CKRecord adapter |
-| `PalmOilFarmer/Data/Location` | Current location, MapKit search, waypoint session, and CoreLocation geometry adapters |
+| `PalmOilFarmer/Data/Location` | Location authorization, current location, MapKit search, waypoint session, and CoreLocation geometry adapters |
 | `PalmOilFarmer/Data/Photos` | Photos authorization, eligible asset lookup, and cancellable thumbnail requests |
 | `PalmOilFarmer/Features/GardenList` | Production screen/ViewModel, list data-source contract, presentation values, shared layout, cards, filters, and list illustration |
-| `PalmOilFarmer/Features/GardenRegistration` | Guide/location/photo flow Coordinator and ViewModels; transitional details and boundary mapping |
+| `PalmOilFarmer/Features/GardenRegistration` | Guide/location/photo flow, details form ViewModel/Coordinator, and registration write contract |
+| `PalmOilFarmer/Features/GardenRegistration/Mapping` | Boundary ViewModel, mapping Coordinator, map camera/gesture UI, and editor layout |
 | `PalmOilFarmer/Features/GardenProfile` | Profile, summary, and profile progress |
 | `PalmOilFarmer/Features/GardenHistory` | Fertilizer and harvest editors and history UI |
 | `PalmOilFarmer/Features/ReviewRequest` | Program information, consent, and contact form |
@@ -70,14 +71,16 @@ The production home uses `GardenListScreen` with `GardenListViewModel`. The View
 
 Registration receives a fresh flow from `GardenRegistrationFactory`. LocationSearchViewModel handles the 350 ms search debounce, trimmed queries, stale responses, GPS request state, and existing messages. GardenPhotoPickerViewModel reads Foundation-only photo values; Photos assets and authorization stay in Data. GardenRegistrationCoordinator owns guide/search progress and gallery presentation, forwarding the selected location to AppCoordinator only after the gallery closes. AppCoordinator then waits for the registration sheet to close before presenting the map. Thumbnail requests retain the existing 240×240 aspect-fill/opportunistic/network settings, stream encoded PNG updates, and cancel when their consumer terminates.
 
-`App/LegacyComposition.swift` retains the no-argument GardenStore initializer and default review repository. `App/LegacyRegistrationComposition.swift` retains the existing registration/search/photo initializers and optional fixed-result/search-closure API. These compatibility defaults still use live services for unchanged standalone/reference screens and the experiment. The main app injects dependencies explicitly; its root preview uses in-memory storage and registration/review stubs. GardenStore still coordinates state and submission pending feature-level migration. There is still one app module.
+`GardenMappingFactory` supplies the boundary ViewModel, mapping Coordinator, and a fresh details editor for each details session. Boundary points, duplicate checks, photo confirmation, validity checks, and location-draft saves belong to the ViewModel. Camera position, marker hit testing, drag offsets, annotation layout, and focus remain in the View. GardenDetailsViewModel validates and builds the existing Garden payload; its Coordinator owns soil/date presentation. A successful save closes the details sheet before the map closes, and cancelled/replaced editors cannot write through old callbacks. Main registration writes use `GardenRegistrationSaving`, implemented by GardenStore in App, so draft completion, list updates, error policy, and storage remain on the existing path.
 
-The implementation scope runs from Home through successful review submission. Existing status/results/guidance/experiment implementations remain unchanged. See [the baseline](docs/refactor/baseline.md), [Part 2 results](docs/refactor/part-02-structure.md), [Part 3 verification](docs/refactor/part-03-domain-contracts.md), [Part 4 verification](docs/refactor/part-04-data-composition.md), [Part 5 verification](docs/refactor/part-05-mvvm-coordinator.md), and [Part 6 verification](docs/refactor/part-06-location-photo-registration.md).
+`App/LegacyComposition.swift` retains the no-argument GardenStore initializer and default review repository. `App/LegacyRegistrationComposition.swift` retains registration/search/photo initializers and fixed-result/search-closure APIs. `App/LegacyMappingComposition.swift` retains boundary/details callbacks used by the profile, reference screens, and experiment. Compatibility defaults still use live services where they did before. The main app injects dependencies explicitly; its root preview uses in-memory storage and registration/review/authorization stubs. GardenStore still coordinates shared state and submission pending the remaining feature migrations. There is still one app module.
+
+The implementation scope runs from Home through successful review submission. Existing status/results/guidance/experiment implementations remain unchanged. See [the baseline](docs/refactor/baseline.md), [Part 2 results](docs/refactor/part-02-structure.md), [Part 3 verification](docs/refactor/part-03-domain-contracts.md), [Part 4 verification](docs/refactor/part-04-data-composition.md), [Part 5 verification](docs/refactor/part-05-mvvm-coordinator.md), [Part 6 verification](docs/refactor/part-06-location-photo-registration.md), and [Part 7 verification](docs/refactor/part-07-mapping-details-drafts.md).
 
 ## Rules for changes
 
 - Keep transient UI state in the view. `GardenStore` owns saved gardens; profile views receive the latest value from their parent. Editors own local drafts and publish them only after a successful save.
-- The production list ViewModel owns filter state and emits navigation events; AppCoordinator owns root routes and modal sequencing. Read current shared garden values rather than copying them into a second list cache. The registration Coordinator owns guide/search/gallery transitions; mapping and profile internal presentation state remain transitional.
+- The production list ViewModel owns filter state and emits navigation events; AppCoordinator owns root routes and modal sequencing. Read current shared garden values rather than copying them into a second list cache. Registration/mapping/details Coordinators own their feature transitions; profile/history and review presentation still await migration.
 - A profile's `onUpdate` must update the parent's source of truth. Static reference previews intentionally use fixed input; use a stateful parent for interactive editing previews.
 - Put calculations and validation in value types. Introduce use cases, ViewModels, and flow Coordinators incrementally; simple controls do not require a ViewModel or Coordinator of their own.
 - Keep Domain independent of Data, Features, SharedUI, and Apple UI/location/persistence frameworks. Presentation keeps form drafts and messages; existing input rules live in Domain. Persisted decoding and model fields remain compatible rather than being retroactively rejected by new initializers.
@@ -102,7 +105,7 @@ The app follows the Sketch **MID-FID Flow** page (KROPS file): Daftar Kebun (dar
 
 ## Verification
 
-Open `PalmOilFarmer.xcodeproj` and build the `PalmOilFarmer` scheme. Run its `PalmOilFarmerTests` test target on an iOS simulator with Product > Test. Persistence tests use in-memory SwiftData containers. Terminal build/test instructions are included in the [Part 2 tutorial](docs/tutorials/part-02-struktur-folder-dan-batas-fitur.md).
+Open `PalmOilFarmer.xcodeproj` and build the `PalmOilFarmer` scheme. Run its `PalmOilFarmerTests` test target on an iOS simulator with Product > Test. Persistence tests use in-memory and temporary-disk SwiftData containers. Terminal build/test instructions are included in the [Part 2 tutorial](docs/tutorials/part-02-struktur-folder-dan-batas-fitur.md).
 
 Open `DesignSystemCatalog.swift` in Canvas to inspect shared controls. Before merging UI changes, check light/dark appearance, long labels, larger Dynamic Type, Reduce Motion, and Reduce Transparency. For navigation or save-flow changes, also exercise registration, editing, cancellation, and deletion in the simulator. Unit tests do not replace these UI checks.
 
