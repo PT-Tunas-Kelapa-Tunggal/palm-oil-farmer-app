@@ -37,8 +37,4 @@ enum SoilType: String, CaseIterable, Identifiable, Codable {
     case other = "Lainnya"
 
     var id: String { rawValue }
-
-    var displayName: String {
-        self == .other ? rawValue : "Tanah " + rawValue
-    }
 }

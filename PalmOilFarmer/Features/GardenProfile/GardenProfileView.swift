@@ -292,25 +292,8 @@ struct GardenProfileView: View {
     }
 
     private func submitReview(details: ReviewContactDetails) async throws {
-        let boundaryPoints = garden.boundary.points.map { CoordinatePoint(latitude: $0.latitude, longitude: $0.longitude) }
-        let usages = (garden.fertilizerRecords ?? []).map {
-            FertilizerUsage(id: $0.id, name: $0.name, bagWeightKg: $0.bagWeightKg, bagCount: $0.bagCount, doseKgPerTree: $0.doseKgPerTree)
-        }
-        let harvest = garden.harvestRecord.map {
-            HarvestYield(frequencyPerMonth: $0.frequencyPerMonth, latestWeightKg: $0.latestWeightKg)
-        }
-        let request = PlantationReviewRequest(
-            farmer: FarmerContact(name: details.name, phone: details.phone, address: details.address),
-            garden: GardenSummary(id: garden.id, name: garden.name, locationName: garden.locationName, areaHectares: garden.boundary.areaHectares),
-            boundary: boundaryPoints,
-            agronomy: AgronomicProfile(
-                plantingYear: garden.plantingYear,
-                plantingMonth: garden.plantingMonth,
-                soilType: garden.soilType.rawValue,
-                fertilizerRecords: usages,
-                harvestRecord: harvest
-            )
-        )
+        let request = PlantationReviewRequest(garden: garden, contact: details)
+
         let saved = try await CloudKitFarmerReviewRepository.shared.submitRequest(request)
         await MainActor.run {
             activeReviewStatus = saved.status

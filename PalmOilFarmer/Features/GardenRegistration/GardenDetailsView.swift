@@ -173,18 +173,16 @@ struct GardenDetailsView: View {
 
     private func save() {
         isNameFocused = false
-        let trimmedName = name.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !trimmedName.isEmpty,
-              let plantingYear, let soilType else {
+        guard let details = GardenDetails(name: name, plantingYear: plantingYear, soilType: soilType) else {
             errorMessage = "Lengkapi nama kebun, tahun tanam, dan jenis tanah terlebih dahulu."
             showsSaveError = true
             return
         }
         errorMessage = "Data tidak dapat disimpan di perangkat. Coba lagi."
         var garden = Garden(
-            id: originalGarden?.id ?? UUID(), name: trimmedName,
+            id: originalGarden?.id ?? UUID(), name: details.name,
             locationName: locationName, boundary: boundary,
-            plantingYear: plantingYear, soilType: soilType
+            plantingYear: details.plantingYear, soilType: details.soilType
         )
         garden.plantingMonth = plantingMonth
         garden.fertilizerRecords = originalGarden?.fertilizerRecords

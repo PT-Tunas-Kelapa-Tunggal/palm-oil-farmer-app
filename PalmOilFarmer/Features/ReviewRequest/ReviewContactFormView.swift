@@ -109,17 +109,16 @@ struct ReviewContactFormView: View {
     private func submit() async {
         guard !isSubmitting else { return }
         focusedField = nil
-        let trimmedName = name.trimmingCharacters(in: .whitespacesAndNewlines)
-        let trimmedAddress = address.trimmingCharacters(in: .whitespacesAndNewlines)
-        let digits = phone.filter(\.isNumber)
-        guard !trimmedName.isEmpty, !trimmedAddress.isEmpty, digits.count >= 8, hasConsent else {
+        guard let contact = ReviewContactDetails.validated(
+            name: name, phone: phone, address: address, hasConfirmedContact: hasConsent
+        ) else {
             errorMessage = "Lengkapi nama, nomor telepon, alamat rumah, dan persetujuan terlebih dahulu."
             return
         }
         isSubmitting = true
         defer { isSubmitting = false }
         do {
-            try await onSubmit(ReviewContactDetails(name: trimmedName, phone: phone, address: trimmedAddress))
+            try await onSubmit(contact)
         } catch {
             errorMessage = error.localizedDescription
         }

@@ -12,7 +12,7 @@ final class GardenStore {
 
     private let modelContainer: ModelContainer
     private let modelContext: ModelContext
-    private let repository: CloudKitFarmerReviewRepository
+    private let repository: any FarmerReviewRepository
     private let domainMapper = PlantationDomainMapper()
 
     private var localDraftGardens: [Garden] = []
@@ -20,7 +20,7 @@ final class GardenStore {
 
     init(
         modelContainer: ModelContainer = AppConfiguration.makeModelContainer(),
-        repository: CloudKitFarmerReviewRepository = .shared
+        repository: any FarmerReviewRepository = CloudKitFarmerReviewRepository.shared
     ) {
         self.modelContainer = modelContainer
         self.modelContext = ModelContext(modelContainer)
@@ -50,8 +50,8 @@ final class GardenStore {
         isLoading = true
         defer { isLoading = false }
         do {
-            let remoteGardens = try await repository.fetchMyGardens()
-            submittedGardens = remoteGardens
+            let requests = try await repository.fetchMyRequests()
+            submittedGardens = requests.map { domainMapper.toGarden(from: $0) }
             combineGardens()
         } catch {
             print("[GardenStore] CloudKit fetch status: \(error.localizedDescription)")
@@ -193,25 +193,7 @@ final class GardenStore {
     /// Upon successful upload, evicts the local draft from SwiftData so CloudKit becomes the sole source of truth.
     @discardableResult
     func submitReview(for garden: Garden, contact: ReviewContactDetails) async throws -> PlantationReviewRequest {
-        let boundaryPoints = garden.boundary.points.map { CoordinatePoint(latitude: $0.latitude, longitude: $0.longitude) }
-        let usages = (garden.fertilizerRecords ?? []).map {
-            FertilizerUsage(id: $0.id, name: $0.name, bagWeightKg: $0.bagWeightKg, bagCount: $0.bagCount, doseKgPerTree: $0.doseKgPerTree)
-        }
-        let harvest = garden.harvestRecord.map {
-            HarvestYield(frequencyPerMonth: $0.frequencyPerMonth, latestWeightKg: $0.latestWeightKg)
-        }
-        let request = PlantationReviewRequest(
-            farmer: FarmerContact(name: contact.name, phone: contact.phone, address: contact.address),
-            garden: GardenSummary(id: garden.id, name: garden.name, locationName: garden.locationName, areaHectares: garden.boundary.areaHectares),
-            boundary: boundaryPoints,
-            agronomy: AgronomicProfile(
-                plantingYear: garden.plantingYear,
-                plantingMonth: garden.plantingMonth,
-                soilType: garden.soilType.rawValue,
-                fertilizerRecords: usages,
-                harvestRecord: harvest
-            )
-        )
+        let request = PlantationReviewRequest(garden: garden, contact: contact)
 
         let saved = try await repository.submitRequest(request)
 

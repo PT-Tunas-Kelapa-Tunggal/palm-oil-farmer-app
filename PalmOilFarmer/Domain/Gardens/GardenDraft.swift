@@ -1,7 +1,7 @@
 import Foundation
 
 /// A location saved with "Lakukan Nanti" before its boundary is mapped.
-/// Stored apart from gardens.json so the garden file format stays unchanged.
+/// Persists the selected location until its boundary is mapped.
 struct GardenDraft: Identifiable, Codable {
     var id = UUID()
     let name: String
@@ -26,9 +26,5 @@ struct GardenDraft: Identifiable, Codable {
 
     var location: GardenLocation {
         GardenLocation(name: name, subtitle: subtitle, coordinate: coordinate, source: .draft, draftID: id)
-    }
-
-    var title: String {
-        subtitle.isEmpty || subtitle == name ? name : "\(name), \(subtitle)"
     }
 }

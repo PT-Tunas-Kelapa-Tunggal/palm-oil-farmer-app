@@ -176,7 +176,7 @@ struct HarvestHistoryEditor: View {
     @State private var showsError = false
     @Environment(\.dismiss) private var dismiss
 
-    static let frequencyRange = 1...31
+    static let frequencyRange = HarvestRecord.frequencyRange
 
     init(record: HarvestRecord?, onSave: @escaping (HarvestRecord) -> Bool) {
         self.onSave = onSave
@@ -215,8 +215,11 @@ struct HarvestHistoryEditor: View {
     }
 
     private func save() {
-        guard Self.frequencyRange.contains(frequency), weight.isFinite, weight > 0 else { showsError = true; return }
-        if onSave(HarvestRecord(frequencyPerMonth: frequency, latestWeightKg: weight)) {
+        guard let record = HarvestRecord.validated(frequencyPerMonth: frequency, latestWeightKg: weight) else {
+            showsError = true
+            return
+        }
+        if onSave(record) {
             dismiss()
         } else { showsError = true }
     }

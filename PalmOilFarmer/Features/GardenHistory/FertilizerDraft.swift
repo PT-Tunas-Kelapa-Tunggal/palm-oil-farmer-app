@@ -20,13 +20,9 @@ struct FertilizerDraft: Identifiable {
     }
 
     var record: FertilizerRecord? {
-        let trimmedName = name.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !trimmedName.isEmpty,
-              let bagWeightKg, bagWeightKg.isFinite, bagWeightKg > 0,
-              let bagCount, bagCount > 0,
-              let doseKgPerTree, doseKgPerTree.isFinite, doseKgPerTree > 0 else { return nil }
-        return FertilizerRecord(id: id, name: trimmedName, bagWeightKg: bagWeightKg,
-                                bagCount: bagCount, doseKgPerTree: doseKgPerTree)
+        guard let bagWeightKg, let bagCount, let doseKgPerTree else { return nil }
+        return FertilizerRecord.validated(id: id, name: name, bagWeightKg: bagWeightKg,
+                                         bagCount: bagCount, doseKgPerTree: doseKgPerTree)
     }
 }
 
