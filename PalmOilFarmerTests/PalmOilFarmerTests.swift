@@ -17,17 +17,17 @@ struct PalmOilFarmerTests {
 
     @Test func storePersistsUpdatesAndDeletion() throws {
         let container = makeContainer()
-        let store = GardenStore(modelContainer: container)
+        let store = makeTestGardenStore(in: container)
         var value = garden()
         #expect(store.gardens.isEmpty)
         #expect(store.add(value))
         value.harvestRecord = HarvestRecord(frequencyPerMonth: 2, latestWeightKg: 420)
         #expect(store.update(value))
-        let reloaded = GardenStore(modelContainer: container)
+        let reloaded = makeTestGardenStore(in: container)
         #expect(reloaded.gardens.first?.id == value.id)
         #expect(reloaded.gardens.first?.harvestRecord?.latestWeightKg == 420)
         #expect(store.delete(value))
-        #expect(GardenStore(modelContainer: container).gardens.isEmpty)
+        #expect(makeTestGardenStore(in: container).gardens.isEmpty)
     }
 
     @Test func legacyGardenWithoutOptionalHistoryStillLoads() throws {
@@ -42,7 +42,7 @@ struct PalmOilFarmerTests {
 
     @Test func unknownGardenCannotBeUpdatedOrDeleted() throws {
         let container = makeContainer()
-        let store = GardenStore(modelContainer: container)
+        let store = makeTestGardenStore(in: container)
         let existing = garden()
         #expect(store.add(existing))
         #expect(!store.update(garden()))

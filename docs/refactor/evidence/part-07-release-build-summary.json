@@ -1,0 +1,27 @@
+{
+  "actionTitle": "Build \"PalmOilFarmer\"",
+  "analyzerWarningCount": 0,
+  "analyzerWarnings": [],
+  "destination": {
+    "architecture": "undefined_arch",
+    "deviceId": "dvtdevice-DVTiOSDeviceSimulatorPlaceholder-iphonesimulator:placeholder",
+    "deviceName": "Any iOS Simulator Device",
+    "modelName": "GenericiOS SimulatorSimulator",
+    "osVersion": "",
+    "platform": "iOS Simulator"
+  },
+  "endTime": 1793802514.976,
+  "errorCount": 0,
+  "errors": [],
+  "startTime": 1793802500.066,
+  "status": "succeeded",
+  "warningCount": 1,
+  "warnings": [
+    {
+      "className": "DVTTextDocumentLocation",
+      "issueType": "IsolatedConformances",
+      "message": "Main actor-isolated conformance of 'HarvestRecord' to 'Decodable' cannot be used in nonisolated context; this is an error in the Swift 6 language mode",
+      "sourceURL": "file:///Users/hatamisg/Learning/Project/palm-oil/PalmOilFarmer/Data/Gardens/DraftPlantationRequest.swift#EndingColumnNumber=38&EndingLineNumber=94&StartingColumnNumber=38&StartingLineNumber=94&Timestamp=815495300.0894229"
+    }
+  ]
+}

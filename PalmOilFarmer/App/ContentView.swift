@@ -1,72 +1,48 @@
 import SwiftUI
-import SwiftData
 
 struct ContentView: View {
     @State private var store: GardenStore
-    @State private var selectedGardenID: UUID?
-    @State private var showsRegistration = false
-    @State private var registrationStep = RegistrationIntroView.Step.guide
-    @State private var pendingLocation: GardenLocation?
-    @State private var mappingLocation: GardenLocation?
-    @State private var reopensSearch = false
-    @State private var showsDeveloperMode = false
+    @State private var listViewModel: GardenListViewModel
+    @State private var coordinator: AppCoordinator
+    private let registrationFactory: GardenRegistrationFactory
+    private let mappingFactory: GardenMappingFactory
+    private let profileFactory: GardenProfileFactory
 
-    init(modelContainer: ModelContainer = AppConfiguration.makeModelContainer()) {
-        _store = State(initialValue: GardenStore(modelContainer: modelContainer))
+    init(store: GardenStore, listViewModel: GardenListViewModel, coordinator: AppCoordinator,
+         registrationFactory: GardenRegistrationFactory, mappingFactory: GardenMappingFactory,
+         profileFactory: GardenProfileFactory) {
+        _store = State(initialValue: store)
+        _listViewModel = State(initialValue: listViewModel)
+        _coordinator = State(initialValue: coordinator)
+        self.registrationFactory = registrationFactory
+        self.mappingFactory = mappingFactory
+        self.profileFactory = profileFactory
     }
 
     var body: some View {
-        NavigationStack {
-            GardenListView(
-                gardens: store.gardens,
-                drafts: store.drafts,
-                onSelectDraft: { mappingLocation = $0.location },
-                onDeleteDraft: { _ = store.deleteDraft($0) },
-                onSelectGarden: { selectedGardenID = $0.id },
-                onRegisterGarden: {
-                    registrationStep = .guide
-                    showsRegistration = true
-                },
-                onOpenDeveloperMode: developerModeAction
-            )
-            .toolbar(.hidden, for: .navigationBar)
-            #if DEBUG
-            .navigationDestination(isPresented: $showsDeveloperMode) {
-                DeveloperModeView(gardenCount: store.gardens.count, draftCount: store.drafts.count) {
-                    selectedGardenID = nil
-                    store.eraseAll()
+        @Bindable var coordinator = coordinator
+        NavigationStack(path: $coordinator.path) {
+            GardenListScreen(viewModel: listViewModel)
+                .toolbar(.hidden, for: .navigationBar)
+                .navigationDestination(for: AppRoute.self) { route in
+                    destination(for: route)
                 }
-            }
-            #endif
-            .navigationDestination(item: $selectedGardenID) { id in
-                if let garden = store.gardens.first(where: { $0.id == id }) {
-                    GardenProfileView(garden: garden, onDelete: store.delete, onUpdate: store.update)
-                }
-            }
-            .refreshable {
-                await store.refreshRemote()
-            }
         }
         .task {
-            await store.refreshRemote()
+            await listViewModel.refresh()
         }
         .environment(store)
-        .sheet(isPresented: $showsRegistration, onDismiss: openMappingIfNeeded) {
-            RegistrationIntroView(initialStep: registrationStep) { location in
-                pendingLocation = location
-                showsRegistration = false
-            }
+        .sheet(item: $coordinator.registrationSheet, onDismiss: coordinator.registrationDidDismiss) { sheet in
+            RegistrationIntroView(flow: registrationFactory.makeFlow(
+                initialStep: sheet == .guide ? .guide : .search,
+                onLocate: coordinator.locatedGarden, onCancel: coordinator.cancelRegistration
+            ))
         }
-        .fullScreenCover(item: $mappingLocation, onDismiss: reopenSearchIfNeeded) { location in
-            GardenBoundaryView(
-                location: location,
-                onSave: { store.add($0, completingDraft: location.draftID) },
-                onSaveDraft: { store.addDraft(GardenDraft(location: $0)) },
-                onSearchAgain: { reopensSearch = true }
-            )
+        .fullScreenCover(item: $coordinator.mappingLocation, onDismiss: coordinator.mappingDidDismiss) { location in
+            GardenBoundaryView(flow: mappingFactory.makeFlow(location: location, onFinish: coordinator.mappingFinished))
         }
         .alert("Data kebun", isPresented: Binding(
-            get: { store.errorMessage != nil && mappingLocation == nil },
+            get: { store.errorMessage != nil && coordinator.mappingLocation == nil },
             set: { if !$0 { store.errorMessage = nil } }
         )) {
             Button("Mengerti", role: .cancel) { store.errorMessage = nil }
@@ -75,30 +51,33 @@ struct ContentView: View {
         }
     }
 
-    /// Debug builds get developer tools from the home screen, for repeat test sessions.
-    private var developerModeAction: (() -> Void)? {
+    @ViewBuilder
+    private func destination(for route: AppRoute) -> some View {
+        switch route {
+        case .gardenProfile(let id):
+            if let garden = store.gardens.first(where: { $0.id == id }) {
+                GardenProfileScreen(flow: profileFactory.makeFlow(garden: garden))
+            }
         #if DEBUG
-        return { showsDeveloperMode = true }
-        #else
-        return nil
+        case .developerMode:
+            DeveloperModeView(gardenCount: store.gardens.count, draftCount: store.drafts.count) {
+                coordinator.returnHome()
+                store.eraseAll()
+            }
         #endif
-    }
-
-    /// Wait until the intro sheet closes before presenting the full-screen map.
-    private func openMappingIfNeeded() {
-        mappingLocation = pendingLocation
-        pendingLocation = nil
-    }
-
-    /// "Cari Lagi" on a photo location returns to the address search.
-    private func reopenSearchIfNeeded() {
-        guard reopensSearch else { return }
-        reopensSearch = false
-        registrationStep = .search
-        showsRegistration = true
+        }
     }
 }
 
+#if DEBUG
 #Preview {
-    ContentView()
+    let dependencies = AppDependencies.preview()
+    ContentView(store: dependencies.gardenStore,
+                listViewModel: dependencies.gardenListViewModel,
+                coordinator: dependencies.coordinator,
+                registrationFactory: dependencies.registrationFactory,
+                mappingFactory: dependencies.mappingFactory,
+                profileFactory: dependencies.profileFactory)
+        .environment(\.farmerReviewRepository, dependencies.reviewRepository)
 }
+#endif
