@@ -23,7 +23,7 @@ struct GardenListContent: View {
             HStack {
                 Text("Kebun")
                     .font(.largeTitle.bold())
-                    .foregroundStyle(presentation.isEmpty ? KropsTheme.titleText : .primary)
+                    .foregroundStyle(.primary)
                     // Debug builds: hold the title to open Mode Developer, hidden from test participants.
                     .onLongPressGesture(minimumDuration: 1.5) {
                         guard let onOpenDeveloperMode else { return }
@@ -33,17 +33,14 @@ struct GardenListContent: View {
                     .sensoryFeedback(.success, trigger: developerTrigger)
                 Spacer()
             }
-            .padding(KropsTheme.Spacing.screen)
+            .padding(.horizontal, 24)
+            .padding(.vertical, 16)
 
             if presentation.isEmpty && downloads.isEmpty {
                 GeometryReader { geometry in
                     ScrollView {
-                        EmptyStateView(
-                            title: GardenListFilter.all.emptyTitle,
-                            message: GardenListFilter.all.emptyMessage
-                        ) {
-                            SeedlingIcon()
-                        }
+                        GardenRegistrationEmptyState()
+                        .padding(.top, 24)
                         .frame(maxWidth: .infinity, minHeight: geometry.size.height)
                     }
                 }
@@ -115,9 +112,9 @@ struct GardenListContent: View {
                 }
             }
         }
-        .background(KropsTheme.background.ignoresSafeArea())
+        .background(RegistrationStyle.background.ignoresSafeArea())
         .safeAreaInset(edge: .bottom, spacing: 0) {
-            PrimaryActionButton(title: "Daftarkan Kebun", systemImage: "plus", action: onRegisterGarden)
+            RegistrationPrimaryButton(title: "Daftarkan Kebun", systemImage: "plus", action: onRegisterGarden)
                 .padding(.horizontal, 34)
                 .padding(.bottom, 2)
                 .padding(.top, 24)

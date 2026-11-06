@@ -27,3 +27,7 @@ extension HarvestRecord {
         return HarvestRecord(frequencyPerMonth: frequencyPerMonth, latestWeightKg: latestWeightKg)
     }
 }
+
+enum GardenProfileValidation {
+    static let fertilizationFrequencyRange = 1...12
+}

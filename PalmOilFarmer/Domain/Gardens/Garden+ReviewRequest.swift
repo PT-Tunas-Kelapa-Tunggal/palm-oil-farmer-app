@@ -13,14 +13,14 @@ extension Garden {
                 name: $0.name,
                 bagWeightKg: $0.bagWeightKg,
                 bagCount: $0.bagCount,
-                doseKgPerTree: $0.doseKgPerTree
+                doseKgPerTree: $0.doseKgPerTree, composition: $0.composition
             )
         }
 
         let harvest = request.agronomy.harvestRecord.map {
             HarvestRecord(
                 frequencyPerMonth: $0.frequencyPerMonth,
-                latestWeightKg: $0.latestWeightKg
+                latestWeightKg: $0.latestWeightKg, averageMonthlyWeightKg: $0.averageMonthlyWeightKg
             )
         }
 
@@ -53,7 +53,8 @@ extension Garden {
             fertilizerRecords: fertilizers.isEmpty ? nil : fertilizers,
             harvestRecord: harvest,
             review: review,
-            createdAt: request.timeline.submittedAt
+            createdAt: request.timeline.submittedAt,
+            fertilizationFrequencyPerYear: request.agronomy.fertilizationFrequencyPerYear
         )
     }
 }

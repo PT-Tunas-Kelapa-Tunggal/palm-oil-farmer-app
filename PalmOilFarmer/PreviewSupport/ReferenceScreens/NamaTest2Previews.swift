@@ -3,12 +3,11 @@ import SwiftUI
 
 /// Full-screen compositions reuse the production UI, with fixed Sketch map data for comparison.
 struct RegistrationFramePreview: View {
-    enum Frame {
+    enum Frame: Hashable {
         case guide, photo, address
     }
 
     let step: Frame
-    var photoStatus = LocationSearchView.PhotoStatus.idle
     var selectedLocation: GardenLocation? = nil
     var body: some View {
         GardenListView(onRegisterGarden: {})
@@ -20,11 +19,11 @@ struct RegistrationFramePreview: View {
                     } else {
                         LocationSearchView(initialQuery: selectedLocation?.name ?? "",
                                            initialResults: selectedLocation.map { [$0] } ?? [],
-                                           initialPhotoStatus: photoStatus, onSelect: { _ in })
+                                           onSelect: { _ in })
                             .frame(height: 816)
                     }
                 }
-                .id("\(step)-\(photoStatus)")
+                .id(step)
                 .background { SheetGlassBackground() }
                 .overlay(alignment: .top) {
                     Capsule().fill(.secondary.opacity(0.5)).frame(width: 60, height: 4).padding(.top, 5)
@@ -72,8 +71,7 @@ struct BoundaryFramePreview: View {
         BoundaryEditorLayout(
             boundary: boundary,
             metrics: boundary.points.isEmpty ? GardenDisplayMetrics(area: "0 ha", perimeter: "0 m") : GardenPreviewData.metrics,
-            isRegionOverview: state == .region,
-            onClose: {}, onSkip: {}, onRecenter: {}, onUndo: {}, onClear: {}, onConfirm: {}
+            onClose: {}, onSearch: {}, onUndo: {}, onClear: {}, onConfirm: {}
         ) {
             BoundaryReferenceMap(state: state).id(String(describing: state))
         }
@@ -171,12 +169,6 @@ private struct BoundaryReferenceMap: View {
 }
 #Preview("04 · Pilih Foto · Sistem") {
     PhotoPickerFramePreview()
-}
-#Preview("05 · Foto Memuat · Full Frame") {
-    RegistrationFramePreview(step: .photo, photoStatus: .loading)
-}
-#Preview("06 · Foto Gagal · Full Frame") {
-    RegistrationFramePreview(step: .photo, photoStatus: .missingLocation)
 }
 #Preview("08 · Cari Kabupaten · Full Frame") {
     SearchFramePreview()

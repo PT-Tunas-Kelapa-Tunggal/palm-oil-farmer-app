@@ -2,7 +2,7 @@ import Foundation
 import Observation
 
 struct GardenProfileSheet: Identifiable {
-    enum Kind { case details, fertilizer, harvest, review }
+    enum Kind { case details, review, profile, summary, reviewInformation }
     let id = UUID()
     let kind: Kind
 }
@@ -18,6 +18,8 @@ final class GardenProfileCoordinator {
     var showsResults = false
     private(set) var isFinished = false
     private var activeSheet: GardenProfileSheet?
+    private var pendingSheet: GardenProfileSheet.Kind?
+    private var pendingReviewAction: GardenProfileReviewAction?
 
     var canDeleteNow: Bool {
         !isFinished && activeSheet == nil && !showsReviewStatus && !showsResults
@@ -43,6 +45,25 @@ final class GardenProfileCoordinator {
     func sheetDidDismiss() {
         sheet = nil
         activeSheet = nil
+        let nextSheet = pendingSheet
+        let nextReviewAction = pendingReviewAction
+        pendingSheet = nil
+        pendingReviewAction = nil
+        guard !isFinished else { return }
+        if let nextSheet { open(nextSheet) }
+        if let nextReviewAction { reviewAction(nextReviewAction) }
+    }
+
+    func editProfile(from presentation: GardenProfileSheet) {
+        guard presentation.kind == .summary, isCurrent(presentation) else { return }
+        pendingSheet = .profile
+        closeSheet(presentation)
+    }
+
+    func applyForReview(from presentation: GardenProfileSheet, action: GardenProfileReviewAction) {
+        guard presentation.kind == .reviewInformation, isCurrent(presentation) else { return }
+        pendingReviewAction = action
+        closeSheet(presentation)
     }
 
     func requestDelete() {
@@ -67,6 +88,11 @@ final class GardenProfileCoordinator {
     func close() {
         isFinished = true
         sheet = nil
+        activeSheet = nil
+        pendingSheet = nil
+        pendingReviewAction = nil
         showsDeleteConfirmation = false
+        showsReviewStatus = false
+        showsResults = false
     }
 }

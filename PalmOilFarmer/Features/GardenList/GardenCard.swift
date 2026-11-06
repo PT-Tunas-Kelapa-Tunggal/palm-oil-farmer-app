@@ -36,8 +36,10 @@ struct GardenCard: View {
                     .frame(maxWidth: .infinity, alignment: .leading)
                 }
                 .font(.footnote)
-                GardenStageLabel(stage: garden.stage)
-                    .padding(.top, 4)
+                if garden.review != nil {
+                    GardenStageLabel(stage: garden.stage)
+                        .padding(.top, 4)
+                }
             }
             .frame(maxWidth: .infinity, alignment: .leading)
             .padding(10)

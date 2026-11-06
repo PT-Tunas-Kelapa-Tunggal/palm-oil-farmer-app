@@ -23,7 +23,7 @@ struct GardenMappingPersistenceTests {
         #expect(dependencies.gardenStore.drafts.map(\.id) == [other.id])
         let garden = try #require(dependencies.gardenStore.gardens.first)
         #expect(garden.id != draft.id && garden.boundary.points == mappingPoints() && garden.review == nil)
-        #expect(garden.plantingMonth == 10 && garden.createdAt != nil)
+        #expect(garden.plantingMonth == Calendar.current.component(.month, from: .now) && garden.createdAt != nil)
         #expect(dependencies.gardenListViewModel.presentation(showsFilter: true).items.count == 2)
         flow.coordinator.detailsDidDismiss()
         #expect(flow.coordinator.outcome == .savedGarden && dependencies.coordinator.mappingLocation != nil)

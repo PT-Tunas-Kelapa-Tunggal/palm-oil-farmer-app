@@ -1,9 +1,14 @@
 import SwiftUI
 
-/// Production profile flow. Existing GardenProfileView callers retain their callback API.
+/// The single interactive profile entry point.
 struct GardenProfileScreen: View {
     @State private var flow: GardenProfileFlow
-    init(flow: GardenProfileFlow) { _flow = State(initialValue: flow) }
+    private let referenceMapImage: String?
+
+    init(flow: GardenProfileFlow, referenceMapImage: String? = nil) {
+        _flow = State(initialValue: flow)
+        self.referenceMapImage = referenceMapImage
+    }
 
     @Environment(\.dismiss) private var dismiss
     private var garden: Garden { flow.viewModel.garden }
@@ -48,14 +53,16 @@ struct GardenProfileScreen: View {
     }
 
     private var profileContent: some View {
-        GardenProfileContent(
-            garden: garden, currentReviewStatus: currentReviewStatus, isComplete: flow.viewModel.isComplete,
+        GardenProfileContentView(
+            garden: garden, referenceMapImage: referenceMapImage, currentReviewStatus: currentReviewStatus, isComplete: flow.viewModel.isComplete,
             onBack: flow.coordinator.close, onEditGarden: { flow.coordinator.open(.details) },
-            onEditFertilizer: { flow.coordinator.open(.fertilizer) }, onEditHarvest: { flow.coordinator.open(.harvest) },
+            onEditProfile: { flow.coordinator.open(.profile) },
             onReviewAction: {
                 guard flow.viewModel.isComplete else { return }
                 flow.coordinator.reviewAction(flow.reviewPresentation.action(for: garden))
             },
+            onViewSummary: { flow.coordinator.open(.summary) },
+            onViewReviewInformation: { flow.coordinator.open(.reviewInformation) },
             onDelete: deleteAction
         )
     }
@@ -65,12 +72,23 @@ struct GardenProfileScreen: View {
         switch presentation.kind {
         case .details:
             GardenDetailsView(flow: flow.makeDetailsEditor(presentation))
-        case .fertilizer:
-            FertilizerHistoryEditor(flow: flow.makeFertilizerEditor(presentation))
-        case .harvest:
-            HarvestHistoryEditor(flow: flow.makeHarvestEditor(presentation))
+        case .profile:
+            GardenProfileEditorView(model: flow.makeProfileEditor(presentation),
+                onClose: { flow.coordinator.closeSheet(presentation) })
         case .review:
             ReviewRequestView(flow: flow.makeReviewRequest(presentation))
+        case .summary:
+            GardenProfileSummaryView(garden: garden,
+                onClose: { flow.coordinator.closeSheet(presentation) },
+                onEdit: { flow.coordinator.editProfile(from: presentation) })
+        case .reviewInformation:
+            GardenReviewInformationView(
+                onClose: { flow.coordinator.closeSheet(presentation) },
+                onApply: {
+                    guard flow.viewModel.isComplete else { return }
+                    flow.coordinator.applyForReview(from: presentation,
+                        action: flow.reviewPresentation.action(for: garden))
+                })
         }
     }
 
@@ -104,3 +122,20 @@ struct GardenProfileScreen: View {
     }
 
 }
+
+#if DEBUG
+#Preview("Profil · Alur interaktif") {
+    NavigationStack {
+        GardenProfileScreen(flow: GardenProfileCanvasFixtures.makeFlow(complete: false),
+                            referenceMapImage: "ProfileReferenceSatellite")
+    }
+    .environment(\.locale, Locale(identifier: "id_ID"))
+}
+#Preview("Profil · Ringkasan dan pengajuan") {
+    NavigationStack {
+        GardenProfileScreen(flow: GardenProfileCanvasFixtures.makeFlow(complete: true),
+                            referenceMapImage: "ProfileReferenceSatellite")
+    }
+    .environment(\.locale, Locale(identifier: "id_ID"))
+}
+#endif

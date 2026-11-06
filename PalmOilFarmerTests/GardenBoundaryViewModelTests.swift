@@ -23,7 +23,7 @@ struct GardenBoundaryViewModelTests {
         #expect(model.boundary.points.isEmpty)
     }
 
-    @Test func photoConfirmationBlocksMappingAndSearchAgainIsAvailableOnlyBeforeConfirmation() {
+    @Test func photoConfirmationBlocksMappingAndEmptyMapCanReturnToSearch() {
         var events: [GardenMappingEvent] = []
         let model = GardenBoundaryViewModel(location: mappingLocation(source: .photo), saving: RegistrationSavingSpy(),
             authorization: MappingAuthorizationStub(), allowsLocationDrafts: true, onEvent: { events.append($0) })
@@ -36,7 +36,7 @@ struct GardenBoundaryViewModelTests {
         model.searchAgain()
         mappingPoints().forEach(model.addPoint)
         model.confirmBoundary()
-        #expect(!model.isConfirmingPhoto && events == [.searchAgain, .showDetails])
+        #expect(!model.isConfirmingPhoto && events == [.searchAgain, .searchAgain, .showDetails])
         #expect(!model.canSaveLocationDraft)
     }
 

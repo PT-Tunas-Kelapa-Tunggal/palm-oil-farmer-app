@@ -10,7 +10,8 @@ final class MapKitGardenLocationRepository: GardenLocationRepository {
         let provider = CurrentLocationProvider()
         let coordinate = try await provider.coordinate()
         try Task.checkCancellation()
-        let location = await LocationSearchService.location(at: coordinate)
+        var location = await LocationSearchService.location(at: coordinate)
+        location.source = .currentLocation
         try Task.checkCancellation()
         return location
     }

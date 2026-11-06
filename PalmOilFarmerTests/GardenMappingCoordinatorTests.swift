@@ -65,24 +65,18 @@ struct GardenMappingCoordinatorTests {
         #expect(flow.viewModel.boundary.points.count == 3)
     }
 
-    @Test func detailsNavigationSupportsNativeBackAndPreventsCompetingPickers() {
+    @Test func plantingDateCanReopenUntilDetailsAreClosed() {
         let coordinator = GardenDetailsCoordinator()
-        coordinator.openSoilTypes()
-        coordinator.openSoilTypes()
         coordinator.openPlantingDate()
-        #expect(coordinator.path == [.soilTypes] && !coordinator.showsPlantingDate)
-        coordinator.path.removeLast()
         coordinator.openPlantingDate()
-        coordinator.openSoilTypes()
-        #expect(coordinator.showsPlantingDate && coordinator.path.isEmpty)
+        #expect(coordinator.showsPlantingDate)
         coordinator.showsPlantingDate = false
-        coordinator.openSoilTypes()
-        #expect(coordinator.path == [.soilTypes])
-        coordinator.close()
-        coordinator.path = []
-        coordinator.openSoilTypes()
         coordinator.openPlantingDate()
-        #expect(coordinator.isFinished && coordinator.path.isEmpty && !coordinator.showsPlantingDate)
+        #expect(coordinator.showsPlantingDate)
+        coordinator.showsPlantingDate = false
+        coordinator.close()
+        coordinator.openPlantingDate()
+        #expect(coordinator.isFinished && !coordinator.showsPlantingDate)
     }
 
     @Test func photoSearchAgainReopensSearchOnlyAfterMapFinishesDismissing() {

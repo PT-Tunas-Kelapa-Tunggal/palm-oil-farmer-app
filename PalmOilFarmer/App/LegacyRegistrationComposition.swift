@@ -11,7 +11,6 @@ extension RegistrationIntroView {
 
 extension LocationSearchView {
     init(initialQuery: String = "", initialResults: [GardenLocation]? = nil,
-         initialPhotoStatus: PhotoStatus = .idle,
          searchLocations: ((String) async throws -> [GardenLocation])? = nil,
          onSelect: @escaping (GardenLocation) -> Void) {
         let factory = GardenRegistrationFactory {
@@ -25,14 +24,14 @@ extension LocationSearchView {
         }
         self.init(flow: factory.makeFlow(
             initialStep: .search, initialQuery: initialQuery, initialResults: initialResults ?? [],
-            initialPhotoStatus: initialPhotoStatus, onLocate: onSelect, onCancel: {}
+            onLocate: onSelect, onCancel: {}
         ))
     }
 }
 
 extension GardenPhotoPickerView {
     init(onSelect: @escaping (GardenCoordinate) -> Void) {
-        self.init(viewModel: GardenPhotoPickerViewModel(repository: PhotosGardenPhotoRepository(), onSelect: onSelect))
+        self.init(viewModel: GardenPhotoPickerViewModel(repository: PhotosGardenPhotoRepository(), onSelect: { onSelect($0.coordinate) }))
     }
 }
 

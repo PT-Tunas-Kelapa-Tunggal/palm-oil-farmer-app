@@ -38,10 +38,11 @@ enum DemoReviewReport {
         )
     }
 
-    /// Areas follow the six equal-area zones, coded by row (A–C) and column (A–B).
+    /// Sample allocations assume six areas of equal size, coded by row and column.
     static func areas(for boundary: GardenBoundary) -> [FertilizerAllocationArea] {
-        WaypointZoning.zones(for: boundary).map { zone in
-            let trees = zone.areaSquareMeters / 10_000 * treesPerHectare
+        guard boundary.isValid else { return [] }
+        let trees = boundary.areaHectares / 6 * treesPerHectare
+        return (1...6).map { areaID in
             let lines = fertilizers.map { fertilizer in
                 FertilizerAllocationLine(
                     name: fertilizer.name,
@@ -50,12 +51,11 @@ enum DemoReviewReport {
                 )
             }
             return FertilizerAllocationArea(
-                id: code(for: zone.id), mapImage: nil,
+                id: code(for: areaID), mapImage: nil,
                 periods: [
                     FertilizerAllocationPeriod(title: "Periode 1", dateRange: "Januari - Maret", lines: lines),
                     FertilizerAllocationPeriod(title: "Periode 2", dateRange: "Juni - Agustus", lines: lines)
-                ],
-                zone: zone
+                ]
             )
         }
     }

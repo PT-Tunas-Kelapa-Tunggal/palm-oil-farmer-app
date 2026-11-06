@@ -6,17 +6,17 @@ import Testing
 struct GardenProfileCoordinatorTests {
     @Test func editorSessionRemainsLockedUntilDismissalAndOldIdentityExpires() throws {
         let coordinator = GardenProfileCoordinator()
-        coordinator.open(.fertilizer)
+        coordinator.open(.profile)
         let first = try #require(coordinator.sheet)
-        coordinator.open(.harvest)
+        coordinator.open(.summary)
         #expect(coordinator.sheet?.id == first.id)
         coordinator.sheet = nil
         coordinator.open(.details)
         #expect(coordinator.sheet == nil && !coordinator.isCurrent(first))
         coordinator.sheetDidDismiss()
-        coordinator.open(.harvest)
+        coordinator.open(.summary)
         let second = try #require(coordinator.sheet)
-        #expect(second.id != first.id && second.kind == .harvest)
+        #expect(second.id != first.id && second.kind == .summary)
         coordinator.closeSheet(first)
         #expect(coordinator.isCurrent(second))
         coordinator.closeSheet(second)
@@ -31,7 +31,7 @@ struct GardenProfileCoordinatorTests {
         let sheet = try #require(coordinator.sheet)
         coordinator.close()
         coordinator.sheetDidDismiss()
-        coordinator.open(.harvest)
+        coordinator.open(.summary)
         coordinator.requestDelete()
         coordinator.reviewAction(.status)
         coordinator.openResults()
@@ -43,7 +43,7 @@ struct GardenProfileCoordinatorTests {
         let garden = profileGarden()
         let source = ProfileSourceSpy(gardens: [garden])
         let flow = makeProfileTestFlow(garden: garden, source: source)
-        flow.coordinator.open(.fertilizer)
+        flow.coordinator.open(.profile)
         flow.coordinator.requestDelete()
         #expect(!flow.coordinator.showsDeleteConfirmation && !flow.viewModel.delete())
         flow.coordinator.sheet = nil
@@ -57,7 +57,7 @@ struct GardenProfileCoordinatorTests {
     @Test func existingStatusAndResultsNavigationCanReturnBeforeOpeningNewEditor() {
         let coordinator = GardenProfileCoordinator()
         coordinator.reviewAction(.status)
-        coordinator.open(.harvest)
+        coordinator.open(.summary)
         #expect(coordinator.showsReviewStatus && coordinator.sheet == nil)
         coordinator.openResults()
         #expect(coordinator.showsResults)
@@ -69,16 +69,12 @@ struct GardenProfileCoordinatorTests {
         #expect(coordinator.sheet?.kind == .review)
     }
 
-    @Test func historyTypeSelectionUsesNativeBackAndClosePreventsReopening() {
-        let coordinator = GardenHistoryEditorCoordinator()
-        let id = UUID()
-        coordinator.selectType(for: id)
-        #expect(coordinator.selectedDraftID == id)
-        coordinator.selectedDraftID = nil
-        coordinator.selectType(for: id)
+    @Test func closingProfileCancelsPendingSummaryEdit() throws {
+        let coordinator = GardenProfileCoordinator()
+        coordinator.open(.summary)
+        coordinator.editProfile(from: try #require(coordinator.sheet))
         coordinator.close()
-        coordinator.selectedDraftID = nil
-        coordinator.selectType(for: UUID())
-        #expect(coordinator.isFinished && coordinator.selectedDraftID == nil)
+        coordinator.sheetDidDismiss()
+        #expect(coordinator.isFinished && coordinator.sheet == nil)
     }
 }

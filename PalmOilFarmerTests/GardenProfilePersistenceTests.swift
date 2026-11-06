@@ -15,33 +15,26 @@ struct GardenProfilePersistenceTests {
         let garden = profileGarden()
         #expect(app.gardenStore.add(garden))
         let profile = app.profileFactory.makeFlow(garden: garden)
-        profile.coordinator.open(.fertilizer)
-        let fertilizerSheet = try #require(profile.coordinator.sheet)
-        let fertilizer = profile.makeFertilizerEditor(fertilizerSheet)
-        fertilizer.viewModel.drafts[0].name = "Urea"
-        fertilizer.viewModel.drafts[0].bagWeightKg = 50
-        fertilizer.viewModel.drafts[0].bagCount = 2
-        fertilizer.viewModel.drafts[0].doseKgPerTree = 1.5
-        let recordID = fertilizer.viewModel.drafts[0].id
-        #expect(fertilizer.viewModel.save())
-        #expect(!profile.viewModel.isComplete && profile.coordinator.sheet == nil)
-        profile.coordinator.sheetDidDismiss()
-        profile.coordinator.open(.harvest)
-        let harvest = profile.makeHarvestEditor(try #require(profile.coordinator.sheet))
-        harvest.viewModel.frequency = 3
-        harvest.viewModel.weight = 750
-        #expect(harvest.viewModel.save())
-        #expect(profile.viewModel.isComplete)
+        profile.coordinator.open(.profile)
+        let editor = profile.makeProfileEditor(try #require(profile.coordinator.sheet))
+        editor.fertilizers[0].name = "Urea"
+        editor.fertilizers[0].doseKgPerTree = 1.5
+        editor.harvestFrequency = 3
+        editor.monthlyWeightKg = 2250
+        editor.fertilizationFrequency = 2
+        let recordID = editor.fertilizers[0].id
+        #expect(editor.save())
+        #expect(profile.viewModel.isComplete && profile.coordinator.sheet == nil)
         let reopened = makeTestGardenStore(in: app.modelContainer)
         #expect(reopened.gardens.first?.fertilizerRecords?.first?.id == recordID)
         #expect(reopened.gardens.first?.harvestRecord?.latestWeightKg == 750)
         #expect(app.gardenListViewModel.presentation(showsFilter: true).gardens.first?.stage == .readyForReview)
         profile.coordinator.sheetDidDismiss()
-        profile.coordinator.open(.fertilizer)
-        let empty = profile.makeFertilizerEditor(try #require(profile.coordinator.sheet))
-        empty.viewModel.removeDraft(id: recordID)
-        #expect(empty.viewModel.save() && !profile.viewModel.isComplete)
-        #expect(makeTestGardenStore(in: app.modelContainer).gardens.first?.fertilizerRecords == nil)
+        profile.coordinator.open(.profile)
+        let empty = profile.makeProfileEditor(try #require(profile.coordinator.sheet))
+        empty.removeFertilizer(id: recordID)
+        #expect(!empty.save() && profile.viewModel.isComplete)
+        #expect(makeTestGardenStore(in: app.modelContainer).gardens.first?.fertilizerRecords?.first?.id == recordID)
     }
 
     @Test func detailsEditorPreservesHistoryChangedAfterOpeningAndPersistsItsOwnFields() throws {
@@ -70,19 +63,24 @@ struct GardenProfilePersistenceTests {
         let garden = profileGarden()
         let source = ProfileSourceSpy(gardens: [garden])
         let profile = makeProfileTestFlow(garden: garden, source: source)
-        profile.coordinator.open(.harvest)
+        profile.coordinator.open(.profile)
         let first = try #require(profile.coordinator.sheet)
-        let old = profile.makeHarvestEditor(first)
-        old.coordinator.close()
-        #expect(!old.viewModel.save() && source.updates.isEmpty)
-        profile.coordinator.sheet = nil
+        let old = profile.makeProfileEditor(first)
+        old.monthlyWeightKg = 1000
+        old.fertilizers[0].name = "Urea"
+        old.fertilizers[0].doseKgPerTree = 1
+        profile.coordinator.closeSheet(first)
+        #expect(!old.save() && source.updates.isEmpty)
         profile.coordinator.sheetDidDismiss()
-        profile.coordinator.open(.fertilizer)
+        profile.coordinator.open(.details)
         let current = try #require(profile.coordinator.sheet)
-        let wrong = profile.makeHarvestEditor(current)
-        #expect(!wrong.viewModel.save() && !old.viewModel.save() && source.updates.isEmpty)
+        let wrong = profile.makeProfileEditor(current)
+        wrong.monthlyWeightKg = 1000
+        wrong.fertilizers[0].name = "Urea"
+        wrong.fertilizers[0].doseKgPerTree = 1
+        #expect(!wrong.save() && !old.save() && source.updates.isEmpty)
         profile.coordinator.close()
-        #expect(!profile.makeFertilizerEditor(current).viewModel.save() && source.updates.isEmpty)
+        #expect(!profile.makeProfileEditor(current).save() && source.updates.isEmpty)
     }
 
     @Test func submittedHistoryEditsAndDeleteRetainExistingInMemoryOnlyPolicy() async throws {

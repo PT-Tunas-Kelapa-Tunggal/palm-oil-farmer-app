@@ -42,8 +42,6 @@ struct FertilizerAllocationArea: Identifiable {
     let id: String
     let mapImage: String?
     let periods: [FertilizerAllocationPeriod]
-    /// The part of the garden this area covers, used for the area map and navigation.
-    var zone: WaypointZone? = nil
 }
 
 struct RainfallDay: Identifiable {

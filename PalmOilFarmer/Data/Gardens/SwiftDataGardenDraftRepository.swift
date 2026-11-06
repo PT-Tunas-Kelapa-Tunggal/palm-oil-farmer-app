@@ -42,6 +42,7 @@ final class SwiftDataGardenDraftRepository: GardenDraftRepository {
         existing.boundary = garden.boundary
         existing.fertilizerRecords = garden.fertilizerRecords ?? []
         existing.harvestRecord = garden.harvestRecord
+        existing.fertilizationFrequencyPerYear = garden.fertilizationFrequencyPerYear
         try modelContext.save()
         return true
     }

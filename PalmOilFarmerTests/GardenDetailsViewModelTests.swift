@@ -6,9 +6,10 @@ import Testing
 struct GardenDetailsViewModelTests {
     @Test func requiredFieldsPreventPersistenceAndKeepExistingValidationMessage() {
         var saves = 0, finishes = 0
-        let model = GardenDetailsViewModel(locationName: "Dumai", boundary: GardenBoundary(),
+        let date = Date(timeIntervalSince1970: 1_700_000_000)
+        let model = GardenDetailsViewModel(locationName: "Dumai", boundary: GardenBoundary(), now: { date },
             onSave: { _ in saves += 1; return true }, onSaved: { finishes += 1 })
-        #expect(model.plantingMonth == 10 && model.plantingYear == nil && model.soilType == nil)
+        #expect(model.plantingMonth == Calendar.current.component(.month, from: date) && model.plantingYear == nil && model.soilType == nil)
         for step in 0...2 {
             if step == 1 { model.name = "Kebun" }
             if step == 2 { model.plantingYear = 2016 }

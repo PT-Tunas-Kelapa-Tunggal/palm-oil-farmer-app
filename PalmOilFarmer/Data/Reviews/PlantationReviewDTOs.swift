@@ -83,39 +83,45 @@ public struct AgronomicProfileDTO: Codable, Sendable {
     public let soil: String
     public let fertilizers: [FertilizerUsageDTO]
     public let harvest: HarvestYieldDTO?
+    public let fertilizationFrequencyPerYear: Int?
 
-    public init(year: Int, month: Int?, soil: String, fertilizers: [FertilizerUsageDTO], harvest: HarvestYieldDTO?) {
+    public init(year: Int, month: Int?, soil: String, fertilizers: [FertilizerUsageDTO], harvest: HarvestYieldDTO?, fertilizationFrequencyPerYear: Int? = nil) {
         self.year = year
         self.month = month
         self.soil = soil
         self.fertilizers = fertilizers
         self.harvest = harvest
+        self.fertilizationFrequencyPerYear = fertilizationFrequencyPerYear
     }
 }
 
 public struct FertilizerUsageDTO: Codable, Sendable {
     public let id: String
     public let name: String
-    public let bagKg: Double
-    public let bags: Int
+    public let bagKg: Double?
+    public let bags: Int?
     public let dosePerTree: Double
+    public let composition: FertilizerComposition?
 
-    public init(id: String, name: String, bagKg: Double, bags: Int, dosePerTree: Double) {
+    public init(id: String, name: String, bagKg: Double?, bags: Int?, dosePerTree: Double, composition: FertilizerComposition? = nil) {
         self.id = id
         self.name = name
         self.bagKg = bagKg
         self.bags = bags
         self.dosePerTree = dosePerTree
+        self.composition = composition
     }
 }
 
 public struct HarvestYieldDTO: Codable, Sendable {
     public let freq: Int
     public let weightKg: Double
+    public let monthlyWeightKg: Double?
 
-    public init(freq: Int, weightKg: Double) {
+    public init(freq: Int, weightKg: Double, monthlyWeightKg: Double? = nil) {
         self.freq = freq
         self.weightKg = weightKg
+        self.monthlyWeightKg = monthlyWeightKg
     }
 }
 

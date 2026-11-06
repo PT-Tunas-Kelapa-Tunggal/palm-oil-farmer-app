@@ -9,7 +9,7 @@ final class GardenRegistrationCoordinator {
     private(set) var step: GardenRegistrationStep
     var showsPhotoPicker = false
     private(set) var isFinished = false
-    private var pendingPhoto: GardenCoordinate?
+    private var pendingPhotoLocation: GardenLocation?
     private let onLocate: (GardenLocation) -> Void
     private let onCancel: () -> Void
 
@@ -27,35 +27,33 @@ final class GardenRegistrationCoordinator {
 
     func openPhotoPicker() {
         guard !isFinished, step == .search, !showsPhotoPicker else { return }
-        pendingPhoto = nil
+        pendingPhotoLocation = nil
         showsPhotoPicker = true
     }
 
-    func selectedPhoto(_ coordinate: GardenCoordinate) {
+    func selectedPhoto(_ location: GardenLocation) {
         guard !isFinished, showsPhotoPicker else { return }
-        pendingPhoto = coordinate
+        pendingPhotoLocation = location
         showsPhotoPicker = false
     }
 
     func photoPickerDidDismiss() {
         showsPhotoPicker = false
-        guard !isFinished, let coordinate = pendingPhoto else { return }
-        pendingPhoto = nil
-        selectLocation(GardenLocation(name: "Lokasi dari foto", subtitle: "Foto kebun",
-                                      coordinate: coordinate, source: .photo))
+        guard !isFinished, let location = pendingPhotoLocation else { return }
+        pendingPhotoLocation = nil
+        selectLocation(location)
     }
 
     func selectLocation(_ location: GardenLocation) {
-        guard !isFinished, !showsPhotoPicker, pendingPhoto == nil else { return }
+        guard !isFinished, !showsPhotoPicker, pendingPhotoLocation == nil else { return }
         isFinished = true
-        pendingPhoto = nil
         onLocate(location)
     }
 
     func cancel() {
         guard !isFinished else { return }
         isFinished = true
-        pendingPhoto = nil
+        pendingPhotoLocation = nil
         showsPhotoPicker = false
         onCancel()
     }

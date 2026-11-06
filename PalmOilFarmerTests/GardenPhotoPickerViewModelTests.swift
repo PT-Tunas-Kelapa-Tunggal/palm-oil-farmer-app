@@ -52,7 +52,7 @@ struct GardenPhotoPickerViewModelTests {
         let repository = PhotoRepositoryStub()
         repository.snapshot = GardenPhotoLibrarySnapshot(access: .allowed, photos: [try photo("known")])
         var selections: [GardenCoordinate] = []
-        let model = GardenPhotoPickerViewModel(repository: repository, onSelect: { selections.append($0) })
+        let model = GardenPhotoPickerViewModel(repository: repository, onSelect: { selections.append($0.coordinate) })
         await model.load()
         #expect(!model.selectPhoto(id: "missing"))
         #expect(model.selectPhoto(id: "known"))

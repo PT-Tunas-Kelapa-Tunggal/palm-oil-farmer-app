@@ -73,7 +73,7 @@ final class GardenBoundaryViewModel {
     }
 
     func searchAgain() {
-        guard isActive(), isConfirmingPhoto else { return }
+        guard isActive(), boundary.points.isEmpty else { return }
         onEvent(.searchAgain)
     }
 

@@ -1,144 +1,70 @@
 import SwiftUI
 
 struct BoundaryEditorLayout<MapContent: View>: View {
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
+    @Environment(\.verticalSizeClass) private var verticalSizeClass
     let boundary: GardenBoundary
     var metrics: GardenDisplayMetrics? = nil
-    var isRegionOverview = false
     var title = "Buat batas kebun"
-    /// Shown above the map while no point has been placed.
-    var hint: String? = nil
     var showsControls = true
     let onClose: () -> Void
-    /// Offers "Lakukan Nanti" while no point has been placed.
-    var onSkip: (() -> Void)? = nil
-    let onRecenter: () -> Void
+    let onSearch: () -> Void
     let onUndo: () -> Void
     let onClear: () -> Void
     let onConfirm: () -> Void
     @ViewBuilder let map: () -> MapContent
 
+    private var showsMetricsInPanel: Bool {
+        verticalSizeClass == .compact && dynamicTypeSize.isAccessibilitySize
+    }
+
     var body: some View {
-        let isValid = boundary.isValid
         map()
-            .overlay(alignment: .top) {
-                Rectangle()
-                    .fill(.ultraThinMaterial)
-                    .frame(height: 185)
-                    .mask(LinearGradient(colors: [.black, .clear], startPoint: .top, endPoint: .bottom))
-                    .allowsHitTesting(false)
-            }
             .ignoresSafeArea()
             .overlay(alignment: .top) {
-                VStack(spacing: 0) {
-                    ScreenHeader(title: title, onClose: onClose)
-                        .foregroundStyle(.white)
-                    if boundary.points.isEmpty && showsControls {
-                        if let onSkip {
-                            Button(action: onSkip) {
-                                VStack(alignment: .leading, spacing: 4) {
-                                    HStack {
-                                        Text("Lakukan Nanti").font(.headline)
-                                        Spacer()
-                                        Image(systemName: "arrow.right")
-                                    }
-                                    Text("Jika kebun sulit ditemukan di peta, Anda dapat melanjutkan saat berada di kebun. Peta akan otomatis mengikuti posisi Anda.")
-                                        .font(.footnote)
-                                        .multilineTextAlignment(.leading)
-                                        .fixedSize(horizontal: false, vertical: true)
-                                }
-                                .foregroundStyle(.white.opacity(0.9))
-                                .padding(16)
-                                .frame(maxWidth: .infinity, alignment: .leading)
-                                .contentShape(RoundedRectangle(cornerRadius: 20))
-                            }
-                            .buttonStyle(.plain)
-                            .glassEffect(.regular.interactive(), in: RoundedRectangle(cornerRadius: 20))
-                            .padding(.horizontal, 12)
-                        } else if let hint {
-                            Text(hint)
-                                .font(.footnote)
-                                .foregroundStyle(.white.opacity(0.9))
-                                .padding(.horizontal, 16)
-                                .frame(maxWidth: .infinity, minHeight: 44, alignment: .leading)
-                                .glassEffect(.regular, in: RoundedRectangle(cornerRadius: 16))
-                                .padding(.horizontal, 12)
+                if showsControls {
+                    VStack(spacing: 0) {
+                        RegistrationHeader(title: title, trailingSymbol: "magnifyingglass",
+                                           trailingLabel: "Cari lokasi kebun", onTrailing: onSearch,
+                                           onClose: onClose)
+                        if !showsMetricsInPanel {
+                            BoundaryMetricsView(boundary: boundary, metrics: metrics)
+                                .padding(.horizontal, 14)
                         }
                     }
+                    .padding(.bottom, 8)
+                    .background {
+                        Rectangle()
+                            .fill(.ultraThinMaterial)
+                            .opacity(0.7)
+                            .mask {
+                                LinearGradient(
+                                    stops: [
+                                        .init(color: .black, location: 0),
+                                        .init(color: .black, location: 0.65),
+                                        .init(color: .clear, location: 1)
+                                    ],
+                                    startPoint: .top,
+                                    endPoint: .bottom
+                                )
+                            }
+                            .ignoresSafeArea(edges: .top)
+                            .allowsHitTesting(false)
+                    }
+                    .environment(\.colorScheme, .dark)
                 }
-                .environment(\.colorScheme, .dark)
             }
-            .overlay(alignment: .bottom) {
-                if showsControls { controls(isValid: isValid) }
+            .safeAreaInset(edge: .bottom, spacing: 0) {
+                if showsControls {
+                    BoundaryEditingPanel(
+                        boundary: boundary, metrics: metrics, showsMetrics: showsMetricsInPanel,
+                        onUndo: onUndo, onClear: onClear, onConfirm: onConfirm
+                    )
+                }
             }
+            .ignoresSafeArea(.container, edges: .bottom)
     }
 
-    private func controls(isValid: Bool) -> some View {
-        VStack(alignment: .trailing, spacing: 28) {
-            HStack(spacing: 14) {
-                if isRegionOverview {
-                    Text("Menuju ke lokasi saat ini")
-                        .font(.footnote)
-                        .foregroundStyle(.white)
-                        .padding(12)
-                        .background(.black.opacity(0.65), in: Capsule())
-                }
-                Button(action: onRecenter) {
-                    Image(systemName: "location.fill")
-                        .font(.title2)
-                        .foregroundStyle(.secondary)
-                        .frame(width: 52, height: 52)
-                }
-                .buttonStyle(.plain)
-                .glassEffect(.regular.interactive(), in: Circle())
-                .accessibilityLabel("Ke posisi saya")
-            }
-            .padding(.trailing, 4)
-
-            VStack(spacing: 8) {
-                BoundaryMetricsView(boundary: boundary, metrics: metrics)
-                HStack(spacing: 8) {
-                    BoundaryActionButton(title: "Urungkan", systemImage: "arrow.uturn.backward",
-                                         isAvailable: !boundary.points.isEmpty, action: onUndo)
-                    BoundaryActionButton(title: "Hapus", systemImage: "trash",
-                                         isAvailable: !boundary.points.isEmpty, action: onClear)
-                }
-                BoundaryActionButton(title: "Konfirmasi", systemImage: "checkmark",
-                                     isAvailable: isValid, isPrimary: true, action: onConfirm)
-                if boundary.points.count >= 3 && !isValid {
-                    Text("Batas harus membentuk area tanpa garis berpotongan.")
-                        .font(.caption).foregroundStyle(.secondary)
-                }
-            }
-            .padding(8)
-            .glassEffect(.regular, in: RoundedRectangle(cornerRadius: 32))
-        }
-        .padding(.horizontal, 8)
-        .padding(.bottom, -10)
-    }
-}
-
-struct BoundaryActionButton: View {
-    let title: String
-    let systemImage: String
-    var isAvailable = true
-    var isPrimary = false
-    let action: () -> Void
-
-    var body: some View {
-        Button(action: action) {
-            Label(title, systemImage: systemImage)
-                .font(.body.weight(isPrimary ? .bold : .regular))
-                .foregroundStyle(.white)
-                .frame(maxWidth: .infinity)
-                .frame(minHeight: 62)
-                .glassEffect(
-                    .regular.tint(isPrimary && isAvailable ? KropsTheme.primary : Color(white: isAvailable ? 0.45 : 0.5)).interactive(),
-                    in: RoundedRectangle(cornerRadius: 30)
-                )
-        }
-        .buttonStyle(.plain)
-        .disabled(!isAvailable)
-    }
 }
 
 struct BoundaryMetricsView: View {
@@ -149,43 +75,42 @@ struct BoundaryMetricsView: View {
     private var displayMetrics: GardenDisplayMetrics { metrics ?? GardenDisplayMetrics(boundary: boundary) }
 
     var body: some View {
-        let displayMetrics = displayMetrics
         let layout = dynamicTypeSize.isAccessibilitySize
-            ? AnyLayout(VStackLayout(spacing: 4))
-            : AnyLayout(HStackLayout())
+            ? AnyLayout(VStackLayout(spacing: 8))
+            : AnyLayout(HStackLayout(spacing: 12))
         layout {
-            metric("Luas tanah: ", value: displayMetrics.area)
-            metric("Perimeter: ", value: displayMetrics.perimeter)
+            metric("Luas", value: displayMetrics.area)
+            if !dynamicTypeSize.isAccessibilitySize {
+                Rectangle().fill(Color(uiColor: .separator)).frame(width: 1, height: 12)
+                    .accessibilityHidden(true)
+            }
+            metric("Keliling", value: displayMetrics.perimeter)
         }
-        .frame(maxWidth: .infinity)
-        .padding(8)
-        .frame(minHeight: 34)
-        .background(.white.opacity(0.15), in: Capsule())
+        .padding(.horizontal, 16)
+        .padding(.vertical, 8)
+        .frame(minHeight: 41)
+        .glassEffect(.regular, in: RoundedRectangle(cornerRadius: 24))
         .accessibilityElement(children: .combine)
     }
 
     private func metric(_ title: String, value: String) -> some View {
-        Text("\(title)\(Text(value).bold())")
-            .font(.footnote)
-            .frame(maxWidth: .infinity)
+        HStack(alignment: .firstTextBaseline, spacing: 4) {
+            Text(title).font(.footnote)
+            Text(value).font(.title3.weight(.medium))
+        }
+        .frame(maxWidth: .infinity)
     }
 }
 
 #if DEBUG
-#Preview("Boundary Layout") {
+#Preview("COdedUI5 · Boundary Layout") {
     BoundaryEditorLayout(
         boundary: GardenPreviewData.boundary, metrics: GardenPreviewData.metrics,
-        onClose: {}, onSkip: {}, onRecenter: {}, onUndo: {}, onClear: {}, onConfirm: {}
-    ) { Image("MappingSatelliteSource").resizable().scaledToFill() }
-}
-#Preview("Boundary Actions", traits: .sizeThatFitsLayout) {
-    HStack {
-        BoundaryActionButton(title: "Urungkan", systemImage: "arrow.uturn.backward", action: {})
-        BoundaryActionButton(title: "Konfirmasi", systemImage: "checkmark", isPrimary: true, action: {})
-    }.padding().frame(width: 402)
-}
-#Preview("Boundary Metrics", traits: .sizeThatFitsLayout) {
-    BoundaryMetricsView(boundary: GardenPreviewData.boundary, metrics: GardenPreviewData.metrics)
-        .padding().frame(width: 402).background(.gray)
+        onClose: {}, onSearch: {}, onUndo: {}, onClear: {}, onConfirm: {}
+    ) {
+        Color.clear
+            .overlay { Image("MappingSatelliteSource").resizable().scaledToFill() }
+            .clipped()
+    }
 }
 #endif

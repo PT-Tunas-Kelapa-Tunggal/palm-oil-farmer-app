@@ -8,10 +8,10 @@ extension PlantationReviewRequest {
         }
         let usages = (garden.fertilizerRecords ?? []).map {
             FertilizerUsage(id: $0.id, name: $0.name, bagWeightKg: $0.bagWeightKg,
-                            bagCount: $0.bagCount, doseKgPerTree: $0.doseKgPerTree)
+                            bagCount: $0.bagCount, doseKgPerTree: $0.doseKgPerTree, composition: $0.composition)
         }
         let harvest = garden.harvestRecord.map {
-            HarvestYield(frequencyPerMonth: $0.frequencyPerMonth, latestWeightKg: $0.latestWeightKg)
+            HarvestYield(frequencyPerMonth: $0.frequencyPerMonth, latestWeightKg: $0.latestWeightKg, averageMonthlyWeightKg: $0.averageMonthlyWeightKg)
         }
         self.init(
             farmer: FarmerContact(name: contact.name, phone: contact.phone, address: contact.address),
@@ -23,7 +23,8 @@ extension PlantationReviewRequest {
                 plantingMonth: garden.plantingMonth,
                 soilType: garden.soilType.rawValue,
                 fertilizerRecords: usages,
-                harvestRecord: harvest
+                harvestRecord: harvest,
+                fertilizationFrequencyPerYear: garden.fertilizationFrequencyPerYear
             )
         )
     }

@@ -30,8 +30,10 @@ final class GardenDetailsViewModel {
         originalGarden = garden
         name = garden?.name ?? ""
         plantingYear = garden?.plantingYear
-        let storedMonth = garden?.plantingMonth ?? 10
-        plantingMonth = (1...12).contains(storedMonth) ? storedMonth : 10
+        // Older gardens without a stored month retain the existing October fallback.
+        let defaultMonth = garden == nil ? Calendar.current.component(.month, from: now()) : 10
+        let storedMonth = garden?.plantingMonth ?? defaultMonth
+        plantingMonth = (1...12).contains(storedMonth) ? storedMonth : defaultMonth
         soilType = garden?.soilType
         self.makeID = makeID
         self.now = now
@@ -58,6 +60,7 @@ final class GardenDetailsViewModel {
         garden.plantingMonth = plantingMonth
         garden.fertilizerRecords = originalGarden?.fertilizerRecords
         garden.harvestRecord = originalGarden?.harvestRecord
+        garden.fertilizationFrequencyPerYear = originalGarden?.fertilizationFrequencyPerYear
         garden.review = originalGarden?.review
         garden.createdAt = originalGarden == nil ? now() : originalGarden?.createdAt
         showsSaveError = !onSave(garden)
