@@ -6,6 +6,7 @@ struct GardenProfileContentView: View {
     var referenceMapImage: String? = nil
     var metrics: GardenDisplayMetrics? = nil
     var showsHeader = true
+    var profileJustSaved = false
     let currentReviewStatus: ReviewStatus?
     let isComplete: Bool
     let onBack: () -> Void
@@ -26,26 +27,16 @@ struct GardenProfileContentView: View {
                         map.frame(height: 201)
                     }
                     GardenMetricsView(garden: garden, metrics: metrics)
-                        .padding(.horizontal, 18).padding(.top, showsHeader ? -31 : 16)
-                    VStack(spacing: 16) {
+                        .padding(.horizontal, 16).padding(.top, showsHeader ? -37 : 16)
+                    VStack(spacing: 8) {
                         if isComplete {
                             readyCard
-                            Button(action: onViewSummary) {
-                                HStack(spacing: 12) {
-                                    Image(systemName: "leaf")
-                                    Text("Lihat Profil Kebun").font(.body.weight(.medium))
-                                    Spacer(minLength: 4)
-                                    Image(systemName: "chevron.right").foregroundStyle(.secondary)
-                                }
-                                .padding(16).frame(minHeight: 53)
-                                .background(GardenProfileStyle.card, in: RoundedRectangle(cornerRadius: 24))
-                            }
-                            .buttonStyle(.plain)
+                            dataSection
                         } else {
                             GardenProfileCompletionCard(onComplete: onEditProfile)
                         }
                     }
-                    .padding(16).padding(.bottom, 16)
+                    .padding(.horizontal, 16).padding(.top, 8).padding(.bottom, 48)
                 }
             }
             .scrollIndicators(.hidden)
@@ -64,29 +55,31 @@ struct GardenProfileContentView: View {
             HStack(alignment: .top, spacing: 16) {
                 Button(action: onBack) {
                     // The icon stays inside its 44 pt touch target at every text size.
-                    Image(systemName: "chevron.left").font(.system(size: 22))
+                    Image(systemName: "chevron.left").font(.system(size: 22)).foregroundStyle(Color(uiColor: .label))
                         .frame(width: 44, height: 44)
                 }
                 .buttonStyle(.plain).glassEffect(.regular.interactive(), in: Circle())
                 .accessibilityLabel("Kembali")
-                if isComplete {
-                    VStack(alignment: .leading, spacing: 0) {
-                        Text(garden.name).font(.title.bold())
-                        Text(garden.locationName).font(.caption)
-                    }
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                } else {
-                    Text(garden.name).font(.title3.weight(.semibold))
-                        .frame(maxWidth: .infinity).padding(.top, 8)
-                    Color.clear.frame(width: 44, height: 44).accessibilityHidden(true)
+                VStack(spacing: 0) {
+                    Text(garden.name).font(.headline)
+                    Text(garden.locationName).font(.subheadline).foregroundStyle(.white.opacity(0.7))
                 }
+                .frame(maxWidth: .infinity)
+                Menu {
+                    Button("Ubah data kebun", systemImage: "pencil", action: onEditGarden)
+                    if let onDelete { Button("Hapus kebun", systemImage: "trash", role: .destructive, action: onDelete) }
+                } label: {
+                    Image(systemName: "ellipsis").font(.title2).foregroundStyle(Color(uiColor: .label)).frame(width: 44, height: 44)
+                }
+                .buttonStyle(.plain).glassEffect(.regular.interactive(), in: Circle())
+                .accessibilityLabel("Pilihan kebun")
             }
             .foregroundStyle(.white)
-            .padding(.horizontal, 16).padding(.top, topInset + 8)
+            .padding(.horizontal, 16).padding(.top, topInset)
             // Let long names and accessibility text expand the map header naturally.
             Spacer(minLength: 160)
         }
-        .frame(minHeight: 368)
+        .frame(minHeight: 360)
         .background {
             map.overlay(alignment: .top) {
                 // Satellite imagery needs a dark scrim for readable white map labels.
@@ -100,39 +93,63 @@ struct GardenProfileContentView: View {
         }
     }
 
-    private var readyCard: some View {
-        VStack(spacing: 24) {
-            VStack(spacing: 16) {
-                Image(systemName: "checkmark.seal.fill").font(.largeTitle).padding(.top, 16)
-                    .accessibilityHidden(true)
-                VStack(spacing: 4) {
-                    Text(currentReviewStatus == nil ? "Kebun Siap Ditinjau" : "Peninjauan Kebun").font(.title.bold())
-                    Text(currentReviewStatus == nil
-                         ? "Profil Kebun sudah Lengkap. Ajukan peninjauan untuk mengetahui kondisi seluruh kebun lebih cepat dan akurat"
-                         : "Profil kebun sudah diajukan. Lihat perkembangan atau hasil peninjauan kebun Anda.")
-                        .font(.body)
-                }
-                Button(action: onViewReviewInformation) {
-                    HStack(spacing: 5) {
-                        Text("Tentang Pengajuan Kebun")
-                        Image(systemName: "info.circle")
-                    }
-                        .labelStyle(.titleAndIcon).font(.body).foregroundStyle(.secondary)
-                        .frame(minHeight: 44)
-                }
-                .buttonStyle(.plain)
+    private var dataSection: some View {
+        VStack(spacing: 8) {
+            if profileJustSaved {
+                Label("Profil kebun baru saja disimpan", systemImage: "sparkles")
+                    .font(.caption).foregroundStyle(GardenProfileStyle.accent)
+                    .frame(maxWidth: .infinity, alignment: .leading).padding(.horizontal, 14).padding(.top, 10)
             }
-            .padding(.horizontal, 8).multilineTextAlignment(.center)
-            GardenProfileActionButton(title: reviewTitle, symbol: currentReviewStatus == nil ? "paperplane.fill" : "chevron.right",
-                                action: onReviewAction)
+            GardenProfileSectionHeader(title: "Data Kebun", message: "Data yang Anda isi dan menjadi dasar hasil peninjauan.")
+                .padding(.top, 8)
+            dataRow("Identitas Kebun", subtitle: "Lokasi, luas, tahun tanam, jenis tanah", symbol: "square.dashed.inset.filled", action: onEditGarden)
+            dataRow("Riwayat Panen dan Pemupukan", subtitle: "Dasar perhitungan kondisi hara", symbol: "doc.text", action: onViewSummary)
         }
-        .padding(.horizontal, 16).padding(.vertical, 24)
-        .background(GardenProfileStyle.card, in: RoundedRectangle(cornerRadius: 28))
+        .padding(profileJustSaved ? 4 : 0)
+        .background(profileJustSaved ? GardenProfileStyle.accent.opacity(0.12) : .clear, in: RoundedRectangle(cornerRadius: 24))
+    }
+
+    private func dataRow(_ title: String, subtitle: String, symbol: String, action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            HStack(spacing: 12) {
+                Image(systemName: symbol).font(.subheadline).foregroundStyle(.secondary)
+                    .frame(width: 36, height: 36).background(Color(uiColor: .tertiarySystemFill), in: Circle())
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(title).font(.headline)
+                    Text(subtitle).font(.subheadline).foregroundStyle(.secondary)
+                }.frame(maxWidth: .infinity, alignment: .leading)
+                Image(systemName: "chevron.right").font(.subheadline).foregroundStyle(.tertiary)
+            }
+            .padding(16).frame(minHeight: 76)
+            .background(GardenProfileStyle.card, in: RoundedRectangle(cornerRadius: 24))
+        }.buttonStyle(.plain)
+    }
+
+    private var readyCard: some View {
+        VStack(spacing: 12) {
+            Image(systemName: "checkmark.seal.fill").font(.system(size: 36))
+                .foregroundStyle(GardenProfileStyle.accent).frame(height: 41).accessibilityHidden(true)
+            Text(currentReviewStatus == nil ? "Kebun Siap Ditinjau" : "Peninjauan Kebun").font(.title2.bold())
+            Text(currentReviewStatus == nil
+                 ? "Profil kebun sudah lengkap. Ajukan peninjauan agar petugas memeriksa seluruh pohon di kebun Anda dan memberi rekomendasi pupuk yang lebih tepat."
+                 : "Profil kebun sudah diajukan. Lihat perkembangan atau hasil peninjauan kebun Anda.")
+                .font(.body).foregroundStyle(.secondary)
+            Button(action: onViewReviewInformation) {
+                HStack(spacing: 4) {
+                    Text("Tentang Peninjauan Kebun")
+                    Image(systemName: "info.circle")
+                }.font(.subheadline).foregroundStyle(GardenProfileStyle.accent).padding(.vertical, 4)
+            }.buttonStyle(.plain)
+            GardenProfileActionButton(title: reviewTitle, action: onReviewAction)
+        }
+        .multilineTextAlignment(.center)
+        .padding(.horizontal, 20).padding(.top, 24).padding(.bottom, 20)
+        .background(GardenProfileStyle.card, in: RoundedRectangle(cornerRadius: 24))
     }
 
     private var reviewTitle: String {
         switch currentReviewStatus {
-        case nil: "Ajukan Sekarang"
+        case nil: "Ajukan Peninjauan"
         case .completed: "Lihat hasil peninjauan"
         default: "Lihat status peninjauan"
         }

@@ -10,27 +10,44 @@ struct BoundaryEditingPanel: View {
     let onConfirm: () -> Void
 
     var body: some View {
-        MapBottomPanel(insets: EdgeInsets(top: 24, leading: 16, bottom: 24, trailing: 16)) {
+        VStack(spacing: 8) {
+            GeometryReader { geometry in
+                ScrollView {
+                    VStack(spacing: 8) {
+                        Text(instructions)
+                            .font(.subheadline).foregroundStyle(.secondary)
+                            .multilineTextAlignment(.center)
+                            .fixedSize(horizontal: false, vertical: true)
+                        if showsMetrics {
+                            BoundaryMetricsView(boundary: boundary, metrics: metrics, isClosed: isClosed)
+                        }
+                        if boundary.points.count >= GardenBoundary.minimumMappingPointCount && !boundary.isValid {
+                            Text("Batas harus membentuk area tanpa garis berpotongan.")
+                                .font(.caption).foregroundStyle(.secondary)
+                                .multilineTextAlignment(.center)
+                                .fixedSize(horizontal: false, vertical: true)
+                        }
+                    }
+                    .frame(maxWidth: .infinity)
+                    .frame(minHeight: geometry.size.height, alignment: .center)
+                }
+                .scrollBounceBehavior(.basedOnSize)
+            }
+
             VStack(spacing: 12) {
-                Text(instructions)
-                    .font(.subheadline).foregroundStyle(.secondary)
-                    .multilineTextAlignment(.center)
-                    .fixedSize(horizontal: false, vertical: true)
-                if showsMetrics {
-                    BoundaryMetricsView(boundary: boundary, metrics: metrics, isClosed: isClosed)
-                }
                 ViewThatFits(in: .horizontal) {
-                    HStack(spacing: 8) { editingActions }
-                    VStack(spacing: 8) { editingActions }
+                    HStack(spacing: 12) { editingActions }
+                    VStack(spacing: 12) { editingActions }
                 }
+
                 RegistrationPrimaryButton(title: "Simpan Batas Kebun", action: onConfirm)
                     .disabled(!boundary.isReadyForMapping)
-                if boundary.points.count >= GardenBoundary.minimumMappingPointCount && !boundary.isValid {
-                    Text("Batas harus membentuk area tanpa garis berpotongan.")
-                        .font(.caption).foregroundStyle(.secondary)
-                }
             }
+            .fixedSize(horizontal: false, vertical: true)
+            .layoutPriority(1)
         }
+        .padding(.horizontal, 16)
+        .padding(.vertical, 8)
     }
 
     private var instructions: String {
@@ -78,17 +95,25 @@ private struct BoundaryActionButton: View {
 #if DEBUG
 #Preview("Kontrol batas kebun") {
     Color.gray
-        .overlay(alignment: .bottom) {
-            BoundaryEditingPanel(boundary: GardenPreviewData.boundary, metrics: GardenPreviewData.metrics,
+        .sheet(isPresented: .constant(true)) {
+            DynamicSheet(animation: .bouncy, size: .xsmall) {
+                BoundaryEditingPanel(boundary: GardenPreviewData.boundary, metrics: GardenPreviewData.metrics,
                                  onUndo: {}, onClear: {}, onConfirm: {})
+            }
+            .presentationBackgroundInteraction(.enabled)
+            .presentationDragIndicator(.hidden)
         }
         .ignoresSafeArea(.container, edges: .bottom)
 }
 #Preview("Kontrol batas kebun · Teks besar") {
     Color.gray
-        .overlay(alignment: .bottom) {
-            BoundaryEditingPanel(boundary: GardenPreviewData.boundary, metrics: GardenPreviewData.metrics,
+        .sheet(isPresented: .constant(true)) {
+            DynamicSheet(animation: .bouncy, size: .xsmall) {
+                BoundaryEditingPanel(boundary: GardenPreviewData.boundary, metrics: GardenPreviewData.metrics,
                                  onUndo: {}, onClear: {}, onConfirm: {})
+            }
+            .presentationBackgroundInteraction(.enabled)
+            .presentationDragIndicator(.hidden)
         }
         .ignoresSafeArea(.container, edges: .bottom)
         .environment(\.dynamicTypeSize, .accessibility3)

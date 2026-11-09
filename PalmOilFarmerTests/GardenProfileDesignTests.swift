@@ -32,6 +32,7 @@ struct GardenProfileDesignTests {
         let saved = try #require(source.gardens.first)
         #expect(saved.name == "Nama terbaru")
         #expect(saved.fertilizationFrequencyPerYear == 4)
+        #expect(saved.profileUpdatedAt != nil)
         #expect(saved.harvestRecord?.monthlyWeightKg == 420)
         #expect(saved.harvestRecord?.latestWeightKg == 140)
         #expect(saved.fertilizerRecords?.count == 1)
@@ -91,6 +92,7 @@ struct GardenProfileDesignTests {
         let data = try JSONEncoder().encode(garden)
         let decoded = try JSONDecoder().decode(Garden.self, from: data)
         #expect(decoded.fertilizationFrequencyPerYear == nil)
+        #expect(decoded.profileUpdatedAt == nil)
         #expect(decoded.fertilizerRecords?.first?.composition == nil)
     }
 
@@ -108,6 +110,7 @@ struct GardenProfileDesignTests {
         #expect(model.save())
         let saved = try #require(makeTestGardenStore(in: container).gardens.first)
         #expect(saved.fertilizationFrequencyPerYear == 4)
+        #expect(saved.profileUpdatedAt != nil)
         #expect(saved.harvestRecord?.averageMonthlyWeightKg == 420)
         #expect(saved.fertilizerRecords?.first?.composition?.nitrogen == 15)
         let request = PlantationReviewRequest(garden: saved,

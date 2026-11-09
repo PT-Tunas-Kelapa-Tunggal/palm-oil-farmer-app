@@ -8,7 +8,7 @@ struct DeveloperModeView: View {
     let onEraseAll: () -> Void
     @Environment(\.dismiss) private var dismiss
     @State private var confirmsErase = false
-    @AppStorage(DeveloperSettings.showsHomeFilterKey) private var showsHomeFilter = true
+    @AppStorage(DeveloperSettings.showsHomeFilterKey) private var showsHomeFilter = false
 
     var body: some View {
         VStack(spacing: 0) {

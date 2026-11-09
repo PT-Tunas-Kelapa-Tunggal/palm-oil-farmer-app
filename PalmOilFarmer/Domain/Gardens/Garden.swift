@@ -14,6 +14,8 @@ struct Garden: Identifiable, Codable {
     /// When the garden was registered. Gardens saved before this field have none.
     var createdAt: Date? = nil
     var fertilizationFrequencyPerYear: Int? = nil
+    /// Last successful local profile edit; older records have no timestamp.
+    var profileUpdatedAt: Date? = nil
 }
 
 struct FertilizerRecord: Identifiable, Codable {

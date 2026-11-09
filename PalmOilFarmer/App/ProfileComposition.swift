@@ -35,7 +35,7 @@ struct GardenProfileFactory {
                 GardenProfileEditorViewModel(garden: model.garden,
                     isActive: { sheet.kind == .profile && coordinator.isCurrent(sheet) },
                     onSave: { model.saveProfile(harvest: $0, frequency: $1, fertilizers: $2) },
-                    onSaved: { coordinator.closeSheet(sheet) })
+                    onSaved: { coordinator.profileSaved(sheet) })
             }
         )
     }

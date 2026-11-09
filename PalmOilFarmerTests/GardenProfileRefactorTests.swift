@@ -113,17 +113,18 @@ struct GardenProfileRefactorTests {
         #expect(model.nextField(after: .fertilizerDose(second)) == nil)
     }
 
-    @Test func summaryEditWaitsForDismissalAndRejectsStaleCallbacks() throws {
+    @Test func summaryEditRejectsDuplicateAndClosedPageCallbacks() throws {
         let coordinator = GardenProfileCoordinator()
-        coordinator.open(.summary)
-        let summary = try #require(coordinator.sheet)
-        coordinator.editProfile(from: summary)
-        #expect(coordinator.sheet == nil && !coordinator.canDeleteNow)
-        coordinator.sheetDidDismiss()
-        #expect(coordinator.sheet?.kind == .profile)
+        coordinator.openSummary()
+        coordinator.editSummary()
         let editor = try #require(coordinator.sheet)
-        coordinator.editProfile(from: summary)
+        coordinator.editSummary()
         #expect(coordinator.isCurrent(editor))
+        coordinator.closeSheet(editor)
+        coordinator.sheetDidDismiss()
+        coordinator.closeSummary()
+        coordinator.editSummary()
+        #expect(coordinator.sheet == nil && coordinator.canDeleteNow)
     }
 
     @Test func reviewInformationTransitionIsCancelledWhenProfileCloses() throws {

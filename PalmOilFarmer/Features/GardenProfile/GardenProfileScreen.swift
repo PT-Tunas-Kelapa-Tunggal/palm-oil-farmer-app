@@ -10,6 +10,7 @@ struct GardenProfileScreen: View {
         self.referenceMapImage = referenceMapImage
     }
 
+    @AppStorage("gardenReview.hideIntroduction") private var hideReviewIntroduction = false
     @Environment(\.dismiss) private var dismiss
     private var garden: Garden { flow.viewModel.garden }
     private var currentReviewStatus: ReviewStatus? { flow.reviewPresentation.activeStatus ?? garden.review?.status }
@@ -21,7 +22,7 @@ struct GardenProfileScreen: View {
         @Bindable var model = flow.viewModel
         @Bindable var coordinator = flow.coordinator
         profileContent
-        .sheet(item: $coordinator.sheet, onDismiss: coordinator.sheetDidDismiss) { presentation in
+        .sheet(item: rootSheet, onDismiss: coordinator.sheetDidDismiss) { presentation in
             sheetContent(presentation)
         }
         .confirmationDialog("Hapus kebun?", isPresented: $coordinator.showsDeleteConfirmation, titleVisibility: .visible) {
@@ -35,6 +36,13 @@ struct GardenProfileScreen: View {
         } message: {
             Text("Data tidak dapat dihapus dari perangkat. Coba lagi.")
         }
+        .navigationDestination(isPresented: $coordinator.showsSummary) {
+            GardenProfileSummaryView(garden: garden,
+                onClose: coordinator.closeSummary, onEdit: coordinator.editSummary)
+                .sheet(item: $coordinator.sheet, onDismiss: coordinator.sheetDidDismiss) { presentation in
+                    sheetContent(presentation)
+                }
+        }
         .navigationDestination(isPresented: $coordinator.showsReviewStatus) {
             statusDestination
         }
@@ -47,6 +55,11 @@ struct GardenProfileScreen: View {
         .task { await flow.reviewPresentation.load(for: model.gardenID, repository: flow.reviewRepository) }
     }
 
+    private var rootSheet: Binding<GardenProfileSheet?> {
+        Binding(get: { flow.coordinator.showsSummary ? nil : flow.coordinator.sheet },
+                set: { flow.coordinator.sheet = $0 })
+    }
+
     private var deleteAction: (() -> Void)? {
         guard flow.viewModel.canDelete else { return nil }
         return { flow.coordinator.requestDelete() }
@@ -54,14 +67,18 @@ struct GardenProfileScreen: View {
 
     private var profileContent: some View {
         GardenProfileContentView(
-            garden: garden, referenceMapImage: referenceMapImage, currentReviewStatus: currentReviewStatus, isComplete: flow.viewModel.isComplete,
+            garden: garden, referenceMapImage: referenceMapImage, profileJustSaved: flow.coordinator.profileJustSaved, currentReviewStatus: currentReviewStatus, isComplete: flow.viewModel.isComplete,
             onBack: flow.coordinator.close, onEditGarden: { flow.coordinator.open(.details) },
             onEditProfile: { flow.coordinator.open(.profile) },
             onReviewAction: {
                 guard flow.viewModel.isComplete else { return }
-                flow.coordinator.reviewAction(flow.reviewPresentation.action(for: garden))
+                if currentReviewStatus == nil && !hideReviewIntroduction {
+                    flow.coordinator.open(.reviewInformation)
+                } else {
+                    flow.coordinator.reviewAction(flow.reviewPresentation.action(for: garden))
+                }
             },
-            onViewSummary: { flow.coordinator.open(.summary) },
+            onViewSummary: flow.coordinator.openSummary,
             onViewReviewInformation: { flow.coordinator.open(.reviewInformation) },
             onDelete: deleteAction
         )
@@ -77,10 +94,6 @@ struct GardenProfileScreen: View {
                 onClose: { flow.coordinator.closeSheet(presentation) })
         case .review:
             ReviewRequestView(flow: flow.makeReviewRequest(presentation))
-        case .summary:
-            GardenProfileSummaryView(garden: garden,
-                onClose: { flow.coordinator.closeSheet(presentation) },
-                onEdit: { flow.coordinator.editProfile(from: presentation) })
         case .reviewInformation:
             GardenReviewInformationView(
                 onClose: { flow.coordinator.closeSheet(presentation) },

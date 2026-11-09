@@ -11,6 +11,16 @@ struct RegistrationIntroView: View {
     }
 
     var body: some View {
+        DynamicSheet(animation: .bouncy, size: .large) {
+            sheetContent
+        }
+        .presentationBackgroundInteraction(.disabled)
+        .presentationDragIndicator(.hidden)
+        .presentationContentInteraction(.scrolls)
+    }
+
+    @ViewBuilder
+    private var sheetContent: some View {
         Group {
             switch flow.coordinator.step {
             case .guide:
@@ -22,8 +32,6 @@ struct RegistrationIntroView: View {
                 LocationSearchView(flow: flow)
             }
         }
-        .presentationDetents([.large])
-        .presentationDragIndicator(.visible)
         .presentationBackground(RegistrationStyle.background)
         .presentationBackgroundInteraction(.disabled)
     }

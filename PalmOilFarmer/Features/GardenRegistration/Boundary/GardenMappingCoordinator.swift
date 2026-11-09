@@ -10,6 +10,7 @@ final class GardenMappingCoordinator {
     var showsExitConfirmation = false
     private(set) var outcome: GardenMappingOutcome?
     private(set) var detailsSessionID: UUID?
+    private(set) var savedGardenName: String?
     private var pendingOutcome: GardenMappingOutcome?
     private let onFinish: (GardenMappingOutcome) -> Void
 
@@ -37,6 +38,10 @@ final class GardenMappingCoordinator {
     }
 
     func continueMapping() { showsExitConfirmation = false }
+
+    func recordSavedGarden(_ name: String) {
+        savedGardenName = name
+    }
 
     func discardAndClose() {
         // SwiftUI can clear the dialog binding before invoking its button action.

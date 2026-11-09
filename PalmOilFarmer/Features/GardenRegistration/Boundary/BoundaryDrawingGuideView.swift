@@ -1,10 +1,6 @@
 import SwiftUI
 import MapKit
 
-enum BoundaryDrawingGuideStyle {
-    static let sheetHeight: CGFloat = 210
-}
-
 struct BoundaryDrawingGuideView: View {
     // A read-only starting position keeps the demonstration out of the mapping camera binding.
     let position: MapCameraPosition
@@ -14,6 +10,7 @@ struct BoundaryDrawingGuideView: View {
 
     @State private var guide = BoundaryDrawingGuideState()
     @State private var showsSheet = false
+    @State private var sheetHeight: CGFloat = 0
     @State private var pendingExit: Exit?
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
@@ -21,11 +18,22 @@ struct BoundaryDrawingGuideView: View {
 
     var body: some View {
         GeometryReader { _ in
+            let center = position.camera?.centerCoordinate
+                ?? position.region?.center
+                ?? fallbackCenter
+
+            let guideRegion = MKCoordinateRegion(
+                center: center,
+                latitudinalMeters: 400,
+                longitudinalMeters: 400
+            )
+
             BoundaryDrawingGuideDemo(
                 step: guide.step,
-                center: position.camera?.centerCoordinate ?? position.region?.center ?? fallbackCenter,
-                longitudeDelta: position.region?.span.longitudeDelta ?? 0.006,
-                isPlaying: showsSheet && pendingExit == nil
+                center: center,
+                longitudeDelta: guideRegion.span.longitudeDelta,
+                isPlaying: showsSheet && pendingExit == nil,
+                bottomSheetHeight: sheetHeight
             )
             .ignoresSafeArea()
         }
@@ -36,6 +44,7 @@ struct BoundaryDrawingGuideView: View {
         .onAppear { showsSheet = true }
         .sheet(isPresented: $showsSheet, onDismiss: finishExit) {
             BoundaryDrawingGuideSheet(step: guide.step, onContinue: advance)
+                .onGeometryChange(for: CGFloat.self) { $0.size.height } action: { sheetHeight = $0 }
         }
     }
 
@@ -74,35 +83,49 @@ struct BoundaryDrawingGuideSheet: View {
     let onContinue: () -> Void
 
     var body: some View {
-        VStack(spacing: KropsTheme.Spacing.field) {
-            ScrollView {
-                VStack(spacing: KropsTheme.Spacing.field) {
-                    HStack(spacing: KropsTheme.Spacing.compact) {
-                        ForEach(BoundaryDrawingGuideStep.allCases, id: \.self) { page in
-                            Circle()
-                                .fill(page == step ? RegistrationStyle.onAction : RegistrationStyle.onAction.opacity(0.3))
-                                .frame(width: 7, height: 7)
-                        }
-                    }
-                    .accessibilityElement(children: .ignore)
-                    .accessibilityLabel("Panduan \(step.rawValue + 1) dari 2")
+        DynamicSheet(animation: .bouncy, size: .small) {
+            content
+        }
+        .presentationDragIndicator(.hidden)
+        .presentationBackgroundInteraction(.enabled)
+        .presentationCompactAdaptation(.sheet)
+        .preferredColorScheme(.light)
+    }
 
-                    VStack(spacing: KropsTheme.Spacing.compact) {
-                        Text(step.title)
-                            .font(.title2.bold())
-                            .accessibilityAddTraits(.isHeader)
-                        Text(step.message)
-                            .font(KropsTheme.Typography.body)
-                            .foregroundStyle(.secondary)
+    private var content: some View {
+        VStack(spacing: KropsTheme.Spacing.field) {
+            GeometryReader { geometry in
+                ScrollView {
+                    VStack(spacing: KropsTheme.Spacing.field) {
+                        HStack(spacing: KropsTheme.Spacing.compact) {
+                            ForEach(BoundaryDrawingGuideStep.allCases, id: \.self) { page in
+                                Circle()
+                                    .fill(page == step ? RegistrationStyle.onAction : RegistrationStyle.onAction.opacity(0.3))
+                                    .frame(width: 7, height: 7)
+                            }
+                        }
+                        .accessibilityElement(children: .ignore)
+                        .accessibilityLabel("Panduan \(step.rawValue + 1) dari 2")
+
+                        VStack(spacing: KropsTheme.Spacing.compact) {
+                            Text(step.title)
+                                .font(.title2.bold())
+                                .accessibilityAddTraits(.isHeader)
+                            Text(step.message)
+                                .font(KropsTheme.Typography.body)
+                                .foregroundStyle(.secondary)
+                        }
+                        .multilineTextAlignment(.center)
+                        .fixedSize(horizontal: false, vertical: true)
+                        .frame(maxWidth: .infinity)
+                        .id(step)
+                        .transition(.opacity)
                     }
-                    .multilineTextAlignment(.center)
-                    .fixedSize(horizontal: false, vertical: true)
                     .frame(maxWidth: .infinity)
-                    .id(step)
-                    .transition(.opacity)
+                    .frame(minHeight: geometry.size.height, alignment: .center)
                 }
+                .scrollBounceBehavior(.basedOnSize)
             }
-            .scrollBounceBehavior(.basedOnSize)
 
             RegistrationPrimaryButton(title: step.buttonTitle, action: onContinue)
                 .accessibilityIdentifier("boundaryGuideContinue")
@@ -111,13 +134,6 @@ struct BoundaryDrawingGuideSheet: View {
         .padding(.top, KropsTheme.Spacing.screen)
         .padding(.bottom, KropsTheme.Spacing.field)
         .accessibilityElement(children: .contain)
-        .presentationDetents([.height(BoundaryDrawingGuideStyle.sheetHeight)])
-        .presentationDragIndicator(.hidden)
-        // Only the back control is interactive behind the sheet; the demonstration is locked.
-        .presentationBackgroundInteraction(.enabled)
-        .presentationCompactAdaptation(.sheet)
-        .interactiveDismissDisabled()
-        .preferredColorScheme(.dark)
     }
 }
 

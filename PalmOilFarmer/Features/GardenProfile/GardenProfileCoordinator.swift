@@ -2,7 +2,7 @@ import Foundation
 import Observation
 
 struct GardenProfileSheet: Identifiable {
-    enum Kind { case details, review, profile, summary, reviewInformation }
+    enum Kind { case details, review, profile, reviewInformation }
     let id = UUID()
     let kind: Kind
 }
@@ -12,8 +12,10 @@ enum GardenProfileReviewAction { case request, status, results }
 @MainActor
 @Observable
 final class GardenProfileCoordinator {
+    private(set) var profileJustSaved = false
     var sheet: GardenProfileSheet?
     var showsDeleteConfirmation = false
+    var showsSummary = false
     var showsReviewStatus = false
     var showsResults = false
     private(set) var isFinished = false
@@ -22,7 +24,7 @@ final class GardenProfileCoordinator {
     private var pendingReviewAction: GardenProfileReviewAction?
 
     var canDeleteNow: Bool {
-        !isFinished && activeSheet == nil && !showsReviewStatus && !showsResults
+        !isFinished && activeSheet == nil && !showsSummary && !showsReviewStatus && !showsResults
     }
 
     func open(_ kind: GardenProfileSheet.Kind) {
@@ -35,6 +37,12 @@ final class GardenProfileCoordinator {
     func isCurrent(_ presentation: GardenProfileSheet) -> Bool {
         !isFinished && activeSheet?.id == presentation.id && sheet?.id == presentation.id
             && activeSheet?.kind == presentation.kind
+    }
+
+    func profileSaved(_ presentation: GardenProfileSheet) {
+        guard presentation.kind == .profile, isCurrent(presentation) else { return }
+        profileJustSaved = true
+        closeSheet(presentation)
     }
 
     func closeSheet(_ presentation: GardenProfileSheet) {
@@ -54,10 +62,21 @@ final class GardenProfileCoordinator {
         if let nextReviewAction { reviewAction(nextReviewAction) }
     }
 
-    func editProfile(from presentation: GardenProfileSheet) {
-        guard presentation.kind == .summary, isCurrent(presentation) else { return }
-        pendingSheet = .profile
-        closeSheet(presentation)
+    func openSummary() {
+        guard canDeleteNow, !showsDeleteConfirmation else { return }
+        showsSummary = true
+    }
+
+    func closeSummary() {
+        guard activeSheet == nil else { return }
+        showsSummary = false
+    }
+
+    func editSummary() {
+        guard showsSummary, !isFinished, activeSheet == nil else { return }
+        let presentation = GardenProfileSheet(kind: .profile)
+        activeSheet = presentation
+        sheet = presentation
     }
 
     func applyForReview(from presentation: GardenProfileSheet, action: GardenProfileReviewAction) {
@@ -92,6 +111,7 @@ final class GardenProfileCoordinator {
         pendingSheet = nil
         pendingReviewAction = nil
         showsDeleteConfirmation = false
+        showsSummary = false
         showsReviewStatus = false
         showsResults = false
     }

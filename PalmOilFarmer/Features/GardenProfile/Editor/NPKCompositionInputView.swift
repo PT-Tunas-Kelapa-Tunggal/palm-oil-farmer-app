@@ -18,26 +18,25 @@ struct NPKCompositionInputView: View {
                 nutrient("Kalium", value: $composition.potassium, kind: .potassium)
                 nutrient("Magnesium", value: $composition.magnesium, kind: .magnesium)
             }
-            Text("Lihat angka di kemasan. Contoh: NPK 15-15-15 berarti N 15%, P 15%, K 15%.")
-                .font(.subheadline).foregroundStyle(.secondary)
+            Text("Lihat angka di kemasan. Contoh: NPK 15-15-15 berarti N 15%, P 15%, dan K 15%.")
+                .font(.footnote).foregroundStyle(.secondary)
                 .fixedSize(horizontal: false, vertical: true)
         }
     }
 
     private func nutrient(_ title: String, value: Binding<Double?>,
                           kind: GardenProfileEditorField.Nutrient) -> some View {
-        VStack(alignment: .leading, spacing: 8) {
+        VStack(alignment: .leading, spacing: 4) {
             Text(title).font(.caption).foregroundStyle(.secondary)
             HStack(spacing: 4) {
                 TextField("0", value: value, format: .number)
-                    .fontWeight(.semibold)
                     .keyboardType(.decimalPad)
                     .focused(focusedField, equals: .fertilizerNutrient(draftID, kind))
                     .accessibilityLabel("\(title), persen")
                 Text("%").foregroundStyle(.secondary)
             }
             .font(.title3).padding(8).frame(minHeight: 44)
-            .background(GardenProfileStyle.formBackground, in: RoundedRectangle(cornerRadius: 12))
+            .background(Color(uiColor: .tertiarySystemFill), in: RoundedRectangle(cornerRadius: 12))
         }
     }
 }

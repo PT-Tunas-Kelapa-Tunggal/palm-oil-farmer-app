@@ -9,6 +9,8 @@ struct BoundaryEditorLayout<MapContent: View>: View {
     var title = "Buat Batas Kebun"
     var isClosed = true
     var showsControls = true
+    var showsBottomPanel = true
+    var bottomSheetHeight: CGFloat = 0
     let onClose: () -> Void
     let onSearch: () -> Void
     let onUndo: () -> Void
@@ -22,6 +24,9 @@ struct BoundaryEditorLayout<MapContent: View>: View {
 
     var body: some View {
         map()
+            .safeAreaInset(edge: .bottom, spacing: 0) {
+                Color.clear.frame(height: bottomSheetHeight).allowsHitTesting(false)
+            }
             .ignoresSafeArea()
             .overlay(alignment: .top) {
                 if showsControls {
@@ -54,13 +59,16 @@ struct BoundaryEditorLayout<MapContent: View>: View {
                     .environment(\.colorScheme, .dark)
                 }
             }
-            .safeAreaInset(edge: .bottom, spacing: 0) {
-                if showsControls {
+            .sheet(isPresented: .constant(showsControls && showsBottomPanel)) {
+                DynamicSheet(animation: .bouncy, size: .xsmall) {
                     BoundaryEditingPanel(
                         boundary: boundary, metrics: metrics, showsMetrics: showsMetricsInPanel, isClosed: isClosed,
                         onUndo: onUndo, onClear: onClear, onConfirm: onConfirm
                     )
                 }
+                .presentationBackgroundInteraction(.enabled)
+                .presentationDragIndicator(.hidden)
+                .presentationCompactAdaptation(.sheet)
             }
             .ignoresSafeArea(.container, edges: .bottom)
     }

@@ -10,52 +10,55 @@ struct FertilizerInputCard: View {
                 Text("Jenis pupuk").font(.body.weight(.semibold)).foregroundStyle(.secondary)
                 Menu {
                     Picker("Jenis pupuk", selection: $draft.kind) {
-                        Text("Pilih Jenis Pupuk").tag(FertilizerType.unselected)
+                        if draft.kind == .unselected { Text("Pilih Jenis Pupuk").tag(FertilizerType.unselected) }
                         ForEach(options, id: \.self) { kind in
                             Text(FertilizerCatalogue.displayName(for: kind)).tag(kind)
                         }
                     }
                 } label: {
-                    HStack {
+                    HStack(spacing: 12) {
+                        Image("ProfileSeedling").resizable().scaledToFit().frame(width: 22, height: 24).foregroundStyle(.secondary)
                         Text(draft.kind == .unselected ? "Pilih Jenis Pupuk" : FertilizerCatalogue.displayName(for: draft.kind))
                             .foregroundStyle(draft.name.isEmpty ? .tertiary : .primary)
                         Spacer(minLength: 8)
                         Image(systemName: "chevron.up.chevron.down").font(.caption).foregroundStyle(.tertiary)
                     }
-                    .font(.title3.weight(draft.name.isEmpty ? .regular : .semibold))
-                    .frame(minHeight: 41).contentShape(Rectangle())
+                    .font(.title3)
+                    .padding(.horizontal, 14).frame(minHeight: 52)
+                    .background(Color(uiColor: .tertiarySystemFill), in: RoundedRectangle(cornerRadius: 12)).contentShape(Rectangle())
                 }
                 .buttonStyle(.plain)
                 .accessibilityLabel("Jenis pupuk").accessibilityValue(draft.name.isEmpty ? "Belum dipilih" : draft.name)
             }
             .padding(.top, 16).padding(.bottom, 8)
-            Divider()
             if draft.kind == .npk {
                 NPKCompositionInputView(draftID: draft.id, composition: $draft.composition,
                                             focusedField: focusedField)
-                    .padding(.vertical, 16)
+                    .padding(.top, 8)
             }
             VStack(alignment: .leading, spacing: 8) {
-                Text("Dosis per pohon").font(.body.weight(.semibold)).foregroundStyle(.secondary)
+                Text("Dosis per pohon setiap pemupukan").font(.body.weight(.semibold)).foregroundStyle(.secondary)
                     .fixedSize(horizontal: false, vertical: true)
-                HStack {
-                    TextField("cth: 0,5", value: $draft.doseKgPerTree, format: .number)
+                HStack(spacing: 12) {
+                    Image(systemName: "chart.dots.scatter").foregroundStyle(.secondary)
+                    TextField("cth: 0,5", value: $draft.doseKgPerTree, format: .number.precision(.fractionLength(1)))
                         .keyboardType(.decimalPad)
                         .focused(focusedField, equals: .fertilizerDose(draft.id))
                         .accessibilityLabel("Dosis \(draft.name) per pohon, kilogram")
-                    Text("kg").fontWeight(.regular)
+                    Text("kg").font(.body).foregroundStyle(.secondary)
                 }
-                .font(.title3.weight(.semibold)).frame(minHeight: 41)
+                .font(.title3).padding(.horizontal, 14).frame(minHeight: 52)
+                .background(Color(uiColor: .tertiarySystemFill), in: RoundedRectangle(cornerRadius: 12))
             }
-            .padding(.top, 16).padding(.bottom, 8)
+            .padding(.top, draft.kind == .npk ? 16 : 8).padding(.bottom, 8)
         }
         .fixedSize(horizontal: false, vertical: true)
-        .padding(.horizontal, 16)
-        .background(GardenProfileStyle.field, in: RoundedRectangle(cornerRadius: 24))
+        .padding(.horizontal, 16).padding(.bottom, 8)
+        .background(GardenProfileStyle.card, in: RoundedRectangle(cornerRadius: 24))
     }
 
     private var options: [FertilizerType] {
-        let kinds = FertilizerCatalogue.options
+        let kinds: [FertilizerType] = [.urea, .za, .npk, .sp36, .kcl, .dolomite, .kieserite, .manure, .other]
         return draft.kind == .unselected || kinds.contains(draft.kind) ? kinds : kinds + [draft.kind]
     }
 }

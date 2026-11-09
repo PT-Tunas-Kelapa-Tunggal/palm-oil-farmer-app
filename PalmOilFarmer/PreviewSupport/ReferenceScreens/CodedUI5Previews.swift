@@ -85,14 +85,8 @@ struct CodedUI5Preview: View {
                 GardenDetailsView(location: location, boundary: GardenPreviewData.boundary,
                                   onSave: { _ in true }, referenceMapImage: "RegistrationBoundaryMap",
                                   metrics: GardenDisplayMetrics(area: "1,7 ha", perimeter: "540 m"))
-                    .overlay(alignment: .bottom) {
-                        if screen == .plantingDate {
-                            PlantingDatePickerView(onConfirm: { _, _ in })
-                                .frame(height: dynamicTypeSize.isAccessibilitySize ? 650 : 351)
-                                .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 34))
-                                .padding(.horizontal, 8)
-                                .padding(.bottom, -34)
-                        }
+                    .sheet(isPresented: .constant(screen == .plantingDate)) {
+                        PlantingDatePickerView(onConfirm: { _, _ in })
                     }
             }
         }
@@ -108,9 +102,12 @@ struct CodedUI5Preview: View {
                     RegistrationIconButton(symbol: "xmark", label: "Tutup", action: {}).padding(12)
                 }
             }
-            .overlay(alignment: .bottom) {
-                LocationConfirmationPanel(location: location, onBack: {}, onContinue: {})
-                    .padding(.bottom, -34)
+            .sheet(isPresented: .constant(true)) {
+                DynamicSheet(animation: .bouncy, size: .small) {
+                    LocationConfirmationPanel(location: location, onBack: {}, onContinue: {})
+                }
+                .presentationBackgroundInteraction(.enabled)
+                .presentationDragIndicator(.hidden)
             }
     }
 

@@ -8,19 +8,22 @@ struct GardenProfileHeader: View {
 
     var body: some View {
         ZStack {
-            Text(title).font(.title3.weight(.semibold))
+            Text(title).font(.headline)
                 .multilineTextAlignment(.center)
                 .fixedSize(horizontal: false, vertical: true)
-                .padding(.horizontal, 72).padding(.vertical, 22)
+                .padding(.horizontal, 84)
                 .accessibilityAddTraits(.isHeader)
             HStack {
                 GardenProfileIconButton(symbol: symbol, label: symbol == "xmark" ? "Tutup" : "Kembali", action: onBack)
                 Spacer()
-                if let onEdit { GardenProfileIconButton(symbol: "pencil", label: "Ubah profil kebun", action: onEdit) }
+                if let onEdit {
+                    Button(action: onEdit) { Text("Ubah").font(.body).frame(width: 67, height: 44) }
+                        .buttonStyle(.plain).glassEffect(.regular.interactive(), in: Capsule())
+                }
             }
-            .padding(.horizontal, 12)
+            .padding(.horizontal, 16)
         }
-        .frame(minHeight: 72)
+        .frame(minHeight: 44)
     }
 }
 

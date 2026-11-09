@@ -7,23 +7,41 @@ struct GardenMetricsView: View {
 
     var body: some View {
         let metrics = metrics ?? GardenDisplayMetrics(boundary: garden.boundary)
-        let layout = dynamicTypeSize.isAccessibilitySize
-            ? AnyLayout(VStackLayout(spacing: 7)) : AnyLayout(HStackLayout(spacing: 7))
-        layout {
-            tile("Luas tanah", value: metrics.area)
-            tile("Perimeter", value: metrics.perimeter)
-            tile("Tahun Tanam", value: String(garden.plantingYear))
+        Group {
+            if dynamicTypeSize.isAccessibilitySize {
+                VStack(alignment: .leading, spacing: 12) {
+                    tile("Luas", value: metrics.area, symbol: "square.dashed.inset.filled")
+                    tile("Keliling", value: metrics.perimeter, symbol: "square.dashed")
+                    tile("Tahun Tanam", value: String(garden.plantingYear), symbol: "calendar")
+                }
+            } else {
+                GeometryReader { geometry in
+                    let available = max(0, geometry.size.width - 34)
+                    HStack(spacing: 8) {
+                        tile("Luas", value: metrics.area, symbol: "square.dashed.inset.filled")
+                            .frame(width: available * 88 / 304)
+                        Divider().frame(width: 1, height: 36)
+                        tile("Keliling", value: metrics.perimeter, symbol: "square.dashed")
+                            .frame(width: available * 96 / 304)
+                        Divider().frame(width: 1, height: 36)
+                        tile("Tahun Tanam", value: String(garden.plantingYear), symbol: "calendar")
+                    }
+                }.frame(height: 43)
+            }
         }
+        .padding(16)
+        .background(GardenProfileStyle.card, in: RoundedRectangle(cornerRadius: 20))
     }
 
-    private func tile(_ title: String, value: String) -> some View {
-        VStack(spacing: 0) {
-            Text(title).font(.caption)
-            Text(value).font(.body.weight(.semibold))
+    private func tile(_ title: String, value: String, symbol: String) -> some View {
+        VStack(alignment: .leading, spacing: 2) {
+            HStack(spacing: 4) {
+                Image(systemName: symbol).foregroundStyle(GardenProfileStyle.accent)
+                Text(title).foregroundStyle(.secondary)
+            }.font(.caption2)
+            Text(value).font(.title2.bold())
         }
-        .multilineTextAlignment(.center).frame(maxWidth: .infinity, minHeight: 40)
-        .padding(.vertical, 16).padding(.horizontal, 8)
-        .background(GardenProfileStyle.card, in: RoundedRectangle(cornerRadius: 16))
+        .frame(maxWidth: .infinity, minHeight: 43, alignment: .leading)
         .accessibilityElement(children: .combine)
     }
 }

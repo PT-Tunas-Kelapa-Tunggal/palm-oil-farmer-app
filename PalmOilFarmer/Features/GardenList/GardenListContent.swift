@@ -10,6 +10,7 @@ struct GardenListContent: View {
     var downloads: [MapDownloadItem] = []
     var onSelectDownload: (MapDownloadItem) -> Void = { _ in }
     var referenceMapImage: String? = nil
+    var fertilizerSchedules: [UUID: String] = [:]
     var previewMetrics: GardenDisplayMetrics? = nil
     var onSelectGarden: (Garden) -> Void = { _ in }
     let onRegisterGarden: () -> Void
@@ -32,6 +33,13 @@ struct GardenListContent: View {
                     }
                     .sensoryFeedback(.success, trigger: developerTrigger)
                 Spacer()
+                if !presentation.isEmpty || !downloads.isEmpty {
+                    Button(action: onRegisterGarden) {
+                        Image(systemName: "plus").font(.system(size: 22)).frame(width: 44, height: 44)
+                    }
+                    .buttonStyle(.plain).glassEffect(.regular.interactive(), in: Circle())
+                    .accessibilityLabel("Daftarkan Kebun")
+                }
             }
             .padding(.horizontal, 24)
             .padding(.vertical, 16)
@@ -77,7 +85,7 @@ struct GardenListContent: View {
                                     Button {
                                         onSelectGarden(garden)
                                     } label: {
-                                        GardenCard(garden: garden, referenceImage: referenceMapImage, metrics: previewMetrics)
+                                        GardenCard(garden: garden, referenceImage: referenceMapImage, metrics: previewMetrics, fertilizerSchedule: fertilizerSchedules[garden.id])
                                     }
                                     .buttonStyle(.plain)
                                 case .draft(let draft):
@@ -119,15 +127,17 @@ struct GardenListContent: View {
                                center: .center, startRadius: 30, endRadius: 320)
                     .ignoresSafeArea()
             } else {
-                RegistrationStyle.background.ignoresSafeArea()
+                GardenProfileStyle.background.ignoresSafeArea()
             }
         }
         .safeAreaInset(edge: .bottom, spacing: 0) {
-            RegistrationPrimaryButton(title: "Daftarkan Kebun", systemImage: "plus", action: onRegisterGarden)
-                .padding(.horizontal, 34)
-                .padding(.bottom, 2)
-                .padding(.top, 24)
-                .background { BottomBlurFade() }
+            if presentation.isEmpty && downloads.isEmpty {
+                RegistrationPrimaryButton(title: "Daftarkan Kebun", systemImage: "plus", action: onRegisterGarden)
+                    .padding(.horizontal, 34)
+                    .padding(.bottom, 2)
+                    .padding(.top, 24)
+                    .background { BottomBlurFade() }
+            }
         }
     }
 }

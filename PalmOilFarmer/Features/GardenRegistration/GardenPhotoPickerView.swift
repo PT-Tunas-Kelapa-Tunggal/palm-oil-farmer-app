@@ -15,6 +15,16 @@ struct GardenPhotoPickerView: View {
     private let columns = Array(repeating: GridItem(.flexible(), spacing: 2), count: 4)
 
     var body: some View {
+        DynamicSheet(animation: .bouncy, size: .large) {
+            sheetContent
+        }
+        .presentationBackgroundInteraction(.disabled)
+        .presentationDragIndicator(.hidden)
+        .presentationContentInteraction(.scrolls)
+    }
+
+    @ViewBuilder
+    private var sheetContent: some View {
         VStack(spacing: 0) {
             RegistrationHeader(
                 title: viewModel.previewPhotoID == nil ? "Foto" : "Foto Kebun",
@@ -64,8 +74,6 @@ struct GardenPhotoPickerView: View {
         }
         .background(RegistrationStyle.background)
         .presentationBackground(RegistrationStyle.background)
-        .presentationDetents([.large])
-        .presentationDragIndicator(.visible)
         .task { await viewModel.load() }
         .onDisappear { viewModel.cancelLoading() }
     }

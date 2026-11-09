@@ -3,6 +3,8 @@ import SwiftUI
 struct GardenProfileFieldRow<Control: View>: View {
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
     let title: String
+    var message: String? = nil
+    var minimumHeight: CGFloat = 82
     @ViewBuilder var control: () -> Control
 
     var body: some View {
@@ -10,12 +12,15 @@ struct GardenProfileFieldRow<Control: View>: View {
             ? AnyLayout(VStackLayout(alignment: .leading, spacing: 12))
             : AnyLayout(HStackLayout(spacing: 16))
         layout {
-            Text(title).font(.body).frame(maxWidth: .infinity, alignment: .leading)
+            VStack(alignment: .leading, spacing: 4) {
+                Text(title).font(.body)
+                if let message { Text(message).font(.footnote).foregroundStyle(.secondary) }
+            }.frame(maxWidth: .infinity, alignment: .leading)
             control()
         }
-        .padding(16)
-        .frame(maxWidth: .infinity, minHeight: 76, alignment: .leading)
-        .background(GardenProfileStyle.field, in: RoundedRectangle(cornerRadius: 24))
+        .padding(.vertical, 12)
+        .frame(maxWidth: .infinity, minHeight: minimumHeight, alignment: .leading)
+
     }
 }
 

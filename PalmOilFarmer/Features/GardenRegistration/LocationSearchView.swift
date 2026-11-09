@@ -131,7 +131,6 @@ struct LocationSearchContent: View {
         }
         .background(RegistrationStyle.background)
         .presentationBackground(RegistrationStyle.background)
-        .presentationDragIndicator(.visible)
     }
 }
 

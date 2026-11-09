@@ -29,6 +29,16 @@ struct ReviewRequestView: View {
     init(flow: ReviewRequestFlow) { _flow = State(initialValue: flow) }
 
     var body: some View {
+        DynamicSheet(animation: .bouncy, size: .large) {
+            sheetContent
+        }
+        .presentationBackgroundInteraction(.disabled)
+        .presentationDragIndicator(.hidden)
+        .presentationContentInteraction(.scrolls)
+    }
+
+    @ViewBuilder
+    private var sheetContent: some View {
         @Bindable var coordinator = flow.coordinator
         @Bindable var model = flow.viewModel
         NavigationStack(path: $coordinator.path) {
@@ -45,7 +55,6 @@ struct ReviewRequestView: View {
         .onChange(of: coordinator.isFinished) { _, finished in
             if finished { dismiss() }
         }
-        .presentationDetents([.large])
         .alert("Persetujuan diperlukan", isPresented: $model.showsConsentError) {
             Button("Mengerti", role: .cancel) {}
         } message: { Text("Baca informasi dan setujui program peninjauan sebelum melanjutkan.") }

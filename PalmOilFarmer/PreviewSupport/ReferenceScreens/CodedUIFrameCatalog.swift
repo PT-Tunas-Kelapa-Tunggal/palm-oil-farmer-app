@@ -35,11 +35,8 @@ struct CodedUIFramePreview: View {
                 GardenProfileEditorView(model: GardenProfileCanvasFixtures.makeEditor(), onClose: {})
             case 8:
                 profile(garden: GardenPreviewData.fertilizedGarden)
-                    .overlay(alignment: .bottom) {
+                    .sheet(isPresented: .constant(true)) {
                         GardenProfileEditorView(model: GardenProfileCanvasFixtures.makeEditor(), onClose: {})
-                            .frame(height: 721)
-                            .background { SheetGlassBackground() }
-                            .padding(.bottom, -34)
                     }
             case 9:
                 SelectionListView(title: "Jenis Pupuk", options: FertilizerCatalogue.names, selected: "Urea",
@@ -91,12 +88,8 @@ struct CodedUIFramePreview: View {
             case 37:
                 details
             case 38:
-                details.overlay(alignment: .bottom) {
+                details.sheet(isPresented: .constant(true)) {
                     PlantingDatePickerView(onConfirm: { _, _ in })
-                        .frame(height: 351)
-                        .background { SheetGlassBackground() }
-                        .padding(.horizontal, 8)
-                        .padding(.bottom, -34)
                 }
             case 39:
                 SelectionListView(title: "Jenis Tanah", options: SoilType.allCases.map(\.displayName),

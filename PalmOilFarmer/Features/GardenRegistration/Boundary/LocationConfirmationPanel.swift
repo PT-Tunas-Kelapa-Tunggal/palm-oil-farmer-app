@@ -17,12 +17,15 @@ struct LocationConfirmationPanel: View {
 
     var body: some View {
         MapBottomPanel {
-            VStack(spacing: 16) {
-                VStack(spacing: 4) {
-                    Text(location.name).font(.title2.bold())
+            VStack(spacing: 24) {
+                VStack(spacing: 8) {
+                    Text(location.name)
+                        .font(.title2.bold())
+                        .accessibilityAddTraits(.isHeader)
                     Text(location.subtitle).font(.subheadline).foregroundStyle(.secondary)
                     Text(coordinateText).font(.footnote).foregroundStyle(.tertiary)
                 }
+                .frame(maxWidth: .infinity, alignment: .center)
                 .multilineTextAlignment(.center)
                 .fixedSize(horizontal: false, vertical: true)
                 RegistrationPrimaryButton(
@@ -35,17 +38,32 @@ struct LocationConfirmationPanel: View {
 }
 
 #if DEBUG
+private let confirmationPreviewLocation = GardenLocation(
+    name: "Malang Rapat",
+    subtitle: "Kecamatan Gunung Kijang, Kabupaten Bintan, Kepulauan Riau",
+    coordinate: GardenCoordinate(latitude: 1.104950, longitude: 104.121010),
+    source: .photo
+)
+
 #Preview("Konfirmasi lokasi") {
     Color.gray
-        .overlay(alignment: .bottom) {
-            LocationConfirmationPanel(location: GardenPreviewData.location, onBack: {}, onContinue: {})
+        .sheet(isPresented: .constant(true)) {
+            DynamicSheet(animation: .bouncy, size: .small) {
+                LocationConfirmationPanel(location: confirmationPreviewLocation, onBack: {}, onContinue: {})
+            }
+            .presentationBackgroundInteraction(.enabled)
+            .presentationDragIndicator(.hidden)
         }
         .ignoresSafeArea(.container, edges: .bottom)
 }
 #Preview("Konfirmasi lokasi · Teks besar") {
     Color.gray
-        .overlay(alignment: .bottom) {
-            LocationConfirmationPanel(location: GardenPreviewData.location, onBack: {}, onContinue: {})
+        .sheet(isPresented: .constant(true)) {
+            DynamicSheet(animation: .bouncy, size: .small) {
+                LocationConfirmationPanel(location: confirmationPreviewLocation, onBack: {}, onContinue: {})
+            }
+            .presentationBackgroundInteraction(.enabled)
+            .presentationDragIndicator(.hidden)
         }
         .ignoresSafeArea(.container, edges: .bottom)
         .environment(\.dynamicTypeSize, .accessibility3)

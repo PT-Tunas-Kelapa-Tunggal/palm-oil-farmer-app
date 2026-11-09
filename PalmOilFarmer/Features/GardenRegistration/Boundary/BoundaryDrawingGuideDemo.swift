@@ -7,6 +7,7 @@ struct BoundaryDrawingGuideDemo: View {
     let center: CLLocationCoordinate2D
     let longitudeDelta: Double
     let isPlaying: Bool
+    var bottomSheetHeight: CGFloat = 0
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.scenePhase) private var scenePhase
@@ -28,13 +29,14 @@ struct BoundaryDrawingGuideDemo: View {
         let step: BoundaryDrawingGuideStep
         let width: CGFloat
         let height: CGFloat
+        let obscuredHeight: CGFloat
         let isPlaying: Bool
         let reduceMotion: Bool
     }
 
     var body: some View {
         GeometryReader { geometry in
-            let obscuredHeight = BoundaryDrawingGuideStyle.sheetHeight
+            let obscuredHeight = bottomSheetHeight
                 + geometry.safeAreaInsets.bottom + KropsTheme.Spacing.section
             let visibleHeight = max(1, geometry.size.height - obscuredHeight)
             let unit = min(geometry.size.width / 402, visibleHeight / 624)
@@ -44,6 +46,7 @@ struct BoundaryDrawingGuideDemo: View {
             )
             let playback = Playback(
                 step: step, width: geometry.size.width, height: geometry.size.height,
+                obscuredHeight: obscuredHeight,
                 isPlaying: isPlaying && scenePhase == .active, reduceMotion: reduceMotion
             )
 

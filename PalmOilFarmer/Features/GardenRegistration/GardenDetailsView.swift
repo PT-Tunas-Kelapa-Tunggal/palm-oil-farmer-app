@@ -20,6 +20,16 @@ struct GardenDetailsView: View {
     }
 
     var body: some View {
+        DynamicSheet(animation: .bouncy, size: .large) {
+            sheetContent
+        }
+        .presentationBackgroundInteraction(.disabled)
+        .presentationDragIndicator(.hidden)
+        .presentationContentInteraction(.scrolls)
+    }
+
+    @ViewBuilder
+    private var sheetContent: some View {
         @Bindable var model = flow.viewModel
         @Bindable var coordinator = flow.coordinator
         let metricsLayout = dynamicTypeSize.isAccessibilitySize
@@ -34,7 +44,7 @@ struct GardenDetailsView: View {
                 VStack(spacing: 0) {
                     VStack(spacing: 0) {
                         Color.clear
-                            .frame(height: RegistrationStyle.mapHeight)
+                            .frame(height: 176)
                             .overlay {
                                 GardenMapView(boundary: boundary, referenceImage: referenceMapImage, showsAnnotations: true)
                             }
@@ -66,7 +76,6 @@ struct GardenDetailsView: View {
                                     .accessibilityIdentifier("gardenName")
                             }
                         }
-                        Divider()
                         RegistrationFormField(title: "Tahun Tanam") {
                             Button {
                                 isNameFocused = false
@@ -81,7 +90,6 @@ struct GardenDetailsView: View {
                             .accessibilityLabel("Tahun Tanam")
                             .accessibilityValue(model.plantingYear.map(String.init) ?? "Belum dipilih")
                         }
-                        Divider()
                         RegistrationFormField(title: "Jenis Tanah") {
                             Menu {
                                 Picker("Jenis Tanah", selection: $model.soilType) {
@@ -101,6 +109,7 @@ struct GardenDetailsView: View {
                         }
                     }
                     .padding(.horizontal, 16)
+                    .padding(.bottom, 16)
                     .background(RegistrationStyle.surface, in: RoundedRectangle(cornerRadius: RegistrationStyle.cardRadius))
                     .padding(.horizontal, 16)
                 }
@@ -121,12 +130,9 @@ struct GardenDetailsView: View {
             }
         }
         .presentationBackground(RegistrationStyle.background)
-        .presentationDragIndicator(.visible)
         .onChange(of: coordinator.isFinished) { _, finished in
             if finished { dismiss() }
         }
-        .presentationDetents([.large])
-        .interactiveDismissDisabled(!model.name.isEmpty)
         .alert("Kebun belum tersimpan", isPresented: $model.showsSaveError) {
             Button("Mengerti", role: .cancel) {}
         } message: {
@@ -152,6 +158,7 @@ struct GardenDetailsView: View {
             Label(title, systemImage: title == "Luas" ? "square.dashed.inset.filled" : "square.dashed")
                 .font(.footnote)
                 .foregroundStyle(.secondary)
+                .labelStyle(RegistrationMetricLabelStyle())
             Text(value).font(.title.bold())
         }
         .frame(maxWidth: .infinity, alignment: .leading)
@@ -169,14 +176,25 @@ struct RegistrationFormField<Content: View>: View {
     @ViewBuilder let content: () -> Content
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 0) {
+        VStack(alignment: .leading, spacing: KropsTheme.Spacing.compact) {
             Text(title).font(.body.weight(.semibold)).foregroundStyle(.secondary)
             content()
-                .font(.title3)
+                .font(KropsTheme.Typography.body)
                 .frame(minHeight: 52)
+                .padding(.horizontal, KropsTheme.Spacing.field)
+                .background(KropsTheme.secondaryFill, in: RoundedRectangle(cornerRadius: 12))
         }
         .padding(.top, 16)
         .frame(maxWidth: .infinity, alignment: .leading)
+    }
+}
+
+private struct RegistrationMetricLabelStyle: LabelStyle {
+    func makeBody(configuration: Configuration) -> some View {
+        HStack(spacing: 4) {
+            configuration.icon.foregroundStyle(RegistrationStyle.actionTint)
+            configuration.title
+        }
     }
 }
 

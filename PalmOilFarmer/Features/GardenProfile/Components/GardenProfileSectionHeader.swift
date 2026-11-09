@@ -6,11 +6,11 @@ struct GardenProfileSectionHeader: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 4) {
-            Text(title).font(.title2.bold()).accessibilityAddTraits(.isHeader)
-            if let message { Text(message).font(.body).foregroundStyle(.secondary) }
+            Text(title).font(.title3.weight(.semibold)).frame(minHeight: 29, alignment: .leading).accessibilityAddTraits(.isHeader)
+            if let message { Text(message).font(.subheadline).foregroundStyle(.secondary) }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
-        .padding(.horizontal, 8)
+        .padding(.horizontal, 16)
     }
 }
 

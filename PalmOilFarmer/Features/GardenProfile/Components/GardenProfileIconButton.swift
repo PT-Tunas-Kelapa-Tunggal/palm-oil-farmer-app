@@ -8,7 +8,7 @@ struct GardenProfileIconButton: View {
     var body: some View {
         Button(action: action) {
             Image(systemName: symbol).font(.system(size: 22))
-                .frame(width: 48, height: 48)
+                .frame(width: 44, height: 44)
         }
         .buttonStyle(.plain).glassEffect(.regular.interactive(), in: Circle())
         .foregroundStyle(.primary)

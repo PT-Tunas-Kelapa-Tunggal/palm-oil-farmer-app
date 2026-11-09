@@ -16,6 +16,16 @@ struct PlantingDatePickerView: View {
     }
 
     var body: some View {
+        DynamicSheet(animation: .bouncy, size: .medium) {
+            sheetContent
+        }
+        .presentationBackgroundInteraction(.disabled)
+        .presentationDragIndicator(.hidden)
+        .presentationContentInteraction(.scrolls)
+    }
+
+    @ViewBuilder
+    private var sheetContent: some View {
         VStack(spacing: 0) {
             VStack(spacing: 12) {
                 if dynamicTypeSize.isAccessibilitySize {
@@ -34,52 +44,48 @@ struct PlantingDatePickerView: View {
                     }
                 }
             }
-            .buttonStyle(.glass)
-            .buttonBorderShape(.capsule)
-            .controlSize(.large)
             .padding(.horizontal, 16)
             .padding(.top, 12)
             .padding(.bottom, 8)
-            if dynamicTypeSize.isAccessibilitySize {
-                VStack(alignment: .leading, spacing: 16) {
-                    monthPicker.pickerStyle(.menu)
-                    yearPicker.pickerStyle(.menu)
+            ScrollView {
+                VStack(spacing: 0) {
+                    if dynamicTypeSize.isAccessibilitySize {
+                        VStack(alignment: .leading, spacing: 16) {
+                            monthPicker.pickerStyle(.menu)
+                            yearPicker.pickerStyle(.menu)
+                        }
+                        .font(.title3)
+                        .padding(24)
+                    } else {
+                        HStack(spacing: 0) {
+                            monthPicker
+                            yearPicker
+                        }
+                        .pickerStyle(.wheel)
+                        .frame(height: 217)
+                        .padding(.horizontal, 16)
+                        .padding(.bottom, 12)
+                        Text("Jika lupa bulan tanam, pilih perkiraan saja.")
+                            .font(.footnote).foregroundStyle(.secondary)
+                            .padding(.bottom, 24)
+                    }
                 }
-                .font(.title3)
-                .padding(24)
-            } else {
-                HStack(spacing: 0) {
-                    monthPicker
-                    yearPicker
-                }
-                .pickerStyle(.wheel)
-                .frame(height: 217)
-                .padding(.horizontal, 16)
-                .padding(.bottom, 12)
-                Text("Kalau lupa bulannya, pilih perkiraan saja.")
-                    .font(.footnote).foregroundStyle(.secondary)
-                    .padding(.bottom, 24)
             }
+            .scrollBounceBehavior(.basedOnSize)
         }
-        .fittedSheetHeight()
-        .presentationDragIndicator(.visible)
     }
 
     private var cancelButton: some View {
-        Button { dismiss() } label: {
-            Image(systemName: "xmark").font(.title2).accessibilityLabel("Batal")
+        RegistrationIconButton(symbol: "xmark", label: "Batal") {
+            dismiss()
         }
     }
 
     private var confirmButton: some View {
-        Button {
+        RegistrationIconButton(symbol: "checkmark", label: "Selesai", isProminent: true) {
             onConfirm(month, year)
             dismiss()
-        } label: {
-            Image(systemName: "checkmark").font(.title2).accessibilityLabel("Selesai")
         }
-        .buttonStyle(.glassProminent)
-        .tint(RegistrationStyle.actionTint)
     }
 
     private var monthPicker: some View {

@@ -11,25 +11,18 @@ struct RegistrationFramePreview: View {
     var selectedLocation: GardenLocation? = nil
     var body: some View {
         GardenListView(onRegisterGarden: {})
-            .overlay(alignment: .bottom) {
-                Group {
-                    if step == .guide {
-                        RegistrationIntroView(onLocate: { _ in })
-                            .frame(height: 412)
-                    } else {
+            .sheet(isPresented: .constant(true)) {
+                if step == .guide {
+                    RegistrationIntroView(onLocate: { _ in })
+                } else {
+                    DynamicSheet(animation: .bouncy, size: .large) {
                         LocationSearchView(initialQuery: selectedLocation?.name ?? "",
                                            initialResults: selectedLocation.map { [$0] } ?? [],
                                            onSelect: { _ in })
-                            .frame(height: 816)
                     }
+                    .presentationBackgroundInteraction(.disabled)
+                    .presentationDragIndicator(.hidden)
                 }
-                .id(step)
-                .background { SheetGlassBackground() }
-                .overlay(alignment: .top) {
-                    Capsule().fill(.secondary.opacity(0.5)).frame(width: 60, height: 4).padding(.top, 5)
-                }
-                .padding(.horizontal, step == .guide ? 8 : 0)
-                .padding(.bottom, -34)
             }
     }
 }
@@ -38,14 +31,14 @@ struct SearchFramePreview: View {
     var query = ""
     var body: some View {
         GardenListView(onRegisterGarden: {})
-            .overlay(alignment: .bottom) {
-                LocationSearchView(initialQuery: query,
-                                   initialResults: query.isEmpty ? [] : [GardenPreviewData.location],
-                                   onSelect: { _ in })
-                    .id(query)
-                    .frame(height: 816)
-                    .background { SheetGlassBackground() }
-                    .padding(.bottom, -34)
+            .sheet(isPresented: .constant(true)) {
+                DynamicSheet(animation: .bouncy, size: .large) {
+                    LocationSearchView(initialQuery: query,
+                                       initialResults: query.isEmpty ? [] : [GardenPreviewData.location],
+                                       onSelect: { _ in })
+                }
+                .presentationBackgroundInteraction(.disabled)
+                .presentationDragIndicator(.hidden)
             }
     }
 }

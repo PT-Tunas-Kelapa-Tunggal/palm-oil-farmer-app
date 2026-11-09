@@ -16,6 +16,7 @@ final class DraftPlantationRequest {
     var plantingMonth: Int?
     var soilTypeRawValue: String?
     var fertilizerData: Data?
+    var profileUpdatedAt: Date?
     var fertilizationFrequencyPerYear: Int?
     var harvestData: Data?
     var farmerName: String?
@@ -42,7 +43,8 @@ final class DraftPlantationRequest {
         farmerAddress: String? = nil,
         createdAt: Date = .now,
         isBoundaryMapped: Bool = false,
-        fertilizationFrequencyPerYear: Int? = nil
+        fertilizationFrequencyPerYear: Int? = nil,
+        profileUpdatedAt: Date? = nil
     ) {
         self.id = id
         self.name = name
@@ -62,6 +64,7 @@ final class DraftPlantationRequest {
         self.createdAt = createdAt
         self.isBoundaryMapped = isBoundaryMapped
         self.fertilizationFrequencyPerYear = fertilizationFrequencyPerYear
+        self.profileUpdatedAt = profileUpdatedAt
     }
 
     // MARK: - Convenient Domain Conversions
@@ -145,7 +148,8 @@ final class DraftPlantationRequest {
             harvestRecord: harvestRecord,
             review: nil,
             createdAt: createdAt,
-            fertilizationFrequencyPerYear: fertilizationFrequencyPerYear
+            fertilizationFrequencyPerYear: fertilizationFrequencyPerYear,
+            profileUpdatedAt: profileUpdatedAt
         )
     }
 
@@ -183,7 +187,8 @@ final class DraftPlantationRequest {
             harvestData: harvestData,
             createdAt: garden.createdAt ?? .now,
             isBoundaryMapped: true,
-            fertilizationFrequencyPerYear: garden.fertilizationFrequencyPerYear
+            fertilizationFrequencyPerYear: garden.fertilizationFrequencyPerYear,
+            profileUpdatedAt: garden.profileUpdatedAt
         )
     }
 }

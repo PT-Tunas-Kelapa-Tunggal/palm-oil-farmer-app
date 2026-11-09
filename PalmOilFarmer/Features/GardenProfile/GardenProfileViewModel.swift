@@ -45,18 +45,21 @@ final class GardenProfileViewModel {
         updated.harvestRecord = harvest
         updated.fertilizationFrequencyPerYear = frequency
         updated.fertilizerRecords = fertilizers
+        updated.profileUpdatedAt = .now
         return source.update(updated)
     }
 
     func saveFertilizers(_ records: [FertilizerRecord]) -> Bool {
         guard isActive(), !hasDeleted, var updated = currentGarden else { return false }
         updated.fertilizerRecords = records
+        updated.profileUpdatedAt = .now
         return source.update(updated)
     }
 
     func saveHarvest(_ record: HarvestRecord) -> Bool {
         guard isActive(), !hasDeleted, var updated = currentGarden else { return false }
         updated.harvestRecord = record
+        updated.profileUpdatedAt = .now
         return source.update(updated)
     }
 
@@ -66,7 +69,7 @@ final class GardenProfileViewModel {
             id: latest.id, name: edited.name, locationName: latest.locationName, boundary: latest.boundary,
             plantingYear: edited.plantingYear, soilType: edited.soilType, plantingMonth: edited.plantingMonth,
             fertilizerRecords: latest.fertilizerRecords, harvestRecord: latest.harvestRecord,
-            review: latest.review, createdAt: latest.createdAt, fertilizationFrequencyPerYear: latest.fertilizationFrequencyPerYear
+            review: latest.review, createdAt: latest.createdAt, fertilizationFrequencyPerYear: latest.fertilizationFrequencyPerYear, profileUpdatedAt: latest.profileUpdatedAt
         )
         return source.update(updated)
     }

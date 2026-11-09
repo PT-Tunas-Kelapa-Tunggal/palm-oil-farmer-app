@@ -14,7 +14,7 @@ struct GardenListView: View {
     /// Debug builds only: opens developer tools when the title is held.
     var onOpenDeveloperMode: (() -> Void)? = nil
     @State private var selectedFilter = GardenListFilter.all
-    @AppStorage(DeveloperSettings.showsHomeFilterKey) private var showsFilter = true
+    @AppStorage(DeveloperSettings.showsHomeFilterKey) private var showsFilter = false
 
     var body: some View {
         GardenListContent(

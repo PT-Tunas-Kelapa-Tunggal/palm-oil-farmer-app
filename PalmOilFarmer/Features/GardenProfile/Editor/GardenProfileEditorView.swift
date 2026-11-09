@@ -12,40 +12,51 @@ struct GardenProfileEditorView: View {
     }
 
     var body: some View {
+        DynamicSheet(animation: .bouncy, size: .large) {
+            sheetContent
+        }
+        .presentationBackgroundInteraction(.disabled)
+        .presentationDragIndicator(.hidden)
+        .presentationContentInteraction(.scrolls)
+    }
+
+    @ViewBuilder
+    private var sheetContent: some View {
         @Bindable var model = model
         VStack(spacing: 0) {
             GardenProfileHeader(onBack: close)
             ScrollView {
-                VStack(spacing: 24) {
-                    VStack(spacing: 16) {
+                VStack(spacing: 28) {
+                    VStack(spacing: 8) {
                         GardenProfileSectionHeader(title: "Riwayat Panen")
-                        VStack(spacing: 8) {
-                            GardenProfileFieldRow(title: "Frekuensi Panen dalam Sebulan") {
+                        VStack(spacing: 0) {
+                            GardenProfileFieldRow(title: "Frekuensi panen", message: "Berapa kali panen dalam sebulan") {
                                 FrequencyStepper(value: $model.harvestFrequency,
                                                         range: HarvestRecord.frequencyRange, label: "Frekuensi panen per bulan")
                             }
-                            GardenProfileFieldRow(title: "Rata-rata berat hasil panen dalam sebulan") {
-                                HStack(spacing: 16) {
+                            Divider()
+                            GardenProfileFieldRow(title: "Rata-rata hasil panen", message: "Total berat buah dalam\nsebulan", minimumHeight: 88) {
+                                HStack(spacing: 6) {
                                     TextField("0", value: $model.monthlyWeightKg, format: .number)
-                                        .font(.largeTitle.bold()).multilineTextAlignment(.center)
+                                        .font(.title3.weight(.semibold)).multilineTextAlignment(.center)
                                         .keyboardType(.decimalPad).focused($focusedField, equals: .monthlyHarvestWeight)
-                                        .frame(minWidth: 64, idealWidth: 88, maxWidth: dynamicTypeSize.isAccessibilitySize ? .infinity : 88)
+                                        .frame(minWidth: 48, idealWidth: 64, maxWidth: dynamicTypeSize.isAccessibilitySize ? .infinity : 64)
                                         .accessibilityLabel("Rata-rata berat panen per bulan, kilogram")
-                                    Text("kg").font(.title2.bold())
-                                }
+                                    Text("kg").font(.body).foregroundStyle(.secondary)
+                                }.padding(10).background(Color(uiColor: .tertiarySystemFill), in: RoundedRectangle(cornerRadius: 12))
                             }
-                        }
+                        }.padding(.horizontal, 16).background(GardenProfileStyle.card, in: RoundedRectangle(cornerRadius: 20))
                     }
-                    VStack(spacing: 16) {
-                        GardenProfileSectionHeader(title: "Frekuensi Pemupukan")
-                        GardenProfileFieldRow(title: "Frekuensi Pemupukan dalam setahun") {
+                    VStack(spacing: 8) {
+                        GardenProfileSectionHeader(title: "Riwayat Pemupukan")
+                        GardenProfileFieldRow(title: "Frekuensi pemupukan", message: "Berapa kali memupuk dalam setahun") {
                             FrequencyStepper(value: $model.fertilizationFrequency, range: GardenProfileValidation.fertilizationFrequencyRange,
                                                     label: "Frekuensi pemupukan per tahun")
-                        }
+                        }.padding(.horizontal, 16).background(GardenProfileStyle.card, in: RoundedRectangle(cornerRadius: 20))
                     }
-                    VStack(spacing: 16) {
+                    VStack(spacing: 8) {
                         GardenProfileSectionHeader(title: "Jenis Pupuk",
-                                            message: "Data pupuk yang diaplikasikan di kebun ini dalam periode pemupukan terakhir")
+                                            message: "Pupuk yang diberikan pada pemupukan terakhir.")
                         ForEach($model.fertilizers) { $draft in
                             FertilizerInputCard(draft: $draft, focusedField: $focusedField)
                                 .contextMenu {
@@ -56,16 +67,16 @@ struct GardenProfileEditorView: View {
                         Button { model.addFertilizer() } label: {
                             Label("Tambah jenis pupuk", systemImage: "plus")
                                 .font(.body).frame(maxWidth: .infinity, minHeight: 52)
-                                .background(Color(uiColor: .tertiarySystemFill), in: Capsule())
+                                .foregroundStyle(GardenProfileStyle.accent)
                         }
                         .buttonStyle(.plain)
                     }
-                    GardenProfileActionButton(title: "Simpan") {
+                    GardenProfileActionButton(title: "Simpan Profil Kebun") {
                         focusedField = nil
                         _ = model.save()
                     }
                 }
-                .padding(.horizontal, 16).padding(.top, 8).padding(.bottom, 32)
+                .padding(.horizontal, 16).padding(.top, 20).padding(.bottom, 34)
             }
             .scrollDismissesKeyboard(.interactively)
         }
@@ -79,7 +90,6 @@ struct GardenProfileEditorView: View {
         .alert("Profil belum tersimpan", isPresented: Binding(
             get: { model.errorMessage != nil }, set: { if !$0 { model.validationIssue = nil } }
         )) { Button("Mengerti", role: .cancel) {} } message: { Text(model.errorMessage ?? "") }
-        .presentationDetents([.large]).presentationDragIndicator(.hidden)
         .toolbar(.hidden, for: .navigationBar)
     }
 

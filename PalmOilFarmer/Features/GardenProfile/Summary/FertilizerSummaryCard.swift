@@ -4,23 +4,60 @@ struct FertilizerSummaryCard: View {
     let record: FertilizerRecord
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            Text(record.composition.map { record.name + " " + $0.label } ?? record.name).font(.headline)
+        VStack(alignment: .leading, spacing: 0) {
+            VStack(alignment: .leading, spacing: 10) {
+                ViewThatFits(in: .horizontal) {
+                    HStack(spacing: 8) { title; category }
+                    VStack(alignment: .leading, spacing: 8) { title; category }
+                }
+                HStack(spacing: 6) {
+                    if let composition = record.composition {
+                        nutrient("N", value: composition.nitrogen)
+                        nutrient("P", value: composition.phosphorus)
+                        nutrient("K", value: composition.potassium)
+                        if let magnesium = composition.magnesium, magnesium > 0 { nutrient("Mg", value: magnesium) }
+                    } else if FertilizerCatalogue.kind(for: record.name) == .urea {
+                        nutrient("N", value: 46)
+                    }
+                }
+            }.padding(.top, 16).padding(.bottom, 17)
+            Divider()
+            HStack {
+                Text("Dosis per pohon")
+                Spacer()
+                Text(record.doseKgPerTree.formatted(.number.precision(.fractionLength(1))) + " kg").fontWeight(.semibold)
+            }.font(.body).padding(.vertical, 14)
             if let weight = record.bagWeightKg {
-                ProfileSummaryRow(title: "Berat per karung", value: weight.formatted() + "kg")
+                ProfileSummaryRow(title: "Berat per karung", value: weight.formatted() + " kg").padding(.bottom, 8)
             }
             if let count = record.bagCount {
-                ProfileSummaryRow(title: "Jumlah karung", value: "\(count) karung")
+                ProfileSummaryRow(title: "Jumlah karung", value: "\(count) karung").padding(.bottom, 8)
             }
-            if let magnesium = record.composition?.magnesium, magnesium > 0 {
-                ProfileSummaryRow(title: "Magnesium", value: magnesium.formatted() + "%")
-            }
-            ProfileSummaryRow(title: "Dosis", value: record.doseKgPerTree.formatted() + " kg / pohon")
         }
-        .padding(.horizontal, 16)
-        .padding(.vertical, 12)
-        .frame(maxWidth: .infinity, minHeight: record.bagWeightKg == nil && record.bagCount == nil ? nil : 130, alignment: .leading)
-        .background(GardenProfileStyle.field, in: RoundedRectangle(cornerRadius: 18))
+        .padding(.horizontal, 16).frame(maxWidth: .infinity, alignment: .leading)
+        .background(GardenProfileStyle.card, in: RoundedRectangle(cornerRadius: 20))
+    }
+
+    private var title: some View {
+        Text(record.composition.map { record.name.hasPrefix("NPK ") ? record.name : record.name + " " + $0.label } ?? record.name)
+            .font(.title2.bold())
+    }
+
+    private var category: some View {
+        Text(record.name.hasPrefix("NPK") ? "Majemuk" : "Tunggal")
+            .font(.footnote.weight(.medium)).foregroundStyle(.secondary)
+            .padding(.horizontal, 10).padding(.vertical, 5)
+            .background(Color(uiColor: .tertiarySystemFill), in: Capsule())
+    }
+
+    @ViewBuilder
+    private func nutrient(_ label: String, value: Double?) -> some View {
+        if let value {
+            Text("\(label) \(value.formatted())%")
+                .font(.footnote.weight(.medium)).foregroundStyle(GardenProfileStyle.accent)
+                .padding(.horizontal, 10).padding(.vertical, 5)
+                .background(Color(uiColor: .tertiarySystemFill), in: Capsule())
+        }
     }
 }
 

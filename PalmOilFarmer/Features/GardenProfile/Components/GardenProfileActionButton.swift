@@ -16,10 +16,10 @@ struct GardenProfileActionButton: View {
             }
             .font(.body.weight(.semibold)).multilineTextAlignment(.center)
             .fixedSize(horizontal: false, vertical: true)
-            .frame(maxWidth: .infinity)
+            .frame(maxWidth: .infinity, minHeight: 22)
         }
         .buttonStyle(.glassProminent).buttonBorderShape(.capsule)
-        .controlSize(.large).tint(Color(uiColor: .label))
+        .controlSize(.large).tint(GardenProfileStyle.accent)
     }
 }
 

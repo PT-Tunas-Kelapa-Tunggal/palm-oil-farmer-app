@@ -5,7 +5,7 @@ import SwiftUI
 @MainActor
 enum GardenProfileCanvasFixtures {
     static var emptyGarden: Garden {
-        var garden = GardenPreviewData.garden
+        var garden = Garden(id: UUID(), name: "Belakang Rumah", locationName: "Malang Rapat, Bintan", boundary: GardenPreviewData.boundary, plantingYear: 2016, soilType: .peat)
         garden.fertilizerRecords = nil
         garden.harvestRecord = nil
         garden.fertilizationFrequencyPerYear = nil
@@ -14,19 +14,20 @@ enum GardenProfileCanvasFixtures {
     }
 
     static var npkRecord: FertilizerRecord {
-        FertilizerRecord(name: "NPK", bagWeightKg: nil, bagCount: nil, doseKgPerTree: 0.5,
+        FertilizerRecord(name: "NPK", bagWeightKg: nil, bagCount: nil, doseKgPerTree: 1.0,
             composition: FertilizerComposition(nitrogen: 15, phosphorus: 15, potassium: 15))
     }
 
     static var harvestRecord: HarvestRecord {
-        HarvestRecord(frequencyPerMonth: 3, latestWeightKg: 140, averageMonthlyWeightKg: 420)
+        HarvestRecord(frequencyPerMonth: 2, latestWeightKg: 1050, averageMonthlyWeightKg: 2100)
     }
 
     static var completeGarden: Garden {
         var garden = emptyGarden
-        garden.fertilizerRecords = [npkRecord]
+        garden.fertilizerRecords = [npkRecord, FertilizerRecord(name: "Urea", bagWeightKg: nil, bagCount: nil, doseKgPerTree: 0.5)]
         garden.harvestRecord = harvestRecord
         garden.fertilizationFrequencyPerYear = 2
+        garden.profileUpdatedAt = Calendar(identifier: .gregorian).date(from: DateComponents(year: 2026, month: 11, day: 7, hour: 12))
         return garden
     }
 
@@ -48,10 +49,10 @@ enum GardenProfileCanvasFixtures {
             .makeFlow(garden: garden)
     }
 
-    static func content(complete: Bool) -> some View {
+    static func content(complete: Bool, justSaved: Bool = false) -> some View {
         GardenProfileContentView(garden: complete ? completeGarden : emptyGarden,
-            referenceMapImage: "ProfileReferenceSatellite", metrics: GardenPreviewData.metrics,
-            currentReviewStatus: nil, isComplete: complete,
+            referenceMapImage: "ProfileHiFiMap", metrics: GardenDisplayMetrics(area: "1,7 ha", perimeter: "540 m"),
+            profileJustSaved: justSaved, currentReviewStatus: nil, isComplete: complete,
             onBack: {}, onEditGarden: {}, onEditProfile: {}, onReviewAction: {},
             onViewSummary: {}, onViewReviewInformation: {})
     }
