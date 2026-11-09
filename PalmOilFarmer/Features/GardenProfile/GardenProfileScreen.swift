@@ -43,6 +43,14 @@ struct GardenProfileScreen: View {
                     sheetContent(presentation)
                 }
         }
+        .navigationDestination(item: reviewDestination) { presentation in
+            ReviewRequestView(flow: flow.makeReviewRequest(presentation))
+                .onDisappear {
+                    if flow.coordinator.sheet == nil {
+                        flow.coordinator.sheetDidDismiss()
+                    }
+                }
+        }
         .navigationDestination(isPresented: $coordinator.showsReviewStatus) {
             statusDestination
         }
@@ -56,8 +64,24 @@ struct GardenProfileScreen: View {
     }
 
     private var rootSheet: Binding<GardenProfileSheet?> {
-        Binding(get: { flow.coordinator.showsSummary ? nil : flow.coordinator.sheet },
-                set: { flow.coordinator.sheet = $0 })
+        Binding(
+            get: {
+                guard !flow.coordinator.showsSummary, flow.coordinator.sheet?.kind != .review else { return nil }
+                return flow.coordinator.sheet
+            },
+            set: { flow.coordinator.sheet = $0 }
+        )
+    }
+
+    private var reviewDestination: Binding<GardenProfileSheet?> {
+        Binding(
+            get: { flow.coordinator.sheet?.kind == .review ? flow.coordinator.sheet : nil },
+            set: { newValue in
+                if newValue == nil, flow.coordinator.sheet?.kind == .review {
+                    flow.coordinator.sheetDidDismiss()
+                }
+            }
+        )
     }
 
     private var deleteAction: (() -> Void)? {

@@ -110,11 +110,26 @@ struct GardenDetailsView: View {
                     }
                     .padding(.horizontal, 16)
                     .padding(.bottom, 16)
-                    .background(RegistrationStyle.surface, in: RoundedRectangle(cornerRadius: RegistrationStyle.cardRadius))
+                    .background {
+                        RoundedRectangle(cornerRadius: RegistrationStyle.cardRadius)
+                            .fill(RegistrationStyle.surface)
+                            .onTapGesture { isNameFocused = false }
+                    }
                     .padding(.horizontal, 16)
                 }
+                .background {
+                    Color.clear
+                        .contentShape(Rectangle())
+                        .onTapGesture { isNameFocused = false }
+                }
             }
-            .scrollDismissesKeyboard(.interactively)
+            .scrollBounceBehavior(.always)
+            .scrollDismissesKeyboard(.immediately)
+            .background {
+                Color.clear
+                    .contentShape(Rectangle())
+                    .onTapGesture { isNameFocused = false }
+            }
             .bottomActionBar {
                 RegistrationPrimaryButton(title: "Simpan Kebun", action: save)
                     .padding(.horizontal, 16)

@@ -1,8 +1,8 @@
 import Foundation
 import Observation
 
-struct GardenProfileSheet: Identifiable {
-    enum Kind { case details, review, profile, reviewInformation }
+struct GardenProfileSheet: Identifiable, Hashable {
+    enum Kind: Hashable { case details, review, profile, reviewInformation }
     let id = UUID()
     let kind: Kind
 }

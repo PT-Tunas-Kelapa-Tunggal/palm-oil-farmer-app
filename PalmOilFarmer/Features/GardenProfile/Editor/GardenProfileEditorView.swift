@@ -45,14 +45,22 @@ struct GardenProfileEditorView: View {
                                     Text("kg").font(.body).foregroundStyle(.secondary)
                                 }.padding(10).background(Color(uiColor: .tertiarySystemFill), in: RoundedRectangle(cornerRadius: 12))
                             }
-                        }.padding(.horizontal, 16).background(GardenProfileStyle.card, in: RoundedRectangle(cornerRadius: 20))
+                        }.padding(.horizontal, 16).background {
+                            RoundedRectangle(cornerRadius: 20)
+                                .fill(GardenProfileStyle.card)
+                                .onTapGesture { focusedField = nil }
+                        }
                     }
                     VStack(spacing: 8) {
                         GardenProfileSectionHeader(title: "Riwayat Pemupukan")
                         GardenProfileFieldRow(title: "Frekuensi pemupukan", message: "Berapa kali memupuk dalam setahun") {
                             FrequencyStepper(value: $model.fertilizationFrequency, range: GardenProfileValidation.fertilizationFrequencyRange,
                                                     label: "Frekuensi pemupukan per tahun")
-                        }.padding(.horizontal, 16).background(GardenProfileStyle.card, in: RoundedRectangle(cornerRadius: 20))
+                        }.padding(.horizontal, 16).background {
+                            RoundedRectangle(cornerRadius: 20)
+                                .fill(GardenProfileStyle.card)
+                                .onTapGesture { focusedField = nil }
+                        }
                     }
                     VStack(spacing: 8) {
                         GardenProfileSectionHeader(title: "Jenis Pupuk",
@@ -77,15 +85,24 @@ struct GardenProfileEditorView: View {
                     }
                 }
                 .padding(.horizontal, 16).padding(.top, 20).padding(.bottom, 34)
+                .background {
+                    Color.clear
+                        .contentShape(Rectangle())
+                        .onTapGesture { focusedField = nil }
+                }
             }
-            .scrollDismissesKeyboard(.interactively)
+            .scrollBounceBehavior(.always)
+            .scrollDismissesKeyboard(.immediately)
+            .background {
+                Color.clear
+                    .contentShape(Rectangle())
+                    .onTapGesture { focusedField = nil }
+            }
         }
-        .background(GardenProfileStyle.formBackground)
-        .safeAreaInset(edge: .bottom) {
-            if focusedField != nil {
-                KeyboardActionBar(onNext: model.nextField(after: focusedField).map { next in { focusedField = next } },
-                                  onDone: { focusedField = nil })
-            }
+        .background {
+            GardenProfileStyle.formBackground
+                .ignoresSafeArea()
+                .onTapGesture { focusedField = nil }
         }
         .alert("Profil belum tersimpan", isPresented: Binding(
             get: { model.errorMessage != nil }, set: { if !$0 { model.validationIssue = nil } }

@@ -10,10 +10,11 @@ struct FertilizerInputCard: View {
                 Text("Jenis pupuk").font(.body.weight(.semibold)).foregroundStyle(.secondary)
                 Menu {
                     Picker("Jenis pupuk", selection: $draft.kind) {
-                        if draft.kind == .unselected { Text("Pilih Jenis Pupuk").tag(FertilizerType.unselected) }
-                        ForEach(options, id: \.self) { kind in
+                        ForEach(primaryOptions, id: \.self) { kind in
                             Text(FertilizerCatalogue.displayName(for: kind)).tag(kind)
                         }
+                        Divider()
+                        Text(FertilizerCatalogue.displayName(for: .other)).tag(FertilizerType.other)
                     }
                 } label: {
                     HStack(spacing: 12) {
@@ -54,12 +55,16 @@ struct FertilizerInputCard: View {
         }
         .fixedSize(horizontal: false, vertical: true)
         .padding(.horizontal, 16).padding(.bottom, 8)
-        .background(GardenProfileStyle.card, in: RoundedRectangle(cornerRadius: 24))
+        .background {
+            RoundedRectangle(cornerRadius: 24)
+                .fill(GardenProfileStyle.card)
+                .onTapGesture { focusedField.wrappedValue = nil }
+        }
     }
 
-    private var options: [FertilizerType] {
-        let kinds: [FertilizerType] = [.urea, .za, .npk, .sp36, .kcl, .dolomite, .kieserite, .manure, .other]
-        return draft.kind == .unselected || kinds.contains(draft.kind) ? kinds : kinds + [draft.kind]
+    private var primaryOptions: [FertilizerType] {
+        let kinds: [FertilizerType] = [.urea, .za, .npk, .sp36, .kcl, .dolomite, .kieserite, .manure]
+        return draft.kind == .unselected || draft.kind == .other || kinds.contains(draft.kind) ? kinds : kinds + [draft.kind]
     }
 }
 

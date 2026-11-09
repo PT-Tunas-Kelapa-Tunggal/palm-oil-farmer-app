@@ -127,7 +127,7 @@ struct LocationSearchContent: View {
                 .padding(.top, 16)
                 .padding(.bottom, 16)
             }
-            .scrollDismissesKeyboard(.interactively)
+            .scrollDismissesKeyboard(.immediately)
         }
         .background(RegistrationStyle.background)
         .presentationBackground(RegistrationStyle.background)
