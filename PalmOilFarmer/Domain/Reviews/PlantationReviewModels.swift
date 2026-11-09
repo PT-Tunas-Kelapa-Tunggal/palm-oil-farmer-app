@@ -77,51 +77,59 @@ public struct AgronomicProfile: Sendable {
     public let soilType: String
     public let fertilizerRecords: [FertilizerUsage]
     public let harvestRecord: HarvestYield?
+    public let fertilizationFrequencyPerYear: Int?
 
     public init(
         plantingYear: Int,
         plantingMonth: Int? = nil,
         soilType: String,
         fertilizerRecords: [FertilizerUsage] = [],
-        harvestRecord: HarvestYield? = nil
+        harvestRecord: HarvestYield? = nil,
+        fertilizationFrequencyPerYear: Int? = nil
     ) {
         self.plantingYear = plantingYear
         self.plantingMonth = plantingMonth
         self.soilType = soilType
         self.fertilizerRecords = fertilizerRecords
         self.harvestRecord = harvestRecord
+        self.fertilizationFrequencyPerYear = fertilizationFrequencyPerYear
     }
 }
 
 public struct FertilizerUsage: Identifiable, Sendable {
     public let id: UUID
     public let name: String
-    public let bagWeightKg: Double
-    public let bagCount: Int
+    public let bagWeightKg: Double?
+    public let bagCount: Int?
     public let doseKgPerTree: Double
+    public let composition: FertilizerComposition?
 
     public init(
         id: UUID = UUID(),
         name: String,
-        bagWeightKg: Double,
-        bagCount: Int,
-        doseKgPerTree: Double
+        bagWeightKg: Double?,
+        bagCount: Int?,
+        doseKgPerTree: Double,
+        composition: FertilizerComposition? = nil
     ) {
         self.id = id
         self.name = name
         self.bagWeightKg = bagWeightKg
         self.bagCount = bagCount
         self.doseKgPerTree = doseKgPerTree
+        self.composition = composition
     }
 }
 
 public struct HarvestYield: Sendable {
     public let frequencyPerMonth: Int
     public let latestWeightKg: Double
+    public let averageMonthlyWeightKg: Double?
 
-    public init(frequencyPerMonth: Int, latestWeightKg: Double) {
+    public init(frequencyPerMonth: Int, latestWeightKg: Double, averageMonthlyWeightKg: Double? = nil) {
         self.frequencyPerMonth = frequencyPerMonth
         self.latestWeightKg = latestWeightKg
+        self.averageMonthlyWeightKg = averageMonthlyWeightKg
     }
 }
 

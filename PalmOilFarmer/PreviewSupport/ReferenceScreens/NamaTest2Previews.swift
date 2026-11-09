@@ -3,34 +3,26 @@ import SwiftUI
 
 /// Full-screen compositions reuse the production UI, with fixed Sketch map data for comparison.
 struct RegistrationFramePreview: View {
-    enum Frame {
+    enum Frame: Hashable {
         case guide, photo, address
     }
 
     let step: Frame
-    var photoStatus = LocationSearchView.PhotoStatus.idle
     var selectedLocation: GardenLocation? = nil
     var body: some View {
         GardenListView(onRegisterGarden: {})
-            .overlay(alignment: .bottom) {
-                Group {
-                    if step == .guide {
-                        RegistrationIntroView(onLocate: { _ in })
-                            .frame(height: 412)
-                    } else {
+            .sheet(isPresented: .constant(true)) {
+                if step == .guide {
+                    RegistrationIntroView(onLocate: { _ in })
+                } else {
+                    DynamicSheet(animation: .bouncy, size: .large) {
                         LocationSearchView(initialQuery: selectedLocation?.name ?? "",
                                            initialResults: selectedLocation.map { [$0] } ?? [],
-                                           initialPhotoStatus: photoStatus, onSelect: { _ in })
-                            .frame(height: 816)
+                                           onSelect: { _ in })
                     }
+                    .presentationBackgroundInteraction(.disabled)
+                    .presentationDragIndicator(.hidden)
                 }
-                .id("\(step)-\(photoStatus)")
-                .background { SheetGlassBackground() }
-                .overlay(alignment: .top) {
-                    Capsule().fill(.secondary.opacity(0.5)).frame(width: 60, height: 4).padding(.top, 5)
-                }
-                .padding(.horizontal, step == .guide ? 8 : 0)
-                .padding(.bottom, -34)
             }
     }
 }
@@ -39,14 +31,14 @@ struct SearchFramePreview: View {
     var query = ""
     var body: some View {
         GardenListView(onRegisterGarden: {})
-            .overlay(alignment: .bottom) {
-                LocationSearchView(initialQuery: query,
-                                   initialResults: query.isEmpty ? [] : [GardenPreviewData.location],
-                                   onSelect: { _ in })
-                    .id(query)
-                    .frame(height: 816)
-                    .background { SheetGlassBackground() }
-                    .padding(.bottom, -34)
+            .sheet(isPresented: .constant(true)) {
+                DynamicSheet(animation: .bouncy, size: .large) {
+                    LocationSearchView(initialQuery: query,
+                                       initialResults: query.isEmpty ? [] : [GardenPreviewData.location],
+                                       onSelect: { _ in })
+                }
+                .presentationBackgroundInteraction(.disabled)
+                .presentationDragIndicator(.hidden)
             }
     }
 }
@@ -72,8 +64,7 @@ struct BoundaryFramePreview: View {
         BoundaryEditorLayout(
             boundary: boundary,
             metrics: boundary.points.isEmpty ? GardenDisplayMetrics(area: "0 ha", perimeter: "0 m") : GardenPreviewData.metrics,
-            isRegionOverview: state == .region,
-            onClose: {}, onSkip: {}, onRecenter: {}, onUndo: {}, onClear: {}, onConfirm: {}
+            onClose: {}, onSearch: {}, onUndo: {}, onClear: {}, onConfirm: {}
         ) {
             BoundaryReferenceMap(state: state).id(String(describing: state))
         }
@@ -171,12 +162,6 @@ private struct BoundaryReferenceMap: View {
 }
 #Preview("04 · Pilih Foto · Sistem") {
     PhotoPickerFramePreview()
-}
-#Preview("05 · Foto Memuat · Full Frame") {
-    RegistrationFramePreview(step: .photo, photoStatus: .loading)
-}
-#Preview("06 · Foto Gagal · Full Frame") {
-    RegistrationFramePreview(step: .photo, photoStatus: .missingLocation)
 }
 #Preview("08 · Cari Kabupaten · Full Frame") {
     SearchFramePreview()

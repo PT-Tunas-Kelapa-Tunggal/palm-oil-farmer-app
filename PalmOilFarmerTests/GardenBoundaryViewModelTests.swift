@@ -23,7 +23,7 @@ struct GardenBoundaryViewModelTests {
         #expect(model.boundary.points.isEmpty)
     }
 
-    @Test func photoConfirmationBlocksMappingAndSearchAgainIsAvailableOnlyBeforeConfirmation() {
+    @Test func photoConfirmationBlocksMappingAndEmptyMapCanReturnToSearch() {
         var events: [GardenMappingEvent] = []
         let model = GardenBoundaryViewModel(location: mappingLocation(source: .photo), saving: RegistrationSavingSpy(),
             authorization: MappingAuthorizationStub(), allowsLocationDrafts: true, onEvent: { events.append($0) })
@@ -36,7 +36,7 @@ struct GardenBoundaryViewModelTests {
         model.searchAgain()
         mappingPoints().forEach(model.addPoint)
         model.confirmBoundary()
-        #expect(!model.isConfirmingPhoto && events == [.searchAgain, .showDetails])
+        #expect(!model.isConfirmingPhoto && events == [.searchAgain, .searchAgain, .showDetails])
         #expect(!model.canSaveLocationDraft)
     }
 
@@ -56,6 +56,29 @@ struct GardenBoundaryViewModelTests {
         model.movePoint(at: 1, to: points[1])
         model.confirmBoundary()
         #expect(events == [.showDetails])
+    }
+
+    @Test func closedPreviewStillAcceptsMoreCornersAndEveryPointRemainsMovable() {
+        let model = GardenBoundaryViewModel(location: mappingLocation(), saving: RegistrationSavingSpy(),
+            authorization: MappingAuthorizationStub(), allowsLocationDrafts: false, onEvent: { _ in })
+        let points = mappingPoints()
+        points.forEach(model.addPoint)
+        let fifth = GardenCoordinate(latitude: 1.001, longitude: 103.999)
+        model.addPoint(fifth)
+        #expect(model.boundary.points == points + [fifth])
+        #expect(model.canConfirmBoundary)
+        for index in model.boundary.points.indices {
+            let original = model.boundary.points[index]
+            model.movePoint(at: index, to: GardenCoordinate(latitude: original.latitude + 0.0001, longitude: original.longitude))
+            #expect(model.boundary.points.count == 5)
+            #expect(model.boundary.points[index].latitude == original.latitude + 0.0001)
+            model.movePoint(at: index, to: original)
+        }
+        #expect(model.canConfirmBoundary)
+        model.undo()
+        #expect(model.boundary.points == points && model.canConfirmBoundary)
+        model.undo()
+        #expect(model.boundary.points.count == 3 && !model.canConfirmBoundary)
     }
 
     @Test func skipRequiresAnEmptySearchLocationAndAnAvailableSaveCapability() {

@@ -29,7 +29,9 @@ struct GardenMappingFactory {
                         return !detailsCoordinator.isFinished && coordinator.isCurrentDetailsSession(sessionID)
                     },
                     onSave: { garden in
-                        saving.saveGarden(garden, completingDraft: location.draftID)
+                        let saved = saving.saveGarden(garden, completingDraft: location.draftID)
+                        if saved { coordinator.recordSavedGarden(garden.name) }
+                        return saved
                     }, onSaved: {
                         if let sessionID { coordinator.detailsSaved(sessionID: sessionID) }
                     }),

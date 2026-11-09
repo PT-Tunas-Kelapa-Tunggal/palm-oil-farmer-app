@@ -11,7 +11,13 @@ struct GardenCoordinate: Codable, Hashable {
 }
 
 struct GardenBoundary: Codable {
+    static let minimumMappingPointCount = 4
     var points: [GardenCoordinate] = []
+
+    /// New mappings require four corners; existing triangular gardens remain valid.
+    var isReadyForMapping: Bool {
+        points.count >= Self.minimumMappingPointCount && isValid
+    }
 
     /// A local tangent-plane approximation, suitable for small agricultural plots.
     var areaHectares: Double {

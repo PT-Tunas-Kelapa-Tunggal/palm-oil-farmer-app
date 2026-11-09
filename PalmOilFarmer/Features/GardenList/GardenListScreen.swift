@@ -4,7 +4,7 @@ import SwiftUI
 /// used by existing reference screens and the standalone experiment.
 struct GardenListScreen: View {
     @Bindable var viewModel: GardenListViewModel
-    @AppStorage(DeveloperSettings.showsHomeFilterKey) private var showsFilter = true
+    @AppStorage(DeveloperSettings.showsHomeFilterKey) private var showsFilter = false
 
     var body: some View {
         GardenListContent(

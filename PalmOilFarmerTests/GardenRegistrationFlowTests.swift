@@ -23,7 +23,7 @@ struct GardenRegistrationFlowTests {
         var selected: [GardenLocation] = []
         let coordinator = GardenRegistrationCoordinator(initialStep: .search, onLocate: { selected.append($0) }, onCancel: {})
         coordinator.openPhotoPicker()
-        coordinator.selectedPhoto(coordinate)
+        coordinator.selectedPhoto(GardenLocation(name: "Lokasi dari foto", subtitle: "Foto kebun", coordinate: coordinate, source: .photo))
         #expect(!coordinator.showsPhotoPicker && selected.isEmpty && !coordinator.isFinished)
         coordinator.photoPickerDidDismiss()
         coordinator.photoPickerDidDismiss()
@@ -40,7 +40,7 @@ struct GardenRegistrationFlowTests {
         coordinator.photoPickerDidDismiss()
         #expect(selections == 0 && !coordinator.isFinished && coordinator.step == .search)
         coordinator.openPhotoPicker()
-        coordinator.selectedPhoto(coordinate)
+        coordinator.selectedPhoto(GardenLocation(name: "Lokasi dari foto", subtitle: "Foto kebun", coordinate: coordinate, source: .photo))
         coordinator.photoPickerDidDismiss()
         #expect(selections == 1)
     }
@@ -50,7 +50,7 @@ struct GardenRegistrationFlowTests {
         let coordinator = GardenRegistrationCoordinator(initialStep: .search,
             onLocate: { _ in selections += 1 }, onCancel: { cancellations += 1 })
         coordinator.openPhotoPicker()
-        coordinator.selectedPhoto(coordinate)
+        coordinator.selectedPhoto(GardenLocation(name: "Lokasi dari foto", subtitle: "Foto kebun", coordinate: coordinate, source: .photo))
         coordinator.cancel()
         coordinator.cancel()
         coordinator.photoPickerDidDismiss()
@@ -65,7 +65,7 @@ struct GardenRegistrationFlowTests {
         coordinator.openPhotoPicker()
         coordinator.selectLocation(location())
         #expect(selected.isEmpty && coordinator.showsPhotoPicker)
-        coordinator.selectedPhoto(coordinate)
+        coordinator.selectedPhoto(GardenLocation(name: "Lokasi dari foto", subtitle: "Foto kebun", coordinate: coordinate, source: .photo))
         coordinator.selectLocation(location())
         #expect(selected.isEmpty)
         coordinator.photoPickerDidDismiss()

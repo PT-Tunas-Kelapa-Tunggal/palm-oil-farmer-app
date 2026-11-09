@@ -2,11 +2,12 @@
 
 Folder ini menyimpan entry point eksperimen (`FindingWaypointView.swift`), layar peta (`WaypointMapView.swift`), serta thumbnail/palette/preview data (`WaypointZoneThumbnail.swift`). Pada Part 2, file dipindahkan tanpa mengubah implementasi Swift, app entry point, model Garden, penyimpanan zona, assets, atau target pengujian.
 
-Kemampuan yang dipakai ulang oleh flow produksi berada di lokasi berikut:
+Pendukung eksperimen:
 
 - Session GPS: `PalmOilFarmer/Data/Location/WaypointLocationSession.swift`.
-- Geometri pembagian zona: `PalmOilFarmer/Features/AreaGuidance/Geometry/WaypointZoning.swift`.
-- Peta/picker/navigasi area produksi: `PalmOilFarmer/Features/AreaGuidance/AreaViews.swift`.
+- Geometri pembagian zona: `WaypointZoning.swift` di folder eksperimen ini.
+
+Peta, picker, dan navigasi AreaGuidance sudah dihapus dari halaman hasil peninjauan.
 
 Semua file masih dikompilasi dalam module app yang sama. Pemindahan folder tidak mengaktifkan eksperimen sebagai root app atau mengubah perilaku hasil peninjauan.
 
@@ -14,7 +15,7 @@ Semua file masih dikompilasi dalam module app yang sama. Pemindahan folder tidak
 
 - Buka FindingWaypointView.swift dan pilih preview “Finding Waypoint — data tersimpan” untuk tab Home/Pemupukan.
 - Preview “Pemupukan — contoh” dan “Zona 5” menggunakan data contoh yang tidak disimpan.
-- Untuk berjalan dengan GPS pada iPhone, ganti sementara ContentView() dengan FindingWaypointView() di WindowGroup PalmOilFarmerApp.swift, lalu Run ke iPhone. Build user testing memakai ContentView; zona eksperimen ini dipakai ulang sebagai area di Hasil Peninjauan (Alokasi pupuk dan Navigasi Area).
+- Untuk berjalan dengan GPS pada iPhone, ganti sementara ContentView() dengan FindingWaypointView() di WindowGroup PalmOilFarmerApp.swift, lalu Run ke iPhone. Build user testing memakai ContentView; panduan zona hanya tersedia melalui eksperimen ini.
 - Aktifkan internet dan izinkan lokasi saat aplikasi digunakan, termasuk Lokasi Tepat. Project sudah memiliki deskripsi izin lokasi.
 - Tab Home memakai GardenStore dan alur registrasi yang sudah ada: tambah/edit/hapus di Home memengaruhi data kebun asli.
 - Pemupukan → pilih kebun → pilih zona 1–6 → Mulai panduan. Tombol lokasi mengikuti posisi; menggeser peta melepaskan follow. Tombol peta menampilkan kebun kembali.

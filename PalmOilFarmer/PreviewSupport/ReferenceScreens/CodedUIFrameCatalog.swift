@@ -32,17 +32,11 @@ struct CodedUIFramePreview: View {
                                 state: index == 5 ? .referenceProgress : .completed,
                                 onMapBoundary: {}, referenceMapImage: "CodedRegionHero")
             case 7:
-                FertilizerHistoryEditor(
-                    records: [FertilizerRecord(name: "Dolomit Super", bagWeightKg: 50, bagCount: 6, doseKgPerTree: 1.5)],
-                    includesEmptyDraft: true, onSave: { _ in true }
-                )
+                GardenProfileEditorView(model: GardenProfileCanvasFixtures.makeEditor(), onClose: {})
             case 8:
                 profile(garden: GardenPreviewData.fertilizedGarden)
-                    .overlay(alignment: .bottom) {
-                        HarvestHistoryEditor(record: nil, onSave: { _ in true })
-                            .frame(height: 721)
-                            .background { SheetGlassBackground() }
-                            .padding(.bottom, -34)
+                    .sheet(isPresented: .constant(true)) {
+                        GardenProfileEditorView(model: GardenProfileCanvasFixtures.makeEditor(), onClose: {})
                     }
             case 9:
                 SelectionListView(title: "Jenis Pupuk", options: FertilizerCatalogue.names, selected: "Urea",
@@ -75,10 +69,6 @@ struct CodedUIFramePreview: View {
                 RegistrationFramePreview(step: .guide)
             case 26:
                 RegistrationFramePreview(step: .photo)
-            case 27:
-                RegistrationFramePreview(step: .photo, photoStatus: .loading)
-            case 28:
-                RegistrationFramePreview(step: .photo, photoStatus: .missingLocation)
             case 29:
                 RegistrationFramePreview(step: .address)
             case 30:
@@ -98,12 +88,8 @@ struct CodedUIFramePreview: View {
             case 37:
                 details
             case 38:
-                details.overlay(alignment: .bottom) {
+                details.sheet(isPresented: .constant(true)) {
                     PlantingDatePickerView(onConfirm: { _, _ in })
-                        .frame(height: 351)
-                        .background { SheetGlassBackground() }
-                        .padding(.horizontal, 8)
-                        .padding(.bottom, -34)
                 }
             case 39:
                 SelectionListView(title: "Jenis Tanah", options: SoilType.allCases.map(\.displayName),
@@ -131,15 +117,12 @@ struct CodedUIFramePreview: View {
             .background { SheetGlassBackground() }
     }
 
-    private func profile(garden: Garden, layout: GardenProfileLayout = .standard,
+    private func profile(garden: Garden, layout: GardenProfileReferenceLayout = .standard,
                          reviewStatus: ReviewStatus? = nil) -> some View {
-        GardenProfileView(
+        GardenProfileReferenceView(
             garden: garden, referenceMapImage: layout == .standard ? "CodedProfileMap" : "GardenProfileMap",
             metrics: GardenPreviewData.metrics, showsHeader: layout == .standard, layout: layout,
-            chartValues: [1, 3, 1.5, 0.5], reviewStatus: reviewStatus,
-            reviewEntries: reviewStatus.map { ReviewTimelineEntry.referenceEntries(for: $0) } ?? [],
-            recommendationReport: reviewStatus == .completed ? RecommendationPreviewData.report : nil,
-            onUpdate: { _ in true }
+            chartValues: [1, 3, 1.5, 0.5], reviewStatus: reviewStatus
         )
     }
 }
@@ -324,18 +307,6 @@ struct CodedPhotoGridReference: View {
 
 #Preview("27 · Daftar Kebun / Lokasi dari Foto / Default", traits: .fixedLayout(width: 402, height: 874)) {
     CodedUIFramePreview(index: 26)
-        .safeAreaPadding(.top, 62)
-        .safeAreaPadding(.bottom, 34)
-}
-
-#Preview("28 · Daftar Kebun / Lokasi dari Foto / Loading", traits: .fixedLayout(width: 402, height: 874)) {
-    CodedUIFramePreview(index: 27)
-        .safeAreaPadding(.top, 62)
-        .safeAreaPadding(.bottom, 34)
-}
-
-#Preview("29 · Daftar Kebun / Lokasi dari Foto / Error", traits: .fixedLayout(width: 402, height: 874)) {
-    CodedUIFramePreview(index: 28)
         .safeAreaPadding(.top, 62)
         .safeAreaPadding(.bottom, 34)
 }

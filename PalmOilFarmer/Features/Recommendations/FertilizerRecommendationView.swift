@@ -6,8 +6,6 @@ struct FertilizerRecommendationView: View {
     @State private var selectedTab: RecommendationTab
     @State private var selectedAreaID: String
     @State private var reference: NutrientReference?
-    @State private var showsAreaPicker = false
-    @State private var showsNavigation = false
     @Environment(\.dismiss) private var dismiss
 
     init(report: FertilizerRecommendationReport, initialTab: RecommendationTab = .nutrients) {
@@ -72,10 +70,7 @@ struct FertilizerRecommendationView: View {
                     case .allocation:
                         if let area = selectedArea {
                             Group {
-                                if area.zone != nil {
-                                    AllocationAreaMap(boundary: report.boundary, areas: report.areas,
-                                                      selectedID: area.id) { selectedAreaID = $0 }
-                                } else if let mapImage = area.mapImage {
+                                if let mapImage = area.mapImage {
                                     Image(mapImage).resizable().scaledToFill()
                                 } else {
                                     GardenMapView(boundary: report.boundary)
@@ -84,28 +79,12 @@ struct FertilizerRecommendationView: View {
                             .frame(height: 206)
                             .clipped()
                             .clipShape(RoundedRectangle(cornerRadius: 8))
-                            HStack {
-                                Button { showsAreaPicker = true } label: {
-                                    HStack(spacing: 6) {
-                                        Text("Area " + area.id).font(.headline)
-                                        Image(systemName: "chevron.down").font(.caption.weight(.semibold))
-                                    }
-                                }
-                                .buttonStyle(.glass)
-                                .buttonBorderShape(.capsule)
-                                .foregroundStyle(.primary)
-                                .accessibilityHint("Pilih area kebun lain")
-                                Spacer()
-                                if area.zone != nil {
-                                    Button { showsNavigation = true } label: {
-                                        Label("Buka Map", systemImage: "figure.walk")
-                                            .font(.subheadline.weight(.semibold))
-                                    }
-                                    .buttonStyle(.glass)
-                                    .buttonBorderShape(.capsule)
-                                    .foregroundStyle(.primary)
+                            Picker("Area kebun", selection: $selectedAreaID) {
+                                ForEach(report.areas) { area in
+                                    Text("Area " + area.id).tag(area.id)
                                 }
                             }
+                            .pickerStyle(.menu)
                             ForEach(area.periods) { period in
                                 FertilizerAllocationSection(period: period)
                             }
@@ -131,12 +110,7 @@ struct FertilizerRecommendationView: View {
         .sheet(item: $reference) { reference in
             NutrientReferenceView(reference: reference)
         }
-        .sheet(isPresented: $showsAreaPicker) {
-            AreaPickerView(areas: report.areas, selectedID: selectedAreaID) { selectedAreaID = $0 }
-        }
-        .fullScreenCover(isPresented: $showsNavigation) {
-            AreaNavigationView(boundary: report.boundary, areas: report.areas, selectedID: selectedAreaID)
-        }
+
     }
 }
 
@@ -193,8 +167,8 @@ struct FertilizerCostTable: View {
                 if dynamicTypeSize.isAccessibilitySize {
                     VStack(alignment: .leading, spacing: 8) {
                         Text(line.name).font(.headline)
-                        HistoryValueRow(title: "Jumlah (kg)", value: line.quantity)
-                        HistoryValueRow(title: "Biaya", value: line.cost)
+                        ProfileSummaryRow(title: "Jumlah (kg)", value: line.quantity)
+                        ProfileSummaryRow(title: "Biaya", value: line.cost)
                     }
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .padding(12)

@@ -31,23 +31,11 @@ struct GardenProfileFactory {
                     coordinator: editor
                 )
             },
-            makeFertilizerEditor: { sheet in
-                let editor = GardenHistoryEditorCoordinator()
-                return FertilizerHistoryFlow(
-                    viewModel: FertilizerHistoryViewModel(records: model.fertilizers,
-                        isActive: { !editor.isFinished && sheet.kind == .fertilizer && coordinator.isCurrent(sheet) },
-                        onSave: model.saveFertilizers, onSaved: { editor.close(); coordinator.closeSheet(sheet) }),
-                    coordinator: editor
-                )
-            },
-            makeHarvestEditor: { sheet in
-                let editor = GardenHistoryEditorCoordinator()
-                return HarvestHistoryFlow(
-                    viewModel: HarvestHistoryViewModel(record: model.garden.harvestRecord,
-                        isActive: { !editor.isFinished && sheet.kind == .harvest && coordinator.isCurrent(sheet) },
-                        onSave: model.saveHarvest, onSaved: { editor.close(); coordinator.closeSheet(sheet) }),
-                    coordinator: editor
-                )
+            makeProfileEditor: { sheet in
+                GardenProfileEditorViewModel(garden: model.garden,
+                    isActive: { sheet.kind == .profile && coordinator.isCurrent(sheet) },
+                    onSave: { model.saveProfile(harvest: $0, frequency: $1, fertilizers: $2) },
+                    onSaved: { coordinator.profileSaved(sheet) })
             }
         )
     }

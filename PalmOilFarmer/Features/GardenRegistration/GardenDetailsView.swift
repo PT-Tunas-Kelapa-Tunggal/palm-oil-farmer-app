@@ -20,104 +20,134 @@ struct GardenDetailsView: View {
     }
 
     var body: some View {
+        DynamicSheet(animation: .bouncy, size: .large) {
+            sheetContent
+        }
+        .presentationBackgroundInteraction(.disabled)
+        .presentationDragIndicator(.hidden)
+        .presentationContentInteraction(.scrolls)
+    }
+
+    @ViewBuilder
+    private var sheetContent: some View {
         @Bindable var model = flow.viewModel
         @Bindable var coordinator = flow.coordinator
-        let displayMetrics = displayMetrics
         let metricsLayout = dynamicTypeSize.isAccessibilitySize
             ? AnyLayout(VStackLayout(spacing: 7))
             : AnyLayout(HStackLayout(spacing: 7))
-        NavigationStack(path: $coordinator.path) {
-            VStack(spacing: 0) {
-                ScreenHeader(title: !model.isEditing ? "Data kebun" : "Edit kebun", onClose: {
-                    isNameFocused = false
-                    coordinator.close()
-                })
-                .simultaneousGesture(TapGesture().onEnded {
-                    isNameFocused = false
-                })
-                ScrollView {
+        VStack(spacing: 0) {
+            RegistrationHeader(title: model.isEditing ? "Edit Kebun" : "Data Kebun") {
+                isNameFocused = false
+                coordinator.close()
+            }
+            ScrollView {
+                VStack(spacing: 0) {
                     VStack(spacing: 0) {
-                        GardenMapView(boundary: boundary, referenceImage: referenceMapImage, showsAnnotations: true)
-                            .frame(height: 201)
-                            .simultaneousGesture(TapGesture().onEnded {
-                                isNameFocused = false
-                            })
-    
-                        TextField("Nama Kebun", text: $model.name)
-                            .font(.title)
-                            .textInputAutocapitalization(.words)
-                            .focused($isNameFocused)
-                            .submitLabel(.done)
-                            .onSubmit { isNameFocused = false }
-                            .accessibilityIdentifier("gardenName")
-                            .padding(16)
-                            .frame(minHeight: 66)
-    
+                        Color.clear
+                            .frame(height: 176)
+                            .overlay {
+                                GardenMapView(boundary: boundary, referenceImage: referenceMapImage, showsAnnotations: true)
+                            }
+                            .clipped()
+                            .simultaneousGesture(TapGesture().onEnded { isNameFocused = false })
                         metricsLayout {
-                            detailMetric("Luas tanah", value: displayMetrics.area)
-                            detailMetric("Perimeter", value: displayMetrics.perimeter)
+                            detailMetric("Luas", value: displayMetrics.area)
+                            Divider().frame(height: 36)
+                            detailMetric("Keliling", value: displayMetrics.perimeter)
                         }
-                        .padding(.horizontal, KropsTheme.Spacing.screen)
-                        .padding(.vertical, 8)
-                        .contentShape(Rectangle())
-                        .onTapGesture { isNameFocused = false }
-    
-                        VStack(spacing: 16) {
-                            FormSelectionRow(title: "Tahun Tanam", placeholder: "Pilih tahun tanam",
-                                             value: model.plantingYear.map { "\(PlantingDatePickerView.monthNames[model.plantingMonth - 1]) \($0)" },
-                                             systemImage: "calendar", trailingImage: "chevron.up.chevron.down") {
+                        .padding(.horizontal, 16)
+                        .padding(.vertical, 14)
+                    }
+                    .background(RegistrationStyle.surface)
+                    .clipShape(RoundedRectangle(cornerRadius: 24))
+                    .padding(.horizontal, 16)
+                    .padding(.top, 8)
+                    .padding(.bottom, 16)
+                    VStack(spacing: 0) {
+                        RegistrationFormField(title: "Nama Kebun") {
+                            HStack(spacing: 8) {
+                                Image(systemName: "mappin.and.ellipse").foregroundStyle(.secondary)
+                                TextField("cth: Pinggir jalan, Hilir sungai", text: $model.name)
+                                    .textInputAutocapitalization(.words)
+                                    .focused($isNameFocused)
+                                    .submitLabel(.done)
+                                    .onSubmit { isNameFocused = false }
+                                    .accessibilityLabel("Nama Kebun")
+                                    .accessibilityIdentifier("gardenName")
+                            }
+                        }
+                        RegistrationFormField(title: "Tahun Tanam") {
+                            Button {
                                 isNameFocused = false
                                 coordinator.openPlantingDate()
+                            } label: {
+                                selectionLabel(
+                                    model.plantingYear.map { "\(PlantingDatePickerView.monthNames[model.plantingMonth - 1]) \($0)" },
+                                    placeholder: "Pilih tahun tanam", symbol: "calendar", trailing: "chevron.right"
+                                )
                             }
-                            Divider()
-                            FormSelectionRow(title: "Jenis Tanah", placeholder: "Pilih jenis tanah",
-                                             value: model.soilType?.displayName, systemImage: "leaf.fill") {
-                                isNameFocused = false
-                                coordinator.openSoilTypes()
-                            }
+                            .buttonStyle(.plain)
+                            .accessibilityLabel("Tahun Tanam")
+                            .accessibilityValue(model.plantingYear.map(String.init) ?? "Belum dipilih")
                         }
-                        .padding(16)
-                        .background(KropsTheme.cardFill, in: RoundedRectangle(cornerRadius: KropsTheme.Radius.card))
-                        .padding(.horizontal, KropsTheme.Spacing.screen)
-                        .padding(.vertical, 8)
+                        RegistrationFormField(title: "Jenis Tanah") {
+                            Menu {
+                                Picker("Jenis Tanah", selection: $model.soilType) {
+                                    ForEach(SoilType.allCases) { soil in
+                                        Text(soil.displayName).tag(Optional(soil))
+                                    }
+                                }
+                            } label: {
+                                selectionLabel(model.soilType?.displayName,
+                                               placeholder: "Pilih jenis tanah", symbol: "leaf",
+                                               trailing: "chevron.up.chevron.down")
+                            }
+                            .tint(.primary)
+                            .onChange(of: model.soilType) { isNameFocused = false }
+                            .accessibilityLabel("Jenis Tanah")
+                            .accessibilityValue(model.soilType?.displayName ?? "Belum dipilih")
+                        }
                     }
+                    .padding(.horizontal, 16)
+                    .padding(.bottom, 16)
+                    .background {
+                        RoundedRectangle(cornerRadius: RegistrationStyle.cardRadius)
+                            .fill(RegistrationStyle.surface)
+                            .onTapGesture { isNameFocused = false }
+                    }
+                    .padding(.horizontal, 16)
                 }
-                .scrollDismissesKeyboard(.interactively)
                 .background {
                     Color.clear
                         .contentShape(Rectangle())
                         .onTapGesture { isNameFocused = false }
                 }
-                .bottomActionBar {
-                    PrimaryActionButton(title: "Simpan", action: save)
-                        .padding(.horizontal, 24)
-                        .padding(.top, 16)
-                        .padding(.bottom, 2)
-                }
             }
-            .containerBackground(.clear, for: .navigation)
-            .toolbar(.hidden, for: .navigationBar)
-            .navigationDestination(for: GardenDetailsRoute.self) { _ in
-                SelectionListView(
-                    title: "Jenis Tanah", options: SoilType.allCases.map(\.displayName),
-                    selected: model.soilType?.displayName,
-                    footer: "Jenis tanah membantu kami memahami kondisi kebun Anda. Pilih yang paling mendekati."
-                ) { selected in
-                    model.soilType = SoilType.allCases.first { $0.displayName == selected }
-                }
+            .scrollBounceBehavior(.always)
+            .scrollDismissesKeyboard(.immediately)
+            .background {
+                Color.clear
+                    .contentShape(Rectangle())
+                    .onTapGesture { isNameFocused = false }
             }
-            .sheet(isPresented: $coordinator.showsPlantingDate) {
-                PlantingDatePickerView(month: model.plantingMonth, year: model.plantingYear ?? 2016) { month, year in
-                    model.plantingMonth = month
-                    model.plantingYear = year
-                }
+            .bottomActionBar {
+                RegistrationPrimaryButton(title: "Simpan Kebun", action: save)
+                    .padding(.horizontal, 16)
+                    .padding(.top, 16)
+                    .padding(.bottom, 2)
             }
         }
+        .background(RegistrationStyle.background)
+        .sheet(isPresented: $coordinator.showsPlantingDate) {
+            PlantingDatePickerView(month: model.plantingMonth, year: model.plantingYear ?? Calendar.current.component(.year, from: .now)) { month, year in
+                model.plantingMonth = month
+                model.plantingYear = year
+            }
+        }
+        .presentationBackground(RegistrationStyle.background)
         .onChange(of: coordinator.isFinished) { _, finished in
             if finished { dismiss() }
         }
-        .presentationDetents([.large])
-        .interactiveDismissDisabled(!model.name.isEmpty)
         .alert("Kebun belum tersimpan", isPresented: $model.showsSaveError) {
             Button("Mengerti", role: .cancel) {}
         } message: {
@@ -125,15 +155,29 @@ struct GardenDetailsView: View {
         }
     }
 
-    private func detailMetric(_ title: String, value: String) -> some View {
-        VStack(spacing: 3) {
-            Text(title).font(.footnote)
-            Text(value).font(.headline)
+    private func selectionLabel(_ value: String?, placeholder: String, symbol: String, trailing: String) -> some View {
+        HStack(spacing: 8) {
+            Image(systemName: symbol).foregroundStyle(.secondary).accessibilityHidden(true)
+            Text(value ?? placeholder)
+                .foregroundStyle(value == nil ? Color(uiColor: .placeholderText) : .primary)
+                .fixedSize(horizontal: false, vertical: true)
+            Spacer(minLength: 0)
+            Image(systemName: trailing).font(.footnote).foregroundStyle(.tertiary)
         }
-        .padding(12)
-        .frame(maxWidth: .infinity)
-        .frame(minHeight: 72)
-        .background(KropsTheme.cardFill, in: RoundedRectangle(cornerRadius: KropsTheme.Radius.metric))
+        .frame(maxWidth: .infinity, minHeight: 44, alignment: .leading)
+        .contentShape(Rectangle())
+    }
+
+    private func detailMetric(_ title: String, value: String) -> some View {
+        VStack(alignment: .leading, spacing: 4) {
+            Label(title, systemImage: title == "Luas" ? "square.dashed.inset.filled" : "square.dashed")
+                .font(.footnote)
+                .foregroundStyle(.secondary)
+                .labelStyle(RegistrationMetricLabelStyle())
+            Text(value).font(.title.bold())
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .accessibilityElement(children: .combine)
     }
 
     private func save() {
@@ -142,10 +186,37 @@ struct GardenDetailsView: View {
     }
 }
 
+struct RegistrationFormField<Content: View>: View {
+    let title: String
+    @ViewBuilder let content: () -> Content
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: KropsTheme.Spacing.compact) {
+            Text(title).font(.body.weight(.semibold)).foregroundStyle(.secondary)
+            content()
+                .font(KropsTheme.Typography.body)
+                .frame(minHeight: 52)
+                .padding(.horizontal, KropsTheme.Spacing.field)
+                .background(KropsTheme.secondaryFill, in: RoundedRectangle(cornerRadius: 12))
+        }
+        .padding(.top, 16)
+        .frame(maxWidth: .infinity, alignment: .leading)
+    }
+}
+
+private struct RegistrationMetricLabelStyle: LabelStyle {
+    func makeBody(configuration: Configuration) -> some View {
+        HStack(spacing: 4) {
+            configuration.icon.foregroundStyle(RegistrationStyle.actionTint)
+            configuration.title
+        }
+    }
+}
+
 #if DEBUG
-#Preview("12 Copy 3 · Data Kebun") {
+#Preview("COdedUI5 · Data Kebun") {
     GardenDetailsView(location: GardenPreviewData.location, boundary: GardenPreviewData.boundary,
-                      onSave: { _ in true }, referenceMapImage: "GardenBoundaryMap",
+                      onSave: { _ in true }, referenceMapImage: "RegistrationBoundaryMap",
                       metrics: GardenPreviewData.metrics)
 }
 #endif

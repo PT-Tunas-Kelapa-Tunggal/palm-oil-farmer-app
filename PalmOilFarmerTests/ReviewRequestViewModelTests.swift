@@ -133,4 +133,48 @@ struct ReviewRequestViewModelTests {
         let second = flow.makeContactFlow(newID)
         #expect(newID != oldID && second.viewModel.name.isEmpty && !second.viewModel.hasConsent)
     }
+
+    @Test func savingMultipleContactsBudgetCalculationAndConfirmationStepWorkTogether() async {
+        var submitted: [ReviewContactDetails] = []
+        var finishes = 0
+        let model = ReviewContactFormViewModel(
+            gardenName: "Belakang Rumah",
+            areaHectares: 1.7,
+            isActive: { true },
+            onSubmit: { submitted.append($0) },
+            onSubmitted: { finishes += 1 }
+        )
+        #expect(model.isEditingContact && model.savedContacts.isEmpty)
+        #expect(!model.cancelEditingContact())
+
+        model.name = "  Hendrawan Nugroho "
+        model.phone = "0812 7745 3021"
+        model.address = "  Jl. Raya Gunung Kijang Km 25, Malang Rapat, Gunung Kijang, Bintan "
+        #expect(model.saveContact())
+        #expect(!model.isEditingContact && model.savedContacts.count == 1 && model.selectedContactIndex == 0)
+
+        model.startAddingAnotherContact()
+        #expect(model.isEditingContact && model.name.isEmpty && model.phone.isEmpty && model.address.isEmpty)
+        #expect(model.cancelEditingContact())
+        #expect(!model.isEditingContact && model.name == "Hendrawan Nugroho")
+
+        model.startAddingAnotherContact()
+        model.name = "Pak Budi"
+        model.phone = "0813 9988 7766"
+        model.address = "Desa Toapaya, Bintan"
+        #expect(model.saveContact())
+        #expect(model.savedContacts.count == 2 && model.selectedContactIndex == 1 && model.name == "Pak Budi")
+
+        model.selectContact(at: 0)
+        #expect(model.selectedContactIndex == 0 && model.name == "Hendrawan Nugroho")
+
+        #expect(model.formattedBudgetPerHectare == "Rp5.500.000")
+        #expect(model.formattedArea == "1,7 ha")
+        #expect(model.formattedTotalBudget == "Rp9.350.000")
+
+        model.hasConsent = true
+        await model.submit(closesImmediately: false)
+        #expect(model.hasSubmitted && finishes == 0 && submitted.count == 1)
+        #expect(submitted.first?.name == "Hendrawan Nugroho")
+    }
 }

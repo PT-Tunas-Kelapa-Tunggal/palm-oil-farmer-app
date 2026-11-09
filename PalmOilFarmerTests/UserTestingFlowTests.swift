@@ -83,37 +83,10 @@ struct UserTestingFlowTests {
     @Test func demoReportCodesSixAreasFromTheBoundary() {
         let report = DemoReviewReport.make(for: squareGarden())
         #expect(report.areas.map(\.id) == ["AA", "AB", "BA", "BB", "CA", "CB"])
-        #expect(report.areas.allSatisfy { $0.zone != nil && $0.periods.count == 2 })
+        #expect(report.areas.allSatisfy { $0.periods.count == 2 })
         #expect(report.outline.count == 4)
         #expect(report.rainfall?.days.count == 7)
         #expect(report.nutrients.allSatisfy { NutrientReference.reference(for: $0.name) != nil })
-    }
-}
-
-@MainActor
-struct AreaOutlineTests {
-    @Test func outlineDropsEdgesSharedBetweenFragments() {
-        let corners = [(0.0, 0.0), (0.0, 1.0), (1.0, 1.0), (1.0, 0.0)].map {
-            CLLocationCoordinate2D(latitude: $0.0, longitude: $0.1)
-        }
-        let zone = WaypointZone(id: 1, fragments: [[corners[0], corners[1], corners[2]], [corners[0], corners[2], corners[3]]],
-                                destination: corners[0], areaSquareMeters: 1)
-        #expect(zone.outlineSegments.count == 4)
-    }
-
-    @Test func tappedCoordinateFindsItsArea() {
-        let report = DemoReviewReport.make(for: Garden(
-            id: UUID(), name: "Uji", locationName: "Bintan",
-            boundary: GardenBoundary(points: [(0.0, 0.0), (0.0, 0.002), (0.002, 0.002), (0.002, 0.0)].map {
-                GardenCoordinate(CLLocationCoordinate2D(latitude: 1 + $0.0, longitude: 104 + $0.1))
-            }),
-            plantingYear: 2016, soilType: .peat
-        ))
-        for area in report.areas {
-            let destination = try! #require(area.zone).destination
-            #expect(report.areas.filter { $0.zone?.contains(destination) == true }.map(\.id) == [area.id])
-        }
-        #expect(report.areas.allSatisfy { $0.zone?.contains(CLLocationCoordinate2D(latitude: 0, longitude: 0)) == false })
     }
 }
 

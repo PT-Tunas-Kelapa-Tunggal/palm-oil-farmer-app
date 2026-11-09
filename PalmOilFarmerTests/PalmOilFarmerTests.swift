@@ -51,20 +51,17 @@ struct PalmOilFarmerTests {
     }
 
     @Test func fertilizerDraftRejectsInvalidNumbers() {
-        var draft = FertilizerDraft()
+        var draft = FertilizerInputDraft()
         draft.name = "Urea"
-        draft.bagWeightKg = 50
-        draft.bagCount = 2
         draft.doseKgPerTree = 1
         #expect(draft.record?.id == draft.id)
         draft.name = "  Urea \n"
         #expect(draft.record?.name == "Urea")
         draft.doseKgPerTree = .infinity
         #expect(draft.record == nil)
-        draft.doseKgPerTree = 1
-        draft.bagCount = 0
+        draft.doseKgPerTree = -1
         #expect(draft.record == nil)
-        draft.bagCount = 2
+        draft.doseKgPerTree = 1
         draft.name = "  "
         #expect(draft.record == nil)
     }

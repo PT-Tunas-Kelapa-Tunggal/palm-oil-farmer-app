@@ -13,7 +13,7 @@ struct LocationSearchViewModelTests {
         let model = LocationSearchViewModel(repository: repository, initialQuery: " \n ",
                                             initialResults: [location("Lama")], debounce: {}, onSelect: { _ in })
         await model.search()
-        #expect(!model.hasQuery && model.results.isEmpty && !model.isSearching)
+        #expect(model.results.isEmpty && !model.isSearching)
         #expect(repository.queries.isEmpty && model.errorMessage == nil)
     }
 

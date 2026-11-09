@@ -33,20 +33,15 @@ struct ReviewSubmissionFlowTests {
         app.gardenListViewModel.selectGarden(garden)
         #expect(app.coordinator.path == [.gardenProfile(garden.id)])
         let profile = app.profileFactory.makeFlow(garden: garden)
-        profile.coordinator.open(.fertilizer)
-        let fertilizer = profile.makeFertilizerEditor(try #require(profile.coordinator.sheet))
-        fertilizer.viewModel.drafts[0].name = "Urea"
-        fertilizer.viewModel.drafts[0].bagWeightKg = 50
-        fertilizer.viewModel.drafts[0].bagCount = 2
-        fertilizer.viewModel.drafts[0].doseKgPerTree = 1.5
-        let fertilizerID = fertilizer.viewModel.drafts[0].id
-        #expect(fertilizer.viewModel.save())
-        profile.coordinator.sheetDidDismiss()
-        profile.coordinator.open(.harvest)
-        let harvest = profile.makeHarvestEditor(try #require(profile.coordinator.sheet))
-        harvest.viewModel.frequency = 3
-        harvest.viewModel.weight = 750
-        #expect(harvest.viewModel.save() && profile.viewModel.isComplete)
+        profile.coordinator.open(.profile)
+        let editor = profile.makeProfileEditor(try #require(profile.coordinator.sheet))
+        editor.fertilizers[0].name = "Urea"
+        editor.fertilizers[0].doseKgPerTree = 1.5
+        editor.harvestFrequency = 3
+        editor.monthlyWeightKg = 2250
+        editor.fertilizationFrequency = 2
+        let fertilizerID = editor.fertilizers[0].id
+        #expect(editor.save() && profile.viewModel.isComplete)
         profile.coordinator.sheetDidDismiss()
         #expect(app.gardenListViewModel.presentation(showsFilter: true).gardens.first?.stage == .readyForReview)
         #expect(makeTestGardenStore(in: app.modelContainer).gardens.first?.id == garden.id)
@@ -57,7 +52,7 @@ struct ReviewSubmissionFlowTests {
         let sent = try #require(repository.submissions.first)
         #expect(repository.submissions.count == 1 && sent.garden.id == garden.id && sent.status == .submitted)
         #expect(sent.garden.name == garden.name && sent.boundary == mappingPoints().map { CoordinatePoint(latitude: $0.latitude, longitude: $0.longitude) })
-        #expect(sent.agronomy.plantingYear == 2016 && sent.agronomy.plantingMonth == 10 && sent.agronomy.soilType == SoilType.peat.rawValue)
+        #expect(sent.agronomy.plantingYear == 2016 && sent.agronomy.plantingMonth == garden.plantingMonth && sent.agronomy.soilType == SoilType.peat.rawValue)
         #expect(sent.agronomy.fertilizerRecords.first?.id == fertilizerID && sent.agronomy.harvestRecord?.latestWeightKg == 750)
         #expect(sent.farmer.name == "Budi" && sent.farmer.address == "Riau" && sent.farmer.phone == "+62 (812)-3456 789")
         #expect(review.coordinator.isFinished && profile.coordinator.sheet == nil && !profile.coordinator.isFinished)

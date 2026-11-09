@@ -8,6 +8,32 @@ Developer.xcconfig
 /DerivedData/
 *.xcuserstate
 
+# Swift package and Xcode build caches (keep Package.resolved tracked).
+.build/
+.swiftpm/
+*.xcactivitylog
+*.xcresult/
+*.xcarchive/
+*.dSYM/
+*.dSYM.zip
+*.ipa
+
+# Local environment values; shared examples remain versioned.
+.env
+.env.*
+!.env.example
+!.env.*.example
+
+# Temporary logs, editor files, and exported test artifacts.
+*.log
+*.swp
+*.swo
+*~
+/artifacts/
+/test-results/
+/home-hifid-audit/
+/profile-hifid-audit/
+
 # Screenshots and reports from local development sessions.
 /DesignReview/
 /CODED_UI_UPDATE.md

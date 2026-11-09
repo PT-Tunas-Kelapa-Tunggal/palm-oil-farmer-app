@@ -326,7 +326,7 @@
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = Configurations/Info.plist;
-				INFOPLIST_KEY_CFBundleDisplayName = "$(APP_DISPLAY_NAME)";
+				INFOPLIST_KEY_CFBundleDisplayName = "Palm Oil Farmer";
 				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "Lokasi digunakan untuk menemukan kebun dan memusatkan peta di posisi kamu.";
 				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "Foto dari kamera digunakan untuk menemukan lokasi kebun dari data lokasi foto.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
@@ -365,7 +365,7 @@
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = Configurations/Info.plist;
-				INFOPLIST_KEY_CFBundleDisplayName = "$(APP_DISPLAY_NAME)";
+				INFOPLIST_KEY_CFBundleDisplayName = "Palm Oil Farmer";
 				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "Lokasi digunakan untuk menemukan kebun dan memusatkan peta di posisi kamu.";
 				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "Foto dari kamera digunakan untuk menemukan lokasi kebun dari data lokasi foto.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;

@@ -37,6 +37,14 @@ final class PhotosGardenPhotoRepository: GardenPhotoRepository {
     }
 
     func thumbnails(for photoID: String) -> AsyncStream<Data> {
+        images(for: photoID, size: CGSize(width: 240, height: 240))
+    }
+
+    func previewImages(for photoID: String) -> AsyncStream<Data> {
+        images(for: photoID, size: CGSize(width: 1600, height: 1600))
+    }
+
+    private func images(for photoID: String, size: CGSize) -> AsyncStream<Data> {
         guard let asset = assets[photoID] else { return AsyncStream { $0.finish() } }
         let manager = imageManager
         return AsyncStream { continuation in
@@ -44,7 +52,7 @@ final class PhotosGardenPhotoRepository: GardenPhotoRepository {
             options.deliveryMode = .opportunistic
             options.isNetworkAccessAllowed = true
             let requestID = manager.requestImage(
-                for: asset, targetSize: CGSize(width: 240, height: 240), contentMode: .aspectFill, options: options
+                for: asset, targetSize: size, contentMode: .aspectFill, options: options
             ) { image, info in
                 if let data = image?.pngData() { continuation.yield(data) }
                 if info?[PHImageResultIsDegradedKey] as? Bool != true { continuation.finish() }

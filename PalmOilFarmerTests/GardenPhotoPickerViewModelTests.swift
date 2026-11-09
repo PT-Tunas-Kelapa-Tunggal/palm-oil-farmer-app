@@ -11,15 +11,15 @@ struct GardenPhotoPickerViewModelTests {
                                  isUserLibrary: true, isScreenshot: false))
     }
 
-    @Test func eligibilityRetainsGeotagUserLibraryAndScreenshotRules() {
+    @Test func eligibilityIncludesPhotosWithoutGPSAndExcludesScreenshots() {
         let date = Date(timeIntervalSince1970: 1_000)
         for hasLocation in [false, true] {
             for isUserLibrary in [false, true] {
                 for isScreenshot in [false, true] {
                     let value = GardenPhoto(id: "photo", coordinate: hasLocation ? coordinate : nil, creationDate: date,
                                             isUserLibrary: isUserLibrary, isScreenshot: isScreenshot)
-                    #expect((value != nil) == (hasLocation && isUserLibrary && !isScreenshot))
-                    if let value { #expect(value.id == "photo" && value.coordinate == coordinate && value.creationDate == date) }
+                    #expect((value != nil) == (isUserLibrary && !isScreenshot))
+                    if let value { #expect(value.id == "photo" && value.coordinate == (hasLocation ? coordinate : nil) && value.creationDate == date) }
                 }
             }
         }
@@ -52,7 +52,7 @@ struct GardenPhotoPickerViewModelTests {
         let repository = PhotoRepositoryStub()
         repository.snapshot = GardenPhotoLibrarySnapshot(access: .allowed, photos: [try photo("known")])
         var selections: [GardenCoordinate] = []
-        let model = GardenPhotoPickerViewModel(repository: repository, onSelect: { selections.append($0) })
+        let model = GardenPhotoPickerViewModel(repository: repository, onSelect: { selections.append($0.coordinate) })
         await model.load()
         #expect(!model.selectPhoto(id: "missing"))
         #expect(model.selectPhoto(id: "known"))

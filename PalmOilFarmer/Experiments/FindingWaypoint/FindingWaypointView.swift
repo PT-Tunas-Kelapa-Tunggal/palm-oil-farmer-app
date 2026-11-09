@@ -20,7 +20,11 @@ struct FindingWaypointView: View {
                     .toolbar(.hidden, for: .navigationBar)
                     .navigationDestination(item: $selectedGardenID) { id in
                         if let garden = store.gardens.first(where: { $0.id == id }) {
-                            GardenProfileView(garden: garden, onDelete: store.delete, onUpdate: store.update)
+                            GardenProfileScreen(flow: GardenProfileFactory(
+                                source: store,
+                                reviewRepository: CloudKitFarmerReviewRepository.shared,
+                                reviewRequestFactory: ReviewRequestFactory(submission: SubmitGardenReview(gateway: store))
+                            ).makeFlow(garden: garden))
                         }
                     }
                 }

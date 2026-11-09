@@ -10,7 +10,6 @@ struct GardenRegistrationFactory {
 
     func makeFlow(initialStep: GardenRegistrationStep,
                   initialQuery: String = "", initialResults: [GardenLocation] = [],
-                  initialPhotoStatus: GardenPhotoStatus = .idle,
                   onLocate: @escaping (GardenLocation) -> Void,
                   onCancel: @escaping () -> Void) -> GardenRegistrationFlow {
         let dependencies = services()
@@ -19,9 +18,13 @@ struct GardenRegistrationFactory {
             coordinator: coordinator,
             searchViewModel: LocationSearchViewModel(
                 repository: dependencies.locations, initialQuery: initialQuery, initialResults: initialResults,
-                initialPhotoStatus: initialPhotoStatus, onSelect: coordinator.selectLocation
+                onSelect: coordinator.selectLocation
             ),
-            photoViewModel: GardenPhotoPickerViewModel(repository: dependencies.photos, onSelect: coordinator.selectedPhoto)
+            photoViewModel: GardenPhotoPickerViewModel(
+                repository: dependencies.photos,
+                resolveLocation: { await LocationSearchService.location(at: $0.mapCoordinate) },
+                onSelect: coordinator.selectedPhoto
+            )
         )
     }
 
