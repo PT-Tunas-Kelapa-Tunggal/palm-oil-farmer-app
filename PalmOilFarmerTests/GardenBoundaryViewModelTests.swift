@@ -58,6 +58,29 @@ struct GardenBoundaryViewModelTests {
         #expect(events == [.showDetails])
     }
 
+    @Test func closedPreviewStillAcceptsMoreCornersAndEveryPointRemainsMovable() {
+        let model = GardenBoundaryViewModel(location: mappingLocation(), saving: RegistrationSavingSpy(),
+            authorization: MappingAuthorizationStub(), allowsLocationDrafts: false, onEvent: { _ in })
+        let points = mappingPoints()
+        points.forEach(model.addPoint)
+        let fifth = GardenCoordinate(latitude: 1.001, longitude: 103.999)
+        model.addPoint(fifth)
+        #expect(model.boundary.points == points + [fifth])
+        #expect(model.canConfirmBoundary)
+        for index in model.boundary.points.indices {
+            let original = model.boundary.points[index]
+            model.movePoint(at: index, to: GardenCoordinate(latitude: original.latitude + 0.0001, longitude: original.longitude))
+            #expect(model.boundary.points.count == 5)
+            #expect(model.boundary.points[index].latitude == original.latitude + 0.0001)
+            model.movePoint(at: index, to: original)
+        }
+        #expect(model.canConfirmBoundary)
+        model.undo()
+        #expect(model.boundary.points == points && model.canConfirmBoundary)
+        model.undo()
+        #expect(model.boundary.points.count == 3 && !model.canConfirmBoundary)
+    }
+
     @Test func skipRequiresAnEmptySearchLocationAndAnAvailableSaveCapability() {
         for source in [GardenLocation.Source.photo, .draft] {
             let model = GardenBoundaryViewModel(location: mappingLocation(source: source), saving: RegistrationSavingSpy(),

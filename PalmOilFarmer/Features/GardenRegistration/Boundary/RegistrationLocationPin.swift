@@ -6,7 +6,8 @@ struct RegistrationLocationPin: View {
         VStack(spacing: -2) {
             Circle()
                 .fill(RegistrationStyle.actionTint)
-                .frame(width: 46, height: 46)
+                .frame(width: 42, height: 42)
+                .overlay { Image(systemName: "mappin").foregroundStyle(.white) }
                 .overlay { Circle().stroke(RegistrationStyle.onAction, lineWidth: 3) }
             Image(systemName: "triangle.fill")
                 .font(.system(size: 12))
@@ -19,13 +20,13 @@ struct RegistrationLocationPin: View {
 
 struct RegistrationUserLocationMarker: View {
     var body: some View {
-        Image(systemName: "figure.walk")
-            .font(.system(size: 14))
-            .foregroundStyle(.primary)
-            .frame(width: 26, height: 26)
-            .background(RegistrationStyle.surface, in: Circle())
-            .padding(10)
-            .background(Color(uiColor: .tertiarySystemFill), in: Circle())
+        Circle()
+            .fill(RegistrationStyle.actionTint)
+            .frame(width: 22, height: 22)
+            .overlay { Circle().stroke(.white, lineWidth: 4) }
+            .padding(15)
+            .background(RegistrationStyle.actionTint.opacity(0.35), in: Circle())
+            .overlay { Circle().stroke(.white.opacity(0.7), lineWidth: 1.5) }
             .accessibilityLabel("Posisi Anda sekarang")
     }
 }
@@ -35,15 +36,17 @@ struct RegistrationSelectedLocationMarker: View {
     let name: String
 
     var body: some View {
-        VStack(spacing: 16) {
+        VStack(spacing: 8) {
             // The panel already presents the full name at accessibility sizes.
             if !dynamicTypeSize.isAccessibilitySize {
                 Text(name)
                     .font(.headline)
                     .multilineTextAlignment(.center)
                     .frame(maxWidth: 180)
-                    .foregroundStyle(.white)
-                    .shadow(radius: 2)
+                    .foregroundStyle(.black)
+                    .padding(.horizontal, 12)
+                    .padding(.vertical, 6)
+                    .background(.white, in: Capsule())
             }
             RegistrationLocationPin()
         }
@@ -54,15 +57,16 @@ struct RegistrationSelectedLocationMarker: View {
 
 struct RegistrationBoundaryMarker: View {
     let number: Int
-    @ScaledMetric(relativeTo: .footnote) private var size = 32
+    var isActive = false
+    @ScaledMetric(relativeTo: .footnote) private var size = 28
 
     var body: some View {
         Text(number.formatted())
             .font(.footnote)
-            .foregroundStyle(RegistrationStyle.onAction)
+            .foregroundStyle(isActive ? .white : RegistrationStyle.actionTint)
             .frame(minWidth: size, minHeight: size)
-            .background(RegistrationStyle.actionTint, in: Circle())
-            .overlay { Circle().stroke(RegistrationStyle.onAction, lineWidth: 2) }
+            .background(isActive ? RegistrationStyle.actionTint : .white, in: Circle())
+            .overlay { Circle().stroke(RegistrationStyle.actionTint, lineWidth: 2) }
             .accessibilityLabel("Titik \(number)")
     }
 }

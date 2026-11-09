@@ -2,14 +2,13 @@ import Foundation
 
 struct GardenPhoto: Identifiable {
     let id: String
-    let coordinate: GardenCoordinate
+    let coordinate: GardenCoordinate?
     let creationDate: Date?
 
-    /// Retains the existing library policy: geotagged user-library images,
-    /// excluding screenshots. This does not prove a photo's camera provenance.
+    /// Keep photos without GPS so the preview can explain why they cannot locate a garden.
     init?(id: String, coordinate: GardenCoordinate?, creationDate: Date?,
           isUserLibrary: Bool, isScreenshot: Bool) {
-        guard let coordinate, isUserLibrary, !isScreenshot else { return nil }
+        guard isUserLibrary, !isScreenshot else { return nil }
         self.id = id
         self.coordinate = coordinate
         self.creationDate = creationDate

@@ -31,7 +31,7 @@ struct LocationSearchView: View {
             },
             onClose: { coordinator.cancel(); dismiss() }
         )
-        .task { isSearchFocused = true }
+        .task { isSearchFocused = !model.query.isEmpty }
         .task(id: model.query) { await model.search() }
         .task(id: model.locationRequestID) { await model.locateCurrentIfRequested() }
         .sheet(isPresented: $coordinator.showsPhotoPicker, onDismiss: coordinator.photoPickerDidDismiss) {
@@ -62,10 +62,11 @@ struct LocationSearchContent: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            RegistrationHeader(title: "Cari alamat", onClose: onClose)
+            RegistrationHeader(title: "Cari Lokasi Kebun", onClose: onClose)
             VStack(alignment: .leading, spacing: 4) {
                 HStack(spacing: 8) {
-                    TextField("Cari Patokan Terdekat", text: $query)
+                    Image(systemName: "magnifyingglass").font(.title2).foregroundStyle(.secondary)
+                    TextField("Cari patokan terdekat", text: $query)
                         .focused(isSearchFocused)
                         .submitLabel(.search)
                         .autocorrectionDisabled()
@@ -80,9 +81,9 @@ struct LocationSearchContent: View {
                 .padding(.leading, 16)
                 .padding(.trailing, query.isEmpty ? 16 : 4)
                 .frame(minHeight: 52)
-                .background(Color(uiColor: .tertiarySystemFill), in: Capsule())
-                Text("Nama desa, masjid, sekolah, atau simpang jalan yang Anda kenal.")
-                    .font(.subheadline)
+                .glassEffect(.regular, in: Capsule())
+                Text("Contohnya nama desa, masjid, sekolah, atau simpang jalan di dekat kebun.")
+                    .font(.footnote)
                     .foregroundStyle(.secondary)
                     .fixedSize(horizontal: false, vertical: true)
                     .padding(.horizontal, 16)
@@ -103,22 +104,22 @@ struct LocationSearchContent: View {
                     }
                     ForEach(results) { location in
                         LocationOptionRow(title: location.name, subtitle: location.subtitle,
-                                                symbol: "mappin.and.ellipse") { onSelect(location) }
+                                                symbol: "mappin", isBrand: false) { onSelect(location) }
                     }
                     VStack(alignment: .leading, spacing: 2) {
-                        Text("Cara lain").font(.title3.weight(.semibold)).accessibilityAddTraits(.isHeader)
-                        Text("Pilih yang sesuai dengan kondisi Anda")
+                        Text("Belum tahu alamat kebun").font(.title3.weight(.semibold)).accessibilityAddTraits(.isHeader)
+                        Text("Pilih cara yang paling mudah untuk Anda.")
                             .font(.body).foregroundStyle(.secondary)
                     }
                     .padding(.horizontal, 16)
                     .padding(.top, results.isEmpty ? 0 : 12)
                     .padding(.bottom, 8)
                     LocationOptionRow(title: "Saya sedang di kebun",
-                                            subtitle: isLocating ? "Mencari lokasi…" : "Peta mengikuti posisi Anda sekarang",
+                                            subtitle: isLocating ? "Mencari lokasi…" : "Lokasi kebun diambil dari posisi Anda saat ini.",
                                             symbol: "location.fill", isLoading: isLocating,
                                             action: onCurrentLocation)
-                    LocationOptionRow(title: "Cari dari foto kebun",
-                                            subtitle: "Lokasi kebun ditemukan dari foto",
+                    LocationOptionRow(title: "Saya punya foto kebun",
+                                            subtitle: "Lokasi kebun dicari dari foto yang diambil di sana.",
                                             symbol: "photo.fill",
                                             action: onPhoto)
                 }
@@ -130,7 +131,7 @@ struct LocationSearchContent: View {
         }
         .background(RegistrationStyle.background)
         .presentationBackground(RegistrationStyle.background)
-        .presentationDragIndicator(.hidden)
+        .presentationDragIndicator(.visible)
     }
 }
 

@@ -17,13 +17,7 @@ struct GardenPhotoPickerView: View {
     var body: some View {
         VStack(spacing: 0) {
             RegistrationHeader(
-                title: "Album Kamera",
-                trailingSymbol: viewModel.previewPhotoID == nil ? nil : "checkmark",
-                trailingLabel: "Gunakan foto",
-                isTrailingEnabled: viewModel.previewLocation != nil,
-                onTrailing: {
-                    if viewModel.confirmPreview(imageData: previewImage?.jpegData(compressionQuality: 0.5)) { dismiss() }
-                },
+                title: viewModel.previewPhotoID == nil ? "Foto" : "Foto Kebun",
                 onClose: {
                     if viewModel.previewPhotoID != nil {
                         previewImage = nil
@@ -35,7 +29,9 @@ struct GardenPhotoPickerView: View {
             )
             if let selectedPhotoID = viewModel.previewPhotoID {
                 PhotoSelectionContent(location: viewModel.previewLocation, image: previewImage,
-                                      isLoadingImage: previewImage == nil)
+                                      isLoadingImage: previewImage == nil,
+                                      creationDate: viewModel.previewPhoto?.creationDate,
+                                      hasNoLocation: viewModel.previewHasNoLocation)
                     .task(id: selectedPhotoID) {
                         await viewModel.preparePreview(for: selectedPhotoID)
                     }
@@ -49,10 +45,27 @@ struct GardenPhotoPickerView: View {
                 gallery
             }
         }
+        .safeAreaInset(edge: .bottom) {
+            if viewModel.previewPhotoID != nil {
+                RegistrationPrimaryButton(
+                    title: viewModel.previewHasNoLocation ? "Pilih Foto Lain" : "Gunakan Foto Ini"
+                ) {
+                    if viewModel.previewHasNoLocation {
+                        previewImage = nil
+                        viewModel.clearPreview()
+                    } else if viewModel.confirmPreview(imageData: previewImage?.jpegData(compressionQuality: 0.5)) {
+                        dismiss()
+                    }
+                }
+                .disabled(!viewModel.previewHasNoLocation && viewModel.previewLocation == nil)
+                .padding(.horizontal, 16)
+                .padding(.vertical, 12)
+            }
+        }
         .background(RegistrationStyle.background)
         .presentationBackground(RegistrationStyle.background)
         .presentationDetents([.large])
-        .presentationDragIndicator(.hidden)
+        .presentationDragIndicator(.visible)
         .task { await viewModel.load() }
         .onDisappear { viewModel.cancelLoading() }
     }
@@ -74,7 +87,7 @@ struct GardenPhotoPickerView: View {
                 .buttonStyle(.glass)
             }
         case .allowed where viewModel.photos.isEmpty:
-            ContentUnavailableView("Belum ada foto dengan lokasi", systemImage: "camera",
+            ContentUnavailableView("Belum ada foto", systemImage: "camera",
                 description: Text("Ambil foto di kebun dengan lokasi aktif, lalu coba lagi."))
         case .allowed:
             ScrollView {
@@ -104,35 +117,65 @@ struct PhotoSelectionContent: View {
     var referenceMapImage: String? = nil
     var isLoadingImage = false
 
+    var creationDate: Date? = nil
+    var hasNoLocation = false
+
     var body: some View {
-        GeometryReader { geometry in
-            ScrollView {
-                VStack(spacing: 14) {
-                    Group {
-                        if let image {
-                            Image(uiImage: image).resizable().scaledToFit()
-                        } else if isLoadingImage {
-                            ProgressView("Memuat foto…")
-                        } else {
-                            Image(systemName: "photo")
-                                .font(.system(size: 120))
-                                .foregroundStyle(.tertiary)
-                        }
-                    }
-                    .frame(maxWidth: .infinity)
-                    .frame(height: geometry.size.height * 0.6)
-                    .background(RegistrationStyle.surface)
-                    .accessibilityLabel("Foto terpilih")
-                    if let location {
-                        PhotoLocationCard(location: location, image: image, referenceMapImage: referenceMapImage)
-                            .padding(.horizontal, 16)
+        ScrollView {
+            VStack(spacing: 16) {
+                Color.clear.frame(height: 400).overlay {
+                    if let image {
+                        Image(uiImage: image).resizable().scaledToFill()
+                    } else if isLoadingImage {
+                        ProgressView("Memuat foto…")
                     } else {
-                        ProgressView("Mencari alamat foto…").padding(24)
+                        Image(systemName: "photo").font(.system(size: 80)).foregroundStyle(.tertiary)
                     }
                 }
-                .padding(.bottom, 32)
+                .frame(maxWidth: .infinity)
+                .clipped()
+                .clipShape(RoundedRectangle(cornerRadius: 20))
+                .accessibilityLabel("Foto terpilih")
+                VStack(alignment: .leading, spacing: 16) {
+                    metadataRow(symbol: "calendar", caption: "Waktu foto diambil",
+                                value: creationDate.map {
+                                    $0.formatted(.dateTime.day().month(.wide).year().locale(Locale(identifier: "id_ID"))) + ", " + $0.formatted(.dateTime.hour().minute().locale(Locale(identifier: "id_ID")))
+                                } ?? "Waktu tidak tersimpan")
+                    Divider()
+                    if hasNoLocation {
+                        HStack(alignment: .center, spacing: 14) {
+                            Image(systemName: "exclamationmark.triangle.fill").foregroundStyle(.orange)
+                            VStack(alignment: .leading, spacing: 4) {
+                                Text("Lokasi tidak tersimpan di foto").font(.footnote).foregroundStyle(.secondary)
+                                Text("Foto ini tidak bisa dipakai").font(.headline)
+                                Text("Layanan Lokasi untuk Kamera belum aktif saat foto diambil. Aktifkan di Pengaturan, lalu ambil foto baru di kebun.")
+                                    .font(.footnote).foregroundStyle(.secondary)
+                            }
+                        }
+                    } else if let location {
+                        metadataRow(symbol: "location.fill", caption: "Lokasi tersimpan di foto",
+                                    value: String(format: "%.6f, %.6f", location.coordinate.latitude, location.coordinate.longitude))
+                    } else {
+                        ProgressView("Mencari alamat foto…")
+                    }
+                }
+                .padding(16)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .background(RegistrationStyle.surface, in: RoundedRectangle(cornerRadius: 20))
             }
-            .scrollBounceBehavior(.basedOnSize)
+            .padding(.horizontal, 16)
+            .padding(.top, 8)
+        }
+        .scrollBounceBehavior(.basedOnSize)
+    }
+
+    private func metadataRow(symbol: String, caption: String, value: String) -> some View {
+        HStack(spacing: 14) {
+            Image(systemName: symbol).foregroundStyle(RegistrationStyle.actionTint)
+            VStack(alignment: .leading, spacing: 4) {
+                Text(caption).font(.footnote).foregroundStyle(.secondary)
+                Text(value).font(.headline)
+            }
         }
     }
 }

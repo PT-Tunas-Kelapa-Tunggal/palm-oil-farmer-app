@@ -6,14 +6,15 @@ struct GardenRegistrationEmptyState: View {
             Image("GardenHeatmapIllustration")
                 .resizable()
                 .scaledToFit()
-                .frame(width: 220, height: 210)
+                .frame(maxWidth: 370)
+                .padding(.horizontal, -16)
                 .accessibilityHidden(true)
             VStack(spacing: 16) {
-                Text("Pahami kebun anda lebih baik")
+                Text("Ketahui pohon yang\nperlu perhatian")
                     .font(.title.bold())
                     .foregroundStyle(.primary)
                     .accessibilityAddTraits(.isHeader)
-                Text("Peninjauan memberikan peta kondisi kebun per area sehingga anda tahu bagian mana yang perlu diprioritaskan dan kapan waktu terbaik untuk merawatnya")
+                Text("Daftarkan kebun Anda, lalu ajukan peninjauan. Hasilnya berupa peta yang menandai pohon sehat dan pohon yang perlu perhatian.")
                     .font(.body)
                     .foregroundStyle(.secondary)
             }

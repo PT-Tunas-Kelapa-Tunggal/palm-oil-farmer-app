@@ -109,4 +109,43 @@ struct RegistrationDesignFlowTests {
         model.searchAgain()
         #expect(events == [.searchAgain])
     }
+    @Test func photoWithoutGPSCanBePreviewedButNeverSelected() async throws {
+        let repository = PhotoRepositoryStub()
+        let photo = try #require(GardenPhoto(id: "no-gps", coordinate: nil, creationDate: nil,
+                                             isUserLibrary: true, isScreenshot: false))
+        repository.snapshot = GardenPhotoLibrarySnapshot(access: .allowed, photos: [photo])
+        var selections = 0
+        let model = GardenPhotoPickerViewModel(repository: repository, onSelect: { _ in selections += 1 })
+        await model.load()
+        #expect(model.showPreview(for: photo.id))
+        await model.preparePreview(for: photo.id)
+        #expect(model.previewHasNoLocation)
+        #expect(!model.selectPhoto(id: photo.id))
+        #expect(!model.confirmPreview(imageData: nil))
+        #expect(selections == 0)
+        model.clearPreview()
+        #expect(!model.previewHasNoLocation)
+    }
+
+    @Test func fourCornersCloseThePreviewAndConfirmWithoutTappingTheFirstPoint() {
+        var events: [GardenMappingEvent] = []
+        let model = GardenBoundaryViewModel(location: mappingLocation(), saving: RegistrationSavingSpy(),
+            authorization: MappingAuthorizationStub(), allowsLocationDrafts: false, onEvent: { events.append($0) })
+        let points = mappingPoints()
+        points.prefix(3).forEach(model.addPoint)
+        #expect(model.boundary.isValid && !model.canConfirmBoundary)
+        model.confirmBoundary()
+        #expect(events.isEmpty && !model.isClosed)
+        model.addPoint(points[3])
+        #expect(model.isClosed && model.canConfirmBoundary)
+        model.undo()
+        #expect(!model.isClosed && model.boundary.points.count == 3)
+        model.confirmBoundary()
+        #expect(events.isEmpty)
+        model.addPoint(points[3])
+        model.confirmBoundary()
+        #expect(events == [.showDetails])
+        model.clear()
+        #expect(!model.isClosed && model.boundary.points.isEmpty)
+    }
 }

@@ -23,15 +23,13 @@ struct RegistrationIntroView: View {
             }
         }
         .presentationDetents([.large])
-        .presentationDragIndicator(.hidden)
+        .presentationDragIndicator(.visible)
         .presentationBackground(RegistrationStyle.background)
         .presentationBackgroundInteraction(.disabled)
     }
 }
 
 struct LocationDiscoveryGuide: View {
-    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
-    @ScaledMetric(relativeTo: .title2) private var iconSize = 44
     let onContinue: () -> Void
     let onClose: () -> Void
 
@@ -39,39 +37,43 @@ struct LocationDiscoveryGuide: View {
         VStack(spacing: 0) {
             RegistrationHeader(onClose: onClose)
             ScrollView {
-                VStack(spacing: 16) {
-                    Text("Temukan Lokasi Kebun")
-                        .font(.title.bold())
-                        .multilineTextAlignment(.center)
-                        .accessibilityAddTraits(.isHeader)
+                VStack(spacing: 32) {
                     Image("LocationGuideSatellite")
                         .resizable()
                         .scaledToFill()
-                        .frame(height: 184)
+                        .frame(height: 160)
                         .clipped()
-                        .clipShape(RoundedRectangle(cornerRadius: RegistrationStyle.cardRadius))
-                        .padding(.horizontal, 30)
+                        .clipShape(RoundedRectangle(cornerRadius: 20))
                         .accessibilityHidden(true)
-                    VStack(spacing: 0) {
-                        guideRow("Gunakan lokasi saat ini",
-                                 message: "Jika sedang berada di kebun, peta langsung menampilkan posisi Anda.",
-                                 symbol: "location")
+                    VStack(spacing: 12) {
+                        Text("Temukan Lokasi Kebun")
+                            .font(.title.bold())
+                            .accessibilityAddTraits(.isHeader)
+                        Text("Ada tiga cara untuk menemukan kebun Anda di peta.")
+                            .font(.body)
+                            .foregroundStyle(.secondary)
+                    }
+                    .multilineTextAlignment(.center)
+                    VStack(spacing: 20) {
                         guideRow("Cari patokan terdekat",
                                  message: "Ketik nama desa, masjid, sekolah, atau simpang jalan di dekat kebun.",
                                  symbol: "mappin.and.ellipse")
-                        guideRow("Unggah foto terdekat",
+                        guideRow("Gunakan lokasi saat ini",
+                                 message: "Jika sedang berada di kebun, peta langsung menampilkan posisi Anda.",
+                                 symbol: "location")
+                        guideRow("Pakai foto dari kebun",
                                  message: "Lokasi kebun ditemukan dari foto yang pernah diambil di sana.",
                                  symbol: "photo")
                     }
-                    .padding(.horizontal, 30)
                 }
+                .padding(.horizontal, 24)
             }
             .scrollBounceBehavior(.basedOnSize)
         }
-        .background(RegistrationStyle.background)
+        .background(RegistrationStyle.surface)
         .safeAreaInset(edge: .bottom, spacing: 0) {
-            RegistrationPrimaryButton(title: "Cari lokasi kebun", action: onContinue)
-                .padding(.horizontal, 34)
+            RegistrationPrimaryButton(title: "Cari Lokasi Kebun", action: onContinue)
+                .padding(.horizontal, 24)
                 .padding(.top, 24)
                 .padding(.bottom, 2)
                 .background { BottomBlurFade() }
@@ -79,24 +81,18 @@ struct LocationDiscoveryGuide: View {
     }
 
     private func guideRow(_ title: String, message: String, symbol: String) -> some View {
-        let layout = dynamicTypeSize.isAccessibilitySize
-            ? AnyLayout(VStackLayout(alignment: .leading, spacing: 12))
-            : AnyLayout(HStackLayout(spacing: 20))
-        return layout {
+        HStack(alignment: .top, spacing: 20) {
             Image(systemName: symbol)
                 .font(.title2)
-                .frame(width: iconSize, height: iconSize)
-                .background(Color(uiColor: .tertiarySystemFill), in: Circle())
+                .foregroundStyle(RegistrationStyle.actionTint)
+                .frame(width: 32, height: 32)
                 .accessibilityHidden(true)
-            VStack(alignment: .leading, spacing: 6) {
-                Text(title).font(.title3.weight(.semibold))
-                Text(message).font(.body)
+            VStack(alignment: .leading, spacing: 4) {
+                Text(title).font(.headline)
+                Text(message).font(.subheadline).foregroundStyle(.secondary)
             }
             .fixedSize(horizontal: false, vertical: true)
             .frame(maxWidth: .infinity, alignment: .leading)
-            .padding(.top, 6)
-            .padding(.bottom, 16)
-            .padding(.trailing, 20)
         }
         .accessibilityElement(children: .combine)
     }

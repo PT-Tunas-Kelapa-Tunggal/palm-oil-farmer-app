@@ -112,7 +112,16 @@ struct GardenListContent: View {
                 }
             }
         }
-        .background(RegistrationStyle.background.ignoresSafeArea())
+        .background {
+            if presentation.isEmpty && downloads.isEmpty {
+                Color(uiColor: .systemBackground).ignoresSafeArea()
+                RadialGradient(colors: [RegistrationStyle.actionTint.opacity(0.12), .clear],
+                               center: .center, startRadius: 30, endRadius: 320)
+                    .ignoresSafeArea()
+            } else {
+                RegistrationStyle.background.ignoresSafeArea()
+            }
+        }
         .safeAreaInset(edge: .bottom, spacing: 0) {
             RegistrationPrimaryButton(title: "Daftarkan Kebun", systemImage: "plus", action: onRegisterGarden)
                 .padding(.horizontal, 34)

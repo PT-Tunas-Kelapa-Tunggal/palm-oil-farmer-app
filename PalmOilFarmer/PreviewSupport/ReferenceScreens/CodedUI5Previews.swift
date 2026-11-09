@@ -6,7 +6,7 @@ import SwiftUI
 struct CodedUI5Preview: View {
     enum Screen {
         case empty, discovery, searchResults, searchGPS, searchPhoto
-        case gallery, selectedPhoto, searchLocation, currentLocation, photoLocation
+        case gallery, selectedPhoto, photoError, searchLocation, currentLocation, photoLocation
         case mappingGuide, mappingEmpty, mappingDrawing, mappingClosed, details, plantingDate, soil
     }
 
@@ -41,42 +41,50 @@ struct CodedUI5Preview: View {
                 .onAppear { if screen == .searchResults { query = "smkn gunung kijang" } }
             case .gallery:
                 VStack(spacing: 0) {
-                    RegistrationHeader(title: "Album Kamera", onClose: {})
+                    RegistrationHeader(title: "Foto", onClose: {})
                     ScrollView {
                         LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 2), count: 4), spacing: 2) {
                             ForEach(0..<32) { _ in
                                 Color.white.aspectRatio(1, contentMode: .fit)
-                                    .overlay { Image(systemName: "photo.fill").foregroundStyle(.tertiary) }
+                                    .overlay { Image("RegistrationPhotoReference").resizable().scaledToFill() }
                             }
                         }
                     }
                 }
-            case .selectedPhoto:
+            case .selectedPhoto, .photoError:
                 VStack(spacing: 0) {
-                    RegistrationHeader(title: "Album Kamera", trailingSymbol: "checkmark",
-                                       trailingLabel: "Gunakan foto", onTrailing: {}, onClose: {})
-                    PhotoSelectionContent(location: location, referenceMapImage: "RegistrationPhotoSatellite")
+                    RegistrationHeader(title: "Foto Kebun", onClose: {})
+                    PhotoSelectionContent(
+                        location: screen == .photoError ? nil : location,
+                        image: UIImage(named: "RegistrationPhotoReference"),
+                        creationDate: Date(timeIntervalSince1970: 1793582040),
+                        hasNoLocation: screen == .photoError
+                    )
+                }
+                .safeAreaInset(edge: .bottom) {
+                    RegistrationPrimaryButton(title: screen == .photoError ? "Pilih Foto Lain" : "Gunakan Foto Ini", action: {})
+                        .padding(16)
                 }
             case .searchLocation, .currentLocation, .photoLocation:
                 confirmation
             case .mappingGuide:
                 referenceMap
                     .ignoresSafeArea()
-                    .overlay { BoundaryDrawingGuideOverlay() }
-                    .overlay(alignment: .bottom) {
-                        BoundaryDrawingGuidePanel(onContinue: {}).padding(.bottom, -34)
+                    .sheet(isPresented: .constant(true)) {
+                        BoundaryDrawingGuideSheet(onContinue: {})
                     }
             case .mappingEmpty, .mappingDrawing, .mappingClosed:
                 BoundaryEditorLayout(
                     boundary: screen == .mappingEmpty ? GardenBoundary() : GardenPreviewData.boundary,
-                    metrics: GardenDisplayMetrics(area: screen == .mappingEmpty ? "0 ha" : "1,2 ha",
-                                                  perimeter: screen == .mappingEmpty ? "0 m" : "2.400 m"),
+                    metrics: GardenDisplayMetrics(area: screen == .mappingEmpty ? "0 ha" : "1,7 ha",
+                                                  perimeter: screen == .mappingEmpty ? "0 m" : "540 m"),
+                    isClosed: screen == .mappingClosed,
                     onClose: {}, onSearch: {}, onUndo: {}, onClear: {}, onConfirm: {}
                 ) { referenceMap }
             case .details, .soil, .plantingDate:
                 GardenDetailsView(location: location, boundary: GardenPreviewData.boundary,
                                   onSave: { _ in true }, referenceMapImage: "RegistrationBoundaryMap",
-                                  metrics: GardenDisplayMetrics(area: "2,3 ha", perimeter: "2300 m"))
+                                  metrics: GardenDisplayMetrics(area: "1,7 ha", perimeter: "540 m"))
                     .overlay(alignment: .bottom) {
                         if screen == .plantingDate {
                             PlantingDatePickerView(onConfirm: { _, _ in })
@@ -240,5 +248,8 @@ private struct CodedUI5MapReference: View {
 }
 #Preview("17 · COdedUI5 · Jenis Tanah", traits: .fixedLayout(width: 402, height: 812)) {
     CodedUI5Preview(screen: .soil).padding(.bottom, 34)
+}
+#Preview("18 · Foto tanpa lokasi", traits: .fixedLayout(width: 402, height: 812)) {
+    CodedUI5Preview(screen: .photoError).safeAreaPadding(.bottom, 34)
 }
 #endif

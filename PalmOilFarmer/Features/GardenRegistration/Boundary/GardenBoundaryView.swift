@@ -13,10 +13,14 @@ struct GardenBoundaryView: View {
 
     @Environment(\.dismiss) private var dismiss
     @State private var position: MapCameraPosition
+    @State private var latestCamera: MapCamera?
     /// Finger position minus the dragged marker's tip, so a point does not jump under the finger.
     /// Drags use the global space: annotation views are hosted apart from the map's own hierarchy.
     @State private var dragOffset: CGSize?
     @State private var draggingIndex: Int?
+    @GestureState private var isDraggingPoint = false
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    private static let markerHitSize: CGFloat = 44
 
     init(flow: GardenMappingFlow) {
         _flow = State(initialValue: flow)
@@ -34,51 +38,46 @@ struct GardenBoundaryView: View {
 
     var body: some View {
         @Bindable var coordinator = flow.coordinator
-        MapReader { proxy in
-            BoundaryEditorLayout(
-                boundary: boundary,
-                showsControls: isDrawing,
-                onClose: flow.viewModel.close,
-                onSearch: searchAgain,
-                onUndo: flow.viewModel.undo,
-                onClear: flow.viewModel.clear,
-                onConfirm: flow.viewModel.confirmBoundary
-            ) {
-                Map(position: $position) {
-                    mapContent(proxy)
-                }
-                .mapStyle(.imagery)
-                .mapControls {}
-                .simultaneousGesture(SpatialTapGesture().onEnded { tap in
-                    guard isDrawing, !isOnMarker(tap.location, proxy: proxy),
-                          let coordinate = proxy.convert(tap.location, from: .local) else { return }
-                    flow.viewModel.addPoint(GardenCoordinate(coordinate))
-                })
+        Group {
+            if stage == .guide {
+                BoundaryDrawingGuideView(
+                    position: position,
+                    fallbackCenter: location.coordinate.mapCoordinate,
+                    onBack: { stage = .location },
+                    onContinue: { stage = .drawing }
+                )
+            } else {
+                mappingContent
             }
         }
         .overlay(alignment: .bottom) {
             if stage == .location {
                 LocationConfirmationPanel(
                     location: location,
-                    onSaveDraft: saveDraftAction,
+                    onSaveDraft: nil,
                     onBack: flow.viewModel.searchAgain
                 ) {
                     flow.viewModel.confirmPhoto()
+                    // Preserve the concrete location camera while its map is replaced by the guide.
+                    if let latestCamera { position = .camera(latestCamera) }
                     stage = .guide
                 }
-
-            } else if stage == .guide {
-                BoundaryDrawingGuidePanel { stage = .drawing }
-
             }
         }
-        .overlay {
-            if stage == .guide { BoundaryDrawingGuideOverlay() }
-        }
         .overlay(alignment: .topLeading) {
-            if stage == .location && location.source == .photo {
-                RegistrationIconButton(symbol: "xmark", label: "Tutup", action: flow.viewModel.close)
-                    .padding(12)
+            if stage == .location {
+                HStack {
+                    RegistrationIconButton(symbol: "chevron.left", label: "Kembali") {
+                        flow.viewModel.searchAgain()
+                    }
+                    Spacer()
+                    if location.source == .currentLocation {
+                        RegistrationIconButton(symbol: "location.fill", label: "Lokasi saya") {
+                            position = .userLocation(fallback: .automatic)
+                        }
+                    }
+                }
+                .padding(.horizontal, 16)
             }
         }
         .ignoresSafeArea(.container, edges: .bottom)
@@ -97,6 +96,12 @@ struct GardenBoundaryView: View {
             Text("Lokasi tidak dapat disimpan di perangkat. Coba lagi.")
         }
         .onAppear { flow.viewModel.requestLocationAuthorization() }
+        .onChange(of: isDraggingPoint) { _, isDragging in
+            if !isDragging {
+                dragOffset = nil
+                draggingIndex = nil
+            }
+        }
         .sheet(isPresented: $coordinator.showsDetails, onDismiss: coordinator.detailsDidDismiss) {
             GardenDetailsView(flow: flow.makeDetailsFlow())
         }
@@ -111,25 +116,56 @@ struct GardenBoundaryView: View {
         }
     }
 
+    private var mappingContent: some View {
+        MapReader { proxy in
+            BoundaryEditorLayout(
+                boundary: boundary,
+                isClosed: flow.viewModel.isClosed,
+                showsControls: isDrawing,
+                onClose: flow.viewModel.close,
+                onSearch: searchAgain,
+                onUndo: flow.viewModel.undo,
+                onClear: flow.viewModel.clear,
+                onConfirm: flow.viewModel.confirmBoundary
+            ) {
+                Map(position: $position) {
+                    mapContent(proxy)
+                }
+                .mapStyle(.imagery)
+                .mapControls {}
+                .onMapCameraChange { context in latestCamera = context.camera }
+                .simultaneousGesture(SpatialTapGesture(coordinateSpace: .global).onEnded { tap in
+                    guard isDrawing, draggingIndex == nil, !isOnMarker(tap.location, proxy: proxy),
+                          let coordinate = proxy.convert(tap.location, from: .global) else { return }
+                    flow.viewModel.addPoint(GardenCoordinate(coordinate))
+                })
+            }
+        }
+    }
+
     @MapContentBuilder
     private func mapContent(_ proxy: MapProxy) -> some MapContent {
-        if boundary.points.count >= 3 {
-            MapPolygon(coordinates: boundary.coordinates)
-                .foregroundStyle(.white.opacity(0.25))
-                .stroke(.white, lineWidth: 2)
-        } else if boundary.points.count == 2 {
-            MapPolyline(coordinates: boundary.coordinates).stroke(.white, lineWidth: 2)
-        }
+        BoundaryGeometryMapContent(
+            coordinates: boundary.coordinates,
+            isClosed: flow.viewModel.isClosed
+        )
         ForEach(boundary.points.indices, id: \.self) { index in
-            Annotation("", coordinate: boundary.points[index].mapCoordinate, anchor: .bottom) {
-                RegistrationBoundaryMarker(number: index + 1)
-                    .scaleEffect(draggingIndex == index ? 1.2 : 1)
-                    .highPriorityGesture(moveGesture(for: index, proxy: proxy))
-                    .accessibilityHint("Geser untuk memindahkan titik")
+            Annotation("", coordinate: boundary.points[index].mapCoordinate, anchor: .center) {
+                RegistrationBoundaryMarker(
+                    number: index + 1,
+                    isActive: index == (draggingIndex ?? boundary.points.indices.last)
+                )
+                .scaleEffect(!reduceMotion && draggingIndex == index ? 1.15 : 1)
+                .animation(reduceMotion ? nil : .easeOut(duration: 0.15), value: draggingIndex == index)
+                .frame(width: Self.markerHitSize, height: Self.markerHitSize)
+                .contentShape(Circle())
+                .highPriorityGesture(moveGesture(for: index, proxy: proxy))
+                .accessibilityIdentifier("boundaryPoint\(index + 1)")
+                .accessibilityHint("Geser untuk memindahkan titik")
             }
         }
         // Two points form one segment; a polygon also includes its closing edge.
-        let edgeCount = boundary.points.count == 2 ? 1 : (boundary.points.count > 2 ? boundary.points.count : 0)
+        let edgeCount = flow.viewModel.isClosed ? boundary.points.count : max(0, boundary.points.count - 1)
         ForEach(0..<edgeCount, id: \.self) { index in
             let first = boundary.points[index].mapCoordinate
             let second = boundary.points[(index + 1) % boundary.points.count].mapCoordinate
@@ -157,9 +193,10 @@ struct GardenBoundaryView: View {
     }
 
     private func moveGesture(for index: Int, proxy: MapProxy) -> some Gesture {
-        DragGesture(minimumDistance: 4, coordinateSpace: .global)
+        DragGesture(minimumDistance: 1, coordinateSpace: .global)
+            .updating($isDraggingPoint) { _, isDragging, _ in isDragging = true }
             .onChanged { drag in
-                guard boundary.points.indices.contains(index) else { return }
+                guard isDrawing, boundary.points.indices.contains(index) else { return }
                 draggingIndex = index
                 if dragOffset == nil,
                    let tip = proxy.convert(boundary.points[index].mapCoordinate, to: .global) {
@@ -170,17 +207,13 @@ struct GardenBoundaryView: View {
                 guard let coordinate = proxy.convert(tip, from: .global) else { return }
                 flow.viewModel.movePoint(at: index, to: GardenCoordinate(coordinate))
             }
-            .onEnded { _ in
-                dragOffset = nil
-                draggingIndex = nil
-            }
     }
 
     /// Markers sit above their point; a tap on one must not also add a new point.
     private func isOnMarker(_ location: CGPoint, proxy: MapProxy) -> Bool {
         boundary.points.contains { point in
-            guard let tip = proxy.convert(point.mapCoordinate, to: .local) else { return false }
-            return hypot(location.x - tip.x, location.y - (tip.y - 18)) < 26
+            guard let tip = proxy.convert(point.mapCoordinate, to: .global) else { return false }
+            return hypot(location.x - tip.x, location.y - tip.y) < Self.markerHitSize / 2
         }
     }
 

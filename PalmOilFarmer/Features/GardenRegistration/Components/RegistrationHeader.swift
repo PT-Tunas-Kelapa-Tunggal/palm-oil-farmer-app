@@ -2,6 +2,7 @@ import SwiftUI
 
 struct RegistrationHeader: View {
     var title = ""
+    var isMapHeader = false
     var closeSymbol = "xmark"
     var trailingSymbol: String? = nil
     var trailingLabel = ""
@@ -12,11 +13,11 @@ struct RegistrationHeader: View {
     var body: some View {
         ZStack {
             Text(title)
-                .font(.title3.weight(.semibold))
+                .font(.headline)
                 .multilineTextAlignment(.center)
                 .fixedSize(horizontal: false, vertical: true)
                 .padding(.horizontal, 72)
-                .padding(.vertical, 20)
+                .padding(.vertical, isMapHeader ? 10 : 20)
                 .accessibilityAddTraits(.isHeader)
             HStack {
                 RegistrationIconButton(symbol: closeSymbol,
@@ -29,8 +30,9 @@ struct RegistrationHeader: View {
                         .disabled(!isTrailingEnabled)
                 }
             }
-            .padding(12)
+            .padding(.horizontal, 16)
+            .padding(.vertical, isMapHeader ? 0 : 12)
         }
-        .frame(minHeight: 72)
+        .frame(minHeight: isMapHeader ? 44 : 70)
     }
 }

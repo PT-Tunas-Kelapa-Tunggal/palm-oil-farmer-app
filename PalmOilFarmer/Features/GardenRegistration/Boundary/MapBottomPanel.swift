@@ -3,7 +3,7 @@ import SwiftUI
 /// Shared map panel surface, spacing, and scrolling for content that exceeds the available height.
 struct MapBottomPanel<Content: View>: View {
     @State private var contentHeight: CGFloat = 1
-    var insets = EdgeInsets(top: 24, leading: 16, bottom: 32, trailing: 16)
+    var insets = EdgeInsets(top: 28, leading: 18, bottom: 32, trailing: 16)
     @ViewBuilder let content: () -> Content
 
     private var panelShape: UnevenRoundedRectangle {
@@ -31,6 +31,10 @@ struct MapBottomPanel<Content: View>: View {
             min(contentHeight, max(1, availableHeight * 0.45))
         }
         .scrollBounceBehavior(.basedOnSize)
+        .overlay(alignment: .top) {
+            Capsule().fill(.white.opacity(0.4)).frame(width: 36, height: 5).padding(.top, 6)
+                .accessibilityHidden(true)
+        }
         .glassEffect(.regular, in: panelShape)
         .clipShape(panelShape)
         .padding(.horizontal, 8)

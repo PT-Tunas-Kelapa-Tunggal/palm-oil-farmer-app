@@ -23,6 +23,9 @@ final class GardenPhotoPickerViewModel {
         self.resolveLocation = resolveLocation
     }
 
+    var previewPhoto: GardenPhoto? { photos.first { $0.id == previewPhotoID } }
+    var previewHasNoLocation: Bool { previewPhoto != nil && previewPhoto?.coordinate == nil }
+
     func load() async {
         let id = UUID()
         loadID = id
@@ -37,10 +40,10 @@ final class GardenPhotoPickerViewModel {
 
     @discardableResult
     func selectPhoto(id: String) -> Bool {
-        guard loadID != nil, access == .allowed, let photo = photos.first(where: { $0.id == id }) else { return false }
+        guard loadID != nil, access == .allowed, let photo = photos.first(where: { $0.id == id }), let coordinate = photo.coordinate else { return false }
         let location = previewPhotoID == id ? previewLocation : nil
         onSelect(location ?? GardenLocation(name: "Lokasi dari foto", subtitle: "Foto kebun",
-                                           coordinate: photo.coordinate, source: .photo))
+                                           coordinate: coordinate, source: .photo))
         return true
     }
 
@@ -63,7 +66,8 @@ final class GardenPhotoPickerViewModel {
     func preparePreview(for photoID: String) async {
         guard let requestID = loadID, access == .allowed, previewPhotoID == photoID,
               let photo = photos.first(where: { $0.id == photoID }) else { return }
-        var location = await resolveLocation(photo.coordinate)
+        guard let coordinate = photo.coordinate else { return }
+        var location = await resolveLocation(coordinate)
         guard !Task.isCancelled, loadID == requestID, previewPhotoID == photoID else { return }
         location.source = .photo
         previewLocation = location

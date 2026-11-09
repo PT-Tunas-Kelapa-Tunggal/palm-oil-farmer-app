@@ -8,6 +8,7 @@ struct LocationOptionRow: View {
     let subtitle: String
     let symbol: String
     var isLoading = false
+    var isBrand = true
     let action: () -> Void
 
     var body: some View {
@@ -18,9 +19,9 @@ struct LocationOptionRow: View {
             layout {
                 Image(systemName: symbol)
                     .font(.title3)
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(isBrand ? RegistrationStyle.actionTint : Color.secondary)
                     .frame(width: iconSize, height: iconSize)
-                    .background(Color(uiColor: .systemGray5), in: Circle())
+                    .background(isBrand ? RegistrationStyle.actionTint.opacity(0.1) : Color(uiColor: .systemGray5), in: Circle())
                     .accessibilityHidden(true)
                 VStack(alignment: .leading, spacing: 0) {
                     Text(title).font(.headline)

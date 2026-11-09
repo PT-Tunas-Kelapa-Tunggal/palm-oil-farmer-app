@@ -54,8 +54,11 @@ struct PlantingDatePickerView: View {
                 }
                 .pickerStyle(.wheel)
                 .frame(height: 217)
-                .padding(.horizontal, 56)
-                .padding(.bottom, 32)
+                .padding(.horizontal, 16)
+                .padding(.bottom, 12)
+                Text("Kalau lupa bulannya, pilih perkiraan saja.")
+                    .font(.footnote).foregroundStyle(.secondary)
+                    .padding(.bottom, 24)
             }
         }
         .fittedSheetHeight()
@@ -64,7 +67,7 @@ struct PlantingDatePickerView: View {
 
     private var cancelButton: some View {
         Button { dismiss() } label: {
-            Text("Batal").frame(maxWidth: dynamicTypeSize.isAccessibilitySize ? .infinity : nil)
+            Image(systemName: "xmark").font(.title2).accessibilityLabel("Batal")
         }
     }
 
@@ -73,8 +76,10 @@ struct PlantingDatePickerView: View {
             onConfirm(month, year)
             dismiss()
         } label: {
-            Text("Selesai").frame(maxWidth: dynamicTypeSize.isAccessibilitySize ? .infinity : nil)
+            Image(systemName: "checkmark").font(.title2).accessibilityLabel("Selesai")
         }
+        .buttonStyle(.glassProminent)
+        .tint(RegistrationStyle.actionTint)
     }
 
     private var monthPicker: some View {

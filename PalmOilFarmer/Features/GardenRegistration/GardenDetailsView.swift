@@ -26,22 +26,33 @@ struct GardenDetailsView: View {
             ? AnyLayout(VStackLayout(spacing: 7))
             : AnyLayout(HStackLayout(spacing: 7))
         VStack(spacing: 0) {
-            RegistrationHeader(title: model.isEditing ? "Edit kebun" : "Data kebun") {
+            RegistrationHeader(title: model.isEditing ? "Edit Kebun" : "Data Kebun") {
                 isNameFocused = false
                 coordinator.close()
             }
             ScrollView {
                 VStack(spacing: 0) {
-                    GardenMapView(boundary: boundary, referenceImage: referenceMapImage, showsAnnotations: true)
-                        .frame(height: RegistrationStyle.mapHeight)
-                        .simultaneousGesture(TapGesture().onEnded { isNameFocused = false })
-                    metricsLayout {
-                        detailMetric("Luas tanah", value: displayMetrics.area)
-                        detailMetric("Perimeter", value: displayMetrics.perimeter)
+                    VStack(spacing: 0) {
+                        Color.clear
+                            .frame(height: RegistrationStyle.mapHeight)
+                            .overlay {
+                                GardenMapView(boundary: boundary, referenceImage: referenceMapImage, showsAnnotations: true)
+                            }
+                            .clipped()
+                            .simultaneousGesture(TapGesture().onEnded { isNameFocused = false })
+                        metricsLayout {
+                            detailMetric("Luas", value: displayMetrics.area)
+                            Divider().frame(height: 36)
+                            detailMetric("Keliling", value: displayMetrics.perimeter)
+                        }
+                        .padding(.horizontal, 16)
+                        .padding(.vertical, 14)
                     }
+                    .background(RegistrationStyle.surface)
+                    .clipShape(RoundedRectangle(cornerRadius: 24))
                     .padding(.horizontal, 16)
-                    .padding(.top, 16)
-                    .padding(.bottom, 8)
+                    .padding(.top, 8)
+                    .padding(.bottom, 16)
                     VStack(spacing: 0) {
                         RegistrationFormField(title: "Nama Kebun") {
                             HStack(spacing: 8) {
@@ -74,14 +85,13 @@ struct GardenDetailsView: View {
                         RegistrationFormField(title: "Jenis Tanah") {
                             Menu {
                                 Picker("Jenis Tanah", selection: $model.soilType) {
-                                    Text("Belum dipilih").tag(Optional<SoilType>.none)
                                     ForEach(SoilType.allCases) { soil in
                                         Text(soil.displayName).tag(Optional(soil))
                                     }
                                 }
                             } label: {
                                 selectionLabel(model.soilType?.displayName,
-                                               placeholder: "Pilih jenis tanah", symbol: "sprinkler",
+                                               placeholder: "Pilih jenis tanah", symbol: "leaf",
                                                trailing: "chevron.up.chevron.down")
                             }
                             .tint(.primary)
@@ -97,8 +107,8 @@ struct GardenDetailsView: View {
             }
             .scrollDismissesKeyboard(.interactively)
             .bottomActionBar {
-                RegistrationPrimaryButton(title: "Simpan", action: save)
-                    .padding(.horizontal, 24)
+                RegistrationPrimaryButton(title: "Simpan Kebun", action: save)
+                    .padding(.horizontal, 16)
                     .padding(.top, 16)
                     .padding(.bottom, 2)
             }
@@ -111,7 +121,7 @@ struct GardenDetailsView: View {
             }
         }
         .presentationBackground(RegistrationStyle.background)
-        .presentationDragIndicator(.hidden)
+        .presentationDragIndicator(.visible)
         .onChange(of: coordinator.isFinished) { _, finished in
             if finished { dismiss() }
         }
@@ -138,14 +148,13 @@ struct GardenDetailsView: View {
     }
 
     private func detailMetric(_ title: String, value: String) -> some View {
-        VStack(spacing: 0) {
-            Text(title).font(.footnote)
-            Text(value).font(.headline)
+        VStack(alignment: .leading, spacing: 4) {
+            Label(title, systemImage: title == "Luas" ? "square.dashed.inset.filled" : "square.dashed")
+                .font(.footnote)
+                .foregroundStyle(.secondary)
+            Text(value).font(.title.bold())
         }
-        .padding(.vertical, 16)
-        .padding(.horizontal, 8)
-        .frame(maxWidth: .infinity, minHeight: 72)
-        .background(RegistrationStyle.surface, in: RoundedRectangle(cornerRadius: 20))
+        .frame(maxWidth: .infinity, alignment: .leading)
         .accessibilityElement(children: .combine)
     }
 
@@ -174,7 +183,7 @@ struct RegistrationFormField<Content: View>: View {
 #if DEBUG
 #Preview("COdedUI5 · Data Kebun") {
     GardenDetailsView(location: GardenPreviewData.location, boundary: GardenPreviewData.boundary,
-                      onSave: { _ in true }, referenceMapImage: "GardenBoundaryMap",
+                      onSave: { _ in true }, referenceMapImage: "RegistrationBoundaryMap",
                       metrics: GardenPreviewData.metrics)
 }
 #endif

@@ -11,15 +11,15 @@ struct GardenPhotoPickerViewModelTests {
                                  isUserLibrary: true, isScreenshot: false))
     }
 
-    @Test func eligibilityRetainsGeotagUserLibraryAndScreenshotRules() {
+    @Test func eligibilityIncludesPhotosWithoutGPSAndExcludesScreenshots() {
         let date = Date(timeIntervalSince1970: 1_000)
         for hasLocation in [false, true] {
             for isUserLibrary in [false, true] {
                 for isScreenshot in [false, true] {
                     let value = GardenPhoto(id: "photo", coordinate: hasLocation ? coordinate : nil, creationDate: date,
                                             isUserLibrary: isUserLibrary, isScreenshot: isScreenshot)
-                    #expect((value != nil) == (hasLocation && isUserLibrary && !isScreenshot))
-                    if let value { #expect(value.id == "photo" && value.coordinate == coordinate && value.creationDate == date) }
+                    #expect((value != nil) == (isUserLibrary && !isScreenshot))
+                    if let value { #expect(value.id == "photo" && value.coordinate == (hasLocation ? coordinate : nil) && value.creationDate == date) }
                 }
             }
         }

@@ -17,6 +17,8 @@ enum GardenMappingEvent {
 final class GardenBoundaryViewModel {
     let location: GardenLocation
     private(set) var boundary = GardenBoundary()
+    var isClosed: Bool { boundary.points.count >= GardenBoundary.minimumMappingPointCount }
+    var canConfirmBoundary: Bool { isActive() && !isConfirmingPhoto && boundary.isReadyForMapping }
     private(set) var isConfirmingPhoto: Bool
     private var didSaveDraft = false
     private let allowsLocationDrafts: Bool
@@ -55,15 +57,23 @@ final class GardenBoundaryViewModel {
     }
 
     func movePoint(at index: Int, to point: GardenCoordinate) {
-        guard isActive(), !isConfirmingPhoto, boundary.points.indices.contains(index) else { return }
+        guard isActive(), !isConfirmingPhoto, boundary.points.indices.contains(index),
+              boundary.points[index] != point else { return }
         boundary.points[index] = point
     }
 
-    func undo() { if isActive() { _ = boundary.points.popLast() } }
-    func clear() { if isActive() { boundary.points.removeAll() } }
+    func undo() {
+        guard isActive() else { return }
+        _ = boundary.points.popLast()
+    }
+
+    func clear() {
+        guard isActive() else { return }
+        boundary.points.removeAll()
+    }
 
     func confirmBoundary() {
-        guard isActive(), !isConfirmingPhoto, boundary.isValid else { return }
+        guard canConfirmBoundary else { return }
         onEvent(.showDetails)
     }
 
