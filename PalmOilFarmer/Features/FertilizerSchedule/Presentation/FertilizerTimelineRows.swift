@@ -10,7 +10,7 @@ enum FertilizerScheduleStyle {
         colors: [Color(white: 0.06), Color(white: 0.24)], startPoint: .leading, endPoint: .trailing
     )
     static let screenBackground = LinearGradient(
-        colors: [Color(white: 0.2), Color(white: 0.05)], startPoint: .topTrailing, endPoint: .bottomLeading
+        colors: [Color(white: 0.17), Color(white: 0.02)], startPoint: .topTrailing, endPoint: .bottomLeading
     )
     static let heroRadius: CGFloat = 28
     static let rowRadius: CGFloat = 16
