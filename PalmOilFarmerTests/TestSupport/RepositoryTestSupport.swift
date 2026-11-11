@@ -50,6 +50,9 @@ final class LocationRepositoryStub: GardenLocationRepository {
         guard let currentResult else { throw Failure.unavailable }
         return currentResult
     }
+    func location(at coordinate: GardenCoordinate) async -> GardenLocation {
+        GardenLocation(name: "Lokasi dari foto", subtitle: "Foto kebun", coordinate: coordinate, source: .photo)
+    }
 }
 
 @MainActor

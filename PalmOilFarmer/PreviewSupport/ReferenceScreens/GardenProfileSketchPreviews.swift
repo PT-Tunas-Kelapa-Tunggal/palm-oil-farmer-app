@@ -37,7 +37,7 @@ private enum ProfileSketchFixture {
 #Preview("Sketch · Missing History") { ProfileSketchFixture.content(complete: false) }
 #Preview("Sketch · Profil Lengkap") { ProfileSketchFixture.content(complete: true) }
 #Preview("Sketch · Formulir Profil", traits: .fixedLayout(width: 402, height: 1328)) {
-    GardenProfileEditorView(model: ProfileSketchFixture.editor, onClose: {})
+    GardenProfileEditorView(viewModel: ProfileSketchFixture.editor, onClose: {})
 }
 #Preview("Sketch · Ringkasan Profil", traits: .fixedLayout(width: 402, height: 956)) {
     GardenProfileSummaryView(garden: ProfileSketchFixture.complete, onClose: {}, onEdit: {})
@@ -46,7 +46,7 @@ private enum ProfileSketchFixture {
     GardenReviewInformationView(onClose: {}, onApply: {})
 }
 #Preview("Profil · Dynamic Type") {
-    GardenProfileEditorView(model: ProfileSketchFixture.editor, onClose: {})
+    GardenProfileEditorView(viewModel: ProfileSketchFixture.editor, onClose: {})
         .environment(\.dynamicTypeSize, .accessibility3)
 }
 #endif

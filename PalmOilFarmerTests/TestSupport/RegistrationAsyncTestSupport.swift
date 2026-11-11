@@ -24,6 +24,10 @@ final class ControlledLocationRepository: GardenLocationRepository {
         }
     }
 
+    func location(at coordinate: GardenCoordinate) async -> GardenLocation {
+        GardenLocation(name: "Lokasi dari foto", subtitle: "Foto kebun", coordinate: coordinate, source: .photo)
+    }
+
     func waitForSearch(_ query: String) async {
         if searches[query] != nil { return }
         await withCheckedContinuation { searchWaiters[query] = $0 }

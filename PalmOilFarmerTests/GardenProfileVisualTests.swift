@@ -12,10 +12,10 @@ final class GardenProfileVisualTests: XCTestCase {
         try await capture("missing", height: 874, view: GardenProfileCanvasFixtures.content(complete: false))
         try await capture("complete", height: 1045, view: GardenProfileCanvasFixtures.content(complete: true))
         try await capture("saved", height: 1078, view: GardenProfileCanvasFixtures.content(complete: true, justSaved: true))
-        try await capture("form", height: 1317, view: GardenProfileEditorView(model: GardenProfileCanvasFixtures.makeEditor(), onClose: {}))
+        try await capture("form", height: 1317, view: GardenProfileEditorView(viewModel: GardenProfileCanvasFixtures.makeEditor(), onClose: {}))
         try await capture("summary", height: 1025, view: GardenProfileSummaryView(garden: GardenProfileCanvasFixtures.completeGarden, metrics: GardenDisplayMetrics(area: "1,7 ha", perimeter: "540 m"), onClose: {}, onEdit: {}))
         try await capture("information", height: 1227, view: GardenReviewInformationView(onClose: {}, onApply: {}))
-        try await capture("form-accessibility", height: 1500, view: GardenProfileEditorView(model: GardenProfileCanvasFixtures.makeEditor(), onClose: {}).environment(\.dynamicTypeSize, .accessibility3))
+        try await capture("form-accessibility", height: 1500, view: GardenProfileEditorView(viewModel: GardenProfileCanvasFixtures.makeEditor(), onClose: {}).environment(\.dynamicTypeSize, .accessibility3))
         try await capture("complete-dark", height: 1045, view: GardenProfileCanvasFixtures.content(complete: true).environment(\.colorScheme, .dark))
     }
 

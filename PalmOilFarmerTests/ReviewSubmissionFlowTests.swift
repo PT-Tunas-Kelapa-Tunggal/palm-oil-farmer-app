@@ -4,9 +4,9 @@ import Testing
 
 @MainActor
 struct ReviewSubmissionFlowTests {
-    private func request(in profile: GardenProfileFlow) throws -> ReviewRequestFlow {
-        profile.coordinator.reviewAction(.request)
-        return profile.makeReviewRequest(try #require(profile.coordinator.sheet))
+    private func request(in profile: GardenProfileViewModel) throws -> ReviewRequestFlow {
+        profile.reviewAction(.request)
+        return try #require(profile.makeReviewRequest(for: try #require(profile.sheet)))
     }
 
     @Test func mainFlowRegistersCompletesProfileAndSubmitsWithoutPersistingSubmittedCache() async throws {
@@ -14,27 +14,27 @@ struct ReviewSubmissionFlowTests {
         let app = reviewTestDependencies(repository: repository)
         app.dashboardViewModel.registerGarden()
         #expect(app.coordinator.registrationSheet == .guide)
-        let registration = app.registrationFactory.makeFlow(initialStep: .guide,
+        let registration = app.registrationFactory.makeViewModel(initialStep: .guide,
             onLocate: app.coordinator.locatedGarden, onCancel: app.coordinator.cancelRegistration)
-        registration.coordinator.continueToSearch()
+        registration.continueToSearch()
         registration.searchViewModel.selectResult(mappingLocation())
         #expect(app.coordinator.mappingLocation == nil && app.coordinator.registrationSheet == nil)
         app.coordinator.registrationDidDismiss()
         let location = try #require(app.coordinator.mappingLocation)
-        let mapping = app.mappingFactory.makeFlow(location: location, onFinish: app.coordinator.mappingFinished)
-        mappingPoints().forEach(mapping.viewModel.addPoint)
-        mapping.viewModel.confirmBoundary()
-        let details = mapping.makeDetailsFlow()
-        completeDetails(details.viewModel)
-        #expect(details.viewModel.save())
-        mapping.coordinator.detailsDidDismiss()
+        let mapping = app.mappingFactory.makeViewModel(location: location, onFinish: app.coordinator.mappingFinished)
+        mappingPoints().forEach(mapping.addPoint)
+        mapping.confirmBoundary()
+        let details = mapping.makeDetailsViewModel()
+        completeDetails(details)
+        #expect(details.save())
+        mapping.detailsDidDismiss()
         app.coordinator.mappingDidDismiss()
         let garden = try #require(app.gardenStore.gardens.first)
         app.dashboardViewModel.selectGarden(DashboardMapper().map(garden))
         #expect(app.coordinator.path == [.gardenProfile(garden.id)])
-        let profile = app.profileFactory.makeFlow(garden: garden)
-        profile.coordinator.open(.profile)
-        let editor = profile.makeProfileEditor(try #require(profile.coordinator.sheet))
+        let profile = app.profileFactory.makeViewModel(garden: garden)
+        profile.open(.profile)
+        let editor = profile.makeProfileEditor(for: try #require(profile.sheet))
         editor.fertilizers[0].name = "Urea"
         editor.fertilizers[0].doseKgPerTree = 1.5
         editor.harvestFrequency = 3
@@ -55,8 +55,8 @@ struct ReviewSubmissionFlowTests {
         #expect(sent.agronomy.plantingYear == 2016 && sent.agronomy.plantingMonth == garden.plantingMonth && sent.agronomy.soilType == SoilType.peat.rawValue)
         #expect(sent.agronomy.fertilizerRecords.first?.id == fertilizerID && sent.agronomy.harvestRecord?.latestWeightKg == 750)
         #expect(sent.farmer.name == "Budi" && sent.farmer.address == "Riau" && sent.farmer.phone == "+62 (812)-3456 789")
-        #expect(review.coordinator.isFinished && profile.coordinator.sheet == nil && !profile.coordinator.isFinished)
-        #expect(profile.reviewPresentation.activeStatus == .submitted && profile.reviewPresentation.action(for: profile.viewModel.garden) == .status)
+        #expect(review.coordinator.isFinished && profile.sheet == nil && !profile.isFinished)
+        #expect(profile.reviewViewModel.activeStatus == .submitted && profile.reviewViewModel.action(for: profile.garden) == .status)
         #expect(app.gardenStore.gardens.first?.id == garden.id && app.gardenStore.gardens.first?.review?.status == .submitted)
         let reopened = makeTestGardenStore(in: app.modelContainer, repository: repository)
         #expect(reopened.gardens.isEmpty)
@@ -69,7 +69,7 @@ struct ReviewSubmissionFlowTests {
         let app = reviewTestDependencies(repository: repository)
         let garden = reviewReadyGarden()
         #expect(app.gardenStore.add(garden))
-        let profile = app.profileFactory.makeFlow(garden: garden)
+        let profile = app.profileFactory.makeViewModel(garden: garden)
         let review = try request(in: profile)
         review.viewModel.continueToContact()
         #expect(review.coordinator.path.isEmpty && review.viewModel.showsConsentError)
@@ -89,7 +89,7 @@ struct ReviewSubmissionFlowTests {
         let app = reviewTestDependencies(repository: repository)
         var garden = reviewReadyGarden()
         #expect(app.gardenStore.add(garden))
-        let profile = app.profileFactory.makeFlow(garden: garden)
+        let profile = app.profileFactory.makeViewModel(garden: garden)
         let review = try request(in: profile)
         let contact = try openReviewContact(review)
         completeReviewContact(contact.viewModel)
@@ -97,7 +97,7 @@ struct ReviewSubmissionFlowTests {
         #expect(app.gardenStore.update(garden))
         await contact.viewModel.submit()
         #expect(contact.viewModel.errorMessage == ReviewSubmissionError.profileIncomplete.localizedDescription)
-        #expect(repository.submissions.isEmpty && profile.coordinator.sheet != nil && !review.coordinator.isFinished)
+        #expect(repository.submissions.isEmpty && profile.sheet != nil && !review.coordinator.isFinished)
         garden.harvestRecord = HarvestRecord(frequencyPerMonth: 4, latestWeightKg: 900)
         #expect(app.gardenStore.update(garden))
         await contact.viewModel.submit()
@@ -111,20 +111,20 @@ struct ReviewSubmissionFlowTests {
         let app = reviewTestDependencies(repository: repository)
         let garden = reviewReadyGarden()
         #expect(app.gardenStore.add(garden))
-        let profile = app.profileFactory.makeFlow(garden: garden)
+        let profile = app.profileFactory.makeViewModel(garden: garden)
         let review = try request(in: profile)
         let contact = try openReviewContact(review)
         completeReviewContact(contact.viewModel)
         await contact.viewModel.submit()
         #expect(contact.viewModel.errorMessage == "Pengiriman gagal. Coba lagi.")
         #expect(contact.viewModel.name == "  Budi \n" && contact.viewModel.hasConsent && !contact.viewModel.hasSubmitted)
-        #expect(profile.coordinator.sheet != nil && profile.reviewPresentation.activeStatus == nil)
+        #expect(profile.sheet != nil && profile.reviewViewModel.activeStatus == nil)
         #expect(makeTestGardenStore(in: app.modelContainer).gardens.first?.id == garden.id)
         repository.rejectsSubmission = false
         await contact.viewModel.submit()
         #expect(repository.submissions.count == 2 && contact.viewModel.hasSubmitted && review.coordinator.isFinished)
-        #expect(profile.coordinator.sheet == nil && !profile.coordinator.isFinished)
-        #expect(profile.reviewPresentation.activeStatus == .submitted && makeTestGardenStore(in: app.modelContainer).gardens.isEmpty)
+        #expect(profile.sheet == nil && !profile.isFinished)
+        #expect(profile.reviewViewModel.activeStatus == .submitted && makeTestGardenStore(in: app.modelContainer).gardens.isEmpty)
     }
 
     @Test func closedRequestCannotDismissOrMutateNewSessionButConfirmedSaveStillCommits() async throws {
@@ -133,16 +133,16 @@ struct ReviewSubmissionFlowTests {
         let app = reviewTestDependencies(repository: repository)
         let garden = reviewReadyGarden()
         #expect(app.gardenStore.add(garden))
-        let profile = app.profileFactory.makeFlow(garden: garden)
+        let profile = app.profileFactory.makeViewModel(garden: garden)
         let oldReview = try request(in: profile)
         let oldContact = try openReviewContact(oldReview)
         completeReviewContact(oldContact.viewModel)
         let pending = Task { await oldContact.viewModel.submit() }
         await repository.waitForSubmission(of: garden.id)
         oldContact.close()
-        profile.coordinator.sheetDidDismiss()
+        profile.sheetDidDismiss()
         let newReview = try request(in: profile)
-        let newSheetID = try #require(profile.coordinator.sheet?.id)
+        let newSheetID = try #require(profile.sheet?.id)
         let newContact = try openReviewContact(newReview)
         completeReviewContact(newContact.viewModel)
         await newContact.viewModel.submit()
@@ -151,11 +151,11 @@ struct ReviewSubmissionFlowTests {
         repository.finishSubmission(of: garden.id, with: .success(try #require(repository.submissions.first)))
         await pending.value
         #expect(oldContact.viewModel.hasSubmitted && app.gardenStore.gardens.first?.review?.status == .submitted)
-        #expect(profile.coordinator.sheet?.id == newSheetID && !newReview.coordinator.isFinished)
-        #expect(profile.reviewPresentation.activeStatus == nil && makeTestGardenStore(in: app.modelContainer).gardens.isEmpty)
+        #expect(profile.sheet?.id == newSheetID && !newReview.coordinator.isFinished)
+        #expect(profile.reviewViewModel.activeStatus == nil && makeTestGardenStore(in: app.modelContainer).gardens.isEmpty)
         await newContact.viewModel.submit()
         #expect(newContact.viewModel.errorMessage == ReviewSubmissionError.alreadySubmitted.localizedDescription)
-        #expect(repository.submissions.count == 1 && profile.coordinator.sheet?.id == newSheetID)
+        #expect(repository.submissions.count == 1 && profile.sheet?.id == newSheetID)
     }
 
     @Test func errorFromClosedRequestIsIgnoredAndDraftRemainsRetryable() async throws {
@@ -164,19 +164,19 @@ struct ReviewSubmissionFlowTests {
         let app = reviewTestDependencies(repository: repository)
         let garden = reviewReadyGarden()
         #expect(app.gardenStore.add(garden))
-        let profile = app.profileFactory.makeFlow(garden: garden)
+        let profile = app.profileFactory.makeViewModel(garden: garden)
         let oldReview = try request(in: profile)
         let oldContact = try openReviewContact(oldReview)
         completeReviewContact(oldContact.viewModel)
         let pending = Task { await oldContact.viewModel.submit() }
         await repository.waitForSubmission(of: garden.id)
         oldContact.close()
-        profile.coordinator.sheetDidDismiss()
+        profile.sheetDidDismiss()
         let current = try request(in: profile)
         repository.finishSubmission(of: garden.id, with: .failure(ReviewSubmissionRepositorySpy.Failure.unavailable))
         await pending.value
         #expect(oldContact.viewModel.errorMessage == nil && !oldContact.viewModel.hasSubmitted)
-        #expect(!current.coordinator.isFinished && profile.coordinator.sheet != nil && app.gardenStore.gardens.first?.review == nil)
+        #expect(!current.coordinator.isFinished && profile.sheet != nil && app.gardenStore.gardens.first?.review == nil)
         #expect(makeTestGardenStore(in: app.modelContainer).gardens.first?.id == garden.id)
         repository.suspendsSubmission = false
         let retry = try openReviewContact(current)

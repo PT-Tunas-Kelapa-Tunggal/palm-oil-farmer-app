@@ -16,10 +16,10 @@ struct GardenProfileDesignTests {
     @Test func combinedFormSavesOnceAndPreservesLatestGardenDetails() throws {
         let garden = profileGarden()
         let source = ProfileSourceSpy(gardens: [garden])
-        let flow = makeProfileTestFlow(garden: garden, source: source)
-        flow.coordinator.open(.profile)
-        let sheet = try #require(flow.coordinator.sheet)
-        let model = flow.makeProfileEditor(sheet)
+        let profile = makeProfileTestViewModel(garden: garden, source: source)
+        profile.open(.profile)
+        let sheet = try #require(profile.sheet)
+        let model = profile.makeProfileEditor(for: sheet)
         fill(model)
         model.addFertilizer() // An untouched extra card is ignored.
         var latest = garden
@@ -37,7 +37,7 @@ struct GardenProfileDesignTests {
         #expect(saved.harvestRecord?.latestWeightKg == 140)
         #expect(saved.fertilizerRecords?.count == 1)
         #expect(saved.fertilizerRecords?.first?.bagCount == nil)
-        #expect(flow.coordinator.sheet == nil)
+        #expect(profile.sheet == nil)
     }
 
     @Test func partialOrInvalidNPKCannotWriteAndFailedPersistenceCanRetry() {
@@ -63,16 +63,16 @@ struct GardenProfileDesignTests {
     @Test func dismissedAndWrongSessionsCannotSave() throws {
         let garden = profileGarden()
         let source = ProfileSourceSpy(gardens: [garden])
-        let flow = makeProfileTestFlow(garden: garden, source: source)
-        flow.coordinator.open(.profile)
-        let sheet = try #require(flow.coordinator.sheet)
-        let old = flow.makeProfileEditor(sheet)
+        let profile = makeProfileTestViewModel(garden: garden, source: source)
+        profile.open(.profile)
+        let sheet = try #require(profile.sheet)
+        let old = profile.makeProfileEditor(for: sheet)
         fill(old)
-        flow.coordinator.closeSheet(sheet)
+        profile.closeSheet(sheet)
         #expect(!old.save() && source.updates.isEmpty)
-        flow.coordinator.sheetDidDismiss()
-        flow.coordinator.open(.details)
-        let wrong = flow.makeProfileEditor(try #require(flow.coordinator.sheet))
+        profile.sheetDidDismiss()
+        profile.open(.details)
+        let wrong = profile.makeProfileEditor(for: try #require(profile.sheet))
         fill(wrong)
         #expect(!wrong.save() && !old.save() && source.updates.isEmpty)
     }
@@ -101,11 +101,11 @@ struct GardenProfileDesignTests {
         let store = makeTestGardenStore(in: container)
         let garden = profileGarden()
         #expect(store.add(garden))
-        let flow = GardenProfileFactory(source: store, reviewRepository: ReviewRepositoryStub(),
+        let profile = GardenProfileFactory(source: GardenProfileRepository(gardens: store), reviewRepository: ReviewRepositoryStub(),
             reviewRequestFactory: ReviewRequestFactory(submission: SubmitGardenReview(gateway: store)))
-            .makeFlow(garden: garden)
-        flow.coordinator.open(.profile)
-        let model = flow.makeProfileEditor(try #require(flow.coordinator.sheet))
+            .makeViewModel(garden: garden)
+        profile.open(.profile)
+        let model = profile.makeProfileEditor(for: try #require(profile.sheet))
         fill(model)
         #expect(model.save())
         let saved = try #require(makeTestGardenStore(in: container).gardens.first)

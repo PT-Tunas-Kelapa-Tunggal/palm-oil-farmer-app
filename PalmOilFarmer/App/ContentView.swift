@@ -33,13 +33,13 @@ struct ContentView: View {
         }
         .environment(store)
         .sheet(item: $coordinator.registrationSheet, onDismiss: coordinator.registrationDidDismiss) { sheet in
-            RegistrationIntroView(flow: registrationFactory.makeFlow(
+            RegistrationIntroView(viewModel: registrationFactory.makeViewModel(
                 initialStep: sheet == .guide ? .guide : .search,
                 onLocate: coordinator.locatedGarden, onCancel: coordinator.cancelRegistration
             ))
         }
         .fullScreenCover(item: $coordinator.mappingLocation, onDismiss: coordinator.mappingDidDismiss) { location in
-            GardenBoundaryView(flow: mappingFactory.makeFlow(location: location, onFinish: coordinator.mappingFinished))
+            GardenBoundaryView(viewModel: mappingFactory.makeViewModel(location: location, onFinish: coordinator.mappingFinished))
         }
         .alert("Data kebun", isPresented: Binding(
             get: { store.errorMessage != nil && coordinator.mappingLocation == nil },
@@ -56,7 +56,7 @@ struct ContentView: View {
         switch route {
         case .gardenProfile(let id):
             if let garden = store.gardens.first(where: { $0.id == id }) {
-                GardenProfileScreen(flow: profileFactory.makeFlow(garden: garden))
+                GardenProfileScreen(viewModel: profileFactory.makeViewModel(garden: garden))
             }
         #if DEBUG
         case .developerMode:

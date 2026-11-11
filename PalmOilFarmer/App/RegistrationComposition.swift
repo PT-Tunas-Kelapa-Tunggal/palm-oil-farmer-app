@@ -8,24 +8,13 @@ struct GardenRegistrationFactory {
         self.services = services
     }
 
-    func makeFlow(initialStep: GardenRegistrationStep,
-                  initialQuery: String = "", initialResults: [GardenLocation] = [],
-                  onLocate: @escaping (GardenLocation) -> Void,
-                  onCancel: @escaping () -> Void) -> GardenRegistrationFlow {
-        let dependencies = services()
-        let coordinator = GardenRegistrationCoordinator(initialStep: initialStep, onLocate: onLocate, onCancel: onCancel)
-        return GardenRegistrationFlow(
-            coordinator: coordinator,
-            searchViewModel: LocationSearchViewModel(
-                repository: dependencies.locations, initialQuery: initialQuery, initialResults: initialResults,
-                onSelect: coordinator.selectLocation
-            ),
-            photoViewModel: GardenPhotoPickerViewModel(
-                repository: dependencies.photos,
-                resolveLocation: { await LocationSearchService.location(at: $0.mapCoordinate) },
-                onSelect: coordinator.selectedPhoto
-            )
-        )
+    func makeViewModel(initialStep: GardenRegistrationStep,
+                       initialQuery: String = "", initialResults: [GardenLocation] = [],
+                       onLocate: @escaping (GardenLocation) -> Void,
+                       onCancel: @escaping () -> Void) -> RegistrationIntroViewModel {
+        RegistrationIntroViewModel(services: services(), initialStep: initialStep,
+                                   initialQuery: initialQuery, initialResults: initialResults,
+                                   onLocate: onLocate, onCancel: onCancel)
     }
 
     static func liveServices() -> GardenRegistrationServices {
