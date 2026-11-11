@@ -148,7 +148,7 @@ struct GardenProfileRefactorTests {
 
     @Test func submittedReviewWinsOverEarlierPendingFetch() async {
         let repository = ControlledProfileReviewRepository()
-        let presentation = GardenProfileReviewPresentation()
+        let presentation = GardenProfileReviewViewModel()
         var saved = PlantationReviewRequest(garden: profileGarden(),
             contact: ReviewContactDetails(name: "Petani", phone: "08123456789", address: "Riau"))
         saved.status = .submitted

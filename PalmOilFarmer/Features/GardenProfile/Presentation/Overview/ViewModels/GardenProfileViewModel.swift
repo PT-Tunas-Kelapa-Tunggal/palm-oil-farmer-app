@@ -24,7 +24,7 @@ typealias GardenProfileReviewRequestMaker = (_ gardenID: UUID, _ isActive: @esca
 @Observable
 final class GardenProfileViewModel {
     let gardenID: UUID
-    let reviewPresentation = GardenProfileReviewPresentation()
+    let reviewViewModel = GardenProfileReviewViewModel()
     var showsDeleteError = false
     private(set) var hasDeleted = false
 
@@ -65,7 +65,7 @@ final class GardenProfileViewModel {
 
     func loadReview() async {
         guard let reviewRepository else { return }
-        await reviewPresentation.load(for: gardenID, repository: reviewRepository)
+        await reviewViewModel.load(for: gardenID, repository: reviewRepository)
     }
 
     func saveProfile(harvest: HarvestRecord, frequency: Int, fertilizers: [FertilizerRecord]) -> Bool {
@@ -190,7 +190,7 @@ final class GardenProfileViewModel {
             { [weak self] in presentation.kind == .review && self?.isCurrent(presentation) == true },
             { [weak self] saved in
                 guard let self, isCurrent(presentation) else { return }
-                reviewPresentation.submitted(saved)
+                reviewViewModel.submitted(saved)
             },
             { [weak self] in self?.closeSheet(presentation) })
     }

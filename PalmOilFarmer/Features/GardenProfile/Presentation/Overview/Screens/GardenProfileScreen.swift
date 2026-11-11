@@ -13,9 +13,9 @@ struct GardenProfileScreen: View {
     @AppStorage("gardenReview.hideIntroduction") private var hideReviewIntroduction = false
     @Environment(\.dismiss) private var dismiss
     private var garden: Garden { viewModel.garden }
-    private var currentReviewStatus: ReviewStatus? { viewModel.reviewPresentation.activeStatus ?? garden.review?.status }
+    private var currentReviewStatus: ReviewStatus? { viewModel.reviewViewModel.activeStatus ?? garden.review?.status }
     private var currentReport: FertilizerRecommendationReport? {
-        viewModel.reviewPresentation.activeReport ?? (currentReviewStatus == .completed ? DemoReviewReport.make(for: garden) : nil)
+        viewModel.reviewViewModel.activeReport ?? (currentReviewStatus == .completed ? DemoReviewReport.make(for: garden) : nil)
     }
 
     var body: some View {
@@ -102,7 +102,7 @@ struct GardenProfileScreen: View {
                 if currentReviewStatus == nil && !hideReviewIntroduction {
                     viewModel.open(.reviewInformation)
                 } else {
-                    viewModel.reviewAction(viewModel.reviewPresentation.action(for: garden))
+                    viewModel.reviewAction(viewModel.reviewViewModel.action(for: garden))
                 }
             },
             onViewSummary: viewModel.openSummary,
@@ -117,7 +117,7 @@ struct GardenProfileScreen: View {
         case .details:
             GardenDetailsView(viewModel: viewModel.makeDetailsEditor(for: presentation))
         case .profile:
-            GardenProfileEditorView(model: viewModel.makeProfileEditor(for: presentation),
+            GardenProfileEditorView(viewModel: viewModel.makeProfileEditor(for: presentation),
                 onClose: { viewModel.closeSheet(presentation) })
         case .review:
             if let request = viewModel.makeReviewRequest(for: presentation) {
@@ -129,7 +129,7 @@ struct GardenProfileScreen: View {
                 onApply: {
                     guard viewModel.isComplete else { return }
                     viewModel.applyForReview(from: presentation,
-                        action: viewModel.reviewPresentation.action(for: garden))
+                        action: viewModel.reviewViewModel.action(for: garden))
                 })
         }
     }
@@ -139,9 +139,9 @@ struct GardenProfileScreen: View {
         if let status = currentReviewStatus {
             ReviewStatusView(
                 gardenName: garden.name, status: status,
-                entries: !viewModel.reviewPresentation.activeEntries.isEmpty ? viewModel.reviewPresentation.activeEntries
+                entries: !viewModel.reviewViewModel.activeEntries.isEmpty ? viewModel.reviewViewModel.activeEntries
                     : garden.review.map { ReviewTimelineEntry.entries(for: $0) } ?? [],
-                resultsDownloaded: viewModel.reviewPresentation.activeStatus == .completed || (garden.review?.resultsDownloaded ?? false),
+                resultsDownloaded: viewModel.reviewViewModel.activeStatus == .completed || (garden.review?.resultsDownloaded ?? false),
                 onAdvance: advanceAction,
                 onDownloaded: { viewModel.updateReview { $0.resultsDownloaded = true } },
                 onViewResults: viewModel.openResults

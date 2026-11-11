@@ -56,7 +56,7 @@ struct ReviewSubmissionFlowTests {
         #expect(sent.agronomy.fertilizerRecords.first?.id == fertilizerID && sent.agronomy.harvestRecord?.latestWeightKg == 750)
         #expect(sent.farmer.name == "Budi" && sent.farmer.address == "Riau" && sent.farmer.phone == "+62 (812)-3456 789")
         #expect(review.coordinator.isFinished && profile.sheet == nil && !profile.isFinished)
-        #expect(profile.reviewPresentation.activeStatus == .submitted && profile.reviewPresentation.action(for: profile.garden) == .status)
+        #expect(profile.reviewViewModel.activeStatus == .submitted && profile.reviewViewModel.action(for: profile.garden) == .status)
         #expect(app.gardenStore.gardens.first?.id == garden.id && app.gardenStore.gardens.first?.review?.status == .submitted)
         let reopened = makeTestGardenStore(in: app.modelContainer, repository: repository)
         #expect(reopened.gardens.isEmpty)
@@ -118,13 +118,13 @@ struct ReviewSubmissionFlowTests {
         await contact.viewModel.submit()
         #expect(contact.viewModel.errorMessage == "Pengiriman gagal. Coba lagi.")
         #expect(contact.viewModel.name == "  Budi \n" && contact.viewModel.hasConsent && !contact.viewModel.hasSubmitted)
-        #expect(profile.sheet != nil && profile.reviewPresentation.activeStatus == nil)
+        #expect(profile.sheet != nil && profile.reviewViewModel.activeStatus == nil)
         #expect(makeTestGardenStore(in: app.modelContainer).gardens.first?.id == garden.id)
         repository.rejectsSubmission = false
         await contact.viewModel.submit()
         #expect(repository.submissions.count == 2 && contact.viewModel.hasSubmitted && review.coordinator.isFinished)
         #expect(profile.sheet == nil && !profile.isFinished)
-        #expect(profile.reviewPresentation.activeStatus == .submitted && makeTestGardenStore(in: app.modelContainer).gardens.isEmpty)
+        #expect(profile.reviewViewModel.activeStatus == .submitted && makeTestGardenStore(in: app.modelContainer).gardens.isEmpty)
     }
 
     @Test func closedRequestCannotDismissOrMutateNewSessionButConfirmedSaveStillCommits() async throws {
@@ -152,7 +152,7 @@ struct ReviewSubmissionFlowTests {
         await pending.value
         #expect(oldContact.viewModel.hasSubmitted && app.gardenStore.gardens.first?.review?.status == .submitted)
         #expect(profile.sheet?.id == newSheetID && !newReview.coordinator.isFinished)
-        #expect(profile.reviewPresentation.activeStatus == nil && makeTestGardenStore(in: app.modelContainer).gardens.isEmpty)
+        #expect(profile.reviewViewModel.activeStatus == nil && makeTestGardenStore(in: app.modelContainer).gardens.isEmpty)
         await newContact.viewModel.submit()
         #expect(newContact.viewModel.errorMessage == ReviewSubmissionError.alreadySubmitted.localizedDescription)
         #expect(repository.submissions.count == 1 && profile.sheet?.id == newSheetID)

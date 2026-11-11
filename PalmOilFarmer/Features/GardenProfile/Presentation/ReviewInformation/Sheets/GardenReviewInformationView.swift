@@ -1,6 +1,6 @@
 import SwiftUI
 
-/// SHEET "Peninjauan Kebun": three-step explanation before applying for a review.
+/// "Peninjauan Kebun" sheet: three-step explanation before applying for a review.
 struct GardenReviewInformationView: View {
     @AppStorage("gardenReview.hideIntroduction") private var hideIntroduction = false
     let onClose: () -> Void

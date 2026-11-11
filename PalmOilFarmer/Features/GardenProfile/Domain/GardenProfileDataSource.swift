@@ -1,7 +1,6 @@
 import Foundation
 
-/// (1) Repository protocol: everything the garden profile reads and writes.
-/// Real impl: `GardenProfileRepository` (through Core's `GardenDataSource`); tests use `ProfileSourceSpy`.
+/// Everything the garden profile reads and writes.
 /// `gardens` is read live so the profile reflects edits made anywhere in the app.
 @MainActor
 protocol GardenProfileDataSource: AnyObject {

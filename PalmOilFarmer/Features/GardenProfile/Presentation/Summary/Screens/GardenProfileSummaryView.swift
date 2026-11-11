@@ -1,6 +1,6 @@
 import SwiftUI
 
-/// PUSHED SCREEN "Riwayat Panen dan Pemupukan" (from the profile). "Ubah" opens the editor sheet.
+/// "Riwayat Panen dan Pemupukan" page. "Ubah" opens the profile editor.
 struct GardenProfileSummaryView: View {
     let garden: Garden
     var metrics: GardenDisplayMetrics? = nil

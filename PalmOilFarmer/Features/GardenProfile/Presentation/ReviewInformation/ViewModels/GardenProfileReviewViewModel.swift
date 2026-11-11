@@ -1,10 +1,10 @@
 import Foundation
 import Observation
 
-/// Timeline/report presentation shared by the production profile and submission flow.
+/// Review status, timeline and report shown on the profile.
 @MainActor
 @Observable
-final class GardenProfileReviewPresentation {
+final class GardenProfileReviewViewModel {
     private(set) var activeStatus: ReviewStatus?
     private(set) var activeEntries: [ReviewTimelineEntry] = []
     private(set) var activeReport: FertilizerRecommendationReport?

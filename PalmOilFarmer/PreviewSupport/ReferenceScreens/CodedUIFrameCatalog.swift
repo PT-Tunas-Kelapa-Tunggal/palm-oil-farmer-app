@@ -32,11 +32,11 @@ struct CodedUIFramePreview: View {
                                 state: index == 5 ? .referenceProgress : .completed,
                                 onMapBoundary: {}, referenceMapImage: "CodedRegionHero")
             case 7:
-                GardenProfileEditorView(model: GardenProfileCanvasFixtures.makeEditor(), onClose: {})
+                GardenProfileEditorView(viewModel: GardenProfileCanvasFixtures.makeEditor(), onClose: {})
             case 8:
                 profile(garden: GardenPreviewData.fertilizedGarden)
                     .sheet(isPresented: .constant(true)) {
-                        GardenProfileEditorView(model: GardenProfileCanvasFixtures.makeEditor(), onClose: {})
+                        GardenProfileEditorView(viewModel: GardenProfileCanvasFixtures.makeEditor(), onClose: {})
                     }
             case 9:
                 SelectionListView(title: "Jenis Pupuk", options: FertilizerCatalogue.names, selected: "Urea",

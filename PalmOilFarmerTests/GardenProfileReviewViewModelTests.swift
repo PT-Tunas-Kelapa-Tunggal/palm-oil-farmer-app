@@ -3,7 +3,7 @@ import Testing
 @testable import PalmOilFarmer
 
 @MainActor
-struct GardenProfileReviewPresentationTests {
+struct GardenProfileReviewViewModelTests {
     private func request(status: ReviewStatus) -> PlantationReviewRequest {
         var request = PlantationReviewRequest(garden: profileGarden(),
             contact: ReviewContactDetails(name: "Budi", phone: "08123456789", address: "Riau"))
@@ -13,7 +13,7 @@ struct GardenProfileReviewPresentationTests {
 
     @Test func loadedStatusUsesExistingTimelineAndKeepsMissingReportFallbackAvailable() async {
         let value = request(status: .scheduled)
-        let bridge = GardenProfileReviewPresentation()
+        let bridge = GardenProfileReviewViewModel()
         await bridge.load(for: value.garden.id, repository: ReviewRepositoryStub(requests: [value]))
         #expect(bridge.activeStatus == .scheduled && bridge.activeReport == nil)
         #expect(bridge.activeEntries.map(\.title) == value.timeline.entries(for: .scheduled).map(\.title))
@@ -22,7 +22,7 @@ struct GardenProfileReviewPresentationTests {
 
     @Test func reviewActionRetainsSubmittedCompletedAndDownloadedTransitions() {
         var garden = profileGarden()
-        let bridge = GardenProfileReviewPresentation()
+        let bridge = GardenProfileReviewViewModel()
         #expect(bridge.action(for: garden) == .request)
         garden.review = GardenReview(status: .scheduled,
             contact: ReviewContactDetails(name: "A", phone: "08123456789", address: "B"), stageDates: [])
@@ -39,7 +39,7 @@ struct GardenProfileReviewPresentationTests {
 
     @Test func cancelledReviewLoadDoesNotPublishLateState() async {
         let repository = ControlledProfileReviewRepository()
-        let bridge = GardenProfileReviewPresentation()
+        let bridge = GardenProfileReviewViewModel()
         let value = request(status: .completed)
         let pending = Task { await bridge.load(for: value.garden.id, repository: repository) }
         await repository.waitForRequest(1)
@@ -51,7 +51,7 @@ struct GardenProfileReviewPresentationTests {
 
     @Test func newerLoadWinsAndFailedFetchRetainsCurrentPresentation() async {
         let repository = ControlledProfileReviewRepository()
-        let bridge = GardenProfileReviewPresentation()
+        let bridge = GardenProfileReviewViewModel()
         let first = Task { await bridge.load(for: UUID(), repository: repository) }
         await repository.waitForRequest(1)
         let second = Task { await bridge.load(for: UUID(), repository: repository) }

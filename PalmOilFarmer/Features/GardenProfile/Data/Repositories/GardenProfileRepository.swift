@@ -1,7 +1,7 @@
 import Foundation
 
-/// (2) Real repository: the garden profile reads and edits gardens through the shared
-/// data source (`Core/Gardens`), so the list and profile always show the same garden.
+/// Reads and edits gardens through the shared garden data source, so the list and the
+/// profile always show the same garden.
 @MainActor
 final class GardenProfileRepository: GardenProfileDataSource {
     private let source: any GardenDataSource
