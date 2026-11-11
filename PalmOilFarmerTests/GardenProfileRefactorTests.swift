@@ -114,36 +114,36 @@ struct GardenProfileRefactorTests {
     }
 
     @Test func summaryEditRejectsDuplicateAndClosedPageCallbacks() throws {
-        let coordinator = GardenProfileCoordinator()
-        coordinator.openSummary()
-        coordinator.editSummary()
-        let editor = try #require(coordinator.sheet)
-        coordinator.editSummary()
-        #expect(coordinator.isCurrent(editor))
-        coordinator.closeSheet(editor)
-        coordinator.sheetDidDismiss()
-        coordinator.closeSummary()
-        coordinator.editSummary()
-        #expect(coordinator.sheet == nil && coordinator.canDeleteNow)
+        let model = GardenProfileViewModel(garden: profileGarden(), source: ProfileSourceSpy(gardens: []))
+        model.openSummary()
+        model.editSummary()
+        let editor = try #require(model.sheet)
+        model.editSummary()
+        #expect(model.isCurrent(editor))
+        model.closeSheet(editor)
+        model.sheetDidDismiss()
+        model.closeSummary()
+        model.editSummary()
+        #expect(model.sheet == nil && model.canDeleteNow)
     }
 
     @Test func reviewInformationTransitionIsCancelledWhenProfileCloses() throws {
-        let coordinator = GardenProfileCoordinator()
-        coordinator.open(.reviewInformation)
-        let info = try #require(coordinator.sheet)
-        coordinator.applyForReview(from: info, action: .request)
-        coordinator.close()
-        coordinator.sheetDidDismiss()
-        #expect(coordinator.sheet == nil && coordinator.isFinished)
+        let model = GardenProfileViewModel(garden: profileGarden(), source: ProfileSourceSpy(gardens: []))
+        model.open(.reviewInformation)
+        let info = try #require(model.sheet)
+        model.applyForReview(from: info, action: .request)
+        model.close()
+        model.sheetDidDismiss()
+        #expect(model.sheet == nil && model.isFinished)
     }
 
     @Test func informationRoutesToExistingReviewStatusAfterDismissal() throws {
-        let coordinator = GardenProfileCoordinator()
-        coordinator.open(.reviewInformation)
-        coordinator.applyForReview(from: try #require(coordinator.sheet), action: .status)
-        #expect(!coordinator.showsReviewStatus)
-        coordinator.sheetDidDismiss()
-        #expect(coordinator.sheet == nil && coordinator.showsReviewStatus)
+        let model = GardenProfileViewModel(garden: profileGarden(), source: ProfileSourceSpy(gardens: []))
+        model.open(.reviewInformation)
+        model.applyForReview(from: try #require(model.sheet), action: .status)
+        #expect(!model.showsReviewStatus)
+        model.sheetDidDismiss()
+        #expect(model.sheet == nil && model.showsReviewStatus)
     }
 
     @Test func submittedReviewWinsOverEarlierPendingFetch() async {

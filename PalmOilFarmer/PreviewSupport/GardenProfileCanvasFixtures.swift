@@ -36,7 +36,7 @@ enum GardenProfileCanvasFixtures {
             onSave: { _, _, _ in true }, onSaved: {})
     }
 
-    static func makeFlow(complete: Bool) -> GardenProfileFlow {
+    static func makeViewModel(complete: Bool) -> GardenProfileViewModel {
         let repository = CanvasReviewRepository()
         let store = GardenStore(
             draftRepository: SwiftDataGardenDraftRepository(
@@ -46,7 +46,7 @@ enum GardenProfileCanvasFixtures {
         store.add(garden)
         return GardenProfileFactory(source: GardenProfileRepository(gardens: store), reviewRepository: repository,
             reviewRequestFactory: ReviewRequestFactory(submission: SubmitGardenReview(gateway: store)))
-            .makeFlow(garden: garden)
+            .makeViewModel(garden: garden)
     }
 
     static func content(complete: Bool, justSaved: Bool = false) -> some View {

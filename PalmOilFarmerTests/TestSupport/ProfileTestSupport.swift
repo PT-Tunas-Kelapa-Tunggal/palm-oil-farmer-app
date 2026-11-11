@@ -41,10 +41,10 @@ final class ProfileSourceSpy: GardenProfileDataSource {
 }
 
 @MainActor
-func makeProfileTestFlow(garden: Garden, source: any GardenProfileDataSource) -> GardenProfileFlow {
+func makeProfileTestViewModel(garden: Garden, source: any GardenProfileDataSource) -> GardenProfileViewModel {
     GardenProfileFactory(source: source, reviewRepository: ReviewRepositoryStub(),
         reviewRequestFactory: ReviewRequestFactory(submission: SubmitGardenReview(gateway: ProfileTestReviewGateway(source: source))))
-        .makeFlow(garden: garden)
+        .makeViewModel(garden: garden)
 }
 
 @MainActor

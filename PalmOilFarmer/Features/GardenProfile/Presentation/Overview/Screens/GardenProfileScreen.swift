@@ -1,112 +1,112 @@
 import SwiftUI
 
-/// SCREEN "Profil Kebun" (pushed from the garden list). The single interactive profile entry point.
-/// Layout: `GardenProfileContentView`. Opens: sheet `GardenProfileEditorView` (Lengkapi profil),
-/// sheet `GardenReviewInformationView` (Tentang Peninjauan), push `GardenProfileSummaryView` (Riwayat),
-/// plus screens owned by other features (see `GardenProfileFlowMap.swift`).
+/// "Profil Kebun" screen, pushed from the garden list.
 struct GardenProfileScreen: View {
-    @State private var flow: GardenProfileFlow
+    @State private var viewModel: GardenProfileViewModel
     private let referenceMapImage: String?
 
-    init(flow: GardenProfileFlow, referenceMapImage: String? = nil) {
-        _flow = State(initialValue: flow)
+    init(viewModel: GardenProfileViewModel, referenceMapImage: String? = nil) {
+        _viewModel = State(initialValue: viewModel)
         self.referenceMapImage = referenceMapImage
     }
 
     @AppStorage("gardenReview.hideIntroduction") private var hideReviewIntroduction = false
     @Environment(\.dismiss) private var dismiss
-    private var garden: Garden { flow.viewModel.garden }
-    private var currentReviewStatus: ReviewStatus? { flow.reviewPresentation.activeStatus ?? garden.review?.status }
+    private var garden: Garden { viewModel.garden }
+    private var currentReviewStatus: ReviewStatus? { viewModel.reviewPresentation.activeStatus ?? garden.review?.status }
     private var currentReport: FertilizerRecommendationReport? {
-        flow.reviewPresentation.activeReport ?? (currentReviewStatus == .completed ? DemoReviewReport.make(for: garden) : nil)
+        viewModel.reviewPresentation.activeReport ?? (currentReviewStatus == .completed ? DemoReviewReport.make(for: garden) : nil)
     }
 
     var body: some View {
-        @Bindable var model = flow.viewModel
-        @Bindable var coordinator = flow.coordinator
+        @Bindable var viewModel = viewModel
         profileContent
-        .sheet(item: rootSheet, onDismiss: coordinator.sheetDidDismiss) { presentation in
+        .sheet(item: rootSheet, onDismiss: viewModel.sheetDidDismiss) { presentation in
             sheetContent(presentation)
         }
-        .confirmationDialog("Hapus kebun?", isPresented: $coordinator.showsDeleteConfirmation, titleVisibility: .visible) {
-            Button("Hapus kebun", role: .destructive) { _ = model.delete() }
+        .confirmationDialog("Hapus kebun?", isPresented: $viewModel.showsDeleteConfirmation, titleVisibility: .visible) {
+            Button("Hapus kebun", role: .destructive) { _ = viewModel.delete() }
             Button("Batal", role: .cancel) {}
         } message: {
             Text("Kebun \"\(garden.name)\" beserta riwayat pupuk dan panennya akan dihapus. Tindakan ini tidak dapat dibatalkan.")
         }
-        .alert("Kebun belum dihapus", isPresented: $model.showsDeleteError) {
+        .alert("Kebun belum dihapus", isPresented: $viewModel.showsDeleteError) {
             Button("Mengerti", role: .cancel) {}
         } message: {
             Text("Data tidak dapat dihapus dari perangkat. Coba lagi.")
         }
-        .navigationDestination(isPresented: $coordinator.showsSummary) {
+        .navigationDestination(isPresented: $viewModel.showsSummary) {
             GardenProfileSummaryView(garden: garden,
-                onClose: coordinator.closeSummary, onEdit: coordinator.editSummary)
-                .sheet(item: $coordinator.sheet, onDismiss: coordinator.sheetDidDismiss) { presentation in
+                onClose: viewModel.closeSummary, onEdit: viewModel.editSummary)
+                .sheet(item: $viewModel.sheet, onDismiss: viewModel.sheetDidDismiss) { presentation in
                     sheetContent(presentation)
                 }
         }
         .navigationDestination(item: reviewDestination) { presentation in
-            ReviewRequestView(flow: flow.makeReviewRequest(presentation))
-                .onDisappear {
-                    if flow.coordinator.sheet == nil {
-                        flow.coordinator.sheetDidDismiss()
-                    }
+            Group {
+                if let request = viewModel.makeReviewRequest(for: presentation) {
+                    ReviewRequestView(flow: request)
                 }
+            }
+            .onDisappear {
+                if viewModel.sheet == nil {
+                    viewModel.sheetDidDismiss()
+                }
+            }
         }
-        .navigationDestination(isPresented: $coordinator.showsReviewStatus) {
+        .navigationDestination(isPresented: $viewModel.showsReviewStatus) {
             statusDestination
         }
-        .navigationDestination(isPresented: $coordinator.showsResults) {
+        .navigationDestination(isPresented: $viewModel.showsResults) {
             resultsDestination
         }
-        .onChange(of: coordinator.isFinished) { _, finished in
+        .onChange(of: viewModel.isFinished) { _, finished in
             if finished { dismiss() }
         }
-        .task { await flow.reviewPresentation.load(for: model.gardenID, repository: flow.reviewRepository) }
+        .task { await viewModel.loadReview() }
     }
 
     private var rootSheet: Binding<GardenProfileSheet?> {
         Binding(
             get: {
-                guard !flow.coordinator.showsSummary, flow.coordinator.sheet?.kind != .review else { return nil }
-                return flow.coordinator.sheet
+                guard !viewModel.showsSummary, viewModel.sheet?.kind != .review else { return nil }
+                return viewModel.sheet
             },
-            set: { flow.coordinator.sheet = $0 }
+            set: { viewModel.sheet = $0 }
         )
     }
 
     private var reviewDestination: Binding<GardenProfileSheet?> {
         Binding(
-            get: { flow.coordinator.sheet?.kind == .review ? flow.coordinator.sheet : nil },
+            get: { viewModel.sheet?.kind == .review ? viewModel.sheet : nil },
             set: { newValue in
-                if newValue == nil, flow.coordinator.sheet?.kind == .review {
-                    flow.coordinator.sheetDidDismiss()
+                if newValue == nil, viewModel.sheet?.kind == .review {
+                    viewModel.sheetDidDismiss()
                 }
             }
         )
     }
 
     private var deleteAction: (() -> Void)? {
-        guard flow.viewModel.canDelete else { return nil }
-        return { flow.coordinator.requestDelete() }
+        guard viewModel.canDelete else { return nil }
+        return { viewModel.requestDelete() }
     }
 
     private var profileContent: some View {
         GardenProfileContentView(
-            garden: garden, referenceMapImage: referenceMapImage, profileJustSaved: flow.coordinator.profileJustSaved, currentReviewStatus: currentReviewStatus, isComplete: flow.viewModel.isComplete,
-            onBack: flow.coordinator.close, onEditGarden: { flow.coordinator.open(.details) },
-            onEditProfile: { flow.coordinator.open(.profile) },
+            garden: garden, referenceMapImage: referenceMapImage, profileJustSaved: viewModel.profileJustSaved, currentReviewStatus: currentReviewStatus, isComplete: viewModel.isComplete,
+            onBack: viewModel.close, onEditGarden: { viewModel.open(.details) },
+            onEditProfile: { viewModel.open(.profile) },
             onReviewAction: {
-                guard flow.viewModel.isComplete else { return }
+                guard viewModel.isComplete else { return }
                 if currentReviewStatus == nil && !hideReviewIntroduction {
-                    flow.coordinator.open(.reviewInformation)
+                    viewModel.open(.reviewInformation)
                 } else {
-                    flow.coordinator.reviewAction(flow.reviewPresentation.action(for: garden))
+                    viewModel.reviewAction(viewModel.reviewPresentation.action(for: garden))
                 }
             },
-            onViewSummary: flow.coordinator.openSummary,
-            onViewReviewInformation: { flow.coordinator.open(.reviewInformation) },
+            onViewSummary: viewModel.openSummary,
+            onViewReviewInformation: { viewModel.open(.reviewInformation) },
             onDelete: deleteAction
         )
     }
@@ -115,19 +115,21 @@ struct GardenProfileScreen: View {
     private func sheetContent(_ presentation: GardenProfileSheet) -> some View {
         switch presentation.kind {
         case .details:
-            GardenDetailsView(viewModel: flow.makeDetailsEditor(presentation))
+            GardenDetailsView(viewModel: viewModel.makeDetailsEditor(for: presentation))
         case .profile:
-            GardenProfileEditorView(model: flow.makeProfileEditor(presentation),
-                onClose: { flow.coordinator.closeSheet(presentation) })
+            GardenProfileEditorView(model: viewModel.makeProfileEditor(for: presentation),
+                onClose: { viewModel.closeSheet(presentation) })
         case .review:
-            ReviewRequestView(flow: flow.makeReviewRequest(presentation))
+            if let request = viewModel.makeReviewRequest(for: presentation) {
+                ReviewRequestView(flow: request)
+            }
         case .reviewInformation:
             GardenReviewInformationView(
-                onClose: { flow.coordinator.closeSheet(presentation) },
+                onClose: { viewModel.closeSheet(presentation) },
                 onApply: {
-                    guard flow.viewModel.isComplete else { return }
-                    flow.coordinator.applyForReview(from: presentation,
-                        action: flow.reviewPresentation.action(for: garden))
+                    guard viewModel.isComplete else { return }
+                    viewModel.applyForReview(from: presentation,
+                        action: viewModel.reviewPresentation.action(for: garden))
                 })
         }
     }
@@ -137,19 +139,19 @@ struct GardenProfileScreen: View {
         if let status = currentReviewStatus {
             ReviewStatusView(
                 gardenName: garden.name, status: status,
-                entries: !flow.reviewPresentation.activeEntries.isEmpty ? flow.reviewPresentation.activeEntries
+                entries: !viewModel.reviewPresentation.activeEntries.isEmpty ? viewModel.reviewPresentation.activeEntries
                     : garden.review.map { ReviewTimelineEntry.entries(for: $0) } ?? [],
-                resultsDownloaded: flow.reviewPresentation.activeStatus == .completed || (garden.review?.resultsDownloaded ?? false),
+                resultsDownloaded: viewModel.reviewPresentation.activeStatus == .completed || (garden.review?.resultsDownloaded ?? false),
                 onAdvance: advanceAction,
-                onDownloaded: { flow.viewModel.updateReview { $0.resultsDownloaded = true } },
-                onViewResults: flow.coordinator.openResults
+                onDownloaded: { viewModel.updateReview { $0.resultsDownloaded = true } },
+                onViewResults: viewModel.openResults
             )
         }
     }
 
     private var advanceAction: (() -> Void)? {
         guard garden.review != nil else { return nil }
-        return { flow.viewModel.updateReview { $0.advance() } }
+        return { viewModel.updateReview { $0.advance() } }
     }
 
     @ViewBuilder
@@ -166,14 +168,14 @@ struct GardenProfileScreen: View {
 #if DEBUG
 #Preview("Profil · Alur interaktif") {
     NavigationStack {
-        GardenProfileScreen(flow: GardenProfileCanvasFixtures.makeFlow(complete: false),
+        GardenProfileScreen(viewModel: GardenProfileCanvasFixtures.makeViewModel(complete: false),
                             referenceMapImage: "ProfileReferenceSatellite")
     }
     .environment(\.locale, Locale(identifier: "id_ID"))
 }
 #Preview("Profil · Ringkasan dan pengajuan") {
     NavigationStack {
-        GardenProfileScreen(flow: GardenProfileCanvasFixtures.makeFlow(complete: true),
+        GardenProfileScreen(viewModel: GardenProfileCanvasFixtures.makeViewModel(complete: true),
                             referenceMapImage: "ProfileReferenceSatellite")
     }
     .environment(\.locale, Locale(identifier: "id_ID"))

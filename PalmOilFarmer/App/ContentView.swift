@@ -56,7 +56,7 @@ struct ContentView: View {
         switch route {
         case .gardenProfile(let id):
             if let garden = store.gardens.first(where: { $0.id == id }) {
-                GardenProfileScreen(flow: profileFactory.makeFlow(garden: garden))
+                GardenProfileScreen(viewModel: profileFactory.makeViewModel(garden: garden))
             }
         #if DEBUG
         case .developerMode:
