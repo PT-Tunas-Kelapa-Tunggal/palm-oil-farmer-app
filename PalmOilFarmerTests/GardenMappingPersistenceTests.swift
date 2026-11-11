@@ -11,7 +11,7 @@ struct GardenMappingPersistenceTests {
         let draft = GardenDraft(location: mappingLocation())
         let other = GardenDraft(location: mappingLocation())
         #expect(dependencies.gardenStore.addDraft(draft) && dependencies.gardenStore.addDraft(other))
-        dependencies.coordinator.handle(.resumeDraft(draft))
+        dependencies.coordinator.handle(.resumeDraft(DashboardMapper().map(draft)))
         let flow = dependencies.mappingFactory.makeFlow(location: draft.location, onFinish: dependencies.coordinator.mappingFinished)
         mappingPoints().forEach(flow.viewModel.addPoint)
         flow.viewModel.confirmBoundary()
@@ -24,7 +24,7 @@ struct GardenMappingPersistenceTests {
         let garden = try #require(dependencies.gardenStore.gardens.first)
         #expect(garden.id != draft.id && garden.boundary.points == mappingPoints() && garden.review == nil)
         #expect(garden.plantingMonth == Calendar.current.component(.month, from: .now) && garden.createdAt != nil)
-        #expect(dependencies.gardenListViewModel.presentation(showsFilter: true).items.count == 2)
+        #expect(dependencies.dashboardViewModel.viewState(showsFilter: true).items.count == 2)
         flow.coordinator.detailsDidDismiss()
         #expect(flow.coordinator.outcome == .savedGarden && dependencies.coordinator.mappingLocation != nil)
         dependencies.coordinator.mappingDidDismiss()
@@ -44,7 +44,7 @@ struct GardenMappingPersistenceTests {
         let draft = try #require(reopened.drafts.first)
         #expect(draft.coordinate == mappingLocation().coordinate && draft.name == "Dumai" && draft.subtitle == "Riau")
         let root = AppCoordinator()
-        root.handle(.resumeDraft(draft))
+        root.handle(.resumeDraft(DashboardMapper().map(draft)))
         #expect(root.mappingLocation?.draftID == draft.id && root.mappingLocation?.source == .draft)
     }
 

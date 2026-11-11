@@ -1,7 +1,7 @@
 import Foundation
 
 /// Home screen filter. Drafts always need mapping; other stages are labels on the cards under Semua.
-enum GardenListFilter: String, CaseIterable, Identifiable {
+enum DashboardFilter: String, CaseIterable, Identifiable {
     case all = "Semua"
     case draft = "Draf"
     case inReview = "Peninjauan"
@@ -40,7 +40,7 @@ enum GardenListFilter: String, CaseIterable, Identifiable {
         }
     }
 
-    func includes(_ garden: Garden) -> Bool {
+    func includes(_ garden: DashboardGarden) -> Bool {
         switch self {
         case .all: true
         case .draft: false
@@ -51,7 +51,7 @@ enum GardenListFilter: String, CaseIterable, Identifiable {
     var includesDrafts: Bool { self != .inReview }
 
     /// Items in this tab that need the farmer to act, for the tab's badge.
-    func actionCount(gardens: [Garden], drafts: [GardenDraft]) -> Int {
+    func actionCount(gardens: [DashboardGarden], drafts: [DashboardDraft]) -> Int {
         gardens.filter { includes($0) && $0.stage.needsAction }.count + (includesDrafts ? drafts.count : 0)
     }
 }

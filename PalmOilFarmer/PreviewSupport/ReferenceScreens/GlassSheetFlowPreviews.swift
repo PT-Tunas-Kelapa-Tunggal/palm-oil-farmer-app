@@ -11,7 +11,7 @@ struct GlassSheetFlowPreview: View {
     @State private var isPresented = false
 
     var body: some View {
-        GardenListView(onRegisterGarden: { isPresented = true })
+        DashboardStaticView(onRegisterGarden: { isPresented = true })
             .sheet(isPresented: $isPresented) {
                 switch screen {
                 case .guide:

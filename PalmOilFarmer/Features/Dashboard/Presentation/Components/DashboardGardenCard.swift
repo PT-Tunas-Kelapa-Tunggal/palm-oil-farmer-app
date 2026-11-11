@@ -1,13 +1,18 @@
 import SwiftUI
 
-struct GardenCard: View {
+struct DashboardGardenCard: View {
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
-    let garden: Garden
+    let garden: DashboardGarden
     var referenceImage: String? = nil
     var metrics: GardenDisplayMetrics? = nil
 
     private var displayMetrics: GardenDisplayMetrics {
-        metrics ?? GardenDisplayMetrics(boundary: garden.boundary)
+        metrics ?? GardenDisplayMetrics(area: garden.area, perimeter: garden.perimeter)
+    }
+
+    /// The shared map view takes the app's boundary type; built only for drawing.
+    private var mapBoundary: GardenBoundary {
+        GardenBoundary(points: garden.boundary.map { GardenCoordinate(latitude: $0.latitude, longitude: $0.longitude) })
     }
 
     /// Supplied when a dated fertilizer plan is available; never inferred from sample report text.
@@ -16,7 +21,7 @@ struct GardenCard: View {
     var body: some View {
         VStack(spacing: -24) {
             VStack(spacing: 0) {
-                GardenMapView(boundary: garden.boundary, referenceImage: referenceImage)
+                GardenMapView(boundary: mapBoundary, referenceImage: referenceImage)
                     .frame(height: 200)
                     .clipShape(RoundedRectangle(cornerRadius: 12))
                 VStack(alignment: .leading, spacing: 8) {
@@ -28,18 +33,18 @@ struct GardenCard: View {
                     layout {
                         VStack(alignment: .leading, spacing: 6) {
                             metric(displayMetrics.area, symbol: "area")
-                            metric(garden.soilType.rawValue, symbol: "leaf")
+                            metric(garden.soilType, symbol: "leaf")
                         }.frame(maxWidth: .infinity, alignment: .leading)
                         VStack(alignment: .leading, spacing: 6) {
                             metric(displayMetrics.perimeter, symbol: "square.dashed")
-                            metric(String(garden.plantingYear), symbol: "calendar")
+                            metric(garden.plantingYear, symbol: "calendar")
                         }.frame(maxWidth: .infinity, alignment: .leading)
                     }.font(.footnote)
                 }.frame(minHeight: 82).padding(10)
                 if fertilizerSchedule == nil {
                     VStack(spacing: 0) {
                         Divider()
-                        GardenStageLabel(stage: garden.stage, visitDate: garden.review?.visitDate)
+                        DashboardGardenStageLabel(stage: garden.stage, visitDate: garden.visitDate)
                     }.padding(.horizontal, 10).padding(.top, 4).padding(.bottom, 2)
                 }
             }
@@ -77,15 +82,15 @@ struct GardenCard: View {
     }
 }
 
-struct GardenStageLabel: View {
-    let stage: GardenStage
+struct DashboardGardenStageLabel: View {
+    let stage: DashboardGardenStage
     var visitDate: Date? = nil
 
     private var content: (text: String, symbol: String) {
         switch stage {
         case .incomplete: ("Lengkapi profil kebun", "doc.text")
         case .readyForReview: ("Ajukan peninjauan", "doc.text")
-        case .inReview(.scheduled):
+        case .inReview(visitScheduled: true):
             (visitDate.map { "Kunjungan " + $0.formatted(.dateTime.weekday(.wide).day().month(.wide).locale(Locale(identifier: "id_ID"))) }
                 ?? "Kunjungan petugas dijadwalkan", "clock")
         case .inReview: ("Dalam proses peninjauan", "clock")
@@ -108,7 +113,7 @@ struct GardenStageLabel: View {
 
 #if DEBUG
 #Preview("Garden Card", traits: .sizeThatFitsLayout) {
-    GardenCard(garden: GardenPreviewData.garden, referenceImage: "GardenCardMap",
+    DashboardGardenCard(garden: DashboardPreviewData.garden, referenceImage: "GardenCardMap",
                metrics: GardenDisplayMetrics(area: "2,4 ha", perimeter: "2324 m"))
         .padding(16)
         .frame(width: 402)

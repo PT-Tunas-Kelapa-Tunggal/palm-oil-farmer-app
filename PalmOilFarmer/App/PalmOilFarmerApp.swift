@@ -16,7 +16,7 @@ struct PalmOilFarmerApp: App {
         WindowGroup {
             ContentView(
                 store: dependencies.gardenStore,
-                listViewModel: dependencies.gardenListViewModel,
+                dashboardViewModel: dependencies.dashboardViewModel,
                 coordinator: dependencies.coordinator,
                 registrationFactory: dependencies.registrationFactory,
                 mappingFactory: dependencies.mappingFactory,

@@ -4,7 +4,9 @@ import Testing
 @testable import PalmOilFarmer
 
 @MainActor
-struct GardenListViewModelTests {
+struct DashboardViewModelTests {
+    private let mapper = DashboardMapper()
+
     private func garden(
         name: String = "Kebun", createdAt: Date? = nil,
         complete: Bool = false, status: ReviewStatus? = nil, downloaded: Bool = false
@@ -34,41 +36,41 @@ struct GardenListViewModelTests {
         let values = [garden(), garden(complete: true), submitted, scheduled,
                       garden(status: .completed), garden(status: .completed, downloaded: true)]
         let location = draft()
-        let source = ListDataSourceSpy(gardens: values, drafts: [location])
-        let model = GardenListViewModel(source: source, onEvent: { _ in })
-        let all = model.presentation(showsFilter: true)
+        let repository = DashboardRepositorySpy(gardens: values, drafts: [location])
+        let model = DashboardViewModel(repository: repository, onEvent: { _ in })
+        let all = model.viewState(showsFilter: true)
         #expect(all.items.count == 7 && !all.isEmpty)
         #expect(all.actionCount(for: .all) == 5)
         #expect(all.actionCount(for: .draft) == 1)
         #expect(all.actionCount(for: .inReview) == 1)
         model.selectedFilter = .inReview
-        let review = model.presentation(showsFilter: true)
+        let review = model.viewState(showsFilter: true)
         #expect(Set(review.items.map(\.id)) == Set([submitted.id, scheduled.id]))
         // Badge values count all data for their own tab, even while another tab is selected.
         #expect(review.actionCount(for: .all) == 5)
         model.selectedFilter = .draft
-        #expect(model.presentation(showsFilter: true).items.map(\.id) == [location.id])
+        #expect(model.viewState(showsFilter: true).items.map(\.id) == [location.id])
     }
 
     @Test func hidingFilterShowsAllWithoutLosingSelectedTab() {
         let local = garden(), location = draft()
-        let model = GardenListViewModel(source: ListDataSourceSpy(gardens: [local], drafts: [location]), onEvent: { _ in })
+        let model = DashboardViewModel(repository: DashboardRepositorySpy(gardens: [local], drafts: [location]), onEvent: { _ in })
         model.selectedFilter = .inReview
-        #expect(model.presentation(showsFilter: true).hasNoVisibleItems)
-        let hidden = model.presentation(showsFilter: false)
+        #expect(model.viewState(showsFilter: true).hasNoVisibleItems)
+        let hidden = model.viewState(showsFilter: false)
         #expect(hidden.filter == .all && hidden.items.count == 2)
         #expect(model.selectedFilter == .inReview)
-        #expect(model.presentation(showsFilter: true).filter == .inReview)
-        #expect(model.presentation(showsFilter: true).hasNoVisibleItems)
+        #expect(model.viewState(showsFilter: true).filter == .inReview)
+        #expect(model.viewState(showsFilter: true).hasNoVisibleItems)
     }
 
     @Test func emptyFilteredListIsDistinctFromAnEmptyHome() {
-        let source = ListDataSourceSpy()
-        let model = GardenListViewModel(source: source, onEvent: { _ in })
-        #expect(model.presentation(showsFilter: true).isEmpty)
-        source.gardens = [garden()]
+        let repository = DashboardRepositorySpy()
+        let model = DashboardViewModel(repository: repository, onEvent: { _ in })
+        #expect(model.viewState(showsFilter: true).isEmpty)
+        repository.appGardens = [garden()]
         model.selectedFilter = .draft
-        let presentation = model.presentation(showsFilter: true)
+        let presentation = model.viewState(showsFilter: true)
         #expect(!presentation.isEmpty && presentation.hasNoVisibleItems)
     }
 
@@ -77,19 +79,19 @@ struct GardenListViewModelTests {
         let dated = garden(createdAt: Date(timeIntervalSince1970: 1_000))
         let newest = garden(createdAt: Date(timeIntervalSince1970: 3_000))
         let location = draft()
-        let model = GardenListViewModel(
-            source: ListDataSourceSpy(gardens: [old, newerLegacy, dated, newest], drafts: [location]), onEvent: { _ in }
+        let model = DashboardViewModel(
+            repository: DashboardRepositorySpy(gardens: [old, newerLegacy, dated, newest], drafts: [location]), onEvent: { _ in }
         )
-        #expect(model.presentation(showsFilter: true).items.map(\.id) == [newest.id, location.id, dated.id, newerLegacy.id, old.id])
+        #expect(model.viewState(showsFilter: true).items.map(\.id) == [newest.id, location.id, dated.id, newerLegacy.id, old.id])
     }
 
     @Test func userActionsEmitValuesWithoutAConcreteCoordinatorDependency() {
-        var events: [GardenListEvent] = []
-        let source = ListDataSourceSpy()
-        let model = GardenListViewModel(source: source, onEvent: { events.append($0) })
+        var events: [DashboardEvent] = []
+        let repository = DashboardRepositorySpy()
+        let model = DashboardViewModel(repository: repository, onEvent: { events.append($0) })
         let local = garden(), location = draft()
-        model.selectGarden(local)
-        model.selectDraft(location)
+        model.selectGarden(mapper.map(local))
+        model.selectDraft(mapper.map(location))
         model.registerGarden()
         model.openDeveloperMode()
         #expect(events.count == 4)
@@ -97,45 +99,46 @@ struct GardenListViewModelTests {
         if case .resumeDraft(let value) = events[1] { #expect(value.id == location.id) } else { Issue.record("Expected draft event") }
         if case .registerGarden = events[2] {} else { Issue.record("Expected registration event") }
         if case .openDeveloperMode = events[3] {} else { Issue.record("Expected developer event") }
-        #expect(source.refreshCount == 0 && source.deletedIDs.isEmpty)
+        #expect(repository.refreshCount == 0 && repository.deletedIDs.isEmpty)
     }
 
     @Test func refreshAndDeleteUseInjectedSourceWithoutOptimisticRemovalOnFailure() async {
         let location = draft()
-        let source = ListDataSourceSpy(drafts: [location])
+        let repository = DashboardRepositorySpy(drafts: [location])
         let remote = garden(status: .submitted)
-        source.refreshedGardens = [remote]
-        let model = GardenListViewModel(source: source, onEvent: { _ in })
+        repository.refreshedGardens = [remote]
+        let model = DashboardViewModel(repository: repository, onEvent: { _ in })
         await model.refresh()
-        #expect(source.refreshCount == 1)
-        #expect(Set(model.presentation(showsFilter: true).items.map(\.id)) == Set([location.id, remote.id]))
-        source.rejectsDeletion = true
-        #expect(!model.deleteDraft(location))
-        #expect(model.presentation(showsFilter: true).items.contains { $0.id == location.id })
-        source.rejectsDeletion = false
-        #expect(model.deleteDraft(location))
-        #expect(model.presentation(showsFilter: true).items.map(\.id) == [remote.id])
-        #expect(source.deletedIDs == [location.id, location.id])
+        #expect(repository.refreshCount == 1)
+        #expect(Set(model.viewState(showsFilter: true).items.map(\.id)) == Set([location.id, remote.id]))
+        repository.rejectsDeletion = true
+        #expect(!model.deleteDraft(mapper.map(location)))
+        #expect(model.viewState(showsFilter: true).items.contains { $0.id == location.id })
+        repository.rejectsDeletion = false
+        #expect(model.deleteDraft(mapper.map(location)))
+        #expect(model.viewState(showsFilter: true).items.map(\.id) == [remote.id])
+        #expect(repository.deletedIDs == [location.id, location.id])
     }
 
     @Test func sharedStoreMutationInvalidatesObservationAndProfileEditsStayVisible() async throws {
         let store = makeTestGardenStore(in: AppConfiguration.makeModelContainer(inMemory: true))
-        let model = GardenListViewModel(source: store, onEvent: { _ in })
+        let model = DashboardViewModel(repository: DashboardRepository(store: store), onEvent: { _ in })
         var local = garden()
         await confirmation("Changes in the shared store invalidate list presentation") { changed in
             withObservationTracking {
-                _ = model.presentation(showsFilter: true).items
+                _ = model.viewState(showsFilter: true).items
             } onChange: {
                 changed()
             }
             #expect(store.add(local))
         }
-        #expect(model.presentation(showsFilter: true).items.map(\.id) == [local.id])
+        #expect(model.viewState(showsFilter: true).items.map(\.id) == [local.id])
+        local.fertilizerRecords = [FertilizerRecord(name: "Urea", bagWeightKg: 50, bagCount: 1, doseKgPerTree: 1)]
         local.harvestRecord = HarvestRecord(frequencyPerMonth: 3, latestWeightKg: 750)
         #expect(store.update(local))
-        let item = try #require(model.presentation(showsFilter: true).items.first)
+        let item = try #require(model.viewState(showsFilter: true).items.first)
         if case .garden(let updated) = item {
-            #expect(updated.harvestRecord?.latestWeightKg == 750)
+            #expect(updated.stage == .readyForReview)
         } else { Issue.record("Expected the updated garden") }
     }
 
@@ -150,45 +153,49 @@ struct GardenListViewModelTests {
         )
         let location = draft()
         #expect(dependencies.gardenStore.addDraft(location))
-        await dependencies.gardenListViewModel.refresh()
-        #expect(dependencies.gardenListViewModel.presentation(showsFilter: true).items.count == 2)
-        dependencies.gardenListViewModel.selectGarden(remote)
+        await dependencies.dashboardViewModel.refresh()
+        #expect(dependencies.dashboardViewModel.viewState(showsFilter: true).items.count == 2)
+        dependencies.dashboardViewModel.selectGarden(mapper.map(remote))
         #expect(dependencies.coordinator.path == [.gardenProfile(remote.id)])
         dependencies.coordinator.path = []
-        dependencies.gardenListViewModel.selectDraft(location)
+        dependencies.dashboardViewModel.selectDraft(mapper.map(location))
         #expect(dependencies.coordinator.mappingLocation?.draftID == location.id)
-        #expect(dependencies.gardenListViewModel.deleteDraft(location))
+        #expect(dependencies.dashboardViewModel.deleteDraft(mapper.map(location)))
         #expect(dependencies.gardenStore.drafts.isEmpty)
         dependencies.coordinator.mappingDidDismiss()
-        dependencies.gardenListViewModel.registerGarden()
+        dependencies.dashboardViewModel.registerGarden()
         #expect(dependencies.coordinator.registrationSheet == .guide)
     }
 }
 
 @MainActor
 @Observable
-private final class ListDataSourceSpy: GardenListDataSource {
-    var gardens: [Garden]
-    var drafts: [GardenDraft]
+private final class DashboardRepositorySpy: DashboardRepositoryProtocol {
+    var appGardens: [Garden]
+    var appDrafts: [GardenDraft]
     var refreshedGardens: [Garden] = []
     var refreshCount = 0
     var deletedIDs: [UUID] = []
     var rejectsDeletion = false
+    private let mapper = DashboardMapper()
 
     init(gardens: [Garden] = [], drafts: [GardenDraft] = []) {
-        self.gardens = gardens
-        self.drafts = drafts
+        appGardens = gardens
+        appDrafts = drafts
     }
 
-    func refreshRemote() async {
+    var gardens: [DashboardGarden] { appGardens.map { mapper.map($0) } }
+    var drafts: [DashboardDraft] { appDrafts.map { mapper.map($0) } }
+
+    func refresh() async {
         refreshCount += 1
-        gardens = refreshedGardens
+        appGardens = refreshedGardens
     }
 
-    func deleteDraft(_ draft: GardenDraft) -> Bool {
-        deletedIDs.append(draft.id)
+    func deleteDraft(id: UUID) -> Bool {
+        deletedIDs.append(id)
         guard !rejectsDeletion else { return false }
-        drafts.removeAll { $0.id == draft.id }
+        appDrafts.removeAll { $0.id == id }
         return true
     }
 }

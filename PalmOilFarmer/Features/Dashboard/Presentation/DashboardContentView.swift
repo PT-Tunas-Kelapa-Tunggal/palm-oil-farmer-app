@@ -1,23 +1,23 @@
 import SwiftUI
 
-/// Shared layout for the production screen and the existing value-based previews.
-struct GardenListContent: View {
-    let presentation: GardenListPresentation
-    @Binding var selectedFilter: GardenListFilter
+/// Stateless dashboard layout shared by `DashboardView` and `DashboardStaticView`.
+struct DashboardContentView: View {
+    let state: DashboardViewState
+    @Binding var selectedFilter: DashboardFilter
     let showsFilter: Bool
-    var onSelectDraft: (GardenDraft) -> Void = { _ in }
-    var onDeleteDraft: (GardenDraft) -> Void = { _ in }
+    var onSelectDraft: (DashboardDraft) -> Void = { _ in }
+    var onDeleteDraft: (DashboardDraft) -> Void = { _ in }
     var downloads: [MapDownloadItem] = []
     var onSelectDownload: (MapDownloadItem) -> Void = { _ in }
     var referenceMapImage: String? = nil
     var fertilizerSchedules: [UUID: String] = [:]
     var previewMetrics: GardenDisplayMetrics? = nil
-    var onSelectGarden: (Garden) -> Void = { _ in }
+    var onSelectGarden: (DashboardGarden) -> Void = { _ in }
     let onRegisterGarden: () -> Void
     var onOpenDeveloperMode: (() -> Void)? = nil
     @State private var developerTrigger = 0
 
-    private var filter: GardenListFilter { presentation.filter }
+    private var filter: DashboardFilter { state.filter }
 
     var body: some View {
         VStack(spacing: 0) {
@@ -33,7 +33,7 @@ struct GardenListContent: View {
                     }
                     .sensoryFeedback(.success, trigger: developerTrigger)
                 Spacer()
-                if !presentation.isEmpty || !downloads.isEmpty {
+                if !state.isEmpty || !downloads.isEmpty {
                     Button(action: onRegisterGarden) {
                         Image(systemName: "plus").font(.system(size: 22)).frame(width: 44, height: 44)
                     }
@@ -44,10 +44,10 @@ struct GardenListContent: View {
             .padding(.horizontal, 24)
             .padding(.vertical, 16)
 
-            if presentation.isEmpty && downloads.isEmpty {
+            if state.isEmpty && downloads.isEmpty {
                 GeometryReader { geometry in
                     ScrollView {
-                        GardenRegistrationEmptyState()
+                        DashboardEmptyStateView()
                         .padding(.top, 24)
                         .frame(maxWidth: .infinity, minHeight: geometry.size.height)
                     }
@@ -55,14 +55,14 @@ struct GardenListContent: View {
             } else {
                 if showsFilter {
                     BadgedSegmentedControl(
-                        options: GardenListFilter.allCases, selection: $selectedFilter,
+                        options: DashboardFilter.allCases, selection: $selectedFilter,
                         title: \.rawValue, accessibilityName: \.accessibilityName,
-                        badge: { presentation.actionCount(for: $0) }
+                        badge: { state.actionCount(for: $0) }
                     )
                     .padding(.horizontal, KropsTheme.Spacing.screen)
                     .padding(.bottom, 12)
                 }
-                if presentation.hasNoVisibleItems && downloads.isEmpty {
+                if state.hasNoVisibleItems && downloads.isEmpty {
                     GeometryReader { geometry in
                         ScrollView {
                             EmptyStateView(title: filter.emptyTitle, message: filter.emptyMessage, messageFont: .body) {
@@ -79,20 +79,20 @@ struct GardenListContent: View {
                 } else {
                     ScrollView {
                         LazyVStack(spacing: 12) {
-                            ForEach(presentation.items) { item in
+                            ForEach(state.items) { item in
                                 switch item {
                                 case .garden(let garden):
                                     Button {
                                         onSelectGarden(garden)
                                     } label: {
-                                        GardenCard(garden: garden, referenceImage: referenceMapImage, metrics: previewMetrics, fertilizerSchedule: fertilizerSchedules[garden.id])
+                                        DashboardGardenCard(garden: garden, referenceImage: referenceMapImage, metrics: previewMetrics, fertilizerSchedule: fertilizerSchedules[garden.id])
                                     }
                                     .buttonStyle(.plain)
                                 case .draft(let draft):
                                     Button {
                                         onSelectDraft(draft)
                                     } label: {
-                                        GardenDraftCard(draft: draft)
+                                        DashboardDraftCard(draft: draft)
                                     }
                                     .buttonStyle(.plain)
                                     .contextMenu {
@@ -121,7 +121,7 @@ struct GardenListContent: View {
             }
         }
         .background {
-            if presentation.isEmpty && downloads.isEmpty {
+            if state.isEmpty && downloads.isEmpty {
                 Color(uiColor: .systemBackground).ignoresSafeArea()
                 RadialGradient(colors: [RegistrationStyle.actionTint.opacity(0.12), .clear],
                                center: .center, startRadius: 30, endRadius: 320)
@@ -131,7 +131,7 @@ struct GardenListContent: View {
             }
         }
         .safeAreaInset(edge: .bottom, spacing: 0) {
-            if presentation.isEmpty && downloads.isEmpty {
+            if state.isEmpty && downloads.isEmpty {
                 RegistrationPrimaryButton(title: "Daftarkan Kebun", systemImage: "plus", action: onRegisterGarden)
                     .padding(.horizontal, 34)
                     .padding(.bottom, 2)

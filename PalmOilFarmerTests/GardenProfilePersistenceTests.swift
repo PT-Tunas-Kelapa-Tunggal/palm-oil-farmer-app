@@ -28,7 +28,7 @@ struct GardenProfilePersistenceTests {
         let reopened = makeTestGardenStore(in: app.modelContainer)
         #expect(reopened.gardens.first?.fertilizerRecords?.first?.id == recordID)
         #expect(reopened.gardens.first?.harvestRecord?.latestWeightKg == 750)
-        #expect(app.gardenListViewModel.presentation(showsFilter: true).gardens.first?.stage == .readyForReview)
+        #expect(app.dashboardViewModel.viewState(showsFilter: true).gardens.first?.stage == .readyForReview)
         profile.coordinator.sheetDidDismiss()
         profile.coordinator.open(.profile)
         let empty = profile.makeProfileEditor(try #require(profile.coordinator.sheet))
@@ -111,6 +111,6 @@ struct GardenProfilePersistenceTests {
         #expect(profile.viewModel.delete() && profile.coordinator.isFinished)
         #expect(app.gardenStore.gardens.map(\.id) == [other.id])
         #expect(makeTestGardenStore(in: app.modelContainer).gardens.map(\.id) == [other.id])
-        #expect(app.gardenListViewModel.presentation(showsFilter: true).items.map(\.id) == [other.id])
+        #expect(app.dashboardViewModel.viewState(showsFilter: true).items.map(\.id) == [other.id])
     }
 }

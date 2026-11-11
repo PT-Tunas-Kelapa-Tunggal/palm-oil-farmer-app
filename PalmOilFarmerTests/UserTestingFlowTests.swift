@@ -103,7 +103,8 @@ struct GardenOrderTests {
         var draft = GardenDraft(location: GardenLocation(name: "draf", subtitle: "",
             coordinate: GardenCoordinate(CLLocationCoordinate2D(latitude: 1, longitude: 104))))
         draft.createdAt = Date(timeIntervalSince1970: 2_000)
-        let order = GardenListItem.newestFirst(gardens: [legacyOld, legacyNew, older, newest], drafts: [draft]).map(\.id)
+        let order = DashboardItem.newestFirst(gardens: [legacyOld, legacyNew, older, newest].map { DashboardMapper().map($0) },
+                                               drafts: [DashboardMapper().map(draft)]).map(\.id)
         #expect(order == [newest.id, draft.id, older.id, legacyNew.id, legacyOld.id])
     }
 }
@@ -116,7 +117,7 @@ struct NutrientLinkTests {
     }
 }
 
-struct GardenListFilterTests {
+struct DashboardFilterTests {
     private func garden(fertilized: Bool, harvested: Bool, review: ReviewStatus?) -> Garden {
         var garden = Garden(id: UUID(), name: "Uji", locationName: "Bintan", boundary: GardenBoundary(),
                             plantingYear: 2016, soilType: .peat)
@@ -136,17 +137,18 @@ struct GardenListFilterTests {
         let submitted = garden(fertilized: true, harvested: true, review: .submitted)
         let scheduled = garden(fertilized: true, harvested: true, review: .scheduled)
         let done = garden(fertilized: true, harvested: true, review: .completed)
-        #expect(incomplete.stage == .incomplete)
-        #expect(ready.stage == .readyForReview)
-        #expect(scheduled.stage == .inReview(.scheduled))
-        #expect(done.stage == .results(downloaded: false))
-        let all = [incomplete, ready, submitted, scheduled, done]
-        #expect(all.filter(GardenListFilter.inReview.includes).map(\.id) == [submitted.id, scheduled.id])
-        #expect(all.filter(GardenListFilter.all.includes).count == 5)
+        let mapper = DashboardMapper()
+        #expect(mapper.map(incomplete).stage == .incomplete)
+        #expect(mapper.map(ready).stage == .readyForReview)
+        #expect(mapper.map(scheduled).stage == .inReview(visitScheduled: true))
+        #expect(mapper.map(done).stage == .results(downloaded: false))
+        let all = [incomplete, ready, submitted, scheduled, done].map { mapper.map($0) }
+        #expect(all.filter(DashboardFilter.inReview.includes).map(\.id) == [submitted.id, scheduled.id])
+        #expect(all.filter(DashboardFilter.all.includes).count == 5)
         let draft = GardenDraft(location: GardenLocation(name: "D", subtitle: "",
             coordinate: GardenCoordinate(CLLocationCoordinate2D(latitude: 1, longitude: 104))))
-        #expect(GardenListFilter.all.actionCount(gardens: all, drafts: [draft]) == 5)
-        #expect(GardenListFilter.draft.actionCount(gardens: all, drafts: [draft]) == 1)
-        #expect(GardenListFilter.inReview.actionCount(gardens: all, drafts: [draft]) == 1)
+        #expect(DashboardFilter.all.actionCount(gardens: all, drafts: [mapper.map(draft)]) == 5)
+        #expect(DashboardFilter.draft.actionCount(gardens: all, drafts: [mapper.map(draft)]) == 1)
+        #expect(DashboardFilter.inReview.actionCount(gardens: all, drafts: [mapper.map(draft)]) == 1)
     }
 }

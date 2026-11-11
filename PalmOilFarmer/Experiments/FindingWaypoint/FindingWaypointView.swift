@@ -12,7 +12,7 @@ struct FindingWaypointView: View {
         TabView {
             Tab("Home", systemImage: "house") {
                 NavigationStack {
-                    GardenListView(gardens: store.gardens, onSelectGarden: {
+                    DashboardStaticView(gardens: store.gardens.map { DashboardMapper().map($0) }, onSelectGarden: {
                         selectedGardenID = $0.id
                     }) {
                         showsRegistration = true

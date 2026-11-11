@@ -24,14 +24,14 @@ final class AppCoordinator {
     private var pendingLocation: GardenLocation?
     private var reopensSearch = false
 
-    func handle(_ event: GardenListEvent) {
+    func handle(_ event: DashboardEvent) {
         guard path.isEmpty, registrationSheet == nil, mappingLocation == nil, pendingLocation == nil else { return }
         switch event {
         case .openGarden(let id):
             path.append(.gardenProfile(id))
         case .resumeDraft(let draft):
             reopensSearch = false
-            mappingLocation = draft.location
+            mappingLocation = DashboardMapper().mappingLocation(for: draft)
         case .registerGarden:
             reopensSearch = false
             registrationSheet = .guide
