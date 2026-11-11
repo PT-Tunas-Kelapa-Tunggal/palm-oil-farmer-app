@@ -10,7 +10,7 @@ struct RegistrationFramePreview: View {
     let step: Frame
     var selectedLocation: GardenLocation? = nil
     var body: some View {
-        GardenListView(onRegisterGarden: {})
+        DashboardStaticView(onRegisterGarden: {})
             .sheet(isPresented: .constant(true)) {
                 if step == .guide {
                     RegistrationIntroView(onLocate: { _ in })
@@ -30,7 +30,7 @@ struct RegistrationFramePreview: View {
 struct SearchFramePreview: View {
     var query = ""
     var body: some View {
-        GardenListView(onRegisterGarden: {})
+        DashboardStaticView(onRegisterGarden: {})
             .sheet(isPresented: .constant(true)) {
                 DynamicSheet(animation: .bouncy, size: .large) {
                     LocationSearchView(initialQuery: query,

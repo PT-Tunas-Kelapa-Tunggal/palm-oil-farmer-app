@@ -1,14 +1,13 @@
 import SwiftUI
 
-/// Production MVVM entry point. GardenListView retains the value/callback API
-/// used by existing reference screens and the standalone experiment.
-struct GardenListScreen: View {
-    @Bindable var viewModel: GardenListViewModel
+/// The dashboard screen used by the app, bound to `DashboardViewModel`.
+struct DashboardView: View {
+    @Bindable var viewModel: DashboardViewModel
     @AppStorage(DeveloperSettings.showsHomeFilterKey) private var showsFilter = false
 
     var body: some View {
-        GardenListContent(
-            presentation: viewModel.presentation(showsFilter: showsFilter),
+        DashboardContentView(
+            state: viewModel.viewState(showsFilter: showsFilter),
             selectedFilter: $viewModel.selectedFilter,
             showsFilter: showsFilter,
             onSelectDraft: viewModel.selectDraft,
@@ -28,3 +27,12 @@ struct GardenListScreen: View {
         #endif
     }
 }
+
+#if DEBUG
+#Preview("Dashboard") {
+    DashboardView(viewModel: DashboardViewModel(
+        repository: DummyDashboardRepository(gardens: DashboardPreviewData.gardens),
+        onEvent: { _ in }
+    ))
+}
+#endif

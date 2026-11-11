@@ -1,6 +1,6 @@
 import SwiftUI
 
-struct GardenRegistrationEmptyState: View {
+struct DashboardEmptyStateView: View {
     var body: some View {
         VStack(spacing: 24) {
             Image("GardenHeatmapIllustration")

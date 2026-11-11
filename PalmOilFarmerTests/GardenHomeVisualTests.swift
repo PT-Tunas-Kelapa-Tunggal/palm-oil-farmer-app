@@ -10,16 +10,16 @@ final class GardenHomeVisualTests: XCTestCase {
         complete.createdAt = Date(timeIntervalSince1970: 100)
         let incomplete = Garden(id: UUID(), name: "Hilir Sungai", locationName: "Malang Rapat, Bintan", boundary: complete.boundary, plantingYear: 2019, soilType: .peat, createdAt: Date(timeIntervalSince1970: 0))
         let metrics = GardenDisplayMetrics(area: "1,7 ha", perimeter: "540 m")
-        let presentation = GardenListPresentation(gardens: [complete, incomplete], drafts: [], filter: .all)
-        let home = GardenListContent(presentation: presentation, selectedFilter: .constant(.all), showsFilter: false,
+        let state = DashboardViewState(gardens: [complete, incomplete].map { DashboardMapper().map($0) }, drafts: [], filter: .all)
+        let home = DashboardContentView(state: state, selectedFilter: .constant(.all), showsFilter: false,
             referenceMapImage: "HomeReferenceMap", fertilizerSchedules: [complete.id: "Pemupukan 1 dalam 50 hari"],
             previewMetrics: metrics, onRegisterGarden: {})
         try await capture("home", height: 987, view: home)
         try await capture("home-dark", height: 987, view: home.environment(\.colorScheme, .dark))
         try await capture("home-accessibility", height: 1200, view: home.environment(\.dynamicTypeSize, .accessibility3))
-        try await capture("empty", height: 874, view: GardenListContent(presentation: GardenListPresentation(gardens: [], drafts: [], filter: .all), selectedFilter: .constant(.all), showsFilter: false, onRegisterGarden: {}))
-        try await capture("incomplete", height: 430, view: GardenCard(garden: incomplete, referenceImage: "HomeReferenceMap", metrics: metrics).padding(.horizontal, 16))
-        try await capture("ready", height: 430, view: GardenCard(garden: complete, referenceImage: "HomeReferenceMap", metrics: metrics).padding(.horizontal, 16))
+        try await capture("empty", height: 874, view: DashboardContentView(state: DashboardViewState(gardens: [], drafts: [], filter: .all), selectedFilter: .constant(.all), showsFilter: false, onRegisterGarden: {}))
+        try await capture("incomplete", height: 430, view: DashboardGardenCard(garden: DashboardMapper().map(incomplete), referenceImage: "HomeReferenceMap", metrics: metrics).padding(.horizontal, 16))
+        try await capture("ready", height: 430, view: DashboardGardenCard(garden: DashboardMapper().map(complete), referenceImage: "HomeReferenceMap", metrics: metrics).padding(.horizontal, 16))
     }
 
     private func capture<V: View>(_ name: String, height: CGFloat, view: V) async throws {

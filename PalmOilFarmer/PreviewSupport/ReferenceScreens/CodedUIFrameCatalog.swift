@@ -15,14 +15,14 @@ struct CodedUIFramePreview: View {
         Group {
             switch index {
             case 0:
-                GardenListView(onRegisterGarden: {})
+                DashboardStaticView(onRegisterGarden: {})
             case 1:
-                GardenListView(gardens: [GardenPreviewData.garden], downloads: [download],
+                DashboardStaticView(gardens: [DashboardPreviewData.garden], downloads: [download],
                                referenceMapImage: "GardenCardMap",
                                previewMetrics: GardenDisplayMetrics(area: "2,4 ha", perimeter: "2324 m"),
                                onRegisterGarden: {})
             case 2:
-                GardenListView(downloads: [download], onRegisterGarden: {})
+                DashboardStaticView(downloads: [download], onRegisterGarden: {})
             case 3:
                 profile(garden: GardenPreviewData.garden, layout: .overview)
             case 4:

@@ -12,7 +12,7 @@ struct ReviewSubmissionFlowTests {
     @Test func mainFlowRegistersCompletesProfileAndSubmitsWithoutPersistingSubmittedCache() async throws {
         let repository = ReviewSubmissionRepositorySpy()
         let app = reviewTestDependencies(repository: repository)
-        app.gardenListViewModel.registerGarden()
+        app.dashboardViewModel.registerGarden()
         #expect(app.coordinator.registrationSheet == .guide)
         let registration = app.registrationFactory.makeFlow(initialStep: .guide,
             onLocate: app.coordinator.locatedGarden, onCancel: app.coordinator.cancelRegistration)
@@ -30,7 +30,7 @@ struct ReviewSubmissionFlowTests {
         mapping.coordinator.detailsDidDismiss()
         app.coordinator.mappingDidDismiss()
         let garden = try #require(app.gardenStore.gardens.first)
-        app.gardenListViewModel.selectGarden(garden)
+        app.dashboardViewModel.selectGarden(DashboardMapper().map(garden))
         #expect(app.coordinator.path == [.gardenProfile(garden.id)])
         let profile = app.profileFactory.makeFlow(garden: garden)
         profile.coordinator.open(.profile)
@@ -43,7 +43,7 @@ struct ReviewSubmissionFlowTests {
         let fertilizerID = editor.fertilizers[0].id
         #expect(editor.save() && profile.viewModel.isComplete)
         profile.coordinator.sheetDidDismiss()
-        #expect(app.gardenListViewModel.presentation(showsFilter: true).gardens.first?.stage == .readyForReview)
+        #expect(app.dashboardViewModel.viewState(showsFilter: true).gardens.first?.stage == .readyForReview)
         #expect(makeTestGardenStore(in: app.modelContainer).gardens.first?.id == garden.id)
         let review = try request(in: profile)
         let contact = try openReviewContact(review)

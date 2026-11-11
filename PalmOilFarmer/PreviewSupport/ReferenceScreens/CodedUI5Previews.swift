@@ -29,7 +29,7 @@ struct CodedUI5Preview: View {
         Group {
             switch screen {
             case .empty:
-                GardenListView(onRegisterGarden: {})
+                DashboardStaticView(onRegisterGarden: {})
             case .discovery:
                 LocationDiscoveryGuide(onContinue: {}, onClose: {})
             case .searchResults, .searchGPS, .searchPhoto:

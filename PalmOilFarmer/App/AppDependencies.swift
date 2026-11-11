@@ -7,7 +7,7 @@ struct AppDependencies {
     let reviewRepository: any FarmerReviewRepository
     let gardenStore: GardenStore
     let coordinator: AppCoordinator
-    let gardenListViewModel: GardenListViewModel
+    let dashboardViewModel: DashboardViewModel
     let registrationFactory: GardenRegistrationFactory
     let mappingFactory: GardenMappingFactory
     let profileFactory: GardenProfileFactory
@@ -26,7 +26,7 @@ struct AppDependencies {
         let coordinator = AppCoordinator()
         self.gardenStore = gardenStore
         self.coordinator = coordinator
-        gardenListViewModel = GardenListViewModel(source: gardenStore, onEvent: coordinator.handle)
+        dashboardViewModel = DashboardViewModel(repository: DashboardRepository(store: gardenStore), onEvent: coordinator.handle)
         registrationFactory = GardenRegistrationFactory(services: registrationServices)
         mappingFactory = GardenMappingFactory(saving: gardenStore, authorization: mappingAuthorization)
         let submitGardenReview = SubmitGardenReview(gateway: gardenStore)
