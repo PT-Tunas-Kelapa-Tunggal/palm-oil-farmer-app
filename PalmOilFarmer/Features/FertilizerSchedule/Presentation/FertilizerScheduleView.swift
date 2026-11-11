@@ -76,7 +76,7 @@ struct FertilizerScheduleView: View {
                 }
 
                 if !presentation.completedPeriods.isEmpty {
-                    section(title: "Sudah Selesai", subtitle: "Catatan pupuk yang sudah diberikan.") {
+                    section(title: "Sudah Selesai", subtitle: "Catatan pupuk yang sudah Anda berikan.") {
                         ForEach(presentation.completedPeriods) { card in
                             completedCard(card)
                         }
@@ -96,7 +96,7 @@ struct FertilizerScheduleView: View {
                 .accessibilityAddTraits(.isHeader)
             Text(subtitle)
                 .font(.subheadline)
-                .foregroundStyle(.secondary)
+                .foregroundStyle(FertilizerScheduleStyle.headerSecondary)
         }
         .foregroundStyle(.white)
     }
@@ -104,7 +104,7 @@ struct FertilizerScheduleView: View {
     // MARK: Hero
 
     private func heroCard(_ hero: FertilizerSchedulePresentation.Hero) -> some View {
-        VStack(spacing: 0) {
+        VStack(spacing: 16) {
             switch hero {
             case .active(let range, let dayTitle, let daySubtitle, let rows):
                 Label {
@@ -114,53 +114,55 @@ struct FertilizerScheduleView: View {
                 }
                 .labelStyle(DotLabelStyle())
                 .font(.footnote.weight(.semibold))
-                .padding(.bottom, 14)
 
                 dateRow(range)
 
                 VStack(spacing: 0) {
                     Text(dayTitle).font(.title.bold())
-                    Text(daySubtitle).font(.headline).foregroundStyle(.secondary)
+                    Text(daySubtitle).font(.headline).foregroundStyle(FertilizerScheduleStyle.inkTertiary)
                 }
                 .accessibilityElement(children: .combine)
-                .padding(.top, 18)
-                .padding(.bottom, 20)
 
                 FertilizerTimelineList(rows: rows, onSelectStep: viewModel.selectStep)
 
             case .upcoming(let periodID, let title, let range):
                 VStack(alignment: .leading, spacing: 4) {
-                    Text("Pemupukan terdekat").font(.subheadline).foregroundStyle(.secondary)
+                    Text("Pemupukan terdekat").font(.subheadline).foregroundStyle(FertilizerScheduleStyle.inkSecondary)
                     Text(title).font(.headline)
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .accessibilityElement(children: .combine)
-                .padding(.bottom, 20)
 
-                dateRow(range)
-
-                Button { viewModel.openPeriod(periodID) } label: {
-                    HStack(spacing: 6) {
-                        Text("Lihat pupuk")
-                        Image(systemName: "chevron.right").font(.footnote.weight(.bold))
-                    }
-                    .font(.subheadline.weight(.semibold))
-                    .frame(minHeight: 44)
-                    .contentShape(Rectangle())
+                VStack(spacing: 8) {
+                    dateRow(range)
+                    lihatPupukButton(periodID)
                 }
-                .buttonStyle(.plain)
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .padding(.top, 14)
             }
         }
-        .padding(20)
+        .padding(.horizontal, 20)
+        .padding(.vertical, 22)
         .modifier(WhiteCard(radius: FertilizerScheduleStyle.heroRadius))
+    }
+
+    /// Text sits at the bottom of a 44 pt target so it lines up with the card's bottom padding.
+    private func lihatPupukButton(_ periodID: UUID) -> some View {
+        Button { viewModel.openPeriod(periodID) } label: {
+            HStack(spacing: 6) {
+                Text("Lihat pupuk")
+                Image(systemName: "chevron.right").font(.footnote.weight(.bold))
+            }
+            .font(.subheadline.weight(.semibold))
+            .frame(minHeight: 44, alignment: .bottom)
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .frame(maxWidth: .infinity, alignment: .leading)
     }
 
     private func dateRow(_ range: FertilizerSchedulePresentation.DateRange) -> some View {
         HStack(alignment: .center, spacing: 8) {
             dateColumn(label: "Mulai", day: range.startDay, detail: range.startDetail, alignment: .leading)
-            VStack(spacing: 6) {
+            VStack(spacing: 5) {
                 HStack(spacing: 6) {
                     DottedLine()
                     SeedlingIcon()
@@ -171,7 +173,7 @@ struct FertilizerScheduleView: View {
                         .background(FertilizerScheduleStyle.accent, in: Circle())
                     DottedLine()
                 }
-                Text(range.length).font(.caption).foregroundStyle(.secondary)
+                Text(range.length).font(.caption.weight(.medium)).foregroundStyle(FertilizerScheduleStyle.inkSecondary)
             }
             .accessibilityElement(children: .combine)
             dateColumn(label: "Selesai", day: range.endDay, detail: range.endDetail, alignment: .trailing)
@@ -180,9 +182,9 @@ struct FertilizerScheduleView: View {
 
     private func dateColumn(label: String, day: String, detail: String, alignment: HorizontalAlignment) -> some View {
         VStack(alignment: alignment, spacing: 2) {
-            Text(label).font(.caption).foregroundStyle(.secondary)
+            Text(label).font(.caption).foregroundStyle(FertilizerScheduleStyle.inkSecondary)
             Text(day).font(.title.bold())
-            Text(detail).font(.caption).foregroundStyle(.secondary)
+            Text(detail).font(.footnote).foregroundStyle(FertilizerScheduleStyle.inkSecondary)
         }
         .fixedSize()
         .accessibilityElement(children: .combine)
@@ -194,11 +196,10 @@ struct FertilizerScheduleView: View {
         VStack(alignment: .leading, spacing: 12) {
             VStack(alignment: .leading, spacing: 2) {
                 Text(title).font(.title3.weight(.semibold)).accessibilityAddTraits(.isHeader)
-                Text(subtitle).font(.subheadline).foregroundStyle(.secondary)
+                Text(subtitle).font(.subheadline).foregroundStyle(FertilizerScheduleStyle.headerSecondary)
             }
             .foregroundStyle(.white)
             .padding(.horizontal, KropsTheme.Spacing.screen)
-            .padding(.top, 8)
             cards()
         }
     }
@@ -208,20 +209,20 @@ struct FertilizerScheduleView: View {
             VStack(alignment: .leading, spacing: 12) {
                 HStack(alignment: .top) {
                     VStack(alignment: .leading, spacing: 2) {
-                        Text(card.caption).font(.footnote).foregroundStyle(.secondary)
-                        Text(card.title).font(.title3.weight(.bold))
+                        Text(card.caption).font(.footnote).foregroundStyle(FertilizerScheduleStyle.inkSecondary)
+                        Text(card.title).font(.title3.weight(.semibold))
                     }
                     Spacer(minLength: 8)
                     chevron
                 }
                 ViewThatFits(in: .horizontal) {
-                    HStack(spacing: 8) { chips(card.fertilizers) }
-                    VStack(alignment: .leading, spacing: 8) { chips(card.fertilizers) }
+                    HStack(spacing: 6) { chips(card.fertilizers) }
+                    VStack(alignment: .leading, spacing: 6) { chips(card.fertilizers) }
                 }
             }
             .padding(16)
             .frame(maxWidth: .infinity, alignment: .leading)
-            .modifier(WhiteCard(radius: KropsTheme.Radius.card))
+            .modifier(WhiteCard(radius: FertilizerScheduleStyle.cardRadius))
         }
         .buttonStyle(.plain)
         .accessibilityElement(children: .combine)
@@ -233,8 +234,8 @@ struct FertilizerScheduleView: View {
             Text(names[index])
                 .font(.footnote.weight(.semibold))
                 .padding(.horizontal, 10)
-                .padding(.vertical, 6)
-                .background(FertilizerScheduleStyle.neutralFill, in: Capsule())
+                .padding(.vertical, 5)
+                .background(FertilizerScheduleStyle.chipFill, in: Capsule())
         }
     }
 
@@ -242,20 +243,20 @@ struct FertilizerScheduleView: View {
         Button { viewModel.openPeriod(card.id) } label: {
             HStack(spacing: 12) {
                 Image(systemName: "checkmark")
-                    .font(.body.weight(.semibold))
+                    .font(.subheadline)
                     .foregroundStyle(FertilizerScheduleStyle.accent)
                     .frame(width: 36, height: 36)
                     .background(FertilizerScheduleStyle.accentSoft, in: Circle())
                 VStack(alignment: .leading, spacing: 2) {
-                    Text(card.caption).font(.footnote).foregroundStyle(.secondary)
-                    Text(card.title).font(.title3.weight(.bold))
+                    Text(card.caption).font(.footnote).foregroundStyle(FertilizerScheduleStyle.inkSecondary)
+                    Text(card.title).font(.title3.weight(.semibold))
                 }
                 Spacer(minLength: 8)
                 chevron
             }
             .padding(16)
             .frame(maxWidth: .infinity, alignment: .leading)
-            .modifier(WhiteCard(radius: KropsTheme.Radius.card))
+            .modifier(WhiteCard(radius: FertilizerScheduleStyle.cardRadius))
         }
         .buttonStyle(.plain)
         .accessibilityElement(children: .ignore)
@@ -265,8 +266,8 @@ struct FertilizerScheduleView: View {
 
     private var chevron: some View {
         Image(systemName: "chevron.right")
-            .font(.body.weight(.semibold))
-            .foregroundStyle(.tertiary)
+            .font(.headline)
+            .foregroundStyle(FertilizerScheduleStyle.inkTertiary)
     }
 }
 
@@ -276,7 +277,7 @@ private struct WhiteCard: ViewModifier {
 
     func body(content: Content) -> some View {
         content
-            .foregroundStyle(.primary)
+            .foregroundStyle(FertilizerScheduleStyle.ink)
             .background(.white, in: RoundedRectangle(cornerRadius: radius))
             .environment(\.colorScheme, .light)
     }
@@ -284,7 +285,7 @@ private struct WhiteCard: ViewModifier {
 
 private struct DotLabelStyle: LabelStyle {
     func makeBody(configuration: Configuration) -> some View {
-        HStack(spacing: 6) {
+        HStack(spacing: 4) {
             configuration.icon
             configuration.title
         }
@@ -294,7 +295,7 @@ private struct DotLabelStyle: LabelStyle {
 private struct DottedLine: View {
     var body: some View {
         Line()
-            .stroke(Color(white: 0.6), style: StrokeStyle(lineWidth: 1.5, lineCap: .round, dash: [2, 4]))
+            .stroke(FertilizerScheduleStyle.inkTertiary, style: StrokeStyle(lineWidth: 2, dash: [3, 4]))
             .frame(height: 2)
             .frame(minWidth: 12, maxWidth: .infinity)
     }

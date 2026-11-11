@@ -1,19 +1,27 @@
 import SwiftUI
 
+/// Values from the Sketch "Jadwal Pemupukan" frames. Cards stay light in both appearances, so their ink is fixed.
 enum FertilizerScheduleStyle {
-    /// Bright fruit-bunch orange from the design; only used for icons and the status dot.
-    static let accent = Color(red: 0.95, green: 0.33, blue: 0.13)
-    static let accentSoft = accent.opacity(0.14)
-    static let neutralFill = Color(white: 0.94)
-    static let gapBar = Color(white: 0.86)
+    static let accent = Color(red: 1, green: 0x4F / 255, blue: 0x18 / 255)
+    static let accentSoft = Color(red: 1, green: 0xEA / 255, blue: 0xE3 / 255)
+    static let ink = Color(red: 0x14 / 255, green: 0x15 / 255, blue: 0x17 / 255)
+    static let inkSecondary = ink.opacity(0.72)
+    static let inkTertiary = ink.opacity(0.55)
+    static let inkGap = ink.opacity(0.9)
+    static let numberFill = Color(red: 0x78 / 255, green: 0x78 / 255, blue: 0x80 / 255).opacity(0.16)
+    static let raisedFill = Color(red: 0xF2 / 255, green: 0xF4 / 255, blue: 0xF7 / 255)
+    static let chipFill = ink.opacity(0.04)
+    static let gapBar = ink.opacity(0.12)
+    static let headerSecondary = Color.white.opacity(0.8)
     static let highlight = LinearGradient(
-        colors: [Color(white: 0.06), Color(white: 0.24)], startPoint: .leading, endPoint: .trailing
+        colors: [ink, Color(red: 0x2E / 255, green: 0x30 / 255, blue: 0x34 / 255)], startPoint: .top, endPoint: .bottom
     )
     static let screenBackground = LinearGradient(
         colors: [Color(white: 0.17), Color(white: 0.02)], startPoint: .topTrailing, endPoint: .bottomLeading
     )
     static let heroRadius: CGFloat = 28
-    static let rowRadius: CGFloat = 16
+    static let cardRadius: CGFloat = 20
+    static let rowRadius: CGFloat = 20
 }
 
 struct FertilizerStepRow: View {
@@ -23,35 +31,37 @@ struct FertilizerStepRow: View {
     var isCard = false
     let action: () -> Void
 
+    private typealias Style = FertilizerScheduleStyle
     private var isHighlighted: Bool { row.style == .highlighted }
 
     var body: some View {
         Button(action: action) {
-            HStack(spacing: 12) {
+            HStack(spacing: 10) {
                 badge
-                VStack(alignment: .leading, spacing: 2) {
+                VStack(alignment: .leading, spacing: 0) {
                     Text(row.name)
                         .font(.title3.weight(.semibold))
-                        .foregroundStyle(nameStyle)
+                        .foregroundStyle(ink)
                     if let subtitle = row.subtitle {
                         Text(subtitle)
-                            .font(.caption)
-                            .foregroundStyle(isHighlighted ? AnyShapeStyle(.white.opacity(0.75)) : AnyShapeStyle(.secondary))
+                            .font(.footnote)
+                            .foregroundStyle(isHighlighted ? Color.white.opacity(0.8) : Style.inkSecondary)
                     }
                 }
-                Spacer(minLength: 8)
+                Spacer(minLength: 0)
                 Text(row.quantity)
-                    .font(.body.weight(.bold))
-                    .foregroundStyle(nameStyle)
+                    .font(.headline)
+                    .foregroundStyle(ink)
                 Image(systemName: "chevron.right")
-                    .font(.body.weight(.semibold))
-                    .foregroundStyle(isHighlighted ? AnyShapeStyle(.white) : AnyShapeStyle(.tertiary))
+                    .font(.headline)
+                    .foregroundStyle(isHighlighted ? Color.white.opacity(0.8) : Style.inkTertiary)
             }
-            .padding(.horizontal, 12)
-            .padding(.vertical, isHighlighted || isCard ? 12 : 8)
+            .padding(.vertical, 14)
+            .padding(.leading, 12)
+            .padding(.trailing, 14)
             .frame(maxWidth: .infinity, minHeight: 44)
             .background { background }
-            .contentShape(RoundedRectangle(cornerRadius: FertilizerScheduleStyle.rowRadius))
+            .contentShape(RoundedRectangle(cornerRadius: Style.rowRadius))
         }
         .buttonStyle(.plain)
         .accessibilityElement(children: .ignore)
@@ -59,11 +69,11 @@ struct FertilizerStepRow: View {
         .accessibilityAddTraits(.isButton)
     }
 
-    private var nameStyle: AnyShapeStyle {
+    private var ink: Color {
         switch row.style {
-        case .highlighted: AnyShapeStyle(.white)
-        case .given: AnyShapeStyle(.secondary)
-        case .waiting, .locked: AnyShapeStyle(.primary)
+        case .highlighted: .white
+        case .given: Style.inkSecondary
+        case .waiting, .locked: Style.ink
         }
     }
 
@@ -71,28 +81,31 @@ struct FertilizerStepRow: View {
     private var badge: some View {
         if row.style == .given {
             Image(systemName: "checkmark")
-                .font(.footnote.weight(.bold))
-                .foregroundStyle(FertilizerScheduleStyle.accent)
-                .frame(width: 26, height: 26)
-                .background(FertilizerScheduleStyle.accentSoft, in: Circle())
+                .font(.footnote.weight(.semibold))
+                .foregroundStyle(Style.accent)
+                .frame(width: 24, height: 24)
+                .background(Style.accentSoft, in: Circle())
         } else {
             Text("\(row.order)")
                 .font(.footnote.weight(.semibold))
-                .foregroundStyle(isHighlighted ? .black : .primary)
+                .foregroundStyle(Style.ink)
                 .frame(width: 24, height: 24)
-                .background(isHighlighted ? AnyShapeStyle(.white) : AnyShapeStyle(FertilizerScheduleStyle.neutralFill),
-                            in: Circle())
-                .padding(.horizontal, 1)
+                .background(badgeFill, in: Circle())
         }
+    }
+
+    private var badgeFill: Color {
+        if isHighlighted { return .white }
+        return isCard ? Style.ink.opacity(0.08) : Style.numberFill
     }
 
     @ViewBuilder
     private var background: some View {
-        let shape = RoundedRectangle(cornerRadius: FertilizerScheduleStyle.rowRadius)
+        let shape = RoundedRectangle(cornerRadius: Style.rowRadius)
         if isHighlighted {
-            shape.fill(FertilizerScheduleStyle.highlight)
+            shape.fill(Style.highlight)
         } else if isCard {
-            shape.fill(.background.opacity(0.85))
+            shape.fill(Style.raisedFill)
         }
     }
 }
@@ -100,39 +113,35 @@ struct FertilizerStepRow: View {
 struct FertilizerGapRow: View {
     let row: FertilizerSchedulePresentation.GapRow
 
+    private typealias Style = FertilizerScheduleStyle
+    private var isCounting: Bool { row.style == .counting }
+
     var body: some View {
         HStack(spacing: 12) {
-            Capsule()
-                .fill(barColor)
-                .frame(width: 3, height: row.style == .counting ? 16 : 22)
+            RoundedRectangle(cornerRadius: 2)
+                .fill(isCounting ? Style.ink : Style.gapBar)
+                .frame(width: 4, height: isCounting ? 12 : 28)
             Text(row.text)
-                .font(.subheadline.weight(row.style == .counting ? .semibold : .regular))
-                .foregroundStyle(textStyle)
+                .font(.subheadline.weight(isCounting ? .semibold : .regular))
+                .foregroundStyle(textColor)
             Spacer(minLength: 0)
         }
-        .padding(.horizontal, 14)
-        .padding(.vertical, row.style == .counting ? 14 : 4)
+        .padding(.leading, 22)
+        .padding(.trailing, 12)
+        .padding(.vertical, isCounting ? 14 : 2)
         .background {
-            if row.style == .counting {
-                RoundedRectangle(cornerRadius: FertilizerScheduleStyle.rowRadius).fill(FertilizerScheduleStyle.neutralFill)
+            if isCounting {
+                RoundedRectangle(cornerRadius: Style.rowRadius).fill(Style.raisedFill)
             }
         }
         .accessibilityElement(children: .combine)
     }
 
-    private var barColor: Color {
+    private var textColor: Color {
         switch row.style {
-        case .counting: .primary
-        case .pending: FertilizerScheduleStyle.gapBar
-        case .elapsed: FertilizerScheduleStyle.gapBar.opacity(0.6)
-        }
-    }
-
-    private var textStyle: AnyShapeStyle {
-        switch row.style {
-        case .counting: AnyShapeStyle(.primary)
-        case .pending: AnyShapeStyle(.secondary)
-        case .elapsed: AnyShapeStyle(.tertiary)
+        case .counting: Style.ink
+        case .pending: Style.inkGap
+        case .elapsed: Style.inkTertiary
         }
     }
 }
@@ -143,7 +152,7 @@ struct FertilizerTimelineList: View {
     let onSelectStep: (UUID) -> Void
 
     var body: some View {
-        VStack(spacing: isCard ? 8 : 6) {
+        VStack(spacing: 6) {
             ForEach(rows) { row in
                 switch row {
                 case .step(let step):

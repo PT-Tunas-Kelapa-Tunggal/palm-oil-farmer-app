@@ -30,11 +30,12 @@ struct FertilizerPeriodSheet: View {
                 Spacer()
                 Text(sheet.total).fontWeight(.bold)
             }
-            .font(.subheadline)
+            .font(.callout)
             .padding(.horizontal, 4)
+            .padding(.top, 12)
             .accessibilityElement(children: .combine)
         }
-        .padding(.horizontal, 20)
+        .padding(.horizontal, 24)
         .padding(.top, 20)
         .padding(.bottom, 20)
         .fittedSheetHeight()
