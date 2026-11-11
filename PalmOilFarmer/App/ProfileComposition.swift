@@ -9,9 +9,9 @@ struct GardenProfileFactory {
     func makeViewModel(garden: Garden) -> GardenProfileViewModel {
         let reviewRequestFactory = self.reviewRequestFactory
         return GardenProfileViewModel(garden: garden, source: source, reviewRepository: reviewRepository,
-            makeReviewRequest: { gardenID, isActive, onSubmitted, onClose in
-                reviewRequestFactory.makeFlow(gardenID: gardenID, isActive: isActive,
-                                              onSubmitted: onSubmitted, onClose: onClose)
-            })
+                                      makeReviewRequest: { gardenID, isActive, onSubmitted, onClose in
+            reviewRequestFactory.makeFlow(gardenID: gardenID, isActive: isActive,
+                                          onSubmitted: onSubmitted, onClose: onClose)
+        })
     }
 }
