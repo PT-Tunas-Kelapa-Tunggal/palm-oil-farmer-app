@@ -1,7 +1,7 @@
 import CoreLocation
 import Photos
 
-/// (3) Mapper: raw Photos asset (`PHAsset`) → domain model `GardenPhoto`.
+/// Maps a Photos asset (`PHAsset`) to a `GardenPhoto`.
 /// Returns nil for screenshots and photos outside the user's library.
 enum GardenPhotoMapper {
     static func photo(from asset: PHAsset) -> GardenPhoto? {

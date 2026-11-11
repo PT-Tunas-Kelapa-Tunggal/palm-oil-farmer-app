@@ -2,7 +2,7 @@ import SwiftUI
 import UIKit
 import MapKit
 
-/// Card with the photo location on a small satellite map. Not used by the production flow yet.
+/// Card with the photo location on a small satellite map.
 struct PhotoLocationCard: View {
     let location: GardenLocation
     var image: UIImage?

@@ -1,6 +1,6 @@
 import CoreLocation
 
-/// (2) Real implementation of `GardenLocationAuthorizing` (CoreLocation permission prompt).
+/// Asks for location permission through CoreLocation.
 @MainActor
 final class MappingLocationAuthorization: GardenLocationAuthorizing {
     private let manager = CLLocationManager()

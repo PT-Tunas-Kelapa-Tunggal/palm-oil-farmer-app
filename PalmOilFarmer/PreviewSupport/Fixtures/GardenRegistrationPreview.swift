@@ -2,11 +2,8 @@
 import Foundation
 import UIKit
 
-/// Preview composition root for the GardenRegistration feature.
-/// Builds view models with the same factories as production (`App/RegistrationComposition`,
-/// `App/MappingComposition`) but with the dummy data sources from
-/// `Features/GardenRegistration/Data/Dummy`, so every `#Preview` renders the same way,
-/// offline, without permission prompts and without touching stored gardens.
+/// Preview data for the registration screens: dummy data sources, so every `#Preview` renders the
+/// same way, offline, without permission prompts and without touching stored gardens.
 @MainActor
 enum GardenRegistrationPreview {
     // MARK: Sample locations
@@ -25,7 +22,7 @@ enum GardenRegistrationPreview {
                        source: .photo)
     }
 
-    // MARK: Step 1 · FindLocation
+    // MARK: Location
 
     static func introViewModel(step: GardenRegistrationStep = .guide,
                                query: String = "",
@@ -53,7 +50,7 @@ enum GardenRegistrationPreview {
         )
     }
 
-    // MARK: Step 2 · SetBoundaries
+    // MARK: Boundary
 
     static func boundaryViewModel(location: GardenLocation) -> GardenBoundaryViewModel {
         GardenMappingFactory(saving: DummyGardenRegistrationSaving(),
@@ -61,7 +58,7 @@ enum GardenRegistrationPreview {
             .makeViewModel(location: location, onFinish: { _ in })
     }
 
-    // MARK: Step 3 · CompleteInformation
+    // MARK: Details
 
     static func detailsViewModel(editing garden: Garden? = nil) -> GardenDetailsViewModel {
         GardenDetailsViewModel(

@@ -1,6 +1,6 @@
 import Foundation
 
-/// (4) Domain model: a library photo that may reveal where a garden is.
+/// A library photo that may reveal where a garden is.
 struct GardenPhoto: Identifiable {
     let id: String
     let coordinate: GardenCoordinate?

@@ -1,7 +1,7 @@
 import SwiftUI
 import UIKit
 
-/// Body of the "Foto Kebun" preview inside `GardenPhotoPickerView`: photo, time taken, GPS or a no-GPS warning.
+/// Photo preview: the photo, when it was taken, and its GPS position or a no-GPS warning.
 struct PhotoSelectionContent: View {
     var location: GardenLocation?
     var image: UIImage? = nil

@@ -1,7 +1,6 @@
 import SwiftUI
 
-/// SHEET "Data Kebun" / "Edit Kebun" (step 3, over the boundary map or the garden profile).
-/// Fields use `RegistrationFormField`; "Tahun Tanam" opens the `PlantingDatePickerView` sheet.
+/// "Data Kebun" / "Edit Kebun" sheet.
 struct GardenDetailsView: View {
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
     @State private var viewModel: GardenDetailsViewModel

@@ -1,6 +1,6 @@
 import SwiftUI
 
-/// SHEET "Tahun Tanam" (opened from `GardenDetailsView`): month + year wheels.
+/// "Tahun Tanam" sheet: month and year wheels.
 struct PlantingDatePickerView: View {
     @State private var month: Int
     @State private var year: Int

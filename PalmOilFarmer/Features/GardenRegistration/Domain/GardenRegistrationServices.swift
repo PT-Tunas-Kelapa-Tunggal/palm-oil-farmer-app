@@ -1,6 +1,6 @@
 import Foundation
 
-/// Data sources the "Cari Lokasi" step needs. Built at the composition root (`App/RegistrationComposition`).
+/// Data sources the location step needs.
 @MainActor
 struct GardenRegistrationServices {
     let locations: any GardenLocationRepository

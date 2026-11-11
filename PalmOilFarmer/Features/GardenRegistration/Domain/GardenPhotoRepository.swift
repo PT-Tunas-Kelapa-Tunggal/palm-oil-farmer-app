@@ -1,7 +1,6 @@
 import Foundation
 
-/// (1) Repository protocol: reads garden photos. Real impl: `PhotosGardenPhotoRepository`,
-/// canvas/offline impl: `DummyGardenPhotoRepository`.
+/// Reads garden photos.
 @MainActor
 protocol GardenPhotoRepository {
     func loadPhotos() async -> GardenPhotoLibrarySnapshot

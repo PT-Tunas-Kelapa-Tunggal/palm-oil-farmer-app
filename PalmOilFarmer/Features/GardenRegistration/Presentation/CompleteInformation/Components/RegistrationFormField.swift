@@ -1,6 +1,6 @@
 import SwiftUI
 
-/// Titled input container used by the "Data Kebun" form (`GardenDetailsView`).
+/// Titled input container for form fields.
 struct RegistrationFormField<Content: View>: View {
     let title: String
     @ViewBuilder let content: () -> Content

@@ -1,6 +1,6 @@
 import SwiftUI
 
-/// FULL SCREEN "Kebun Tersimpan" shown by `GardenBoundaryView` after a successful save; closes itself after 3 s.
+/// Full-screen "Kebun Tersimpan" confirmation; closes itself after 3 s.
 struct GardenSavedConfirmationView: View {
     let gardenName: String
     let area: String

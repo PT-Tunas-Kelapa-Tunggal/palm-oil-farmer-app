@@ -1,8 +1,7 @@
 import SwiftUI
 import UIKit
 
-/// SHEET "Foto" (opened from search via "Saya punya foto kebun").
-/// Gallery grid of `CameraPhotoThumbnail` → tap → preview `PhotoSelectionContent` → "Gunakan Foto Ini".
+/// "Foto" sheet: pick a gallery photo, preview it, then confirm with "Gunakan Foto Ini".
 struct GardenPhotoPickerView: View {
     @State private var viewModel: GardenPhotoPickerViewModel
     @State private var previewImage: UIImage?

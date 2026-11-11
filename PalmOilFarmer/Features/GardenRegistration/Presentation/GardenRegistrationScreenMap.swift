@@ -1,67 +1,14 @@
 import SwiftUI
 import UIKit
 
-// MARK: - Where is what? (GardenRegistration)
-//
-// Open this file's canvas ("Peta Alur Registrasi") to see every registration screen at once.
-// Every view file below also has its own #Preview next to the code.
-//
-// Domain/                      (1) protocols + (4) models, pure Foundation
-//   GardenLocationRepository, GardenPhotoRepository, GardenLocationAuthorizing,
-//   GardenRegistrationSaving, GardenRegistrationServices, GardenPhoto, GardenDetails
-// Data/                        (2) repositories + (3) mappers, the only place with MapKit / Photos / CoreLocation
-//   Repositories/  GardenRegistrationRepository (saves via Core/Gardens), MapKitGardenLocationRepository,
-//                  PhotosGardenPhotoRepository, MappingLocationAuthorization
-//   Mappers/       GardenLocationMapper (MKMapItem → GardenLocation), GardenPhotoMapper (PHAsset → GardenPhoto)
-//   Services/      LocationSearchService, CurrentLocationProvider
-//   Dummy/         Dummy* repositories, only wired up by PreviewSupport (DEBUG only)
-// Presentation/
-//   Components/    shared by all steps: RegistrationHeader, RegistrationIconButton,
-//                  RegistrationPrimaryButton, RegistrationStyle, RegistrationSheetPreview
-//
-//   1. FindLocation/
-//      ViewModels/ RegistrationIntroViewModel (guide ↔ search, photo sheet, hand-over to the map),
-//                  LocationSearchViewModel, GardenPhotoPickerViewModel
-//      Screens/   RegistrationIntroView ........ SHEET "Cari Lokasi" (guide ↔ search)
-//                 LocationSearchView ........... content of that sheet, step .search
-//                 GardenPhotoPickerView ........ SHEET "Foto" (gallery → photo preview)
-//      Components/ LocationDiscoveryGuide, LocationSearchContent, LocationOptionRow,
-//                  CameraPhotoThumbnail, PhotoSelectionContent, PhotoLocationMarker, PhotoLocationCard
-//
-//   2. SetBoundaries/
-//      ViewModels/ GardenBoundaryViewModel (boundary, details sheet, exit dialog, outcome),
-//                  BoundaryDrawingGuideViewModel
-//      Screens/   GardenBoundaryView ........... FULL SCREEN map + one bottom sheet
-//                 BoundaryDrawingGuideView ..... standalone guide (not used in production)
-//      Sheets/    LocationConfirmationPanel .... bottom sheet, stage .location
-//                 BoundaryDrawingGuideSheet .... bottom sheet, stage .guide
-//                 BoundaryEditingPanel ......... bottom sheet, stage .drawing
-//                 MapBottomPanel ............... layout used inside those sheets
-//      Components/ BoundaryEditorLayout, BoundaryMetricsView, BoundaryDrawingGuideDemo,
-//                  BoundaryDrawingGuideLayout, BoundaryGeometryMapContent
-//      MapMarkers/ RegistrationLocationPin, RegistrationSelectedLocationMarker,
-//                  RegistrationUserLocationMarker, RegistrationBoundaryMarker
-//
-//   3. CompleteInformation/
-//      ViewModels/ GardenDetailsViewModel (form, saving, "Tahun Tanam" sheet)
-//      Screens/   GardenDetailsView ............ SHEET "Data Kebun" / "Edit Kebun"
-//                 GardenSavedConfirmationView .. FULL SCREEN "Kebun Tersimpan"
-//      Sheets/    PlantingDatePickerView ....... SHEET "Tahun Tanam"
-//      Components/ RegistrationFormField
-//
-// Wiring (outside the feature): App/RegistrationComposition, App/MappingComposition (production),
-// PreviewSupport/Fixtures/GardenRegistrationPreview (canvas).
-
 #if DEBUG
 private struct RegistrationScreenFrame<Content: View>: View {
     let title: String
-    let file: String
     @ViewBuilder let content: () -> Content
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
             Text(title).font(.title3.bold())
-            Text(file).font(.caption.monospaced()).foregroundStyle(.secondary)
             content()
                 .frame(width: 402, height: 874)
                 .background(RegistrationStyle.background)
@@ -74,17 +21,14 @@ private struct RegistrationScreenFrame<Content: View>: View {
 #Preview("Peta Alur Registrasi", traits: .fixedLayout(width: 3100, height: 1000)) {
     ScrollView(.horizontal) {
         HStack(alignment: .top, spacing: 40) {
-            RegistrationScreenFrame(title: "1a · Panduan Lokasi",
-                                  file: "FindLocation/Components/LocationDiscoveryGuide") {
+            RegistrationScreenFrame(title: "1a · Panduan Lokasi") {
                 LocationDiscoveryGuide(onContinue: {}, onClose: {})
             }
-            RegistrationScreenFrame(title: "1b · Cari Lokasi",
-                                  file: "FindLocation/Components/LocationSearchContent") {
+            RegistrationScreenFrame(title: "1b · Cari Lokasi") {
                 LocationSearchContentPreview(query: "smkn gunung kijang",
                                              results: GardenRegistrationPreview.searchResults)
             }
-            RegistrationScreenFrame(title: "1c · Foto Kebun",
-                                  file: "FindLocation/Components/PhotoSelectionContent") {
+            RegistrationScreenFrame(title: "1c · Foto Kebun") {
                 VStack(spacing: 0) {
                     RegistrationHeader(title: "Foto Kebun", onClose: {})
                     PhotoSelectionContent(location: GardenRegistrationPreview.photoLocation,
@@ -92,8 +36,7 @@ private struct RegistrationScreenFrame<Content: View>: View {
                                           creationDate: Date(timeIntervalSince1970: 1_793_582_040))
                 }
             }
-            RegistrationScreenFrame(title: "2a · Konfirmasi Lokasi",
-                                  file: "SetBoundaries/Sheets/LocationConfirmationPanel") {
+            RegistrationScreenFrame(title: "2a · Konfirmasi Lokasi") {
                 Color.clear
                     .overlay { Image("RegistrationSearchSatellite").resizable().scaledToFill() }
                     .clipped()
@@ -104,8 +47,7 @@ private struct RegistrationScreenFrame<Content: View>: View {
                             .background(RegistrationStyle.surface)
                     }
             }
-            RegistrationScreenFrame(title: "2b · Batas Kebun",
-                                  file: "SetBoundaries/Components/BoundaryEditorLayout") {
+            RegistrationScreenFrame(title: "2b · Batas Kebun") {
                 BoundaryEditorLayout(boundary: GardenPreviewData.boundary, metrics: GardenPreviewData.metrics,
                                      showsBottomPanel: false,
                                      onClose: {}, onSearch: {}, onUndo: {}, onClear: {}, onConfirm: {}) {
@@ -120,13 +62,11 @@ private struct RegistrationScreenFrame<Content: View>: View {
                         .background(RegistrationStyle.surface)
                 }
             }
-            RegistrationScreenFrame(title: "3a · Data Kebun",
-                                  file: "CompleteInformation/Screens/GardenDetailsView") {
+            RegistrationScreenFrame(title: "3a · Data Kebun") {
                 GardenDetailsView(viewModel: GardenRegistrationPreview.detailsViewModel(),
                                   referenceMapImage: "RegistrationBoundaryMap", metrics: GardenPreviewData.metrics)
             }
-            RegistrationScreenFrame(title: "3b · Kebun Tersimpan",
-                                  file: "CompleteInformation/Screens/GardenSavedConfirmationView") {
+            RegistrationScreenFrame(title: "3b · Kebun Tersimpan") {
                 GardenSavedConfirmationView(gardenName: "Belakang rumah", area: "2,3 ha", onContinue: {})
             }
         }

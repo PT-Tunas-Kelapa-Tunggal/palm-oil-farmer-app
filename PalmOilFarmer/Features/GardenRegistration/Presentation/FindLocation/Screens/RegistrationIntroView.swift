@@ -1,8 +1,6 @@
 import SwiftUI
 
-/// SHEET "Cari Lokasi" (step 1 entry point, presented from the garden list).
-/// The location guide and search share one sheet and one registration session:
-/// `.guide` shows `LocationDiscoveryGuide`, `.search` shows `LocationSearchView`.
+/// "Cari Lokasi" sheet. The location guide and search share one sheet and one registration session.
 struct RegistrationIntroView: View {
     @State private var viewModel: RegistrationIntroViewModel
     @Environment(\.dismiss) private var dismiss

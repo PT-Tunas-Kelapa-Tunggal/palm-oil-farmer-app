@@ -1,7 +1,7 @@
 import CoreLocation
 import Foundation
 
-/// (2) Real repository: MapKit search + device GPS, mapped by `GardenLocationMapper`.
+/// Finds garden locations with MapKit search and the device's GPS.
 @MainActor
 final class MapKitGardenLocationRepository: GardenLocationRepository {
     func search(_ query: String) async throws -> [GardenLocation] {

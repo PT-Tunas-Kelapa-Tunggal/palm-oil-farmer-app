@@ -1,6 +1,6 @@
 import SwiftUI
 
-/// SHEET content on the boundary map, stage `.drawing`: hint text, Urungkan / Hapus Semua, "Simpan Batas Kebun".
+/// Drawing controls: hint text, Urungkan / Hapus Semua, "Simpan Batas Kebun".
 struct BoundaryEditingPanel: View {
     let boundary: GardenBoundary
     var metrics: GardenDisplayMetrics? = nil

@@ -1,6 +1,6 @@
 import Foundation
 
-/// (2) Real repository: saves registration results into the shared garden data source (`Core/Gardens`).
+/// Saves registration results into the shared garden data source.
 /// One SwiftData container backs every feature, so the garden list updates by itself after a save.
 @MainActor
 final class GardenRegistrationRepository: GardenRegistrationSaving {

@@ -4,7 +4,7 @@ import Observation
 /// How the boundary map ended. The app root decides where to go next.
 enum GardenMappingOutcome { case savedGarden, savedDraft, closed, searchAgain }
 
-/// SCREEN "Peta Batas Kebun" (step 2): the drawn boundary plus the map's own presentation state.
+/// Boundary map: the drawn boundary plus the map's own presentation state.
 ///
 /// While the "Data Kebun" sheet or the exit dialog is open the boundary is locked
 /// (`canEditBoundary == false`), so the geometry cannot drift under the details editor.

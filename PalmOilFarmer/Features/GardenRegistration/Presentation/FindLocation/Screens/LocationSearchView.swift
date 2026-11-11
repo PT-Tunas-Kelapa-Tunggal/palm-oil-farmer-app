@@ -1,8 +1,6 @@
 import SwiftUI
 
-/// Content of the "Cari Lokasi" sheet, step `.search`. Wires `LocationSearchViewModel` (owned by `RegistrationIntroViewModel`)
-/// to the pure layout `LocationSearchContent` and presents the photo sheet `GardenPhotoPickerView`.
-/// It lives inside `RegistrationIntroView`'s sheet, so its previews show it through that sheet.
+/// Search page of the "Cari Lokasi" sheet. Its previews are shown through that sheet.
 struct LocationSearchView: View {
     @State private var viewModel: RegistrationIntroViewModel
     @Environment(\.dismiss) private var dismiss

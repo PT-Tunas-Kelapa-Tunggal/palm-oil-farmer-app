@@ -1,6 +1,6 @@
 import Foundation
 
-/// (1) Asks for location permission before mapping. Real impl: `MappingLocationAuthorization`.
+/// Asks for location permission before mapping.
 @MainActor
 protocol GardenLocationAuthorizing {
     func requestAuthorization()

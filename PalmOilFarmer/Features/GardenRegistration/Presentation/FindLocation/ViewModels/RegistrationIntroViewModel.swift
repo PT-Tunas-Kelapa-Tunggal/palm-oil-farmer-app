@@ -1,10 +1,10 @@
 import Foundation
 import Observation
 
-/// Which page the "Cari Lokasi" sheet shows: `.guide` → `LocationDiscoveryGuide`, `.search` → `LocationSearchView`.
+/// Which page the "Cari Lokasi" sheet shows.
 enum GardenRegistrationStep { case guide, search }
 
-/// SHEET "Cari Lokasi" (step 1): the guide/search page, the photo sheet, and the hand-over to the map.
+/// "Cari Lokasi" sheet: the guide/search page, the photo sheet, and the hand-over to the map.
 ///
 /// Owns the search and photo view models. A location is handed over (`onLocate`) only once, and a
 /// photo location only after the photo sheet has finished dismissing.

@@ -2,7 +2,7 @@ import Foundation
 import Photos
 import UIKit // only for `UIImage.pngData()`: PHImageManager returns resized thumbnails as UIImage on iOS
 
-/// (2) Real repository: reads the Photos library and maps assets with `GardenPhotoMapper`.
+/// Reads garden photos from the Photos library.
 @MainActor
 final class PhotosGardenPhotoRepository: GardenPhotoRepository {
     private let imageManager = PHCachingImageManager()

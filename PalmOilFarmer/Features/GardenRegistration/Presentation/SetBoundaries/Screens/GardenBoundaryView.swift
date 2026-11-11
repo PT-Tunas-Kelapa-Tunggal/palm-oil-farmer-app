@@ -1,9 +1,7 @@
 import SwiftUI
 import MapKit
 
-/// SCREEN "Peta Batas Kebun" (step 2, full screen). Owns the map and one bottom sheet whose
-/// content follows the stage: `LocationConfirmationPanel` → `BoundaryDrawingGuideSheet` → `BoundaryEditingPanel`.
-/// Then presents `GardenDetailsView` (sheet) and `GardenSavedConfirmationView` (full screen).
+/// Full-screen boundary map with one bottom sheet that follows the mapping stage.
 struct GardenBoundaryView: View {
     @State private var viewModel: GardenBoundaryViewModel
     private var location: GardenLocation { viewModel.location }
