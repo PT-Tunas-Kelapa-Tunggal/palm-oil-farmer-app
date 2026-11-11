@@ -1,7 +1,7 @@
 import SwiftUI
 import CoreLocation
 
-/// Map chrome while drawing: dark header (`RegistrationHeader`) + `BoundaryMetricsView` on top of any map.
+/// Map chrome while drawing: header and area/perimeter pill on top of any map.
 struct BoundaryEditorLayout<MapContent: View>: View {
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
     @Environment(\.verticalSizeClass) private var verticalSizeClass

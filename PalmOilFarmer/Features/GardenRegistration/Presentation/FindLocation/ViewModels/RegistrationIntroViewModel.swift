@@ -1,29 +1,43 @@
 import Foundation
 import Observation
 
-/// Step 1 of registration: find the garden location.
-///
-/// Navigation inside the "Cari Lokasi" sheet (`RegistrationIntroView`):
-/// `.guide` → `LocationDiscoveryGuide`, `.search` → `LocationSearchView`,
-/// and from search the photo sheet `GardenPhotoPickerView`.
-/// When a location is chosen, `onLocate` hands over to step 2 (`SetBoundaries`).
+/// Which page the "Cari Lokasi" sheet shows.
 enum GardenRegistrationStep { case guide, search }
 
+/// "Cari Lokasi" sheet: the guide/search page, the photo sheet, and the hand-over to the map.
+///
+/// Owns the search and photo view models. A location is handed over (`onLocate`) only once, and a
+/// photo location only after the photo sheet has finished dismissing.
 @MainActor
 @Observable
-final class GardenRegistrationCoordinator {
+final class RegistrationIntroViewModel {
     private(set) var step: GardenRegistrationStep
     var showsPhotoPicker = false
     private(set) var isFinished = false
+    let searchViewModel: LocationSearchViewModel
+    let photoViewModel: GardenPhotoPickerViewModel
+
     private var pendingPhotoLocation: GardenLocation?
     private let onLocate: (GardenLocation) -> Void
     private let onCancel: () -> Void
 
-    init(initialStep: GardenRegistrationStep, onLocate: @escaping (GardenLocation) -> Void,
-         onCancel: @escaping () -> Void) {
+    init(services: GardenRegistrationServices, initialStep: GardenRegistrationStep,
+         initialQuery: String = "", initialResults: [GardenLocation] = [],
+         onLocate: @escaping (GardenLocation) -> Void, onCancel: @escaping () -> Void) {
+        weak var owner: RegistrationIntroViewModel?
+        searchViewModel = LocationSearchViewModel(
+            repository: services.locations, initialQuery: initialQuery, initialResults: initialResults,
+            onSelect: { owner?.selectLocation($0) }
+        )
+        photoViewModel = GardenPhotoPickerViewModel(
+            repository: services.photos,
+            resolveLocation: { [locations = services.locations] in await locations.location(at: $0) },
+            onSelect: { owner?.selectedPhoto($0) }
+        )
         step = initialStep
         self.onLocate = onLocate
         self.onCancel = onCancel
+        owner = self
     }
 
     func continueToSearch() {

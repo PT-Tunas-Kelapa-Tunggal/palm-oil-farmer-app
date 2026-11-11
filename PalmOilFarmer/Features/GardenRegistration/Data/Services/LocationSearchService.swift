@@ -1,7 +1,6 @@
 import MapKit
 
-/// MapKit stays at the feature's data boundary. Raw `MKMapItem`s are turned into
-/// `GardenLocation` by `GardenLocationMapper`.
+/// MapKit search and reverse geocoding. MapKit types never leave the Data layer.
 enum LocationSearchService {
     @MainActor
     static func search(_ query: String) async throws -> [GardenLocation] {

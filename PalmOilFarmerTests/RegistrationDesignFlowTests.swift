@@ -11,22 +11,22 @@ struct RegistrationDesignFlowTests {
                                              isUserLibrary: true, isScreenshot: false))
         repository.snapshot = GardenPhotoLibrarySnapshot(access: .allowed, photos: [photo])
         var selections: [GardenLocation] = []
-        let coordinator = GardenRegistrationCoordinator(initialStep: .search,
+        let intro = RegistrationIntroViewModel(services: makeTestRegistrationServices(), initialStep: .search,
             onLocate: { selections.append($0) }, onCancel: {})
         let model = GardenPhotoPickerViewModel(
             repository: repository,
             resolveLocation: { GardenLocation(name: "Malang Rapat", subtitle: "Bintan", coordinate: $0) },
-            onSelect: coordinator.selectedPhoto
+            onSelect: intro.selectedPhoto
         )
-        coordinator.openPhotoPicker()
+        intro.openPhotoPicker()
         await model.load()
         #expect(model.showPreview(for: photo.id))
         await model.preparePreview(for: photo.id)
-        #expect(selections.isEmpty && coordinator.showsPhotoPicker)
+        #expect(selections.isEmpty && intro.showsPhotoPicker)
         let data = Data([1, 2, 3])
         #expect(model.confirmPreview(imageData: data))
-        #expect(selections.isEmpty && !coordinator.showsPhotoPicker)
-        coordinator.photoPickerDidDismiss()
+        #expect(selections.isEmpty && !intro.showsPhotoPicker)
+        intro.photoPickerDidDismiss()
         #expect(selections.count == 1)
         #expect(selections.first?.name == "Malang Rapat")
         #expect(selections.first?.source == .photo)
@@ -99,15 +99,15 @@ struct RegistrationDesignFlowTests {
     }
 
     @Test func searchingAgainCannotSilentlyDiscardDrawnBoundary() {
-        var events: [GardenMappingEvent] = []
+        var outcomes: [GardenMappingOutcome] = []
         let model = GardenBoundaryViewModel(location: mappingLocation(), saving: RegistrationSavingSpy(),
-            authorization: MappingAuthorizationStub(), allowsLocationDrafts: true, onEvent: { events.append($0) })
+            authorization: MappingAuthorizationStub(), allowsLocationDrafts: true, onFinish: { outcomes.append($0) })
         model.addPoint(mappingPoints()[0])
         model.searchAgain()
-        #expect(events.isEmpty && model.boundary.points.count == 1)
+        #expect(outcomes.isEmpty && model.boundary.points.count == 1)
         model.clear()
         model.searchAgain()
-        #expect(events == [.searchAgain])
+        #expect(outcomes == [.searchAgain])
     }
     @Test func photoWithoutGPSCanBePreviewedButNeverSelected() async throws {
         let repository = PhotoRepositoryStub()
@@ -128,24 +128,26 @@ struct RegistrationDesignFlowTests {
     }
 
     @Test func fourCornersCloseThePreviewAndConfirmWithoutTappingTheFirstPoint() {
-        var events: [GardenMappingEvent] = []
         let model = GardenBoundaryViewModel(location: mappingLocation(), saving: RegistrationSavingSpy(),
-            authorization: MappingAuthorizationStub(), allowsLocationDrafts: false, onEvent: { events.append($0) })
+            authorization: MappingAuthorizationStub(), allowsLocationDrafts: false, onFinish: { _ in })
         let points = mappingPoints()
         points.prefix(3).forEach(model.addPoint)
         #expect(model.boundary.isValid && !model.canConfirmBoundary)
         model.confirmBoundary()
-        #expect(events.isEmpty && !model.isClosed)
+        #expect(!model.showsDetails && !model.isClosed)
         model.addPoint(points[3])
         #expect(model.isClosed && model.canConfirmBoundary)
         model.undo()
         #expect(!model.isClosed && model.boundary.points.count == 3)
         model.confirmBoundary()
-        #expect(events.isEmpty)
-        model.addPoint(points[3])
-        model.confirmBoundary()
-        #expect(events == [.showDetails])
+        #expect(!model.showsDetails)
         model.clear()
         #expect(!model.isClosed && model.boundary.points.isEmpty)
+        points.forEach(model.addPoint)
+        model.confirmBoundary()
+        #expect(model.showsDetails)
+        // The open "Data Kebun" sheet locks the boundary it is about to save.
+        model.clear()
+        #expect(model.isClosed && model.boundary.points == points)
     }
 }

@@ -1,15 +1,13 @@
 import SwiftUI
 
-/// SHEET "Cari Lokasi" (step 1 entry point, presented from the garden list).
-/// The location guide and search share one sheet and one registration session:
-/// `.guide` shows `LocationDiscoveryGuide`, `.search` shows `LocationSearchView`.
+/// "Cari Lokasi" sheet. The location guide and search share one sheet and one registration session.
 struct RegistrationIntroView: View {
-    @State private var flow: GardenRegistrationFlow
+    @State private var viewModel: RegistrationIntroViewModel
     @Environment(\.dismiss) private var dismiss
     typealias Step = GardenRegistrationStep
 
-    init(flow: GardenRegistrationFlow) {
-        _flow = State(initialValue: flow)
+    init(viewModel: RegistrationIntroViewModel) {
+        _viewModel = State(initialValue: viewModel)
     }
 
     var body: some View {
@@ -24,14 +22,14 @@ struct RegistrationIntroView: View {
     @ViewBuilder
     private var sheetContent: some View {
         Group {
-            switch flow.coordinator.step {
+            switch viewModel.step {
             case .guide:
-                LocationDiscoveryGuide(onContinue: flow.coordinator.continueToSearch) {
-                    flow.coordinator.cancel()
+                LocationDiscoveryGuide(onContinue: viewModel.continueToSearch) {
+                    viewModel.cancel()
                     dismiss()
                 }
             case .search:
-                LocationSearchView(flow: flow)
+                LocationSearchView(viewModel: viewModel)
             }
         }
         .presentationBackground(RegistrationStyle.background)
@@ -42,13 +40,13 @@ struct RegistrationIntroView: View {
 #if DEBUG
 #Preview("Sheet Cari Lokasi · 1 Panduan") {
     SheetPreview {
-        RegistrationIntroView(flow: GardenRegistrationPreview.registrationFlow(step: .guide))
+        RegistrationIntroView(viewModel: GardenRegistrationPreview.introViewModel(step: .guide))
     }
 }
 
 #Preview("Sheet Cari Lokasi · 2 Pencarian") {
     SheetPreview {
-        RegistrationIntroView(flow: GardenRegistrationPreview.registrationFlow(step: .search))
+        RegistrationIntroView(viewModel: GardenRegistrationPreview.introViewModel(step: .search))
     }
 }
 #endif

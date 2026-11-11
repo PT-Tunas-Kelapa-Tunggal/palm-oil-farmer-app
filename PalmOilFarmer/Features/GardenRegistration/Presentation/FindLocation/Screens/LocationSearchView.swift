@@ -1,51 +1,49 @@
 import SwiftUI
 
-/// Content of the "Cari Lokasi" sheet, step `.search`. Wires `LocationSearchViewModel`
-/// to the pure layout `LocationSearchContent` and presents the photo sheet `GardenPhotoPickerView`.
-/// It lives inside `RegistrationIntroView`'s sheet, so its previews show it through that sheet.
+/// Search page of the "Cari Lokasi" sheet. Its previews are shown through that sheet.
 struct LocationSearchView: View {
-    @State private var flow: GardenRegistrationFlow
+    @State private var viewModel: RegistrationIntroViewModel
     @Environment(\.dismiss) private var dismiss
     @FocusState private var isSearchFocused: Bool
 
-    init(flow: GardenRegistrationFlow) {
-        _flow = State(initialValue: flow)
+    init(viewModel: RegistrationIntroViewModel) {
+        _viewModel = State(initialValue: viewModel)
     }
 
     var body: some View {
-        @Bindable var model = flow.searchViewModel
-        @Bindable var coordinator = flow.coordinator
+        @Bindable var viewModel = viewModel
+        @Bindable var searchViewModel = viewModel.searchViewModel
         LocationSearchContent(
-            query: $model.query, isSearchFocused: $isSearchFocused,
-            results: model.results, isSearching: model.isSearching,
-            isLocating: model.isLocating, errorMessage: model.errorMessage,
+            query: $searchViewModel.query, isSearchFocused: $isSearchFocused,
+            results: searchViewModel.results, isSearching: searchViewModel.isSearching,
+            isLocating: searchViewModel.isLocating, errorMessage: searchViewModel.errorMessage,
             onSelect: { location in
                 isSearchFocused = false
-                model.selectResult(location)
+                searchViewModel.selectResult(location)
             },
             onCurrentLocation: {
                 isSearchFocused = false
-                model.requestCurrentLocation()
+                searchViewModel.requestCurrentLocation()
             },
             onPhoto: {
                 isSearchFocused = false
-                model.cancelPendingWork()
-                coordinator.openPhotoPicker()
+                searchViewModel.cancelPendingWork()
+                viewModel.openPhotoPicker()
             },
-            onClose: { coordinator.cancel(); dismiss() }
+            onClose: { viewModel.cancel(); dismiss() }
         )
-        .task { isSearchFocused = !model.query.isEmpty }
-        .task(id: model.query) { await model.search() }
-        .task(id: model.locationRequestID) { await model.locateCurrentIfRequested() }
-        .sheet(isPresented: $coordinator.showsPhotoPicker, onDismiss: coordinator.photoPickerDidDismiss) {
-            GardenPhotoPickerView(viewModel: flow.photoViewModel)
+        .task { isSearchFocused = !searchViewModel.query.isEmpty }
+        .task(id: searchViewModel.query) { await searchViewModel.search() }
+        .task(id: searchViewModel.locationRequestID) { await searchViewModel.locateCurrentIfRequested() }
+        .sheet(isPresented: $viewModel.showsPhotoPicker, onDismiss: viewModel.photoPickerDidDismiss) {
+            GardenPhotoPickerView(viewModel: viewModel.photoViewModel)
         }
-        .onChange(of: coordinator.isFinished) { _, finished in
+        .onChange(of: viewModel.isFinished) { _, finished in
             if finished { dismiss() }
         }
         .onDisappear {
-            model.cancelPendingWork()
-            coordinator.cancel()
+            searchViewModel.cancelPendingWork()
+            viewModel.cancel()
         }
     }
 }
@@ -53,13 +51,13 @@ struct LocationSearchView: View {
 #if DEBUG
 #Preview("Pencarian · Kosong") {
     SheetPreview {
-        RegistrationIntroView(flow: GardenRegistrationPreview.registrationFlow(step: .search))
+        RegistrationIntroView(viewModel: GardenRegistrationPreview.introViewModel(step: .search))
     }
 }
 
 #Preview("Pencarian · Ada hasil") {
     SheetPreview {
-        RegistrationIntroView(flow: GardenRegistrationPreview.registrationFlow(
+        RegistrationIntroView(viewModel: GardenRegistrationPreview.introViewModel(
             step: .search, query: "smkn gunung kijang", showsResults: true
         ))
     }
@@ -67,7 +65,7 @@ struct LocationSearchView: View {
 
 #Preview("Pencarian · Offline") {
     SheetPreview {
-        RegistrationIntroView(flow: GardenRegistrationPreview.registrationFlow(
+        RegistrationIntroView(viewModel: GardenRegistrationPreview.introViewModel(
             step: .search, query: "dumai", locations: .offline
         ))
     }

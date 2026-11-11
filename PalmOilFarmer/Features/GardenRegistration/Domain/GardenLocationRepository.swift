@@ -1,9 +1,6 @@
 import Foundation
 
-/// (1) Repository protocol: finds the garden location. Real impl: `MapKitGardenLocationRepository`,
-/// canvas/offline impl: `DummyGardenLocationRepository`.
-/// Output model (4) `GardenLocation` stays in the app-wide `Domain/Gardens`, because drafts,
-/// the garden list and navigation share it.
+/// Finds the garden location.
 @MainActor
 protocol GardenLocationRepository {
     func search(_ query: String) async throws -> [GardenLocation]

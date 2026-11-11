@@ -1,7 +1,7 @@
 import SwiftUI
 import MapKit
 
-/// Map overlay (polygon / polyline) for the drawn boundary. Used by `GardenBoundaryView`.
+/// Map overlay (polygon / polyline) for the drawn boundary.
 struct BoundaryGeometryMapContent: MapContent {
     let coordinates: [CLLocationCoordinate2D]
     let isClosed: Bool

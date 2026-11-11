@@ -1,6 +1,6 @@
 import SwiftUI
 
-/// SHEET content on the boundary map, stage `.guide`: two pages ("zoom", "tandai sudut").
+/// Drawing guide sheet: two pages ("zoom", "tandai sudut").
 struct BoundaryDrawingGuideSheet: View {
     var step: BoundaryDrawingGuideStep = .zoom
     let onContinue: () -> Void

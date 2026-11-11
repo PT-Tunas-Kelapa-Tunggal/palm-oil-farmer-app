@@ -1,7 +1,7 @@
 #if DEBUG
 import Foundation
 
-/// (2) Dummy repository for canvas previews and offline demos.
+/// Dummy repository for canvas previews and offline demos.
 /// Never touches MapKit or GPS, so previews render instantly and the same way every time.
 @MainActor
 struct DummyGardenLocationRepository: GardenLocationRepository {

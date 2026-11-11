@@ -1,8 +1,7 @@
 import SwiftUI
 import MapKit
 
-/// Standalone version of the drawing guide (map demo + its own sheet).
-/// Production uses the same pieces inline in `GardenBoundaryView`; this screen is kept for previews/experiments.
+/// Standalone drawing guide (map demo + its own sheet), kept for previews and experiments.
 struct BoundaryDrawingGuideView: View {
     // A read-only starting position keeps the demonstration out of the mapping camera binding.
     let position: MapCameraPosition
@@ -10,7 +9,7 @@ struct BoundaryDrawingGuideView: View {
     let onBack: () -> Void
     let onContinue: () -> Void
 
-    @State private var guide = BoundaryDrawingGuideState()
+    @State private var guide = BoundaryDrawingGuideViewModel()
     @State private var showsSheet = false
     @State private var sheetHeight: CGFloat = 0
     @State private var pendingExit: Exit?

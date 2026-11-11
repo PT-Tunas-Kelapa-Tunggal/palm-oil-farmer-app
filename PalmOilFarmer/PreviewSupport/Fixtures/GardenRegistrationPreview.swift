@@ -2,11 +2,8 @@
 import Foundation
 import UIKit
 
-/// Preview composition root for the GardenRegistration feature.
-/// Builds flows with the same factories as production (`App/RegistrationComposition`,
-/// `App/MappingComposition`) but with the dummy data sources from
-/// `Features/GardenRegistration/Data/Dummy`, so every `#Preview` renders the same way,
-/// offline, without permission prompts and without touching stored gardens.
+/// Preview data for the registration screens: dummy data sources, so every `#Preview` renders the
+/// same way, offline, without permission prompts and without touching stored gardens.
 @MainActor
 enum GardenRegistrationPreview {
     // MARK: Sample locations
@@ -25,18 +22,18 @@ enum GardenRegistrationPreview {
                        source: .photo)
     }
 
-    // MARK: Step 1 · FindLocation
+    // MARK: Location
 
-    static func registrationFlow(step: GardenRegistrationStep = .guide,
-                                 query: String = "",
-                                 showsResults: Bool = false,
-                                 locations: DummyGardenLocationRepository.Scenario = .results,
-                                 photos: DummyGardenPhotoRepository.Scenario = .photos) -> GardenRegistrationFlow {
+    static func introViewModel(step: GardenRegistrationStep = .guide,
+                               query: String = "",
+                               showsResults: Bool = false,
+                               locations: DummyGardenLocationRepository.Scenario = .results,
+                               photos: DummyGardenPhotoRepository.Scenario = .photos) -> RegistrationIntroViewModel {
         let factory = GardenRegistrationFactory {
             GardenRegistrationServices(locations: DummyGardenLocationRepository(locations),
                                        photos: DummyGardenPhotoRepository(photos, imageData: photoImageData))
         }
-        return factory.makeFlow(
+        return factory.makeViewModel(
             initialStep: step,
             initialQuery: query,
             initialResults: showsResults ? searchResults : [],
@@ -53,26 +50,23 @@ enum GardenRegistrationPreview {
         )
     }
 
-    // MARK: Step 2 · SetBoundaries
+    // MARK: Boundary
 
-    static func mappingFlow(location: GardenLocation) -> GardenMappingFlow {
+    static func boundaryViewModel(location: GardenLocation) -> GardenBoundaryViewModel {
         GardenMappingFactory(saving: DummyGardenRegistrationSaving(),
                              authorization: { DummyGardenLocationAuthorization() })
-            .makeFlow(location: location, onFinish: { _ in })
+            .makeViewModel(location: location, onFinish: { _ in })
     }
 
-    // MARK: Step 3 · CompleteInformation
+    // MARK: Details
 
-    static func detailsFlow(editing garden: Garden? = nil) -> GardenDetailsFlow {
-        GardenDetailsFlow(
-            viewModel: GardenDetailsViewModel(
-                locationName: garden?.locationName ?? GardenPreviewData.location.name,
-                boundary: garden?.boundary ?? GardenPreviewData.boundary,
-                editing: garden,
-                onSave: { _ in true },
-                onSaved: {}
-            ),
-            coordinator: GardenDetailsCoordinator()
+    static func detailsViewModel(editing garden: Garden? = nil) -> GardenDetailsViewModel {
+        GardenDetailsViewModel(
+            locationName: garden?.locationName ?? GardenPreviewData.location.name,
+            boundary: garden?.boundary ?? GardenPreviewData.boundary,
+            editing: garden,
+            onSave: { _ in true },
+            onSaved: {}
         )
     }
 }

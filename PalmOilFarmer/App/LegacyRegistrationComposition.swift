@@ -3,7 +3,7 @@ import Foundation
 // Keep existing reference/experiment call sites while production injects its factory.
 extension RegistrationIntroView {
     init(initialStep: Step = .guide, onLocate: @escaping (GardenLocation) -> Void) {
-        self.init(flow: GardenRegistrationFactory(services: GardenRegistrationFactory.liveServices).makeFlow(
+        self.init(viewModel: GardenRegistrationFactory(services: GardenRegistrationFactory.liveServices).makeViewModel(
             initialStep: initialStep, onLocate: onLocate, onCancel: {}
         ))
     }
@@ -22,7 +22,7 @@ extension LocationSearchView {
                 photos: services.photos
             )
         }
-        self.init(flow: factory.makeFlow(
+        self.init(viewModel: factory.makeViewModel(
             initialStep: .search, initialQuery: initialQuery, initialResults: initialResults ?? [],
             onLocate: onSelect, onCancel: {}
         ))

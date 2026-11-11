@@ -1,6 +1,6 @@
 import SwiftUI
 
-/// Content of the "Cari Lokasi" sheet, step `.guide`: explains the three ways to find a garden.
+/// Explains the three ways to find a garden.
 struct LocationDiscoveryGuide: View {
     let onContinue: () -> Void
     let onClose: () -> Void

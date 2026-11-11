@@ -1,7 +1,7 @@
 import CoreLocation
 import MapKit
 
-/// (3) Mapper: raw MapKit results (`MKMapItem`) → domain model `GardenLocation`.
+/// Maps MapKit results (`MKMapItem`) to `GardenLocation`.
 /// MapKit types never leave the Data layer.
 enum GardenLocationMapper {
     /// A forward-search result. `fallbackName` is the user's query when MapKit has no name.

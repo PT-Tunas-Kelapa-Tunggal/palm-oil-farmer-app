@@ -1,8 +1,6 @@
 import Foundation
 
-/// (1) Repository protocol: saves the registration result.
-/// Real impl: `GardenRegistrationRepository` (writes through Core's `GardenDataSource`),
-/// canvas impl: `DummyGardenRegistrationSaving`.
+/// Saves the registration result.
 @MainActor
 protocol GardenRegistrationSaving {
     func saveGarden(_ garden: Garden, completingDraft draftID: UUID?) -> Bool

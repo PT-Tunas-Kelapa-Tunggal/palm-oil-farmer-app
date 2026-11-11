@@ -1,9 +1,8 @@
 #if DEBUG
 import Foundation
 
-/// (2) Dummy repository for canvas previews: a fixed gallery. Never asks for Photos permission.
-/// Thumbnail bytes are injected (PreviewSupport passes the `RegistrationPhotoReference` asset),
-/// so this Data-layer file needs no UI framework.
+/// Fixed gallery for previews. Never asks for Photos permission.
+/// Thumbnail bytes are injected, so this file needs no UI framework.
 @MainActor
 struct DummyGardenPhotoRepository: GardenPhotoRepository {
     enum Scenario { case photos, denied, empty }

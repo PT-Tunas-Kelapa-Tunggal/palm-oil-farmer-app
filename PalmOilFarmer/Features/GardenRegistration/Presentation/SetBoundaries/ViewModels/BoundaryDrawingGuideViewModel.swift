@@ -1,3 +1,6 @@
+import Foundation
+import Observation
+
 enum BoundaryDrawingGuideStep: Int, Hashable, CaseIterable {
     case zoom
     case tap
@@ -24,18 +27,21 @@ enum BoundaryDrawingGuideStep: Int, Hashable, CaseIterable {
     }
 }
 
-struct BoundaryDrawingGuideState {
+/// Drawing guide pages ("Perbesar Peta Dulu" → "Tandai Sudut Kebun") shown before mapping starts.
+@MainActor
+@Observable
+final class BoundaryDrawingGuideViewModel {
     private(set) var step: BoundaryDrawingGuideStep = .zoom
 
     /// Returns false when the primary action should leave the guide and start mapping.
-    mutating func advance() -> Bool {
+    func advance() -> Bool {
         guard step == .zoom else { return false }
         step = .tap
         return true
     }
 
     /// Returns false when back should leave the guide and return to location confirmation.
-    mutating func goBack() -> Bool {
+    func goBack() -> Bool {
         guard step == .tap else { return false }
         step = .zoom
         return true

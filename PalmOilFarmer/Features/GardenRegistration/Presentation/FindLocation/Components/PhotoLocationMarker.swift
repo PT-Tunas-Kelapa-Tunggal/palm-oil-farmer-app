@@ -1,7 +1,7 @@
 import SwiftUI
 import UIKit
 
-/// Map marker showing the chosen photo. Used on the boundary map (`GardenBoundaryView`) for photo locations.
+/// Map marker showing the chosen photo.
 struct PhotoLocationMarker: View {
     var image: UIImage?
 

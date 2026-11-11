@@ -1,18 +1,17 @@
 import SwiftUI
 
-/// SHEET "Data Kebun" / "Edit Kebun" (step 3, over the boundary map or the garden profile).
-/// Fields use `RegistrationFormField`; "Tahun Tanam" opens the `PlantingDatePickerView` sheet.
+/// "Data Kebun" / "Edit Kebun" sheet.
 struct GardenDetailsView: View {
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
-    @State private var flow: GardenDetailsFlow
+    @State private var viewModel: GardenDetailsViewModel
     var referenceMapImage: String? = nil
     var metrics: GardenDisplayMetrics? = nil
-    private var boundary: GardenBoundary { flow.viewModel.boundary }
+    private var boundary: GardenBoundary { viewModel.boundary }
     @Environment(\.dismiss) private var dismiss
     @FocusState private var isNameFocused: Bool
 
-    init(flow: GardenDetailsFlow, referenceMapImage: String? = nil, metrics: GardenDisplayMetrics? = nil) {
-        _flow = State(initialValue: flow)
+    init(viewModel: GardenDetailsViewModel, referenceMapImage: String? = nil, metrics: GardenDisplayMetrics? = nil) {
+        _viewModel = State(initialValue: viewModel)
         self.referenceMapImage = referenceMapImage
         self.metrics = metrics
     }
@@ -32,15 +31,14 @@ struct GardenDetailsView: View {
 
     @ViewBuilder
     private var sheetContent: some View {
-        @Bindable var model = flow.viewModel
-        @Bindable var coordinator = flow.coordinator
+        @Bindable var viewModel = viewModel
         let metricsLayout = dynamicTypeSize.isAccessibilitySize
             ? AnyLayout(VStackLayout(spacing: 7))
             : AnyLayout(HStackLayout(spacing: 7))
         VStack(spacing: 0) {
-            RegistrationHeader(title: model.isEditing ? "Edit Kebun" : "Data Kebun") {
+            RegistrationHeader(title: viewModel.isEditing ? "Edit Kebun" : "Data Kebun") {
                 isNameFocused = false
-                coordinator.close()
+                viewModel.close()
             }
             ScrollView {
                 VStack(spacing: 0) {
@@ -69,7 +67,7 @@ struct GardenDetailsView: View {
                         RegistrationFormField(title: "Nama Kebun") {
                             HStack(spacing: 8) {
                                 Image(systemName: "mappin.and.ellipse").foregroundStyle(.secondary)
-                                TextField("cth: Pinggir jalan, Hilir sungai", text: $model.name)
+                                TextField("cth: Pinggir jalan, Hilir sungai", text: $viewModel.name)
                                     .textInputAutocapitalization(.words)
                                     .focused($isNameFocused)
                                     .submitLabel(.done)
@@ -81,33 +79,33 @@ struct GardenDetailsView: View {
                         RegistrationFormField(title: "Tahun Tanam") {
                             Button {
                                 isNameFocused = false
-                                coordinator.openPlantingDate()
+                                viewModel.openPlantingDate()
                             } label: {
                                 selectionLabel(
-                                    model.plantingYear.map { "\(PlantingDatePickerView.monthNames[model.plantingMonth - 1]) \($0)" },
+                                    viewModel.plantingYear.map { "\(PlantingDatePickerView.monthNames[viewModel.plantingMonth - 1]) \($0)" },
                                     placeholder: "Pilih tahun tanam", symbol: "calendar", trailing: "chevron.right"
                                 )
                             }
                             .buttonStyle(.plain)
                             .accessibilityLabel("Tahun Tanam")
-                            .accessibilityValue(model.plantingYear.map(String.init) ?? "Belum dipilih")
+                            .accessibilityValue(viewModel.plantingYear.map(String.init) ?? "Belum dipilih")
                         }
                         RegistrationFormField(title: "Jenis Tanah") {
                             Menu {
-                                Picker("Jenis Tanah", selection: $model.soilType) {
+                                Picker("Jenis Tanah", selection: $viewModel.soilType) {
                                     ForEach(SoilType.allCases) { soil in
                                         Text(soil.displayName).tag(Optional(soil))
                                     }
                                 }
                             } label: {
-                                selectionLabel(model.soilType?.displayName,
+                                selectionLabel(viewModel.soilType?.displayName,
                                                placeholder: "Pilih jenis tanah", symbol: "leaf",
                                                trailing: "chevron.up.chevron.down")
                             }
                             .tint(.primary)
-                            .onChange(of: model.soilType) { isNameFocused = false }
+                            .onChange(of: viewModel.soilType) { isNameFocused = false }
                             .accessibilityLabel("Jenis Tanah")
-                            .accessibilityValue(model.soilType?.displayName ?? "Belum dipilih")
+                            .accessibilityValue(viewModel.soilType?.displayName ?? "Belum dipilih")
                         }
                     }
                     .padding(.horizontal, 16)
@@ -140,20 +138,20 @@ struct GardenDetailsView: View {
             }
         }
         .background(RegistrationStyle.background)
-        .sheet(isPresented: $coordinator.showsPlantingDate) {
-            PlantingDatePickerView(month: model.plantingMonth, year: model.plantingYear ?? Calendar.current.component(.year, from: .now)) { month, year in
-                model.plantingMonth = month
-                model.plantingYear = year
+        .sheet(isPresented: $viewModel.showsPlantingDate) {
+            PlantingDatePickerView(month: viewModel.plantingMonth, year: viewModel.plantingYear ?? Calendar.current.component(.year, from: .now)) { month, year in
+                viewModel.plantingMonth = month
+                viewModel.plantingYear = year
             }
         }
         .presentationBackground(RegistrationStyle.background)
-        .onChange(of: coordinator.isFinished) { _, finished in
+        .onChange(of: viewModel.isFinished) { _, finished in
             if finished { dismiss() }
         }
-        .alert("Kebun belum tersimpan", isPresented: $model.showsSaveError) {
+        .alert("Kebun belum tersimpan", isPresented: $viewModel.showsSaveError) {
             Button("Mengerti", role: .cancel) {}
         } message: {
-            Text(model.errorMessage)
+            Text(viewModel.errorMessage)
         }
     }
 
@@ -184,7 +182,7 @@ struct GardenDetailsView: View {
 
     private func save() {
         isNameFocused = false
-        _ = flow.viewModel.save()
+        _ = viewModel.save()
     }
 }
 
@@ -200,21 +198,21 @@ private struct RegistrationMetricLabelStyle: LabelStyle {
 #if DEBUG
 #Preview("Sheet Data Kebun · Kosong") {
     SheetPreview(backdrop: "RegistrationClosedSatellite") {
-        GardenDetailsView(flow: GardenRegistrationPreview.detailsFlow(),
+        GardenDetailsView(viewModel: GardenRegistrationPreview.detailsViewModel(),
                           referenceMapImage: "RegistrationBoundaryMap", metrics: GardenPreviewData.metrics)
     }
 }
 
 #Preview("Sheet Data Kebun · Edit kebun") {
     SheetPreview(backdrop: "RegistrationClosedSatellite") {
-        GardenDetailsView(flow: GardenRegistrationPreview.detailsFlow(editing: GardenPreviewData.garden),
+        GardenDetailsView(viewModel: GardenRegistrationPreview.detailsViewModel(editing: GardenPreviewData.garden),
                           referenceMapImage: "RegistrationBoundaryMap", metrics: GardenPreviewData.metrics)
     }
 }
 
 #Preview("Sheet Data Kebun · Teks besar") {
     SheetPreview(backdrop: "RegistrationClosedSatellite") {
-        GardenDetailsView(flow: GardenRegistrationPreview.detailsFlow(editing: GardenPreviewData.garden),
+        GardenDetailsView(viewModel: GardenRegistrationPreview.detailsViewModel(editing: GardenPreviewData.garden),
                           referenceMapImage: "RegistrationBoundaryMap", metrics: GardenPreviewData.metrics)
             .environment(\.dynamicTypeSize, .accessibility3)
     }

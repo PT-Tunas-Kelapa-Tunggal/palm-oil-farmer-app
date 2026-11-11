@@ -22,14 +22,10 @@ struct GardenProfileFactory {
                     }, onClose: { coordinator.closeSheet(sheet) })
             },
             makeDetailsEditor: { sheet in
-                let editor = GardenDetailsCoordinator()
                 let latest = model.garden
-                return GardenDetailsFlow(
-                    viewModel: GardenDetailsViewModel(locationName: latest.locationName, boundary: latest.boundary, editing: latest,
-                        isActive: { !editor.isFinished && sheet.kind == .details && coordinator.isCurrent(sheet) },
-                        onSave: model.saveDetails, onSaved: { editor.close(); coordinator.closeSheet(sheet) }),
-                    coordinator: editor
-                )
+                return GardenDetailsViewModel(locationName: latest.locationName, boundary: latest.boundary, editing: latest,
+                    isActive: { sheet.kind == .details && coordinator.isCurrent(sheet) }, closesAfterSaving: true,
+                    onSave: model.saveDetails, onSaved: { coordinator.closeSheet(sheet) })
             },
             makeProfileEditor: { sheet in
                 GardenProfileEditorViewModel(garden: model.garden,

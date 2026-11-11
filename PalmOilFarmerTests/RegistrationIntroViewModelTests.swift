@@ -3,88 +3,92 @@ import Testing
 @testable import PalmOilFarmer
 
 @MainActor
-struct GardenRegistrationFlowTests {
+struct RegistrationIntroViewModelTests {
     private let coordinate = GardenCoordinate(latitude: 1, longitude: 104)
 
     private func location() -> GardenLocation {
         GardenLocation(name: "Dumai", subtitle: "Riau", coordinate: coordinate)
     }
 
+    private func introModel(_ step: GardenRegistrationStep, onLocate: @escaping (GardenLocation) -> Void,
+                            onCancel: @escaping () -> Void = {}) -> RegistrationIntroViewModel {
+        RegistrationIntroViewModel(services: makeTestRegistrationServices(), initialStep: step,
+                                   onLocate: onLocate, onCancel: onCancel)
+    }
+
     @Test func guideAdvancesToSearchBeforeOpeningGallery() {
-        let coordinator = GardenRegistrationCoordinator(initialStep: .guide, onLocate: { _ in }, onCancel: {})
-        coordinator.openPhotoPicker()
-        #expect(coordinator.step == .guide && !coordinator.showsPhotoPicker)
-        coordinator.continueToSearch()
-        coordinator.openPhotoPicker()
-        #expect(coordinator.step == .search && coordinator.showsPhotoPicker)
+        let model = introModel(.guide, onLocate: { _ in })
+        model.openPhotoPicker()
+        #expect(model.step == .guide && !model.showsPhotoPicker)
+        model.continueToSearch()
+        model.openPhotoPicker()
+        #expect(model.step == .search && model.showsPhotoPicker)
     }
 
     @Test func selectedPhotoEmitsOnceOnlyAfterGalleryDismissal() {
         var selected: [GardenLocation] = []
-        let coordinator = GardenRegistrationCoordinator(initialStep: .search, onLocate: { selected.append($0) }, onCancel: {})
-        coordinator.openPhotoPicker()
-        coordinator.selectedPhoto(GardenLocation(name: "Lokasi dari foto", subtitle: "Foto kebun", coordinate: coordinate, source: .photo))
-        #expect(!coordinator.showsPhotoPicker && selected.isEmpty && !coordinator.isFinished)
-        coordinator.photoPickerDidDismiss()
-        coordinator.photoPickerDidDismiss()
-        #expect(selected.count == 1 && coordinator.isFinished)
+        let model = introModel(.search, onLocate: { selected.append($0) })
+        model.openPhotoPicker()
+        model.selectedPhoto(GardenLocation(name: "Lokasi dari foto", subtitle: "Foto kebun", coordinate: coordinate, source: .photo))
+        #expect(!model.showsPhotoPicker && selected.isEmpty && !model.isFinished)
+        model.photoPickerDidDismiss()
+        model.photoPickerDidDismiss()
+        #expect(selected.count == 1 && model.isFinished)
         #expect(selected.first?.coordinate == coordinate && selected.first?.source == .photo)
         #expect(selected.first?.name == "Lokasi dari foto" && selected.first?.subtitle == "Foto kebun")
     }
 
     @Test func cancelledGalleryStaysInSearchAndCanBeOpenedAgain() {
         var selections = 0
-        let coordinator = GardenRegistrationCoordinator(initialStep: .search, onLocate: { _ in selections += 1 }, onCancel: {})
-        coordinator.openPhotoPicker()
-        coordinator.showsPhotoPicker = false
-        coordinator.photoPickerDidDismiss()
-        #expect(selections == 0 && !coordinator.isFinished && coordinator.step == .search)
-        coordinator.openPhotoPicker()
-        coordinator.selectedPhoto(GardenLocation(name: "Lokasi dari foto", subtitle: "Foto kebun", coordinate: coordinate, source: .photo))
-        coordinator.photoPickerDidDismiss()
+        let model = introModel(.search, onLocate: { _ in selections += 1 })
+        model.openPhotoPicker()
+        model.showsPhotoPicker = false
+        model.photoPickerDidDismiss()
+        #expect(selections == 0 && !model.isFinished && model.step == .search)
+        model.openPhotoPicker()
+        model.selectedPhoto(GardenLocation(name: "Lokasi dari foto", subtitle: "Foto kebun", coordinate: coordinate, source: .photo))
+        model.photoPickerDidDismiss()
         #expect(selections == 1)
     }
 
     @Test func cancellingRegistrationRejectsLatePhotoAndGPSCallbacks() {
         var selections = 0, cancellations = 0
-        let coordinator = GardenRegistrationCoordinator(initialStep: .search,
-            onLocate: { _ in selections += 1 }, onCancel: { cancellations += 1 })
-        coordinator.openPhotoPicker()
-        coordinator.selectedPhoto(GardenLocation(name: "Lokasi dari foto", subtitle: "Foto kebun", coordinate: coordinate, source: .photo))
-        coordinator.cancel()
-        coordinator.cancel()
-        coordinator.photoPickerDidDismiss()
-        coordinator.selectLocation(location())
-        coordinator.openPhotoPicker()
-        #expect(cancellations == 1 && selections == 0 && !coordinator.showsPhotoPicker)
+        let model = introModel(.search, onLocate: { _ in selections += 1 }, onCancel: { cancellations += 1 })
+        model.openPhotoPicker()
+        model.selectedPhoto(GardenLocation(name: "Lokasi dari foto", subtitle: "Foto kebun", coordinate: coordinate, source: .photo))
+        model.cancel()
+        model.cancel()
+        model.photoPickerDidDismiss()
+        model.selectLocation(location())
+        model.openPhotoPicker()
+        #expect(cancellations == 1 && selections == 0 && !model.showsPhotoPicker)
     }
 
     @Test func photoPresentationAndDismissalCannotBeInterruptedByLateLocation() {
         var selected: [GardenLocation] = []
-        let coordinator = GardenRegistrationCoordinator(initialStep: .search, onLocate: { selected.append($0) }, onCancel: {})
-        coordinator.openPhotoPicker()
-        coordinator.selectLocation(location())
-        #expect(selected.isEmpty && coordinator.showsPhotoPicker)
-        coordinator.selectedPhoto(GardenLocation(name: "Lokasi dari foto", subtitle: "Foto kebun", coordinate: coordinate, source: .photo))
-        coordinator.selectLocation(location())
+        let model = introModel(.search, onLocate: { selected.append($0) })
+        model.openPhotoPicker()
+        model.selectLocation(location())
+        #expect(selected.isEmpty && model.showsPhotoPicker)
+        model.selectedPhoto(GardenLocation(name: "Lokasi dari foto", subtitle: "Foto kebun", coordinate: coordinate, source: .photo))
+        model.selectLocation(location())
         #expect(selected.isEmpty)
-        coordinator.photoPickerDidDismiss()
+        model.photoPickerDidDismiss()
         #expect(selected.count == 1 && selected.first?.source == .photo)
     }
 
     @Test func selectedSearchLocationPreservesIdentityAndPreventsSecondNavigation() {
         var selected: [GardenLocation] = []
         var cancellations = 0
-        let coordinator = GardenRegistrationCoordinator(initialStep: .search,
-            onLocate: { selected.append($0) }, onCancel: { cancellations += 1 })
+        let model = introModel(.search, onLocate: { selected.append($0) }, onCancel: { cancellations += 1 })
         let value = location()
-        coordinator.selectLocation(value)
-        coordinator.selectLocation(location())
-        coordinator.cancel()
+        model.selectLocation(value)
+        model.selectLocation(location())
+        model.cancel()
         #expect(selected.map(\.id) == [value.id] && cancellations == 0)
     }
 
-    @Test func compositionDefersServicesUntilFlowCreationAndUsesSeparateServicesPerFlow() async {
+    @Test func compositionDefersServicesUntilViewModelCreationAndUsesSeparateServicesPerSheet() async {
         var locations: [LocationRepositoryStub] = []
         let value = location()
         let dependencies = AppDependencies(
@@ -99,14 +103,14 @@ struct GardenRegistrationFlowTests {
         )
         #expect(locations.isEmpty)
         dependencies.coordinator.handle(.registerGarden)
-        let flow = dependencies.registrationFactory.makeFlow(
+        let model = dependencies.registrationFactory.makeViewModel(
             initialStep: .search, onLocate: dependencies.coordinator.locatedGarden,
             onCancel: dependencies.coordinator.cancelRegistration
         )
-        _ = dependencies.registrationFactory.makeFlow(initialStep: .search, onLocate: { _ in }, onCancel: {})
+        _ = dependencies.registrationFactory.makeViewModel(initialStep: .search, onLocate: { _ in }, onCancel: {})
         #expect(locations.count == 2 && locations[0] !== locations[1])
-        flow.searchViewModel.requestCurrentLocation()
-        await flow.searchViewModel.locateCurrentIfRequested()
+        model.searchViewModel.requestCurrentLocation()
+        await model.searchViewModel.locateCurrentIfRequested()
         #expect(locations[0].currentRequests == 1 && locations[1].currentRequests == 0)
         #expect(dependencies.coordinator.registrationSheet == nil && dependencies.coordinator.mappingLocation == nil)
         dependencies.coordinator.registrationDidDismiss()
@@ -124,17 +128,17 @@ struct GardenRegistrationFlowTests {
             mappingAuthorization: makeTestMappingAuthorization
         )
         dependencies.coordinator.handle(.registerGarden)
-        let flow = dependencies.registrationFactory.makeFlow(
+        let model = dependencies.registrationFactory.makeViewModel(
             initialStep: .guide, onLocate: dependencies.coordinator.locatedGarden,
             onCancel: dependencies.coordinator.cancelRegistration
         )
-        flow.coordinator.continueToSearch()
-        flow.coordinator.openPhotoPicker()
-        await flow.photoViewModel.load()
-        #expect(flow.photoViewModel.selectPhoto(id: photo.id))
+        model.continueToSearch()
+        model.openPhotoPicker()
+        await model.photoViewModel.load()
+        #expect(model.photoViewModel.selectPhoto(id: photo.id))
         #expect(dependencies.coordinator.registrationSheet == .guide)
         #expect(dependencies.coordinator.mappingLocation == nil)
-        flow.coordinator.photoPickerDidDismiss()
+        model.photoPickerDidDismiss()
         #expect(dependencies.coordinator.registrationSheet == nil && dependencies.coordinator.mappingLocation == nil)
         dependencies.coordinator.registrationDidDismiss()
         #expect(dependencies.coordinator.mappingLocation?.source == .photo)
@@ -149,14 +153,14 @@ struct GardenRegistrationFlowTests {
             mappingAuthorization: makeTestMappingAuthorization
         )
         dependencies.coordinator.handle(.registerGarden)
-        let flow = dependencies.registrationFactory.makeFlow(
+        let model = dependencies.registrationFactory.makeViewModel(
             initialStep: .search, onLocate: dependencies.coordinator.locatedGarden,
             onCancel: dependencies.coordinator.cancelRegistration
         )
-        flow.searchViewModel.requestCurrentLocation()
-        let pending = Task { await flow.searchViewModel.locateCurrentIfRequested() }
+        model.searchViewModel.requestCurrentLocation()
+        let pending = Task { await model.searchViewModel.locateCurrentIfRequested() }
         await repository.waitForCurrentLocation()
-        flow.coordinator.cancel()
+        model.cancel()
         repository.finishCurrentLocation(with: .success(location()))
         await pending.value
         dependencies.coordinator.registrationDidDismiss()

@@ -1,7 +1,7 @@
 import SwiftUI
 import MapKit
 
-/// Animated map behind `BoundaryDrawingGuideSheet` (stage `.guide`): a noninteractive map with its own
+/// Animated map behind the drawing guide: a noninteractive map with its own
 /// camera and a cancellable demonstration for each page.
 struct BoundaryDrawingGuideDemo: View {
     let step: BoundaryDrawingGuideStep

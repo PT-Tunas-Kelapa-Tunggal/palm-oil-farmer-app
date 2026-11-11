@@ -1,7 +1,7 @@
 import SwiftUI
 import UIKit
 
-/// One square cell in the `GardenPhotoPickerView` gallery; streams its thumbnail from the view model.
+/// One square gallery cell; streams its thumbnail from the view model.
 struct CameraPhotoThumbnail: View {
     let photoID: String
     let viewModel: GardenPhotoPickerViewModel

@@ -1,6 +1,6 @@
 import SwiftUI
 
-/// SHEET content on the boundary map, stage `.location`: "is this the right place?" + continue button.
+/// Asks "is this the right place?" before mapping starts.
 struct LocationConfirmationPanel: View {
     let location: GardenLocation
     var onSaveDraft: (() -> Void)? = nil

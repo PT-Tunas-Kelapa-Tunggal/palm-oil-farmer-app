@@ -13,30 +13,9 @@ struct GardenMappingFactory {
         self.allowsLocationDrafts = allowsLocationDrafts
     }
 
-    func makeFlow(location: GardenLocation, onFinish: @escaping (GardenMappingOutcome) -> Void) -> GardenMappingFlow {
-        let saving = self.saving
-        let coordinator = GardenMappingCoordinator(onFinish: onFinish)
-        let model = GardenBoundaryViewModel(location: location, saving: saving, authorization: authorization(),
-                                            allowsLocationDrafts: allowsLocationDrafts,
-                                            isActive: { coordinator.canEditBoundary }, onEvent: coordinator.handle)
-        return GardenMappingFlow(viewModel: model, coordinator: coordinator, makeDetailsFlow: {
-            let sessionID = coordinator.detailsSessionID
-            let detailsCoordinator = GardenDetailsCoordinator()
-            return GardenDetailsFlow(
-                viewModel: GardenDetailsViewModel(locationName: location.name, boundary: model.boundary,
-                    isActive: {
-                        guard let sessionID else { return false }
-                        return !detailsCoordinator.isFinished && coordinator.isCurrentDetailsSession(sessionID)
-                    },
-                    onSave: { garden in
-                        let saved = saving.saveGarden(garden, completingDraft: location.draftID)
-                        if saved { coordinator.recordSavedGarden(garden.name) }
-                        return saved
-                    }, onSaved: {
-                        if let sessionID { coordinator.detailsSaved(sessionID: sessionID) }
-                    }),
-                coordinator: detailsCoordinator
-            )
-        })
+    func makeViewModel(location: GardenLocation,
+                       onFinish: @escaping (GardenMappingOutcome) -> Void) -> GardenBoundaryViewModel {
+        GardenBoundaryViewModel(location: location, saving: saving, authorization: authorization(),
+                                allowsLocationDrafts: allowsLocationDrafts, onFinish: onFinish)
     }
 }

@@ -1,6 +1,6 @@
 import SwiftUI
 
-/// Pure presentation shared by production search and deterministic Sketch previews.
+/// Search page layout without state, so previews stay deterministic.
 struct LocationSearchContent: View {
     @Binding var query: String
     var isSearchFocused: FocusState<Bool>.Binding

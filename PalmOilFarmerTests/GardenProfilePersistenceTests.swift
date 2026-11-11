@@ -49,10 +49,10 @@ struct GardenProfilePersistenceTests {
         latest.fertilizerRecords = [fertilizer]
         latest.harvestRecord = HarvestRecord(frequencyPerMonth: 4, latestWeightKg: 900)
         #expect(app.gardenStore.update(latest))
-        editor.viewModel.name = "Nama baru"
-        editor.viewModel.plantingYear = 2018
-        editor.viewModel.plantingMonth = 9
-        #expect(editor.viewModel.save())
+        editor.name = "Nama baru"
+        editor.plantingYear = 2018
+        editor.plantingMonth = 9
+        #expect(editor.save())
         let restored = try #require(makeTestGardenStore(in: app.modelContainer).gardens.first)
         #expect(restored.name == "Nama baru" && restored.plantingYear == 2018 && restored.plantingMonth == 9)
         #expect(restored.fertilizerRecords?.first?.id == fertilizer.id && restored.harvestRecord?.latestWeightKg == 900)
