@@ -141,7 +141,7 @@ struct GardenBoundaryView: View {
         .preferredColorScheme(.light)
         .onGeometryChange(for: CGFloat.self) { $0.size.height } action: { mapSheetHeight = $0 }
         .sheet(isPresented: $coordinator.showsDetails, onDismiss: coordinator.detailsDidDismiss) {
-            GardenDetailsView(flow: flow.makeDetailsFlow())
+            GardenDetailsView(viewModel: flow.makeDetailsFlow())
         }
         .confirmationDialog("Cari lokasi lain?", isPresented: $showsSearchConfirmation, titleVisibility: .visible) {
             Button("Hapus batas dan cari lokasi lain", role: .destructive) {

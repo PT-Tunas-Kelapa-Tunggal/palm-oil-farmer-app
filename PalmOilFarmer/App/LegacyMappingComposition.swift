@@ -17,23 +17,17 @@ extension GardenBoundaryView {
 extension GardenDetailsView {
     init(location: GardenLocation, boundary: GardenBoundary, onSave: @escaping (Garden) -> Bool,
          referenceMapImage: String? = nil, metrics: GardenDisplayMetrics? = nil) {
-        let coordinator = GardenDetailsCoordinator()
-        let flow = GardenDetailsFlow(
-            viewModel: GardenDetailsViewModel(locationName: location.name, boundary: boundary,
-                isActive: { !coordinator.isFinished }, onSave: onSave, onSaved: {}),
-            coordinator: coordinator
-        )
-        self.init(flow: flow, referenceMapImage: referenceMapImage, metrics: metrics)
+        self.init(viewModel: GardenDetailsViewModel(locationName: location.name, boundary: boundary,
+                                                    onSave: onSave, onSaved: {}),
+                  referenceMapImage: referenceMapImage, metrics: metrics)
     }
 
     init(editing garden: Garden, referenceMapImage: String? = nil, metrics: GardenDisplayMetrics? = nil,
          onSave: @escaping (Garden) -> Bool) {
-        let coordinator = GardenDetailsCoordinator()
-        self.init(flow: GardenDetailsFlow(
-            viewModel: GardenDetailsViewModel(locationName: garden.locationName, boundary: garden.boundary,
-                editing: garden, isActive: { !coordinator.isFinished }, onSave: onSave, onSaved: coordinator.close),
-            coordinator: coordinator
-        ), referenceMapImage: referenceMapImage, metrics: metrics)
+        self.init(viewModel: GardenDetailsViewModel(locationName: garden.locationName, boundary: garden.boundary,
+                                                    editing: garden, closesAfterSaving: true,
+                                                    onSave: onSave, onSaved: {}),
+                  referenceMapImage: referenceMapImage, metrics: metrics)
     }
 }
 

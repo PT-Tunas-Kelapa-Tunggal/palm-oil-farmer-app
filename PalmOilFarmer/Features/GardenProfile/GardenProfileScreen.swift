@@ -112,7 +112,7 @@ struct GardenProfileScreen: View {
     private func sheetContent(_ presentation: GardenProfileSheet) -> some View {
         switch presentation.kind {
         case .details:
-            GardenDetailsView(flow: flow.makeDetailsEditor(presentation))
+            GardenDetailsView(viewModel: flow.makeDetailsEditor(presentation))
         case .profile:
             GardenProfileEditorView(model: flow.makeProfileEditor(presentation),
                 onClose: { flow.coordinator.closeSheet(presentation) })

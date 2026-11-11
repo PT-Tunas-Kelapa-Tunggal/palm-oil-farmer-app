@@ -63,16 +63,13 @@ enum GardenRegistrationPreview {
 
     // MARK: Step 3 · CompleteInformation
 
-    static func detailsFlow(editing garden: Garden? = nil) -> GardenDetailsFlow {
-        GardenDetailsFlow(
-            viewModel: GardenDetailsViewModel(
-                locationName: garden?.locationName ?? GardenPreviewData.location.name,
-                boundary: garden?.boundary ?? GardenPreviewData.boundary,
-                editing: garden,
-                onSave: { _ in true },
-                onSaved: {}
-            ),
-            coordinator: GardenDetailsCoordinator()
+    static func detailsViewModel(editing garden: Garden? = nil) -> GardenDetailsViewModel {
+        GardenDetailsViewModel(
+            locationName: garden?.locationName ?? GardenPreviewData.location.name,
+            boundary: garden?.boundary ?? GardenPreviewData.boundary,
+            editing: garden,
+            onSave: { _ in true },
+            onSaved: {}
         )
     }
 }

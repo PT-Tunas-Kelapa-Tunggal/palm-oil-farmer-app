@@ -66,17 +66,18 @@ struct GardenMappingCoordinatorTests {
     }
 
     @Test func plantingDateCanReopenUntilDetailsAreClosed() {
-        let coordinator = GardenDetailsCoordinator()
-        coordinator.openPlantingDate()
-        coordinator.openPlantingDate()
-        #expect(coordinator.showsPlantingDate)
-        coordinator.showsPlantingDate = false
-        coordinator.openPlantingDate()
-        #expect(coordinator.showsPlantingDate)
-        coordinator.showsPlantingDate = false
-        coordinator.close()
-        coordinator.openPlantingDate()
-        #expect(coordinator.isFinished && !coordinator.showsPlantingDate)
+        let model = GardenDetailsViewModel(locationName: "Kebun", boundary: GardenBoundary(points: []),
+                                           onSave: { _ in true }, onSaved: {})
+        model.openPlantingDate()
+        model.openPlantingDate()
+        #expect(model.showsPlantingDate)
+        model.showsPlantingDate = false
+        model.openPlantingDate()
+        #expect(model.showsPlantingDate)
+        model.showsPlantingDate = false
+        model.close()
+        model.openPlantingDate()
+        #expect(model.isFinished && !model.showsPlantingDate && !model.save())
     }
 
     @Test func photoSearchAgainReopensSearchOnlyAfterMapFinishesDismissing() {

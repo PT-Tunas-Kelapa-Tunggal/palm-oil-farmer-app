@@ -38,7 +38,7 @@ import UIKit
 //      MapMarkers/ RegistrationLocationPin, RegistrationSelectedLocationMarker,
 //                  RegistrationUserLocationMarker, RegistrationBoundaryMarker
 //
-//   3. CompleteInformation/     GardenDetailsCoordinator, GardenDetailsFlow
+//   3. CompleteInformation/     GardenDetailsViewModel
 //      Screens/   GardenDetailsView ............ SHEET "Data Kebun" / "Edit Kebun"
 //                 GardenSavedConfirmationView .. FULL SCREEN "Kebun Tersimpan"
 //      Sheets/    PlantingDatePickerView ....... SHEET "Tahun Tanam"
@@ -117,7 +117,7 @@ private struct RegistrationFlowFrame<Content: View>: View {
             }
             RegistrationFlowFrame(title: "3a · Data Kebun",
                                   file: "CompleteInformation/Screens/GardenDetailsView") {
-                GardenDetailsView(flow: GardenRegistrationPreview.detailsFlow(),
+                GardenDetailsView(viewModel: GardenRegistrationPreview.detailsViewModel(),
                                   referenceMapImage: "RegistrationBoundaryMap", metrics: GardenPreviewData.metrics)
             }
             RegistrationFlowFrame(title: "3b · Kebun Tersimpan",

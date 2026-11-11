@@ -7,6 +7,6 @@ struct GardenProfileFlow {
     let reviewPresentation: GardenProfileReviewPresentation
     let reviewRepository: any FarmerReviewRepository
     let makeReviewRequest: (GardenProfileSheet) -> ReviewRequestFlow
-    let makeDetailsEditor: (GardenProfileSheet) -> GardenDetailsFlow
+    let makeDetailsEditor: (GardenProfileSheet) -> GardenDetailsViewModel
     let makeProfileEditor: (GardenProfileSheet) -> GardenProfileEditorViewModel
 }
