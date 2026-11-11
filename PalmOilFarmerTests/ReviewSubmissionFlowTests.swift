@@ -14,9 +14,9 @@ struct ReviewSubmissionFlowTests {
         let app = reviewTestDependencies(repository: repository)
         app.gardenListViewModel.registerGarden()
         #expect(app.coordinator.registrationSheet == .guide)
-        let registration = app.registrationFactory.makeFlow(initialStep: .guide,
+        let registration = app.registrationFactory.makeViewModel(initialStep: .guide,
             onLocate: app.coordinator.locatedGarden, onCancel: app.coordinator.cancelRegistration)
-        registration.coordinator.continueToSearch()
+        registration.continueToSearch()
         registration.searchViewModel.selectResult(mappingLocation())
         #expect(app.coordinator.mappingLocation == nil && app.coordinator.registrationSheet == nil)
         app.coordinator.registrationDidDismiss()

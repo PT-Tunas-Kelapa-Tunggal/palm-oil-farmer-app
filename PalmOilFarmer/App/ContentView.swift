@@ -33,7 +33,7 @@ struct ContentView: View {
         }
         .environment(store)
         .sheet(item: $coordinator.registrationSheet, onDismiss: coordinator.registrationDidDismiss) { sheet in
-            RegistrationIntroView(flow: registrationFactory.makeFlow(
+            RegistrationIntroView(viewModel: registrationFactory.makeViewModel(
                 initialStep: sheet == .guide ? .guide : .search,
                 onLocate: coordinator.locatedGarden, onCancel: coordinator.cancelRegistration
             ))

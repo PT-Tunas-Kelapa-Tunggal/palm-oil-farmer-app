@@ -11,22 +11,22 @@ struct RegistrationDesignFlowTests {
                                              isUserLibrary: true, isScreenshot: false))
         repository.snapshot = GardenPhotoLibrarySnapshot(access: .allowed, photos: [photo])
         var selections: [GardenLocation] = []
-        let coordinator = GardenRegistrationCoordinator(initialStep: .search,
+        let intro = RegistrationIntroViewModel(services: makeTestRegistrationServices(), initialStep: .search,
             onLocate: { selections.append($0) }, onCancel: {})
         let model = GardenPhotoPickerViewModel(
             repository: repository,
             resolveLocation: { GardenLocation(name: "Malang Rapat", subtitle: "Bintan", coordinate: $0) },
-            onSelect: coordinator.selectedPhoto
+            onSelect: intro.selectedPhoto
         )
-        coordinator.openPhotoPicker()
+        intro.openPhotoPicker()
         await model.load()
         #expect(model.showPreview(for: photo.id))
         await model.preparePreview(for: photo.id)
-        #expect(selections.isEmpty && coordinator.showsPhotoPicker)
+        #expect(selections.isEmpty && intro.showsPhotoPicker)
         let data = Data([1, 2, 3])
         #expect(model.confirmPreview(imageData: data))
-        #expect(selections.isEmpty && !coordinator.showsPhotoPicker)
-        coordinator.photoPickerDidDismiss()
+        #expect(selections.isEmpty && !intro.showsPhotoPicker)
+        intro.photoPickerDidDismiss()
         #expect(selections.count == 1)
         #expect(selections.first?.name == "Malang Rapat")
         #expect(selections.first?.source == .photo)

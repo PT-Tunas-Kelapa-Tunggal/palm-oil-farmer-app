@@ -3,7 +3,7 @@ import Foundation
 import UIKit
 
 /// Preview composition root for the GardenRegistration feature.
-/// Builds flows with the same factories as production (`App/RegistrationComposition`,
+/// Builds view models with the same factories as production (`App/RegistrationComposition`,
 /// `App/MappingComposition`) but with the dummy data sources from
 /// `Features/GardenRegistration/Data/Dummy`, so every `#Preview` renders the same way,
 /// offline, without permission prompts and without touching stored gardens.
@@ -27,16 +27,16 @@ enum GardenRegistrationPreview {
 
     // MARK: Step 1 · FindLocation
 
-    static func registrationFlow(step: GardenRegistrationStep = .guide,
-                                 query: String = "",
-                                 showsResults: Bool = false,
-                                 locations: DummyGardenLocationRepository.Scenario = .results,
-                                 photos: DummyGardenPhotoRepository.Scenario = .photos) -> GardenRegistrationFlow {
+    static func introViewModel(step: GardenRegistrationStep = .guide,
+                               query: String = "",
+                               showsResults: Bool = false,
+                               locations: DummyGardenLocationRepository.Scenario = .results,
+                               photos: DummyGardenPhotoRepository.Scenario = .photos) -> RegistrationIntroViewModel {
         let factory = GardenRegistrationFactory {
             GardenRegistrationServices(locations: DummyGardenLocationRepository(locations),
                                        photos: DummyGardenPhotoRepository(photos, imageData: photoImageData))
         }
-        return factory.makeFlow(
+        return factory.makeViewModel(
             initialStep: step,
             initialQuery: query,
             initialResults: showsResults ? searchResults : [],
