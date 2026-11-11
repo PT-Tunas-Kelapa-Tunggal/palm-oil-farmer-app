@@ -48,4 +48,5 @@ private struct LegacyLocationSearchRepository: GardenLocationRepository {
     }
 
     func currentLocation() async throws -> GardenLocation { try await base.currentLocation() }
+    func location(at coordinate: GardenCoordinate) async -> GardenLocation { await base.location(at: coordinate) }
 }

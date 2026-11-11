@@ -28,7 +28,8 @@ struct AppDependencies {
         self.coordinator = coordinator
         gardenListViewModel = GardenListViewModel(source: gardenStore, onEvent: coordinator.handle)
         registrationFactory = GardenRegistrationFactory(services: registrationServices)
-        mappingFactory = GardenMappingFactory(saving: gardenStore, authorization: mappingAuthorization)
+        mappingFactory = GardenMappingFactory(saving: GardenRegistrationRepository(gardens: gardenStore),
+                                              authorization: mappingAuthorization)
         let submitGardenReview = SubmitGardenReview(gateway: gardenStore)
         self.submitGardenReview = submitGardenReview
         let reviewRequestFactory = ReviewRequestFactory(submission: submitGardenReview)

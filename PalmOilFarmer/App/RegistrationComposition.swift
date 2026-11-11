@@ -22,7 +22,7 @@ struct GardenRegistrationFactory {
             ),
             photoViewModel: GardenPhotoPickerViewModel(
                 repository: dependencies.photos,
-                resolveLocation: { await LocationSearchService.location(at: $0.mapCoordinate) },
+                resolveLocation: { [locations = dependencies.locations] in await locations.location(at: $0) },
                 onSelect: coordinator.selectedPhoto
             )
         )

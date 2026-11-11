@@ -36,7 +36,7 @@ struct GardenMappingPersistenceTests {
     @Test func locationDraftPersistsAndResumesWithOriginalCoordinateAndDraftID() throws {
         let container = AppConfiguration.makeModelContainer(inMemory: true)
         let store = makeTestGardenStore(in: container)
-        let flow = GardenMappingFactory(saving: store, authorization: makeTestMappingAuthorization)
+        let flow = GardenMappingFactory(saving: GardenRegistrationRepository(gardens: store), authorization: makeTestMappingAuthorization)
             .makeFlow(location: mappingLocation(), onFinish: { _ in })
         #expect(flow.viewModel.saveDraft())
         #expect(flow.coordinator.outcome == .savedDraft && store.gardens.isEmpty)
