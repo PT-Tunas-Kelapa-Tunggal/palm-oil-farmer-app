@@ -11,7 +11,7 @@ struct GardenBoundaryView: View {
     private enum Stage { case location, guide, drawing }
     @State private var showsMapSheet = false
     @State private var mapSheetHeight: CGFloat = 0
-    @State private var guide = BoundaryDrawingGuideState()
+    @State private var guide = BoundaryDrawingGuideViewModel()
     @State private var stage: Stage
     @State private var showsSearchConfirmation = false
     @State private var showsDraftSaveError = false
@@ -119,7 +119,7 @@ struct GardenBoundaryView: View {
                             onContinue: {
                                 viewModel.confirmPhoto()
                                 if let latestCamera { position = .camera(latestCamera) }
-                                guide = BoundaryDrawingGuideState()
+                                guide = BoundaryDrawingGuideViewModel()
                                 stage = .guide
                             }
                         )

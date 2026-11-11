@@ -10,7 +10,7 @@ struct BoundaryDrawingGuideView: View {
     let onBack: () -> Void
     let onContinue: () -> Void
 
-    @State private var guide = BoundaryDrawingGuideState()
+    @State private var guide = BoundaryDrawingGuideViewModel()
     @State private var showsSheet = false
     @State private var sheetHeight: CGFloat = 0
     @State private var pendingExit: Exit?

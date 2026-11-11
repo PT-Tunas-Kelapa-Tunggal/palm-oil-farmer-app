@@ -3,7 +3,7 @@ import Testing
 @testable import PalmOilFarmer
 
 @MainActor
-struct GardenRegistrationFlowTests {
+struct RegistrationIntroViewModelTests {
     private let coordinate = GardenCoordinate(latitude: 1, longitude: 104)
 
     private func location() -> GardenLocation {

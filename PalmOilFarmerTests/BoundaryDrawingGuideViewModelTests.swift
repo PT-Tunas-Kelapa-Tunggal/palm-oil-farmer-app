@@ -1,9 +1,10 @@
 import Testing
 @testable import PalmOilFarmer
 
-struct BoundaryDrawingGuideStateTests {
+@MainActor
+struct BoundaryDrawingGuideViewModelTests {
     @Test func primaryActionsShowBothDemonstrationsBeforeStartingMapping() {
-        var guide = BoundaryDrawingGuideState()
+        let guide = BoundaryDrawingGuideViewModel()
         #expect(guide.step == .zoom)
         let advancedToTap = guide.advance()
         #expect(advancedToTap)
@@ -14,7 +15,7 @@ struct BoundaryDrawingGuideStateTests {
     }
 
     @Test func backReturnsToZoomBeforeLeavingForLocationConfirmation() {
-        var guide = BoundaryDrawingGuideState()
+        let guide = BoundaryDrawingGuideViewModel()
         let stayedOnFirstPage = guide.goBack()
         #expect(!stayedOnFirstPage)
         let advancedToTap = guide.advance()
