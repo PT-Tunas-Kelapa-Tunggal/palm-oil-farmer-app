@@ -99,7 +99,7 @@ private struct BoundaryEditingPanelPreview: View {
     var isClosed = true
 
     var body: some View {
-        RegistrationSheetPreview(backdrop: "RegistrationDrawingSatellite") {
+        SheetPreview(backdrop: "RegistrationDrawingSatellite") {
             DynamicSheet(animation: .bouncy, size: .xsmall) {
                 BoundaryEditingPanel(boundary: boundary, isClosed: isClosed,
                                      onUndo: {}, onClear: {}, onConfirm: {})

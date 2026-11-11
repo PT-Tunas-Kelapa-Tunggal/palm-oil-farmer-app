@@ -1,5 +1,6 @@
 import SwiftUI
 
+/// SHEET "Lengkapi / Ubah Profil": harvest + fertilizer form (`FertilizerInputCard` per fertilizer).
 struct GardenProfileEditorView: View {
     @State private var model: GardenProfileEditorViewModel
     let onClose: () -> Void
@@ -124,5 +125,18 @@ struct GardenProfileEditorView: View {
 #Preview("Form profil · NPK custom") {
     GardenProfileEditorView(model: GardenProfileCanvasFixtures.makeEditor(), onClose: {})
         .environment(\.locale, Locale(identifier: "id_ID"))
+}
+#Preview("Sheet Ubah Profil") {
+    SheetPreview(backdrop: "ProfileHiFiMap") {
+        GardenProfileEditorView(model: GardenProfileCanvasFixtures.makeEditor(), onClose: {})
+    }
+    .environment(\.locale, Locale(identifier: "id_ID"))
+}
+#Preview("Sheet Ubah Profil · Teks besar") {
+    SheetPreview(backdrop: "ProfileHiFiMap") {
+        GardenProfileEditorView(model: GardenProfileCanvasFixtures.makeEditor(filled: false), onClose: {})
+            .environment(\.dynamicTypeSize, .accessibility3)
+    }
+    .environment(\.locale, Locale(identifier: "id_ID"))
 }
 #endif

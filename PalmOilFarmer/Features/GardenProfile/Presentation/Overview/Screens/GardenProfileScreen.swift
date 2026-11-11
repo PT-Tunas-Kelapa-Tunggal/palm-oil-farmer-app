@@ -1,6 +1,9 @@
 import SwiftUI
 
-/// The single interactive profile entry point.
+/// SCREEN "Profil Kebun" (pushed from the garden list). The single interactive profile entry point.
+/// Layout: `GardenProfileContentView`. Opens: sheet `GardenProfileEditorView` (Lengkapi profil),
+/// sheet `GardenReviewInformationView` (Tentang Peninjauan), push `GardenProfileSummaryView` (Riwayat),
+/// plus screens owned by other features (see `GardenProfileFlowMap.swift`).
 struct GardenProfileScreen: View {
     @State private var flow: GardenProfileFlow
     private let referenceMapImage: String?

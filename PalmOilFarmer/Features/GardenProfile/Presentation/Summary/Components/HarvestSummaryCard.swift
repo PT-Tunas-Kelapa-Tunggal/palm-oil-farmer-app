@@ -1,5 +1,6 @@
 import SwiftUI
 
+/// Not used by the production summary yet (only its preview).
 struct HarvestSummaryCard: View {
     let record: HarvestRecord
 

@@ -21,7 +21,7 @@ struct FindingWaypointView: View {
                     .navigationDestination(item: $selectedGardenID) { id in
                         if let garden = store.gardens.first(where: { $0.id == id }) {
                             GardenProfileScreen(flow: GardenProfileFactory(
-                                source: store,
+                                source: GardenProfileRepository(gardens: store),
                                 reviewRepository: CloudKitFarmerReviewRepository.shared,
                                 reviewRequestFactory: ReviewRequestFactory(submission: SubmitGardenReview(gateway: store))
                             ).makeFlow(garden: garden))

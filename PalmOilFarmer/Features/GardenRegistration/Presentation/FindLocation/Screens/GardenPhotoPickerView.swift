@@ -122,19 +122,19 @@ struct GardenPhotoPickerView: View {
 
 #if DEBUG
 #Preview("Sheet Foto · Galeri") {
-    RegistrationSheetPreview {
+    SheetPreview {
         GardenPhotoPickerView(viewModel: GardenRegistrationPreview.photoPickerViewModel())
     }
 }
 
 #Preview("Sheet Foto · Akses ditolak") {
-    RegistrationSheetPreview {
+    SheetPreview {
         GardenPhotoPickerView(viewModel: GardenRegistrationPreview.photoPickerViewModel(.denied))
     }
 }
 
 #Preview("Sheet Foto · Belum ada foto") {
-    RegistrationSheetPreview {
+    SheetPreview {
         GardenPhotoPickerView(viewModel: GardenRegistrationPreview.photoPickerViewModel(.empty))
     }
 }

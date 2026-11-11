@@ -1,5 +1,6 @@
 import SwiftUI
 
+/// SHEET "Peninjauan Kebun": three-step explanation before applying for a review.
 struct GardenReviewInformationView: View {
     @AppStorage("gardenReview.hideIntroduction") private var hideIntroduction = false
     let onClose: () -> Void
@@ -62,5 +63,10 @@ struct GardenReviewInformationView: View {
 #if DEBUG
 #Preview("Informasi peninjauan") {
     GardenReviewInformationView(onClose: {}, onApply: {})
+}
+#Preview("Sheet Peninjauan Kebun") {
+    SheetPreview(backdrop: "ProfileHiFiMap") {
+        GardenReviewInformationView(onClose: {}, onApply: {})
+    }
 }
 #endif

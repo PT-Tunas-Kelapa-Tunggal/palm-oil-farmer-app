@@ -44,7 +44,7 @@ private struct LocationConfirmationPanelPreview: View {
     let backdrop: String
 
     var body: some View {
-        RegistrationSheetPreview(backdrop: backdrop) {
+        SheetPreview(backdrop: backdrop) {
             DynamicSheet(animation: .bouncy, size: .small) {
                 LocationConfirmationPanel(location: location, onBack: {}, onContinue: {})
             }

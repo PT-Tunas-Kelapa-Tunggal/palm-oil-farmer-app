@@ -2,14 +2,6 @@ import Foundation
 import Observation
 
 @MainActor
-protocol GardenProfileDataSource: AnyObject {
-    var gardens: [Garden] { get }
-    var canDeleteGardens: Bool { get }
-    func update(_ garden: Garden) -> Bool
-    func delete(_ garden: Garden) -> Bool
-}
-
-@MainActor
 @Observable
 final class GardenProfileViewModel {
     let gardenID: UUID

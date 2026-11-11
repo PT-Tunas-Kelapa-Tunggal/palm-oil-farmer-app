@@ -311,7 +311,17 @@ PalmOilFarmer/
 | :--- | :--- | :--- |
 | GardenRegistration | ✅ `GardenRegistrationRepository` | — |
 | GardenList | ⏳ | `GardenStore+GardenList` |
-| GardenProfile | ⏳ | `GardenStore+Profile` |
+| GardenProfile | ✅ `GardenProfileRepository` | — (still opens other features' screens directly, see 7.4) |
 | ReviewRequest | ⏳ | `GardenStore+ReviewSubmission` |
 
 When the last row is done, `App/State` is empty and `GardenStore` is used only through `GardenDataSource`.
+
+### 7.4. Known Gaps
+
+- **Cross-feature navigation.** `GardenProfileScreen` still creates screens owned by other features
+  (`GardenDetailsView`, `ReviewRequestView`, `ReviewStatusView`, `FertilizerRecommendationView`) and
+  `GardenProfileFlow` exposes their flow types. Target: the flow only exposes
+  `(GardenProfileSheet) -> AnyView` destinations built in `App/ProfileComposition`, so the profile
+  never names another feature's types (rule 1).
+- **Review models** (`ReviewTimelineEntry`, `FertilizerRecommendationReport`) live in feature folders but are
+  used by several features; they belong in `Core/Reviews` together with `Domain/Reviews` and `Data/Reviews`.

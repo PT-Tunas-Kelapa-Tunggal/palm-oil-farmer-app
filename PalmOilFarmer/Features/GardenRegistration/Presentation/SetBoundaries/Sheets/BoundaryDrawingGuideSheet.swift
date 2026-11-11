@@ -62,19 +62,19 @@ struct BoundaryDrawingGuideSheet: View {
 
 #if DEBUG
 #Preview("Sheet panduan · Zoom") {
-    RegistrationSheetPreview(backdrop: "RegistrationGuideSatellite") {
+    SheetPreview(backdrop: "RegistrationGuideSatellite") {
         BoundaryDrawingGuideSheet(onContinue: {})
     }
 }
 
 #Preview("Sheet panduan · Tandai sudut") {
-    RegistrationSheetPreview(backdrop: "RegistrationGuideSatellite") {
+    SheetPreview(backdrop: "RegistrationGuideSatellite") {
         BoundaryDrawingGuideSheet(step: .tap, onContinue: {})
     }
 }
 
 #Preview("Sheet panduan · Teks besar") {
-    RegistrationSheetPreview(backdrop: "RegistrationGuideSatellite") {
+    SheetPreview(backdrop: "RegistrationGuideSatellite") {
         BoundaryDrawingGuideSheet(step: .tap, onContinue: {})
             .environment(\.dynamicTypeSize, .accessibility3)
     }

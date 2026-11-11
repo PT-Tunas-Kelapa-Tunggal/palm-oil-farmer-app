@@ -101,7 +101,7 @@ struct GardenProfileDesignTests {
         let store = makeTestGardenStore(in: container)
         let garden = profileGarden()
         #expect(store.add(garden))
-        let flow = GardenProfileFactory(source: store, reviewRepository: ReviewRepositoryStub(),
+        let flow = GardenProfileFactory(source: GardenProfileRepository(gardens: store), reviewRepository: ReviewRepositoryStub(),
             reviewRequestFactory: ReviewRequestFactory(submission: SubmitGardenReview(gateway: store)))
             .makeFlow(garden: garden)
         flow.coordinator.open(.profile)

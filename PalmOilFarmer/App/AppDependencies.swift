@@ -34,7 +34,7 @@ struct AppDependencies {
         self.submitGardenReview = submitGardenReview
         let reviewRequestFactory = ReviewRequestFactory(submission: submitGardenReview)
         self.reviewRequestFactory = reviewRequestFactory
-        profileFactory = GardenProfileFactory(source: gardenStore, reviewRepository: reviewRepository,
+        profileFactory = GardenProfileFactory(source: GardenProfileRepository(gardens: gardenStore), reviewRepository: reviewRepository,
                                                reviewRequestFactory: reviewRequestFactory)
     }
 

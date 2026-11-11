@@ -17,7 +17,7 @@ import UIKit
 //   Dummy/         Dummy* repositories, only wired up by PreviewSupport (DEBUG only)
 // Presentation/
 //   Components/    shared by all steps: RegistrationHeader, RegistrationIconButton,
-//                  RegistrationPrimaryButton, RegistrationStyle, RegistrationSheetPreview
+//                  RegistrationPrimaryButton, RegistrationStyle
 //
 //   1. FindLocation/            GardenRegistrationCoordinator, GardenRegistrationFlow
 //      Screens/   RegistrationIntroView ........ SHEET "Cari Lokasi" (guide ↔ search)
@@ -45,7 +45,7 @@ import UIKit
 //      Components/ RegistrationFormField
 //
 // Wiring (outside the feature): App/RegistrationComposition, App/MappingComposition (production),
-// PreviewSupport/Fixtures/GardenRegistrationPreview (canvas).
+// PreviewSupport/Fixtures/GardenRegistrationPreview + PreviewSupport/SheetPreview (canvas).
 
 #if DEBUG
 private struct RegistrationFlowFrame<Content: View>: View {

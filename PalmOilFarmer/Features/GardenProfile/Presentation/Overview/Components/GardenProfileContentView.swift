@@ -1,6 +1,7 @@
 import SwiftUI
 
-/// Profile layout only. Presentation and navigation belong to the screen and coordinator.
+/// Layout of the "Profil Kebun" screen only (map header, metrics, cards).
+/// Presentation and navigation belong to `GardenProfileScreen` and `GardenProfileCoordinator`.
 struct GardenProfileContentView: View {
     let garden: Garden
     var referenceMapImage: String? = nil

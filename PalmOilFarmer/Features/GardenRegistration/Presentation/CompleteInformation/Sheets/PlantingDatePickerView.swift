@@ -111,13 +111,13 @@ struct PlantingDatePickerView: View {
 
 #if DEBUG
 #Preview("Sheet Tahun Tanam") {
-    RegistrationSheetPreview {
+    SheetPreview {
         PlantingDatePickerView(month: 10, year: 2016, onConfirm: { _, _ in })
     }
 }
 
 #Preview("Sheet Tahun Tanam · Teks besar") {
-    RegistrationSheetPreview {
+    SheetPreview {
         PlantingDatePickerView(month: 10, year: 2016, onConfirm: { _, _ in })
             .environment(\.dynamicTypeSize, .accessibility3)
     }

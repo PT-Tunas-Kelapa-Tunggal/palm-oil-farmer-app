@@ -52,13 +52,13 @@ struct LocationSearchView: View {
 
 #if DEBUG
 #Preview("Pencarian · Kosong") {
-    RegistrationSheetPreview {
+    SheetPreview {
         RegistrationIntroView(flow: GardenRegistrationPreview.registrationFlow(step: .search))
     }
 }
 
 #Preview("Pencarian · Ada hasil") {
-    RegistrationSheetPreview {
+    SheetPreview {
         RegistrationIntroView(flow: GardenRegistrationPreview.registrationFlow(
             step: .search, query: "smkn gunung kijang", showsResults: true
         ))
@@ -66,7 +66,7 @@ struct LocationSearchView: View {
 }
 
 #Preview("Pencarian · Offline") {
-    RegistrationSheetPreview {
+    SheetPreview {
         RegistrationIntroView(flow: GardenRegistrationPreview.registrationFlow(
             step: .search, query: "dumai", locations: .offline
         ))

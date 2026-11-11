@@ -199,21 +199,21 @@ private struct RegistrationMetricLabelStyle: LabelStyle {
 
 #if DEBUG
 #Preview("Sheet Data Kebun · Kosong") {
-    RegistrationSheetPreview(backdrop: "RegistrationClosedSatellite") {
+    SheetPreview(backdrop: "RegistrationClosedSatellite") {
         GardenDetailsView(flow: GardenRegistrationPreview.detailsFlow(),
                           referenceMapImage: "RegistrationBoundaryMap", metrics: GardenPreviewData.metrics)
     }
 }
 
 #Preview("Sheet Data Kebun · Edit kebun") {
-    RegistrationSheetPreview(backdrop: "RegistrationClosedSatellite") {
+    SheetPreview(backdrop: "RegistrationClosedSatellite") {
         GardenDetailsView(flow: GardenRegistrationPreview.detailsFlow(editing: GardenPreviewData.garden),
                           referenceMapImage: "RegistrationBoundaryMap", metrics: GardenPreviewData.metrics)
     }
 }
 
 #Preview("Sheet Data Kebun · Teks besar") {
-    RegistrationSheetPreview(backdrop: "RegistrationClosedSatellite") {
+    SheetPreview(backdrop: "RegistrationClosedSatellite") {
         GardenDetailsView(flow: GardenRegistrationPreview.detailsFlow(editing: GardenPreviewData.garden),
                           referenceMapImage: "RegistrationBoundaryMap", metrics: GardenPreviewData.metrics)
             .environment(\.dynamicTypeSize, .accessibility3)

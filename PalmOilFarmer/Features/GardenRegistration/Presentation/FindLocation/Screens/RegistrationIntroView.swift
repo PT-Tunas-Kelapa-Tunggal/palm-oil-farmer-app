@@ -41,13 +41,13 @@ struct RegistrationIntroView: View {
 
 #if DEBUG
 #Preview("Sheet Cari Lokasi · 1 Panduan") {
-    RegistrationSheetPreview {
+    SheetPreview {
         RegistrationIntroView(flow: GardenRegistrationPreview.registrationFlow(step: .guide))
     }
 }
 
 #Preview("Sheet Cari Lokasi · 2 Pencarian") {
-    RegistrationSheetPreview {
+    SheetPreview {
         RegistrationIntroView(flow: GardenRegistrationPreview.registrationFlow(step: .search))
     }
 }

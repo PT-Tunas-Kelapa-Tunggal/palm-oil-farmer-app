@@ -22,7 +22,7 @@ struct MapBottomPanel<Content: View>: View {
 
 #if DEBUG
 #Preview("Panel bawah peta") {
-    RegistrationSheetPreview(backdrop: "RegistrationSearchSatellite") {
+    SheetPreview(backdrop: "RegistrationSearchSatellite") {
         DynamicSheet(animation: .bouncy, size: .small) {
             MapBottomPanel {
                 Text("Isi panel apa pun").font(.title3.bold())

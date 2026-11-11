@@ -44,7 +44,7 @@ enum GardenProfileCanvasFixtures {
             repository: repository)
         let garden = complete ? completeGarden : emptyGarden
         store.add(garden)
-        return GardenProfileFactory(source: store, reviewRepository: repository,
+        return GardenProfileFactory(source: GardenProfileRepository(gardens: store), reviewRepository: repository,
             reviewRequestFactory: ReviewRequestFactory(submission: SubmitGardenReview(gateway: store)))
             .makeFlow(garden: garden)
     }
