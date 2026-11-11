@@ -3,6 +3,15 @@ import SwiftUI
 /// The single interactive profile entry point.
 struct GardenProfileScreen: View {
     @State private var flow: GardenProfileFlow
+    @State private var previewReview: GardenReview?
+    @State private var showsAssessmentStatus = false
+    @State private var showsPreviewUpdateError = false
+    @State private var isPresentingReviewCompletion = false
+    @State private var showHistoryAfterConfirmationDismisses = false
+    @State private var assessmentResults = AssessmentResultsViewModel(
+        repository: PlaceholderAssessmentResultsDownloadRepository(),
+        expectedByteCount: PlaceholderAssessmentResultsDownloadRepository.resultByteCount
+    )
     private let referenceMapImage: String?
 
     init(flow: GardenProfileFlow, referenceMapImage: String? = nil) {
@@ -13,7 +22,14 @@ struct GardenProfileScreen: View {
     @AppStorage("gardenReview.hideIntroduction") private var hideReviewIntroduction = false
     @Environment(\.dismiss) private var dismiss
     private var garden: Garden { flow.viewModel.garden }
-    private var currentReviewStatus: ReviewStatus? { flow.reviewPresentation.activeStatus ?? garden.review?.status }
+    private var activePreviewReview: GardenReview? {
+        guard flow.reviewPresentation.activeStatus == nil, garden.review == nil else { return nil }
+        return previewReview
+    }
+
+    private var currentReviewStatus: ReviewStatus? {
+        flow.reviewPresentation.activeStatus ?? garden.review?.status ?? activePreviewReview?.status
+    }
     private var currentReport: FertilizerRecommendationReport? {
         flow.reviewPresentation.activeReport ?? (currentReviewStatus == .completed ? DemoReviewReport.make(for: garden) : nil)
     }
@@ -21,7 +37,37 @@ struct GardenProfileScreen: View {
     var body: some View {
         @Bindable var model = flow.viewModel
         @Bindable var coordinator = flow.coordinator
+        @Bindable var results = assessmentResults
         profileContent
+        .blur(radius: showsAssessmentStatus ? 2 : 0)
+        .sheet(isPresented: $showsAssessmentStatus, onDismiss: assessmentStatusDidDismiss) {
+            if let review = activePreviewReview {
+                AssessmentStatusView(
+                    viewModel: AssessmentStatusViewModel(review: review),
+                    onAdvance: advanceAssessmentPreview
+                )
+                .alert("Status belum dapat diperbarui", isPresented: $showsPreviewUpdateError) {
+                    Button("Mengerti", role: .cancel) {}
+                }
+            }
+        }
+        .fullScreenCover(item: $results.confirmation, onDismiss: assessmentConfirmationDidDismiss) { confirmation in
+            AssessmentResultsConfirmationView(
+                confirmation: confirmation,
+                gardenName: garden.name,
+                downloadWasSimulated: assessmentResults.downloadWasSimulated,
+                onContinue: { assessmentResults.confirmation = nil },
+                onViewHistory: {
+                    showHistoryAfterConfirmationDismisses = true
+                    assessmentResults.confirmation = nil
+                }
+            )
+        }
+        .alert("Unduhan belum selesai", isPresented: $results.showsDownloadError) {
+            Button("Mengerti", role: .cancel) {}
+        } message: {
+            Text("Coba unduh hasil peninjauan kembali.")
+        }
         .sheet(item: rootSheet, onDismiss: coordinator.sheetDidDismiss) { presentation in
             sheetContent(presentation)
         }
@@ -44,7 +90,7 @@ struct GardenProfileScreen: View {
                 }
         }
         .navigationDestination(item: reviewDestination) { presentation in
-            ReviewRequestView(flow: flow.makeReviewRequest(presentation))
+            assessmentDestination(presentation)
                 .onDisappear {
                     if flow.coordinator.sheet == nil {
                         flow.coordinator.sheetDidDismiss()
@@ -60,7 +106,67 @@ struct GardenProfileScreen: View {
         .onChange(of: coordinator.isFinished) { _, finished in
             if finished { dismiss() }
         }
-        .task { await flow.reviewPresentation.load(for: model.gardenID, repository: flow.reviewRepository) }
+        .task(id: model.gardenID) {
+            refreshAssessmentPreview()
+            assessmentResults.load(for: model.gardenID)
+            await flow.reviewPresentation.load(for: model.gardenID, repository: flow.reviewRepository)
+        }
+    }
+
+    private func assessmentDestination(_ presentation: GardenProfileSheet) -> some View {
+        AssessmentRequestFlow(
+            gardenID: garden.id,
+            gardenName: garden.name,
+            areaHectares: garden.boundary.areaHectares,
+            contactRepository: DeviceAssessmentContactRepository(),
+            submissionRepository: PlaceholderAssessmentSubmissionRepository(),
+            onSubmitted: {
+                if flow.coordinator.isCurrent(presentation) { refreshAssessmentPreview() }
+            },
+            onClose: { flow.coordinator.closeSheet(presentation) }
+        )
+    }
+
+    private func refreshAssessmentPreview() {
+        previewReview = try? PlaceholderAssessmentSubmissionRepository().loadReview(for: garden.id)
+    }
+
+    private func advanceAssessmentPreview() {
+        do {
+            if let advanced = try PlaceholderAssessmentSubmissionRepository().advanceReview(for: garden.id) {
+                previewReview = advanced
+                if advanced.status == .completed {
+                    isPresentingReviewCompletion = true
+                    showsAssessmentStatus = false
+                }
+            }
+        } catch {
+            showsPreviewUpdateError = true
+        }
+    }
+
+    private func assessmentStatusDidDismiss() {
+        guard isPresentingReviewCompletion else { return }
+        assessmentResults.confirmation = .reviewCompleted
+    }
+
+    private func assessmentConfirmationDidDismiss() {
+        isPresentingReviewCompletion = false
+        guard showHistoryAfterConfirmationDismisses else { return }
+        showHistoryAfterConfirmationDismisses = false
+        showsAssessmentStatus = activePreviewReview?.status == .completed
+    }
+
+    private func openPreviewReview(_ review: GardenReview) {
+        guard review.status == .completed else {
+            showsAssessmentStatus = true
+            return
+        }
+        switch assessmentResults.state {
+        case .ready: assessmentResults.startDownload()
+        case .downloading: assessmentResults.cancelDownload()
+        case .downloaded: break
+        }
     }
 
     private var rootSheet: Binding<GardenProfileSheet?> {
@@ -95,6 +201,10 @@ struct GardenProfileScreen: View {
             onBack: flow.coordinator.close, onEditGarden: { flow.coordinator.open(.details) },
             onEditProfile: { flow.coordinator.open(.profile) },
             onReviewAction: {
+                if let review = activePreviewReview {
+                    openPreviewReview(review)
+                    return
+                }
                 guard flow.viewModel.isComplete else { return }
                 if currentReviewStatus == nil && !hideReviewIntroduction {
                     flow.coordinator.open(.reviewInformation)
@@ -104,7 +214,13 @@ struct GardenProfileScreen: View {
             },
             onViewSummary: flow.coordinator.openSummary,
             onViewReviewInformation: { flow.coordinator.open(.reviewInformation) },
-            onDelete: deleteAction
+            onDelete: deleteAction,
+            assessmentContactName: activePreviewReview?.contact.name,
+            // Reveal the completed card once the profile is visible again.
+            assessmentResultsState: activePreviewReview?.status == .completed && !isPresentingReviewCompletion
+                ? assessmentResults.state : nil,
+            assessmentCompletedAt: activePreviewReview?.date(for: .completed),
+            assessmentResultByteCount: assessmentResults.expectedByteCount
         )
     }
 
@@ -117,7 +233,9 @@ struct GardenProfileScreen: View {
             GardenProfileEditorView(model: flow.makeProfileEditor(presentation),
                 onClose: { flow.coordinator.closeSheet(presentation) })
         case .review:
-            ReviewRequestView(flow: flow.makeReviewRequest(presentation))
+            NavigationStack {
+                assessmentDestination(presentation)
+            }
         case .reviewInformation:
             GardenReviewInformationView(
                 onClose: { flow.coordinator.closeSheet(presentation) },

@@ -15,7 +15,9 @@ struct GardenProfileFactory {
             viewModel: model, coordinator: coordinator, reviewPresentation: presentation,
             reviewRepository: reviewRepository,
             makeReviewRequest: { sheet in
-                reviewRequestFactory.makeFlow(gardenID: model.gardenID,
+                let currentGarden = model.garden
+                return reviewRequestFactory.makeFlow(gardenID: model.gardenID,
+                    gardenName: currentGarden.name, areaHectares: currentGarden.boundary.areaHectares,
                     isActive: { sheet.kind == .review && coordinator.isCurrent(sheet) },
                     onSubmitted: { saved in
                         if coordinator.isCurrent(sheet) { presentation.submitted(saved) }

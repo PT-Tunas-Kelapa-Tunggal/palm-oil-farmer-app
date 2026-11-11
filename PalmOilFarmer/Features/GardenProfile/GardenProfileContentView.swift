@@ -16,8 +16,26 @@ struct GardenProfileContentView: View {
     let onViewSummary: () -> Void
     let onViewReviewInformation: () -> Void
     var onDelete: (() -> Void)? = nil
+    var assessmentContactName: String? = nil
+    var assessmentResultsState: AssessmentResultsViewModel.State? = nil
+    var assessmentCompletedAt: Date? = nil
+    var assessmentResultByteCount: Int64? = nil
+
+    @Environment(\.colorScheme) private var colorScheme
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+
+    private var assessmentStatus: AssessmentReviewStatusCard.Status? {
+        if let assessmentResultsState { return .results(assessmentResultsState) }
+        if let assessmentContactName { return .inReview(contactName: assessmentContactName) }
+        return nil
+    }
+
+    private var usesLightAssessmentLayout: Bool {
+        colorScheme == .light && assessmentStatus != nil
+    }
 
     var body: some View {
+        let assessmentStatus = self.assessmentStatus
         GeometryReader { geometry in
             ScrollView {
                 VStack(spacing: 0) {
@@ -26,24 +44,64 @@ struct GardenProfileContentView: View {
                     } else {
                         map.frame(height: 201)
                     }
-                    GardenMetricsView(garden: garden, metrics: metrics)
-                        .padding(.horizontal, 16).padding(.top, showsHeader ? -37 : 16)
-                    VStack(spacing: 8) {
-                        if isComplete {
-                            readyCard
-                            dataSection
-                        } else {
-                            GardenProfileCompletionCard(onComplete: onEditProfile)
+                    if usesLightAssessmentLayout, let assessmentStatus {
+                        VStack(spacing: -32) {
+                            GardenMetricsView(garden: garden, metrics: metrics, usesAssessmentBand: true)
+                            assessmentCard(assessmentStatus)
+                                .zIndex(1)
                         }
+                        .padding(.horizontal, 12)
+                        .padding(.top, showsHeader ? -40 : 16)
+
+                        dataSection
+                            .padding(.horizontal, 16)
+                            .padding(.top, 8)
+                            .padding(.bottom, 48)
+                    } else {
+                        GardenMetricsView(garden: garden, metrics: metrics)
+                            .padding(.horizontal, 16)
+                            .padding(.top, showsHeader ? -37 : 16)
+
+                        VStack(spacing: 8) {
+                            if let assessmentStatus {
+                                assessmentCard(assessmentStatus)
+                                if assessmentStatus.phase == .inReview {
+                                    dataRow("Lihat Profil Kebun", subtitle: "Riwayat panen dan pemupukan",
+                                            symbol: "leaf", action: onViewSummary)
+                                        .transition(.opacity)
+                                } else {
+                                    dataSection
+                                        .transition(.opacity)
+                                }
+                            } else if isComplete {
+                                readyCard
+                                dataSection
+                            } else {
+                                GardenProfileCompletionCard(onComplete: onEditProfile)
+                            }
+                        }
+                        .padding(.horizontal, 16)
+                        .padding(.top, 8)
+                        .padding(.bottom, 48)
                     }
-                    .padding(.horizontal, 16).padding(.top, 8).padding(.bottom, 48)
                 }
+                .animation(reduceMotion || assessmentResultsState == nil ? nil : .smooth(duration: 0.35),
+                           value: assessmentStatus?.phase)
             }
             .scrollIndicators(.hidden)
             .ignoresSafeArea(edges: showsHeader ? .top : [])
         }
-        .background(GardenProfileStyle.background.ignoresSafeArea())
+        .background((usesLightAssessmentLayout ? AssessmentPalette.lightBackground : GardenProfileStyle.background).ignoresSafeArea())
         .toolbar(.hidden, for: .navigationBar)
+    }
+
+    private func assessmentCard(_ status: AssessmentReviewStatusCard.Status) -> some View {
+        AssessmentReviewStatusCard(
+            status: status,
+            completedAt: assessmentCompletedAt,
+            expectedByteCount: assessmentResultByteCount,
+            onAction: onReviewAction
+        )
     }
 
     private var map: some View {
@@ -105,6 +163,7 @@ struct GardenProfileContentView: View {
             dataRow("Identitas Kebun", subtitle: "Lokasi, luas, tahun tanam, jenis tanah", symbol: "square.dashed.inset.filled", action: onEditGarden)
             dataRow("Riwayat Panen dan Pemupukan", subtitle: "Dasar perhitungan kondisi hara", symbol: "doc.text", action: onViewSummary)
         }
+        .foregroundStyle(usesLightAssessmentLayout ? AssessmentPalette.ink : Color.primary)
         .padding(profileJustSaved ? 4 : 0)
         .background(profileJustSaved ? GardenProfileStyle.accent.opacity(0.12) : .clear, in: RoundedRectangle(cornerRadius: 24))
     }
@@ -121,7 +180,7 @@ struct GardenProfileContentView: View {
                 Image(systemName: "chevron.right").font(.subheadline).foregroundStyle(.tertiary)
             }
             .padding(16).frame(minHeight: 76)
-            .background(GardenProfileStyle.card, in: RoundedRectangle(cornerRadius: 24))
+            .background(usesLightAssessmentLayout ? .white : GardenProfileStyle.card, in: RoundedRectangle(cornerRadius: 24))
         }.buttonStyle(.plain)
     }
 
