@@ -39,3 +39,21 @@ Developer.xcconfig
 /CODED_UI_UPDATE.md
 /GLASS_SHEET_UPDATE.md
 /OPTIMIZATION_REVIEW.md
+
+# Personal notes kept only on a developer's machine.
+/docs/ARCHITECTURE.md
+
+# Editor and tooling folders.
+.idea/
+.vscode/
+.claude/
+CLAUDE.local.md
+
+# Older Xcode and Instruments leftovers.
+*.xccheckout
+*.xcscmblueprint
+*.moved-aside
+*.hmap
+*.trace/
+timeline.xctimeline
+playground.xcworkspace
