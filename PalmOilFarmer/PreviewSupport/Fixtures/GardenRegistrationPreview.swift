@@ -55,10 +55,10 @@ enum GardenRegistrationPreview {
 
     // MARK: Step 2 · SetBoundaries
 
-    static func mappingFlow(location: GardenLocation) -> GardenMappingFlow {
+    static func boundaryViewModel(location: GardenLocation) -> GardenBoundaryViewModel {
         GardenMappingFactory(saving: DummyGardenRegistrationSaving(),
                              authorization: { DummyGardenLocationAuthorization() })
-            .makeFlow(location: location, onFinish: { _ in })
+            .makeViewModel(location: location, onFinish: { _ in })
     }
 
     // MARK: Step 3 · CompleteInformation

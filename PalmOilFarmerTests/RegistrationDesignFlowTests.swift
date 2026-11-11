@@ -99,15 +99,15 @@ struct RegistrationDesignFlowTests {
     }
 
     @Test func searchingAgainCannotSilentlyDiscardDrawnBoundary() {
-        var events: [GardenMappingEvent] = []
+        var outcomes: [GardenMappingOutcome] = []
         let model = GardenBoundaryViewModel(location: mappingLocation(), saving: RegistrationSavingSpy(),
-            authorization: MappingAuthorizationStub(), allowsLocationDrafts: true, onEvent: { events.append($0) })
+            authorization: MappingAuthorizationStub(), allowsLocationDrafts: true, onFinish: { outcomes.append($0) })
         model.addPoint(mappingPoints()[0])
         model.searchAgain()
-        #expect(events.isEmpty && model.boundary.points.count == 1)
+        #expect(outcomes.isEmpty && model.boundary.points.count == 1)
         model.clear()
         model.searchAgain()
-        #expect(events == [.searchAgain])
+        #expect(outcomes == [.searchAgain])
     }
     @Test func photoWithoutGPSCanBePreviewedButNeverSelected() async throws {
         let repository = PhotoRepositoryStub()
@@ -128,24 +128,26 @@ struct RegistrationDesignFlowTests {
     }
 
     @Test func fourCornersCloseThePreviewAndConfirmWithoutTappingTheFirstPoint() {
-        var events: [GardenMappingEvent] = []
         let model = GardenBoundaryViewModel(location: mappingLocation(), saving: RegistrationSavingSpy(),
-            authorization: MappingAuthorizationStub(), allowsLocationDrafts: false, onEvent: { events.append($0) })
+            authorization: MappingAuthorizationStub(), allowsLocationDrafts: false, onFinish: { _ in })
         let points = mappingPoints()
         points.prefix(3).forEach(model.addPoint)
         #expect(model.boundary.isValid && !model.canConfirmBoundary)
         model.confirmBoundary()
-        #expect(events.isEmpty && !model.isClosed)
+        #expect(!model.showsDetails && !model.isClosed)
         model.addPoint(points[3])
         #expect(model.isClosed && model.canConfirmBoundary)
         model.undo()
         #expect(!model.isClosed && model.boundary.points.count == 3)
         model.confirmBoundary()
-        #expect(events.isEmpty)
-        model.addPoint(points[3])
-        model.confirmBoundary()
-        #expect(events == [.showDetails])
+        #expect(!model.showsDetails)
         model.clear()
         #expect(!model.isClosed && model.boundary.points.isEmpty)
+        points.forEach(model.addPoint)
+        model.confirmBoundary()
+        #expect(model.showsDetails)
+        // The open "Data Kebun" sheet locks the boundary it is about to save.
+        model.clear()
+        #expect(model.isClosed && model.boundary.points == points)
     }
 }

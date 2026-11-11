@@ -4,9 +4,16 @@ import Testing
 
 @MainActor
 struct GardenBoundaryViewModelTests {
+    private func makeModel(source: GardenLocation.Source = .search, saving: RegistrationSavingSpy = RegistrationSavingSpy(),
+                           authorization: MappingAuthorizationStub = MappingAuthorizationStub(),
+                           allowsLocationDrafts: Bool = true,
+                           onFinish: @escaping (GardenMappingOutcome) -> Void = { _ in }) -> GardenBoundaryViewModel {
+        GardenBoundaryViewModel(location: mappingLocation(source: source), saving: saving, authorization: authorization,
+                                allowsLocationDrafts: allowsLocationDrafts, onFinish: onFinish)
+    }
+
     @Test func pointEditsKeepOrderIgnoreDuplicateTapsAndSupportUndoClear() {
-        let model = GardenBoundaryViewModel(location: mappingLocation(), saving: RegistrationSavingSpy(),
-                                            authorization: MappingAuthorizationStub(), allowsLocationDrafts: true, onEvent: { _ in })
+        let model = makeModel()
         let points = mappingPoints()
         points.forEach(model.addPoint)
         model.addPoint(points[0])
@@ -24,43 +31,41 @@ struct GardenBoundaryViewModelTests {
     }
 
     @Test func photoConfirmationBlocksMappingAndEmptyMapCanReturnToSearch() {
-        var events: [GardenMappingEvent] = []
-        let model = GardenBoundaryViewModel(location: mappingLocation(source: .photo), saving: RegistrationSavingSpy(),
-            authorization: MappingAuthorizationStub(), allowsLocationDrafts: true, onEvent: { events.append($0) })
+        let model = makeModel(source: .photo)
         mappingPoints().forEach(model.addPoint)
         model.confirmBoundary()
-        #expect(model.isConfirmingPhoto && model.boundary.points.isEmpty && events.isEmpty)
-        model.searchAgain()
-        #expect(events == [.searchAgain])
+        #expect(model.isConfirmingPhoto && model.boundary.points.isEmpty && !model.showsDetails)
         model.confirmPhoto()
-        model.searchAgain()
         mappingPoints().forEach(model.addPoint)
         model.confirmBoundary()
-        #expect(!model.isConfirmingPhoto && events == [.searchAgain, .searchAgain, .showDetails])
+        #expect(!model.isConfirmingPhoto && model.showsDetails && model.outcome == nil)
         #expect(!model.canSaveLocationDraft)
+
+        var outcomes: [GardenMappingOutcome] = []
+        let unconfirmed = makeModel(source: .photo, onFinish: { outcomes.append($0) })
+        unconfirmed.searchAgain()
+        unconfirmed.searchAgain()
+        #expect(outcomes == [.searchAgain] && unconfirmed.outcome == .searchAgain)
     }
 
     @Test func confirmUsesDomainBoundaryValidationIncludingInvalidDrags() {
-        var events: [GardenMappingEvent] = []
-        let model = GardenBoundaryViewModel(location: mappingLocation(), saving: RegistrationSavingSpy(),
-            authorization: MappingAuthorizationStub(), allowsLocationDrafts: true, onEvent: { events.append($0) })
+        let model = makeModel()
         let points = mappingPoints()
         points.prefix(2).forEach(model.addPoint)
         model.confirmBoundary()
-        #expect(events.isEmpty)
+        #expect(!model.showsDetails)
         points.suffix(2).forEach(model.addPoint)
         model.movePoint(at: 1, to: points[0])
         #expect(!model.boundary.isValid)
         model.confirmBoundary()
-        #expect(events.isEmpty)
+        #expect(!model.showsDetails)
         model.movePoint(at: 1, to: points[1])
         model.confirmBoundary()
-        #expect(events == [.showDetails])
+        #expect(model.showsDetails && model.detailsSessionID != nil)
     }
 
     @Test func closedPreviewStillAcceptsMoreCornersAndEveryPointRemainsMovable() {
-        let model = GardenBoundaryViewModel(location: mappingLocation(), saving: RegistrationSavingSpy(),
-            authorization: MappingAuthorizationStub(), allowsLocationDrafts: false, onEvent: { _ in })
+        let model = makeModel(allowsLocationDrafts: false)
         let points = mappingPoints()
         points.forEach(model.addPoint)
         let fifth = GardenCoordinate(latitude: 1.001, longitude: 103.999)
@@ -83,55 +88,52 @@ struct GardenBoundaryViewModelTests {
 
     @Test func skipRequiresAnEmptySearchLocationAndAnAvailableSaveCapability() {
         for source in [GardenLocation.Source.photo, .draft] {
-            let model = GardenBoundaryViewModel(location: mappingLocation(source: source), saving: RegistrationSavingSpy(),
-                                                authorization: MappingAuthorizationStub(), allowsLocationDrafts: true, onEvent: { _ in })
+            let model = makeModel(source: source)
             #expect(!model.canSaveLocationDraft && !model.saveDraft())
         }
-        let model = GardenBoundaryViewModel(location: mappingLocation(), saving: RegistrationSavingSpy(),
-                                            authorization: MappingAuthorizationStub(), allowsLocationDrafts: false, onEvent: { _ in })
+        let model = makeModel(allowsLocationDrafts: false)
         #expect(!model.canSaveLocationDraft && !model.saveDraft())
-        let enabled = GardenBoundaryViewModel(location: mappingLocation(), saving: RegistrationSavingSpy(),
-                                              authorization: MappingAuthorizationStub(), allowsLocationDrafts: true, onEvent: { _ in })
+        let enabled = makeModel()
         #expect(enabled.canSaveLocationDraft)
         enabled.addPoint(mappingPoints()[0])
         #expect(!enabled.canSaveLocationDraft && !enabled.saveDraft())
     }
 
-    @Test func failedDraftSaveStaysOnMapAndRetryEmitsSuccessOnlyOnce() {
+    @Test func failedDraftSaveStaysOnMapAndRetryFinishesOnlyOnce() {
         let saving = RegistrationSavingSpy()
         saving.acceptsDraft = false
-        var events: [GardenMappingEvent] = []
+        var outcomes: [GardenMappingOutcome] = []
         let location = mappingLocation()
-        let model = GardenBoundaryViewModel(location: location, saving: saving,
-            authorization: MappingAuthorizationStub(), allowsLocationDrafts: true, onEvent: { events.append($0) })
-        #expect(!model.saveDraft() && events.isEmpty && model.canSaveLocationDraft)
+        let model = makeModel(saving: saving, onFinish: { outcomes.append($0) })
+        #expect(!model.saveDraft() && outcomes.isEmpty && model.canSaveLocationDraft)
         saving.acceptsDraft = true
         #expect(model.saveDraft())
-        #expect(!model.saveDraft() && events == [.savedDraft])
+        #expect(!model.saveDraft() && outcomes == [.savedDraft])
         #expect(saving.drafts.count == 2 && saving.drafts.last?.coordinate == location.coordinate)
         #expect(saving.drafts.last?.name == location.name && saving.drafts.last?.subtitle == location.subtitle)
     }
 
-    @Test func closeRequestsConfirmationOnlyForNonemptyBoundaryAndInactiveFlowRejectsEdits() {
-        var active = true
-        var events: [GardenMappingEvent] = []
+    @Test func closeAsksOnlyForNonemptyBoundaryAndFinishedOrDialogStateRejectsEdits() {
+        var outcomes: [GardenMappingOutcome] = []
         let saving = RegistrationSavingSpy()
-        let model = GardenBoundaryViewModel(location: mappingLocation(), saving: saving,
-            authorization: MappingAuthorizationStub(), allowsLocationDrafts: true, isActive: { active }, onEvent: { events.append($0) })
-        model.close()
+        let empty = makeModel(saving: saving, onFinish: { outcomes.append($0) })
+        empty.close()
+        #expect(outcomes == [.closed])
+        empty.addPoint(mappingPoints()[0])
+        #expect(empty.boundary.points.isEmpty && !empty.saveDraft())
+
+        let model = makeModel(saving: saving, onFinish: { outcomes.append($0) })
         model.addPoint(mappingPoints()[0])
         model.close()
-        #expect(events == [.close, .confirmExit])
-        active = false
+        #expect(model.showsExitConfirmation && outcomes == [.closed])
         model.undo(); model.clear(); model.addPoint(mappingPoints()[1]); model.close()
-        #expect(model.boundary.points == [mappingPoints()[0]] && events == [.close, .confirmExit])
+        #expect(model.boundary.points == [mappingPoints()[0]] && outcomes == [.closed])
         #expect(!model.saveDraft() && saving.drafts.isEmpty)
     }
 
     @Test func authorizationIsRequestedOnlyThroughInjectedBoundary() {
         let authorization = MappingAuthorizationStub()
-        let model = GardenBoundaryViewModel(location: mappingLocation(), saving: RegistrationSavingSpy(),
-                                            authorization: authorization, allowsLocationDrafts: true, onEvent: { _ in })
+        let model = makeModel(authorization: authorization)
         #expect(authorization.requestCount == 0)
         model.requestLocationAuthorization()
         #expect(authorization.requestCount == 1)

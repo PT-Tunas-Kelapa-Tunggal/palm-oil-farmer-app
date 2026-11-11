@@ -7,8 +7,8 @@ extension GardenBoundaryView {
         let saving = CallbackRegistrationSaving(
             onSave: { garden, _ in onSave(garden) }, onSaveDraft: { _ in onSaveDraft?(location) ?? false }
         )
-        self.init(flow: GardenMappingFactory(saving: saving, authorization: { MappingLocationAuthorization() },
-                                             allowsLocationDrafts: onSaveDraft != nil).makeFlow(location: location) { outcome in
+        self.init(viewModel: GardenMappingFactory(saving: saving, authorization: { MappingLocationAuthorization() },
+                                                  allowsLocationDrafts: onSaveDraft != nil).makeViewModel(location: location) { outcome in
             if outcome == .searchAgain { onSearchAgain?() }
         })
     }

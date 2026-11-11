@@ -5,9 +5,9 @@ import MapKit
 /// content follows the stage: `LocationConfirmationPanel` → `BoundaryDrawingGuideSheet` → `BoundaryEditingPanel`.
 /// Then presents `GardenDetailsView` (sheet) and `GardenSavedConfirmationView` (full screen).
 struct GardenBoundaryView: View {
-    @State private var flow: GardenMappingFlow
-    private var location: GardenLocation { flow.viewModel.location }
-    private var boundary: GardenBoundary { flow.viewModel.boundary }
+    @State private var viewModel: GardenBoundaryViewModel
+    private var location: GardenLocation { viewModel.location }
+    private var boundary: GardenBoundary { viewModel.boundary }
     private enum Stage { case location, guide, drawing }
     @State private var showsMapSheet = false
     @State private var mapSheetHeight: CGFloat = 0
@@ -32,10 +32,10 @@ struct GardenBoundaryView: View {
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     private static let markerHitSize: CGFloat = 44
 
-    init(flow: GardenMappingFlow) {
-        _flow = State(initialValue: flow)
-        _stage = State(initialValue: flow.viewModel.location.source == .draft ? .drawing : .location)
-        let location = flow.viewModel.location
+    init(viewModel: GardenBoundaryViewModel) {
+        _viewModel = State(initialValue: viewModel)
+        _stage = State(initialValue: viewModel.location.source == .draft ? .drawing : .location)
+        let location = viewModel.location
         let region = MKCoordinateRegion(
             center: location.coordinate.mapCoordinate,
             latitudinalMeters: 400,
@@ -48,7 +48,7 @@ struct GardenBoundaryView: View {
     }
 
     var body: some View {
-        @Bindable var coordinator = flow.coordinator
+        @Bindable var viewModel = viewModel
         Group {
             if stage == .guide {
                 BoundaryDrawingGuideDemo(
@@ -81,8 +81,8 @@ struct GardenBoundaryView: View {
         }
         .ignoresSafeArea(.container, edges: .bottom)
         .onAppear {
-            flow.viewModel.requestLocationAuthorization()
-            if coordinator.outcome == nil { showsMapSheet = true }
+            viewModel.requestLocationAuthorization()
+            if viewModel.outcome == nil { showsMapSheet = true }
         }
         .onChange(of: isDraggingPoint) { _, isDragging in
             if !isDragging {
@@ -93,12 +93,12 @@ struct GardenBoundaryView: View {
         .sheet(isPresented: $showsMapSheet, onDismiss: mapSheetDidDismiss) {
             mapSheetContent
         }
-        .onChange(of: coordinator.outcome) { _, outcome in
+        .onChange(of: viewModel.outcome) { _, outcome in
             if outcome != nil { showsMapSheet = false }
         }
         .fullScreenCover(isPresented: $showsSavedConfirmation, onDismiss: { dismiss() }) {
             GardenSavedConfirmationView(
-                gardenName: coordinator.savedGardenName ?? location.name,
+                gardenName: viewModel.savedGardenName ?? location.name,
                 area: GardenDisplayMetrics(boundary: boundary).area,
                 onContinue: { showsSavedConfirmation = false }
             )
@@ -106,7 +106,7 @@ struct GardenBoundaryView: View {
     }
 
     private var mapSheetContent: some View {
-        @Bindable var coordinator = flow.coordinator
+        @Bindable var viewModel = viewModel
         return Group {
             if stage == .guide {
                 BoundaryDrawingGuideSheet(step: guide.step, onContinue: advanceGuide)
@@ -117,7 +117,7 @@ struct GardenBoundaryView: View {
                             location: location,
                             onBack: goBack,
                             onContinue: {
-                                flow.viewModel.confirmPhoto()
+                                viewModel.confirmPhoto()
                                 if let latestCamera { position = .camera(latestCamera) }
                                 guide = BoundaryDrawingGuideState()
                                 stage = .guide
@@ -127,9 +127,9 @@ struct GardenBoundaryView: View {
                         BoundaryEditingPanel(
                             boundary: boundary,
                             showsMetrics: verticalSizeClass == .compact && dynamicTypeSize.isAccessibilitySize,
-                            isClosed: flow.viewModel.isClosed,
-                            onUndo: flow.viewModel.undo, onClear: flow.viewModel.clear,
-                            onConfirm: flow.viewModel.confirmBoundary
+                            isClosed: viewModel.isClosed,
+                            onUndo: viewModel.undo, onClear: viewModel.clear,
+                            onConfirm: viewModel.confirmBoundary
                         )
                     }
                 }
@@ -140,13 +140,13 @@ struct GardenBoundaryView: View {
         .presentationCompactAdaptation(.sheet)
         .preferredColorScheme(.light)
         .onGeometryChange(for: CGFloat.self) { $0.size.height } action: { mapSheetHeight = $0 }
-        .sheet(isPresented: $coordinator.showsDetails, onDismiss: coordinator.detailsDidDismiss) {
-            GardenDetailsView(viewModel: flow.makeDetailsFlow())
+        .sheet(isPresented: $viewModel.showsDetails, onDismiss: viewModel.detailsDidDismiss) {
+            GardenDetailsView(viewModel: viewModel.makeDetailsViewModel())
         }
         .confirmationDialog("Cari lokasi lain?", isPresented: $showsSearchConfirmation, titleVisibility: .visible) {
             Button("Hapus batas dan cari lokasi lain", role: .destructive) {
-                flow.viewModel.clear()
-                flow.viewModel.searchAgain()
+                viewModel.clear()
+                viewModel.searchAgain()
             }
             Button("Lanjutkan pemetaan", role: .cancel) {}
         } message: {
@@ -157,9 +157,9 @@ struct GardenBoundaryView: View {
         } message: {
             Text("Lokasi tidak dapat disimpan di perangkat. Coba lagi.")
         }
-        .confirmationDialog("Keluar dari pemetaan?", isPresented: $coordinator.showsExitConfirmation, titleVisibility: .visible) {
-            Button("Keluar tanpa menyimpan", role: .destructive, action: coordinator.discardAndClose)
-            Button("Lanjutkan pemetaan", role: .cancel, action: coordinator.continueMapping)
+        .confirmationDialog("Keluar dari pemetaan?", isPresented: $viewModel.showsExitConfirmation, titleVisibility: .visible) {
+            Button("Keluar tanpa menyimpan", role: .destructive, action: viewModel.discardAndClose)
+            Button("Lanjutkan pemetaan", role: .cancel, action: viewModel.continueMapping)
         } message: {
             Text("Batas yang belum disimpan perlu dipetakan ulang saat kamu kembali.")
         }
@@ -177,14 +177,14 @@ struct GardenBoundaryView: View {
                 if !guide.goBack() { stage = .location }
             }
         } else {
-            flow.viewModel.searchAgain()
+            viewModel.searchAgain()
         }
     }
 
     private func mapSheetDidDismiss() {
-        if flow.coordinator.outcome == .savedGarden {
+        if viewModel.outcome == .savedGarden {
             showsSavedConfirmation = true
-        } else if flow.coordinator.outcome != nil {
+        } else if viewModel.outcome != nil {
             dismiss()
         }
     }
@@ -193,15 +193,15 @@ struct GardenBoundaryView: View {
         MapReader { proxy in
             BoundaryEditorLayout(
                 boundary: boundary,
-                isClosed: flow.viewModel.isClosed,
+                isClosed: viewModel.isClosed,
                 showsControls: isDrawing,
                 showsBottomPanel: false,
                 bottomSheetHeight: showsMapSheet ? mapSheetHeight : 0,
-                onClose: flow.viewModel.close,
+                onClose: viewModel.close,
                 onSearch: searchAgain,
-                onUndo: flow.viewModel.undo,
-                onClear: flow.viewModel.clear,
-                onConfirm: flow.viewModel.confirmBoundary
+                onUndo: viewModel.undo,
+                onClear: viewModel.clear,
+                onConfirm: viewModel.confirmBoundary
             ) {
                 Map(position: $position) {
                     mapContent(proxy)
@@ -218,11 +218,11 @@ struct GardenBoundaryView: View {
                     Task { @MainActor in
                         // Let annotation gesture callbacks settle before interpreting the map tap.
                         try? await Task.sleep(for: .milliseconds(60))
-                        guard isDrawing, flow.coordinator.canEditBoundary,
+                        guard isDrawing, viewModel.canEditBoundary,
                               ContinuousClock.now >= ignoresMapTapsUntil,
                               draggingIndex == nil, !isOnMarker(tap.location, proxy: proxy),
                               let coordinate = proxy.convert(tap.location, from: .global) else { return }
-                        flow.viewModel.addPoint(GardenCoordinate(coordinate))
+                        viewModel.addPoint(GardenCoordinate(coordinate))
                     }
                 })
             }
@@ -233,7 +233,7 @@ struct GardenBoundaryView: View {
     private func mapContent(_ proxy: MapProxy) -> some MapContent {
         BoundaryGeometryMapContent(
             coordinates: boundary.coordinates,
-            isClosed: flow.viewModel.isClosed
+            isClosed: viewModel.isClosed
         )
         ForEach(boundary.points.indices, id: \.self) { index in
             Annotation("", coordinate: boundary.points[index].mapCoordinate, anchor: .center) {
@@ -251,7 +251,7 @@ struct GardenBoundaryView: View {
             }
         }
         // Two points form one segment; a polygon also includes its closing edge.
-        let edgeCount = flow.viewModel.isClosed ? boundary.points.count : max(0, boundary.points.count - 1)
+        let edgeCount = viewModel.isClosed ? boundary.points.count : max(0, boundary.points.count - 1)
         ForEach(0..<edgeCount, id: \.self) { index in
             let first = boundary.points[index].mapCoordinate
             let second = boundary.points[(index + 1) % boundary.points.count].mapCoordinate
@@ -292,7 +292,7 @@ struct GardenBoundaryView: View {
                 let offset = dragOffset ?? .zero
                 let tip = CGPoint(x: drag.location.x - offset.width, y: drag.location.y - offset.height)
                 guard let coordinate = proxy.convert(tip, from: .global) else { return }
-                flow.viewModel.movePoint(at: index, to: GardenCoordinate(coordinate))
+                viewModel.movePoint(at: index, to: GardenCoordinate(coordinate))
             }
             .onEnded { _ in
                 ignoresMapTapsUntil = .now.advanced(by: .milliseconds(250))
@@ -308,17 +308,17 @@ struct GardenBoundaryView: View {
     }
 
     private var saveDraftAction: (() -> Void)? {
-        guard flow.viewModel.canSaveLocationDraft else { return nil }
+        guard viewModel.canSaveLocationDraft else { return nil }
         return { saveDraft() }
     }
 
     private func saveDraft() {
-        showsDraftSaveError = !flow.viewModel.saveDraft()
+        showsDraftSaveError = !viewModel.saveDraft()
     }
 
     private func searchAgain() {
         if boundary.points.isEmpty {
-            flow.viewModel.searchAgain()
+            viewModel.searchAgain()
         } else {
             showsSearchConfirmation = true
         }
@@ -338,15 +338,15 @@ struct GardenBoundaryView: View {
 
 #if DEBUG
 #Preview("Peta Batas · Dari pencarian") {
-    GardenBoundaryView(flow: GardenRegistrationPreview.mappingFlow(location: GardenRegistrationPreview.searchLocation))
+    GardenBoundaryView(viewModel: GardenRegistrationPreview.boundaryViewModel(location: GardenRegistrationPreview.searchLocation))
 }
 
 #Preview("Peta Batas · Dari foto") {
-    GardenBoundaryView(flow: GardenRegistrationPreview.mappingFlow(location: GardenRegistrationPreview.photoLocation))
+    GardenBoundaryView(viewModel: GardenRegistrationPreview.boundaryViewModel(location: GardenRegistrationPreview.photoLocation))
 }
 
 #Preview("Peta Batas · Dari GPS") {
-    GardenBoundaryView(flow: GardenRegistrationPreview.mappingFlow(
+    GardenBoundaryView(viewModel: GardenRegistrationPreview.boundaryViewModel(
         location: GardenRegistrationPreview.currentLocation
     ))
 }
