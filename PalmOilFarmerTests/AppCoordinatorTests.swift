@@ -67,7 +67,7 @@ struct AppCoordinatorTests {
     @Test func resumingDraftPreservesIdentityAndSkipsRegistrationSheet() {
         let coordinator = AppCoordinator()
         let draft = GardenDraft(location: location())
-        coordinator.handle(.resumeDraft(draft))
+        coordinator.handle(.resumeDraft(DashboardMapper().map(draft)))
         #expect(coordinator.registrationSheet == nil)
         #expect(coordinator.mappingLocation?.draftID == draft.id)
         #expect(coordinator.mappingLocation?.source == .draft)
@@ -76,7 +76,7 @@ struct AppCoordinatorTests {
 
     @Test func closingMappingWithoutSearchAgainReturnsHomeAndNextRegistrationStartsAtGuide() {
         let coordinator = AppCoordinator()
-        coordinator.handle(.resumeDraft(GardenDraft(location: location())))
+        coordinator.handle(.resumeDraft(DashboardMapper().map(GardenDraft(location: location()))))
         coordinator.mappingDidDismiss()
         #expect(coordinator.mappingLocation == nil && coordinator.registrationSheet == nil)
         coordinator.handle(.registerGarden)
@@ -90,7 +90,7 @@ struct AppCoordinatorTests {
         coordinator.locatedGarden(selected)
         coordinator.handle(.registerGarden)
         coordinator.handle(.openGarden(UUID()))
-        coordinator.handle(.resumeDraft(GardenDraft(location: location())))
+        coordinator.handle(.resumeDraft(DashboardMapper().map(GardenDraft(location: location()))))
         #expect(coordinator.registrationSheet == nil && coordinator.path.isEmpty)
         coordinator.registrationDidDismiss()
         coordinator.registrationDidDismiss()

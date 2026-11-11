@@ -1,9 +1,9 @@
 import Foundation
 
 /// One card on the home list: a registered garden or a draft waiting to be mapped.
-enum GardenListItem: Identifiable {
-    case garden(Garden)
-    case draft(GardenDraft)
+enum DashboardItem: Identifiable {
+    case garden(DashboardGarden)
+    case draft(DashboardDraft)
 
     var id: UUID {
         switch self {
@@ -13,11 +13,11 @@ enum GardenListItem: Identifiable {
     }
 
     /// Newest first. Gardens saved before `createdAt` existed keep their saved order, after dated items.
-    static func newestFirst(gardens: [Garden], drafts: [GardenDraft]) -> [GardenListItem] {
+    static func newestFirst(gardens: [DashboardGarden], drafts: [DashboardDraft]) -> [DashboardItem] {
         let dated = gardens.enumerated().map { index, garden in
-            (item: GardenListItem.garden(garden),
+            (item: DashboardItem.garden(garden),
              date: garden.createdAt ?? Date.distantPast.addingTimeInterval(Double(index)))
-        } + drafts.map { (item: GardenListItem.draft($0), date: $0.createdAt) }
+        } + drafts.map { (item: DashboardItem.draft($0), date: $0.createdAt) }
         return dated.sorted { $0.date > $1.date }.map(\.item)
     }
 }

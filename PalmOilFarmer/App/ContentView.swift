@@ -2,17 +2,17 @@ import SwiftUI
 
 struct ContentView: View {
     @State private var store: GardenStore
-    @State private var listViewModel: GardenListViewModel
+    @State private var dashboardViewModel: DashboardViewModel
     @State private var coordinator: AppCoordinator
     private let registrationFactory: GardenRegistrationFactory
     private let mappingFactory: GardenMappingFactory
     private let profileFactory: GardenProfileFactory
 
-    init(store: GardenStore, listViewModel: GardenListViewModel, coordinator: AppCoordinator,
+    init(store: GardenStore, dashboardViewModel: DashboardViewModel, coordinator: AppCoordinator,
          registrationFactory: GardenRegistrationFactory, mappingFactory: GardenMappingFactory,
          profileFactory: GardenProfileFactory) {
         _store = State(initialValue: store)
-        _listViewModel = State(initialValue: listViewModel)
+        _dashboardViewModel = State(initialValue: dashboardViewModel)
         _coordinator = State(initialValue: coordinator)
         self.registrationFactory = registrationFactory
         self.mappingFactory = mappingFactory
@@ -22,14 +22,14 @@ struct ContentView: View {
     var body: some View {
         @Bindable var coordinator = coordinator
         NavigationStack(path: $coordinator.path) {
-            GardenListScreen(viewModel: listViewModel)
+            DashboardView(viewModel: dashboardViewModel)
                 .toolbar(.hidden, for: .navigationBar)
                 .navigationDestination(for: AppRoute.self) { route in
                     destination(for: route)
                 }
         }
         .task {
-            await listViewModel.refresh()
+            await dashboardViewModel.refresh()
         }
         .environment(store)
         .sheet(item: $coordinator.registrationSheet, onDismiss: coordinator.registrationDidDismiss) { sheet in
@@ -73,7 +73,7 @@ struct ContentView: View {
 #Preview {
     let dependencies = AppDependencies.preview()
     ContentView(store: dependencies.gardenStore,
-                listViewModel: dependencies.gardenListViewModel,
+                dashboardViewModel: dependencies.dashboardViewModel,
                 coordinator: dependencies.coordinator,
                 registrationFactory: dependencies.registrationFactory,
                 mappingFactory: dependencies.mappingFactory,
