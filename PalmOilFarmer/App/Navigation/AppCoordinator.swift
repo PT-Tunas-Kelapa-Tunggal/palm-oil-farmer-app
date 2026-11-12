@@ -6,6 +6,7 @@ enum AppRoute: Hashable {
     case requestAssessment(UUID)
     case resultOverview(gardenId: String)
     case nutrientCondition(gardenId: String)
+    case farmGreenIndex(gardenId: String)
     case fertilizerEstimation(gardenId: String)
     #if DEBUG
     case developerMode
@@ -60,6 +61,10 @@ final class AppCoordinator {
 
     func openNutrientCondition(gardenId: String) {
         path.append(.nutrientCondition(gardenId: gardenId))
+    }
+
+    func openFarmGreenIndex(gardenId: String) {
+        path.append(.farmGreenIndex(gardenId: gardenId))
     }
 
     func openFertilizerEstimation(gardenId: String) {
