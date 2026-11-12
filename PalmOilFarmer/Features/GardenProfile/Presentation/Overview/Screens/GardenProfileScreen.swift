@@ -4,10 +4,25 @@ import SwiftUI
 struct GardenProfileScreen: View {
     @State private var viewModel: GardenProfileViewModel
     private let referenceMapImage: String?
+    private let onOpenRequestAssessment: (() -> Void)?
+    private let onOpenResultOverview: (() -> Void)?
+    private let onOpenNutrientCondition: (() -> Void)?
+    private let onOpenFertilizerEstimation: (() -> Void)?
 
-    init(viewModel: GardenProfileViewModel, referenceMapImage: String? = nil) {
+    init(
+        viewModel: GardenProfileViewModel,
+        referenceMapImage: String? = nil,
+        onOpenRequestAssessment: (() -> Void)? = nil,
+        onOpenResultOverview: (() -> Void)? = nil,
+        onOpenNutrientCondition: (() -> Void)? = nil,
+        onOpenFertilizerEstimation: (() -> Void)? = nil
+    ) {
         _viewModel = State(initialValue: viewModel)
         self.referenceMapImage = referenceMapImage
+        self.onOpenRequestAssessment = onOpenRequestAssessment
+        self.onOpenResultOverview = onOpenResultOverview
+        self.onOpenNutrientCondition = onOpenNutrientCondition
+        self.onOpenFertilizerEstimation = onOpenFertilizerEstimation
     }
 
     @AppStorage("gardenReview.hideIntroduction") private var hideReviewIntroduction = false
@@ -99,8 +114,22 @@ struct GardenProfileScreen: View {
             onEditProfile: { viewModel.open(.profile) },
             onReviewAction: {
                 guard viewModel.isComplete else { return }
-                if currentReviewStatus == nil && !hideReviewIntroduction {
-                    viewModel.open(.reviewInformation)
+                if currentReviewStatus == nil {
+                    if !hideReviewIntroduction {
+                        viewModel.open(.reviewInformation)
+                    } else if let onOpenRequestAssessment {
+                        onOpenRequestAssessment()
+                    } else {
+                        viewModel.reviewAction(viewModel.reviewViewModel.action(for: garden))
+                    }
+                } else if currentReviewStatus == .completed {
+                    if let onOpenResultOverview {
+                        onOpenResultOverview()
+                    } else if let onOpenNutrientCondition {
+                        onOpenNutrientCondition()
+                    } else {
+                        viewModel.reviewAction(viewModel.reviewViewModel.action(for: garden))
+                    }
                 } else {
                     viewModel.reviewAction(viewModel.reviewViewModel.action(for: garden))
                 }
@@ -127,9 +156,14 @@ struct GardenProfileScreen: View {
             GardenReviewInformationView(
                 onClose: { viewModel.closeSheet(presentation) },
                 onApply: {
-                    guard viewModel.isComplete else { return }
-                    viewModel.applyForReview(from: presentation,
-                        action: viewModel.reviewViewModel.action(for: garden))
+                    viewModel.closeSheet(presentation)
+                    if let onOpenRequestAssessment {
+                        onOpenRequestAssessment()
+                    } else {
+                        guard viewModel.isComplete else { return }
+                        viewModel.applyForReview(from: presentation,
+                            action: viewModel.reviewViewModel.action(for: garden))
+                    }
                 })
         }
     }

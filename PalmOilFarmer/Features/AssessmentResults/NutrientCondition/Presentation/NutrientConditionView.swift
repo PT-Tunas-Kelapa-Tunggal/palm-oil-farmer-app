@@ -8,18 +8,25 @@ public struct NutrientConditionView: View {
     @State private var viewModel: NutrientConditionViewModel
 
     public var onBack: (() -> Void)?
+    public var onOpenFertilizerEstimation: (() -> Void)?
 
     public init(
         viewModel: NutrientConditionViewModel,
-        onBack: (() -> Void)? = nil
+        onBack: (() -> Void)? = nil,
+        onOpenFertilizerEstimation: (() -> Void)? = nil
     ) {
         _viewModel = State(initialValue: viewModel)
         self.onBack = onBack
+        self.onOpenFertilizerEstimation = onOpenFertilizerEstimation
     }
 
-    public init(onBack: (() -> Void)? = nil) {
+    public init(
+        onBack: (() -> Void)? = nil,
+        onOpenFertilizerEstimation: (() -> Void)? = nil
+    ) {
         _viewModel = State(initialValue: NutrientConditionViewModel())
         self.onBack = onBack
+        self.onOpenFertilizerEstimation = onOpenFertilizerEstimation
     }
 
     public var body: some View {

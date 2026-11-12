@@ -56,8 +56,68 @@ struct ContentView: View {
         switch route {
         case .gardenProfile(let id):
             if let garden = store.gardens.first(where: { $0.id == id }) {
-                GardenProfileScreen(viewModel: profileFactory.makeViewModel(garden: garden))
+                GardenProfileScreen(
+                    viewModel: profileFactory.makeViewModel(garden: garden),
+                    onOpenRequestAssessment: {
+                        coordinator.openRequestAssessment(id)
+                    },
+                    onOpenResultOverview: {
+                        coordinator.openResultOverview(gardenId: id.uuidString)
+                    },
+                    onOpenNutrientCondition: {
+                        coordinator.openNutrientCondition(gardenId: id.uuidString)
+                    },
+                    onOpenFertilizerEstimation: {
+                        coordinator.openFertilizerEstimation(gardenId: id.uuidString)
+                    }
+                )
             }
+        case .requestAssessment(let id):
+            if let garden = store.gardens.first(where: { $0.id == id }) {
+                AssessmentRequestFlow(
+                    gardenID: garden.id,
+                    gardenName: garden.name,
+                    areaHectares: max(garden.boundary.areaHectares, 0.1),
+                    contactRepository: DeviceAssessmentContactRepository(),
+                    submissionRepository: PlaceholderAssessmentSubmissionRepository(),
+                    onSubmitted: {
+                        coordinator.pop()
+                    },
+                    onClose: {
+                        coordinator.pop()
+                    }
+                )
+            }
+        case .resultOverview(let gardenId):
+            ResultOverviewView(
+                viewModel: ResultOverviewViewModel(gardenId: gardenId),
+                onBack: {
+                    coordinator.pop()
+                },
+                onOpenNutrientCondition: {
+                    coordinator.openNutrientCondition(gardenId: gardenId)
+                },
+                onOpenFertilizerEstimation: {
+                    coordinator.openFertilizerEstimation(gardenId: gardenId)
+                }
+            )
+        case .nutrientCondition(let gardenId):
+            NutrientConditionView(
+                viewModel: NutrientConditionViewModel(gardenId: gardenId),
+                onBack: {
+                    coordinator.pop()
+                },
+                onOpenFertilizerEstimation: {
+                    coordinator.openFertilizerEstimation(gardenId: gardenId)
+                }
+            )
+        case .fertilizerEstimation(let gardenId):
+            FertilizerEstimationView(
+                viewModel: FertilizerEstimationViewModel(gardenId: gardenId),
+                onBack: {
+                    coordinator.pop()
+                }
+            )
         #if DEBUG
         case .developerMode:
             DeveloperModeView(gardenCount: store.gardens.count, draftCount: store.drafts.count) {
