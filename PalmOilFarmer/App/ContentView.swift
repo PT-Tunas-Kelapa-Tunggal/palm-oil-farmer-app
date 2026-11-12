@@ -97,6 +97,9 @@ struct ContentView: View {
                 onOpenNutrientCondition: {
                     coordinator.openNutrientCondition(gardenId: gardenId)
                 },
+                onOpenFarmGreenness: {
+                    coordinator.openFarmGreenIndex(gardenId: gardenId)
+                },
                 onOpenFertilizerEstimation: {
                     coordinator.openFertilizerEstimation(gardenId: gardenId)
                 }
@@ -109,6 +112,13 @@ struct ContentView: View {
                 },
                 onOpenFertilizerEstimation: {
                     coordinator.openFertilizerEstimation(gardenId: gardenId)
+                }
+            )
+        case .farmGreenIndex(let gardenId):
+            FarmGreenIndexView(
+                viewModel: FarmGreenIndexViewModel(gardenId: gardenId),
+                onBack: {
+                    coordinator.pop()
                 }
             )
         case .fertilizerEstimation(let gardenId):
