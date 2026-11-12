@@ -80,7 +80,7 @@ struct ContentView: View {
                     gardenName: garden.name,
                     areaHectares: max(garden.boundary.areaHectares, 0.1),
                     contactRepository: DeviceAssessmentContactRepository(),
-                    submissionRepository: PlaceholderAssessmentSubmissionRepository(),
+                    submissionRepository: CloudKitAssessmentSubmissionRepository(gardenStore: store),
                     onSubmitted: {
                         coordinator.pop()
                     },
