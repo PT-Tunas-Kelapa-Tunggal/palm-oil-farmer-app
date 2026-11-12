@@ -190,11 +190,10 @@ struct GardenProfileScreen: View {
 
     @ViewBuilder
     private var resultsDestination: some View {
-        if let currentReport {
-            FertilizerRecommendationView(report: currentReport)
-        } else {
-            ContentUnavailableView("Hasil peninjauan belum tersedia", systemImage: "chart.bar.doc.horizontal")
-        }
+        NutrientConditionView(
+            onBack: { viewModel.showsResults = false },
+            onOpenFertilizerEstimation: onOpenFertilizerEstimation
+        )
     }
 
 }

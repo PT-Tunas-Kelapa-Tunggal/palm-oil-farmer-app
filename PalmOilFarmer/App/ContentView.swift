@@ -32,6 +32,7 @@ struct ContentView: View {
             await dashboardViewModel.refresh()
         }
         .environment(store)
+        .environment(coordinator)
         .sheet(item: $coordinator.registrationSheet, onDismiss: coordinator.registrationDidDismiss) { sheet in
             RegistrationIntroView(viewModel: registrationFactory.makeViewModel(
                 initialStep: sheet == .guide ? .guide : .search,
