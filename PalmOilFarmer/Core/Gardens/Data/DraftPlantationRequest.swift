@@ -136,7 +136,13 @@ final class DraftPlantationRequest {
     }
 
     func toGarden() -> Garden {
-        Garden(
+        let review: GardenReview?
+        if let farmerName, !farmerName.isEmpty, let farmerPhone, let farmerAddress {
+            review = GardenReview(contact: ReviewContactDetails(name: farmerName, phone: farmerPhone, address: farmerAddress))
+        } else {
+            review = nil
+        }
+        return Garden(
             id: id,
             name: name,
             locationName: locationName,
@@ -146,7 +152,7 @@ final class DraftPlantationRequest {
             plantingMonth: plantingMonth,
             fertilizerRecords: fertilizerRecords.isEmpty ? nil : fertilizerRecords,
             harvestRecord: harvestRecord,
-            review: nil,
+            review: review,
             createdAt: createdAt,
             fertilizationFrequencyPerYear: fertilizationFrequencyPerYear,
             profileUpdatedAt: profileUpdatedAt

@@ -72,6 +72,8 @@ struct ContentView: View {
                         coordinator.openFertilizerEstimation(gardenId: id.uuidString)
                     }
                 )
+            } else {
+                ContentUnavailableView("Kebun Tidak Ditemukan", systemImage: "leaf.fill")
             }
         case .requestAssessment(let id):
             if let garden = store.gardens.first(where: { $0.id == id }) {
@@ -81,13 +83,13 @@ struct ContentView: View {
                     areaHectares: max(garden.boundary.areaHectares, 0.1),
                     contactRepository: DeviceAssessmentContactRepository(),
                     submissionRepository: CloudKitAssessmentSubmissionRepository(gardenStore: store),
-                    onSubmitted: {
-                        coordinator.pop()
-                    },
+                    onSubmitted: {},
                     onClose: {
                         coordinator.pop()
                     }
                 )
+            } else {
+                ContentUnavailableView("Kebun Tidak Ditemukan", systemImage: "leaf.fill")
             }
         case .resultOverview(let gardenId):
             ResultOverviewView(
