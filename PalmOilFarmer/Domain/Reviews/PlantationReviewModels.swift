@@ -139,17 +139,20 @@ public struct ReviewTimeline: Sendable {
     public var scheduledFor: Date?
     public var inReviewAt: Date?
     public var completedAt: Date?
+    public var detailEvents: [ProgressionStatusDetailEvent]?
 
     public init(
         submittedAt: Date = Date(),
         scheduledFor: Date? = nil,
         inReviewAt: Date? = nil,
-        completedAt: Date? = nil
+        completedAt: Date? = nil,
+        detailEvents: [ProgressionStatusDetailEvent]? = nil
     ) {
         self.submittedAt = submittedAt
         self.scheduledFor = scheduledFor
         self.inReviewAt = inReviewAt
         self.completedAt = completedAt
+        self.detailEvents = detailEvents
     }
 }
 

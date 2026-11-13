@@ -12,6 +12,7 @@ struct AssessmentStatusViewModel {
     }
 
     let review: GardenReview
+    var detailEvents: [ProgressionStatusDetailEvent]? = nil
 
     var sheetHeight: Double {
         switch review.status {
@@ -22,7 +23,28 @@ struct AssessmentStatusViewModel {
     }
 
     var steps: [Step] {
-        ReviewStatus.allCases.map { stage in
+        var customDates: [ReviewStatus: String] = [:]
+        var customMessages: [ReviewStatus: String] = [:]
+        if let detailEvents {
+            for event in detailEvents {
+                let stage: ReviewStatus?
+                switch event.title.lowercased() {
+                case "sent": stage = .submitted
+                case "scheduled": stage = .scheduled
+                case "in progress", "inprogress": stage = .inReview
+                case "finished": stage = .completed
+                default: stage = nil
+                }
+                if let stage {
+                    customDates[stage] = Self.timestamp.string(from: event.dateTime)
+                    if !event.desc.isEmpty {
+                        customMessages[stage] = event.desc
+                    }
+                }
+            }
+        }
+
+        return ReviewStatus.allCases.map { stage in
             let phase: Step.Phase
             if stage == review.status {
                 phase = .current
@@ -30,10 +52,17 @@ struct AssessmentStatusViewModel {
                 phase = stage.rawValue < review.status.rawValue ? .finished : .upcoming
             }
 
-            let (title, message) = copy(for: stage, phase: phase)
-            return Step(id: stage, title: title, message: message,
-                        date: phase == .upcoming ? nil : review.date(for: stage).map(Self.timestamp.string(from:)),
-                        phase: phase)
+            let (defaultTitle, defaultMessage) = copy(for: stage, phase: phase)
+            let message = (phase != .upcoming && customMessages[stage] != nil) ? customMessages[stage]! : defaultMessage
+            let date = phase == .upcoming ? nil : (customDates[stage] ?? review.date(for: stage).map(Self.timestamp.string(from:)))
+
+            return Step(
+                id: stage,
+                title: defaultTitle,
+                message: message,
+                date: date,
+                phase: phase
+            )
         }
     }
 

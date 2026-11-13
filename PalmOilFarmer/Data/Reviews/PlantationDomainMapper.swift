@@ -1,4 +1,5 @@
 import Foundation
+internal import _LocationEssentials
 
 public struct PlantationDomainMapper {
     private let encoder = JSONEncoder()
@@ -158,6 +159,68 @@ public struct PlantationDomainMapper {
 
     func toGarden(from request: PlantationReviewRequest) -> Garden {
         Garden(reviewRequest: request)
+    }
+
+    /// Maps a raw CloudKit `PlantationScanRequest` record via `ScanRequestRecord` reader into a `PlantationReviewRequest`.
+    public func toDomain(from reader: ScanRequestRecord, gardenID: UUID) -> PlantationReviewRequest {
+        let progression = reader.progressionStatus().or(.sent)
+        let status: ReviewStatus
+        switch progression {
+        case .sent: status = .submitted
+        case .scheduled: status = .scheduled
+        case .inProgress: status = .inReview
+        case .finished: status = .completed
+        case .unknown: status = .submitted
+        }
+
+        let events = reader.progressionStatusDetail().orNil
+        let submittedAt = reader.submittedAt().or(Date())
+        let scheduledFor = reader.plannedOperatorVisitDate().orNil
+        let inReviewAt = events?.first(where: { $0.title.lowercased().contains("progress") })?.dateTime
+        let completedAt = reader.resultSentAt().orNil
+
+        let timeline = ReviewTimeline(
+            submittedAt: submittedAt,
+            scheduledFor: scheduledFor,
+            inReviewAt: inReviewAt,
+            completedAt: completedAt,
+            detailEvents: events
+        )
+
+        let farmer = FarmerContact(
+            name: reader.farmerContactName().or(""),
+            phone: reader.farmerPhoneNumber().or(""),
+            address: reader.farmerHomeAddress().or("")
+        )
+
+        let garden = GardenSummary(
+            id: gardenID,
+            name: reader.farmName().or("Kebun"),
+            locationName: reader.farmAddress().or(""),
+            areaHectares: reader.farmSize().or(0.0)
+        )
+
+        let boundary = reader.farmBoundary().or([]).map {
+            CoordinatePoint(latitude: $0.coordinate.latitude, longitude: $0.coordinate.longitude)
+        }
+
+        let plantingDate = reader.plantingMonthAndYear().or(Date())
+        let agronomy = AgronomicProfile(
+            plantingYear: Calendar.current.component(.year, from: plantingDate),
+            plantingMonth: Calendar.current.component(.month, from: plantingDate),
+            soilType: reader.soilType().or(.mineral).rawValue,
+            fertilizationFrequencyPerYear: reader.fertilizingFrequencyPerYear().map(Int.init).orNil
+        )
+
+        return PlantationReviewRequest(
+            id: gardenID,
+            farmer: farmer,
+            garden: garden,
+            boundary: boundary,
+            agronomy: agronomy,
+            status: status,
+            timeline: timeline
+        )
     }
 }
 

@@ -66,6 +66,44 @@ final class GardenProfileViewModel {
     func loadReview() async {
         guard let reviewRepository else { return }
         await reviewViewModel.load(for: gardenID, repository: reviewRepository)
+        syncLocalGardenReviewWithRemote()
+    }
+
+    func syncLocalGardenReviewWithRemote() {
+        guard let activeStatus = reviewViewModel.activeStatus,
+              var updated = currentGarden else { return }
+        let currentReview = updated.review ?? GardenReview(contact: ReviewContactDetails(name: "", phone: "", address: ""))
+        var stageDates = currentReview.stageDates
+        if stageDates.count <= activeStatus.rawValue {
+            stageDates += Array(repeating: Date(), count: (activeStatus.rawValue + 1) - stageDates.count)
+        }
+        if let events = reviewViewModel.detailEvents {
+            for event in events {
+                let idx: Int?
+                switch event.title.lowercased() {
+                case "sent": idx = 0
+                case "scheduled": idx = 1
+                case "in progress", "inprogress": idx = 2
+                case "finished": idx = 3
+                default: idx = nil
+                }
+                if let idx, stageDates.indices.contains(idx) {
+                    stageDates[idx] = event.dateTime
+                }
+            }
+        }
+        let updatedReview = GardenReview(
+            status: activeStatus,
+            contact: currentReview.contact,
+            stageDates: stageDates,
+            resultsDownloaded: currentReview.resultsDownloaded || (activeStatus == .completed)
+        )
+        updated.review = updatedReview
+        _ = source.update(updated)
+    }
+
+    func observeReviewUpdates() -> AsyncStream<PlantationReviewRequest>? {
+        reviewRepository?.observeRequestUpdates(for: gardenID)
     }
 
     func saveProfile(harvest: HarvestRecord, frequency: Int, fertilizers: [FertilizerRecord]) -> Bool {

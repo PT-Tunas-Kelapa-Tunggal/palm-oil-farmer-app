@@ -8,22 +8,26 @@ final class GardenProfileReviewViewModel {
     private(set) var activeStatus: ReviewStatus?
     private(set) var activeEntries: [ReviewTimelineEntry] = []
     private(set) var activeReport: FertilizerRecommendationReport?
+    private(set) var detailEvents: [ProgressionStatusDetailEvent]?
     private var loadID: UUID?
 
     func load(for gardenID: UUID, repository: any FarmerReviewRepository) async {
         let id = UUID()
         loadID = id
         guard let existing = try? await repository.fetchRequest(for: gardenID), !Task.isCancelled, loadID == id else { return }
-        activeStatus = existing.status
-        activeEntries = existing.timeline.entries(for: existing.status)
-        activeReport = existing.makeRecommendationReport()
+        applyUpdate(existing)
+    }
+
+    func applyUpdate(_ request: PlantationReviewRequest) {
+        activeStatus = request.status
+        detailEvents = request.timeline.detailEvents
+        activeEntries = request.timeline.entries(for: request.status)
+        activeReport = request.makeRecommendationReport()
     }
 
     func submitted(_ saved: PlantationReviewRequest) {
         loadID = nil
-        activeStatus = saved.status
-        activeEntries = saved.timeline.entries(for: saved.status)
-        activeReport = saved.makeRecommendationReport()
+        applyUpdate(saved)
     }
 
     func action(for garden: Garden) -> GardenProfileReviewAction {

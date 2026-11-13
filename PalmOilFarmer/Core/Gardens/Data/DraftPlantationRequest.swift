@@ -24,6 +24,9 @@ final class DraftPlantationRequest {
     var farmerAddress: String?
     var createdAt: Date
     var isBoundaryMapped: Bool
+    var reviewStatusRawValue: Int?
+    var reviewStageDatesData: Data?
+    var reviewResultsDownloaded: Bool
 
     init(
         id: UUID = UUID(),
@@ -44,7 +47,10 @@ final class DraftPlantationRequest {
         createdAt: Date = .now,
         isBoundaryMapped: Bool = false,
         fertilizationFrequencyPerYear: Int? = nil,
-        profileUpdatedAt: Date? = nil
+        profileUpdatedAt: Date? = nil,
+        reviewStatusRawValue: Int? = nil,
+        reviewStageDatesData: Data? = nil,
+        reviewResultsDownloaded: Bool = false
     ) {
         self.id = id
         self.name = name
@@ -65,6 +71,9 @@ final class DraftPlantationRequest {
         self.isBoundaryMapped = isBoundaryMapped
         self.fertilizationFrequencyPerYear = fertilizationFrequencyPerYear
         self.profileUpdatedAt = profileUpdatedAt
+        self.reviewStatusRawValue = reviewStatusRawValue
+        self.reviewStageDatesData = reviewStageDatesData
+        self.reviewResultsDownloaded = reviewResultsDownloaded
     }
 
     // MARK: - Convenient Domain Conversions
@@ -138,7 +147,15 @@ final class DraftPlantationRequest {
     func toGarden() -> Garden {
         let review: GardenReview?
         if let farmerName, !farmerName.isEmpty, let farmerPhone, let farmerAddress {
-            review = GardenReview(contact: ReviewContactDetails(name: farmerName, phone: farmerPhone, address: farmerAddress))
+            let contact = ReviewContactDetails(name: farmerName, phone: farmerPhone, address: farmerAddress)
+            let status = reviewStatusRawValue.flatMap(ReviewStatus.init(rawValue:)) ?? .submitted
+            let stageDates = (reviewStageDatesData.flatMap { try? JSONDecoder().decode([Date].self, from: $0) }) ?? [.now]
+            review = GardenReview(
+                status: status,
+                contact: contact,
+                stageDates: stageDates,
+                resultsDownloaded: reviewResultsDownloaded
+            )
         } else {
             review = nil
         }
@@ -177,6 +194,7 @@ final class DraftPlantationRequest {
         let boundaryData = try? JSONEncoder().encode(garden.boundary.points)
         let fertilizerData = garden.fertilizerRecords != nil ? (try? JSONEncoder().encode(garden.fertilizerRecords)) : nil
         let harvestData = garden.harvestRecord != nil ? (try? JSONEncoder().encode(garden.harvestRecord)) : nil
+        let stageDatesData = garden.review.flatMap { try? JSONEncoder().encode($0.stageDates) }
 
         return DraftPlantationRequest(
             id: garden.id,
@@ -191,10 +209,16 @@ final class DraftPlantationRequest {
             soilTypeRawValue: garden.soilType.rawValue,
             fertilizerData: fertilizerData,
             harvestData: harvestData,
+            farmerName: garden.review?.contact.name,
+            farmerPhone: garden.review?.contact.phone,
+            farmerAddress: garden.review?.contact.address,
             createdAt: garden.createdAt ?? .now,
             isBoundaryMapped: true,
             fertilizationFrequencyPerYear: garden.fertilizationFrequencyPerYear,
-            profileUpdatedAt: garden.profileUpdatedAt
+            profileUpdatedAt: garden.profileUpdatedAt,
+            reviewStatusRawValue: garden.review?.status.rawValue,
+            reviewStageDatesData: stageDatesData,
+            reviewResultsDownloaded: garden.review?.resultsDownloaded ?? false
         )
     }
 }

@@ -69,8 +69,26 @@ struct GardenProfileScreen: View {
                 }
             }
         }
-        .navigationDestination(isPresented: $viewModel.showsReviewStatus) {
-            statusDestination
+        .sheet(isPresented: $viewModel.showsReviewStatus) {
+            let review = garden.review ?? GardenReview(
+                status: currentReviewStatus ?? .submitted,
+                contact: ReviewContactDetails(name: "", phone: "", address: ""),
+                stageDates: [Date()]
+            )
+            AssessmentStatusView(
+                viewModel: AssessmentStatusViewModel(
+                    review: GardenReview(
+                        status: currentReviewStatus ?? review.status,
+                        contact: review.contact,
+                        stageDates: review.stageDates,
+                        resultsDownloaded: review.resultsDownloaded
+                    ),
+                    detailEvents: viewModel.reviewViewModel.detailEvents
+                ),
+                onAdvance: {
+                    advanceAction?()
+                }
+            )
         }
         .navigationDestination(isPresented: $viewModel.showsResults) {
             resultsDestination
@@ -78,7 +96,16 @@ struct GardenProfileScreen: View {
         .onChange(of: viewModel.isFinished) { _, finished in
             if finished { dismiss() }
         }
-        .task { await viewModel.loadReview() }
+        .task {
+            await viewModel.loadReview()
+            if let stream = viewModel.observeReviewUpdates() {
+                for await update in stream {
+                    guard !Task.isCancelled else { break }
+                    viewModel.reviewViewModel.applyUpdate(update)
+                    viewModel.syncLocalGardenReviewWithRemote()
+                }
+            }
+        }
     }
 
     private var rootSheet: Binding<GardenProfileSheet?> {
@@ -168,20 +195,7 @@ struct GardenProfileScreen: View {
         }
     }
 
-    @ViewBuilder
-    private var statusDestination: some View {
-        if let status = currentReviewStatus {
-            ReviewStatusView(
-                gardenName: garden.name, status: status,
-                entries: !viewModel.reviewViewModel.activeEntries.isEmpty ? viewModel.reviewViewModel.activeEntries
-                    : garden.review.map { ReviewTimelineEntry.entries(for: $0) } ?? [],
-                resultsDownloaded: viewModel.reviewViewModel.activeStatus == .completed || (garden.review?.resultsDownloaded ?? false),
-                onAdvance: advanceAction,
-                onDownloaded: { viewModel.updateReview { $0.resultsDownloaded = true } },
-                onViewResults: viewModel.openResults
-            )
-        }
-    }
+
 
     private var advanceAction: (() -> Void)? {
         guard garden.review != nil else { return nil }

@@ -44,10 +44,13 @@ final class SwiftDataGardenDraftRepository: GardenDraftRepository {
         existing.harvestRecord = garden.harvestRecord
         existing.fertilizationFrequencyPerYear = garden.fertilizationFrequencyPerYear
         existing.profileUpdatedAt = garden.profileUpdatedAt
-        if let contact = garden.review?.contact {
-            existing.farmerName = contact.name
-            existing.farmerPhone = contact.phone
-            existing.farmerAddress = contact.address
+        if let review = garden.review {
+            existing.farmerName = review.contact.name
+            existing.farmerPhone = review.contact.phone
+            existing.farmerAddress = review.contact.address
+            existing.reviewStatusRawValue = review.status.rawValue
+            existing.reviewStageDatesData = try? JSONEncoder().encode(review.stageDates)
+            existing.reviewResultsDownloaded = review.resultsDownloaded
         }
         try modelContext.save()
         return true

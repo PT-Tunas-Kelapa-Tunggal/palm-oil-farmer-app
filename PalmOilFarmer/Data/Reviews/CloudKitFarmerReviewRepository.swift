@@ -25,32 +25,73 @@ public final class CloudKitFarmerReviewRepository: FarmerReviewRepository, @unch
     }
 
     public func fetchRequest(for gardenID: UUID) async throws -> PlantationReviewRequest? {
-        let predicate = NSPredicate(format: "%K == %@", PlantationRecordCKAdapter.Field.gardenID, gardenID.uuidString)
-        let query = CKQuery(recordType: PlantationRecordCKAdapter.recordType, predicate: predicate)
-        query.sortDescriptors = [NSSortDescriptor(key: "creationDate", ascending: false)]
+        let recordID = CKRecord.ID(recordName: gardenID.uuidString)
+        do {
+            let record = try await database.record(for: recordID)
+            let reader = ScanRequestRecord(record)
+            return domainMapper.toDomain(from: reader, gardenID: gardenID)
+        } catch let error as CKError where error.code == .unknownItem {
+            return try await fetchLegacyRequest(for: gardenID)
+        } catch {
+            if let legacy = try? await fetchLegacyRequest(for: gardenID) {
+                return legacy
+            }
+            throw error
+        }
+    }
 
-        let (matchResults, _) = try await database.records(matching: query, inZoneWith: nil, desiredKeys: nil, resultsLimit: 1)
-        guard let firstResult = matchResults.first else { return nil }
-        let record = try firstResult.1.get()
-        let dto = try PlantationRecordCKAdapter.toDTO(from: record)
-        return try domainMapper.toDomain(from: dto)
+    private func fetchLegacyRequest(for gardenID: UUID) async throws -> PlantationReviewRequest? {
+        do {
+            let predicate = NSPredicate(format: "%K == %@", PlantationRecordCKAdapter.Field.gardenID, gardenID.uuidString)
+            let query = CKQuery(recordType: PlantationRecordCKAdapter.recordType, predicate: predicate)
+            query.sortDescriptors = [NSSortDescriptor(key: "creationDate", ascending: false)]
+
+            let (matchResults, _) = try await database.records(matching: query, inZoneWith: nil, desiredKeys: nil, resultsLimit: 1)
+            guard let firstResult = matchResults.first else { return nil }
+            let record = try firstResult.1.get()
+            let dto = try PlantationRecordCKAdapter.toDTO(from: record)
+            return try domainMapper.toDomain(from: dto)
+        } catch {
+            return nil
+        }
     }
 
     public func fetchMyRequests() async throws -> [PlantationReviewRequest] {
-        let predicate = NSPredicate(value: true)
-        let query = CKQuery(recordType: PlantationRecordCKAdapter.recordType, predicate: predicate)
-        query.sortDescriptors = [NSSortDescriptor(key: "creationDate", ascending: false)]
+        do {
+            let predicate = NSPredicate(value: true)
+            let query = CKQuery(recordType: RecordKeys.recordType, predicate: predicate)
+            query.sortDescriptors = [NSSortDescriptor(key: "creationDate", ascending: false)]
 
-        let (matchResults, _) = try await database.records(matching: query, inZoneWith: nil, desiredKeys: nil, resultsLimit: 50)
-        var requests: [PlantationReviewRequest] = []
-        for result in matchResults {
-            if let record = try? result.1.get(),
-               let dto = try? PlantationRecordCKAdapter.toDTO(from: record),
-               let domain = try? domainMapper.toDomain(from: dto) {
-                requests.append(domain)
+            let (matchResults, _) = try await database.records(matching: query, inZoneWith: nil, desiredKeys: nil, resultsLimit: 50)
+            var requests: [PlantationReviewRequest] = []
+            for result in matchResults {
+                if let record = try? result.1.get() {
+                    let reader = ScanRequestRecord(record)
+                    if let gardenUUID = UUID(uuidString: record.recordID.recordName) {
+                        requests.append(domainMapper.toDomain(from: reader, gardenID: gardenUUID))
+                    }
+                }
             }
+            return requests
+        } catch {
+            // Fallback to legacy
+            let predicate = NSPredicate(value: true)
+            let query = CKQuery(recordType: PlantationRecordCKAdapter.recordType, predicate: predicate)
+            query.sortDescriptors = [NSSortDescriptor(key: "creationDate", ascending: false)]
+
+            guard let (matchResults, _) = try? await database.records(matching: query, inZoneWith: nil, desiredKeys: nil, resultsLimit: 50) else {
+                return []
+            }
+            var requests: [PlantationReviewRequest] = []
+            for result in matchResults {
+                if let record = try? result.1.get(),
+                   let dto = try? PlantationRecordCKAdapter.toDTO(from: record),
+                   let domain = try? domainMapper.toDomain(from: dto) {
+                    requests.append(domain)
+                }
+            }
+            return requests
         }
-        return requests
     }
 
     /// Fetches all submitted requests mapped to Garden domain models for display.
