@@ -70,19 +70,9 @@ struct GardenProfileScreen: View {
             }
         }
         .sheet(isPresented: $viewModel.showsReviewStatus) {
-            let review = garden.review ?? GardenReview(
-                status: currentReviewStatus ?? .submitted,
-                contact: ReviewContactDetails(name: "", phone: "", address: ""),
-                stageDates: [Date()]
-            )
             AssessmentStatusView(
                 viewModel: AssessmentStatusViewModel(
-                    review: GardenReview(
-                        status: currentReviewStatus ?? review.status,
-                        contact: review.contact,
-                        stageDates: review.stageDates,
-                        resultsDownloaded: review.resultsDownloaded
-                    ),
+                    status: currentReviewStatus ?? .submitted,
                     detailEvents: viewModel.reviewViewModel.detailEvents
                 ),
                 onAdvance: {
@@ -102,7 +92,6 @@ struct GardenProfileScreen: View {
                 for await update in stream {
                     guard !Task.isCancelled else { break }
                     viewModel.reviewViewModel.applyUpdate(update)
-                    viewModel.syncLocalGardenReviewWithRemote()
                 }
             }
         }

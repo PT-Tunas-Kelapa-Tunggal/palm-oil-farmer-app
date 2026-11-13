@@ -80,37 +80,6 @@ struct SwiftDataGardenDraftRepositoryTests {
         #expect(try repository.loadDrafts().gardens.count == 2)
     }
 
-    @Test func reviewStatusAndStageDatesSurviveDraftPersistence() throws {
-        let container = AppConfiguration.makeModelContainer(inMemory: true)
-        let repository = SwiftDataGardenDraftRepository(modelContainer: container)
-        let id = UUID()
-        let contact = ReviewContactDetails(name: "Pak Tani", phone: "0812345678", address: "Kebun Sawit")
-        let stageDates = [Date(timeIntervalSince1970: 1000), Date(timeIntervalSince1970: 2000)]
-        let review = GardenReview(status: .scheduled, contact: contact, stageDates: stageDates, resultsDownloaded: false)
-
-        var garden = Garden(
-            id: id, name: "Kebun Alpha", locationName: "Riau",
-            boundary: GardenBoundary(points: [GardenCoordinate(latitude: 1, longitude: 100)]),
-            plantingYear: 2020, soilType: .mineral, review: review
-        )
-        try repository.add(garden, completingDraft: nil)
-
-        let snapshot = try repository.loadDrafts()
-        let loaded = try #require(snapshot.gardens.first(where: { $0.id == id }))
-        #expect(loaded.review?.status == .scheduled)
-        #expect(loaded.review?.contact.name == "Pak Tani")
-        #expect(loaded.review?.stageDates.count == 2)
-
-        // Advance to inReview and update
-        garden.review?.advance(now: Date(timeIntervalSince1970: 3000))
-        #expect(try repository.update(garden))
-
-        let updatedSnapshot = try repository.loadDrafts()
-        let updatedLoaded = try #require(updatedSnapshot.gardens.first(where: { $0.id == id }))
-        #expect(updatedLoaded.review?.status == .inReview)
-        #expect(updatedLoaded.review?.stageDates.count == 3)
-    }
-
     private func diskContainer(at url: URL) throws -> ModelContainer {
         let schema = Schema([DraftPlantationRequest.self])
         let configuration = ModelConfiguration(schema: schema, url: url, allowsSave: true, cloudKitDatabase: .none)

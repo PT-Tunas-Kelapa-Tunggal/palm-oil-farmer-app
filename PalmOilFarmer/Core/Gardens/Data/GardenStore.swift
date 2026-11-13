@@ -49,9 +49,6 @@ final class GardenStore: GardenDataSource {
         do {
             let requests = try await repository.fetchMyRequests()
             submittedGardens = requests.map { Garden(reviewRequest: $0) }
-            for garden in submittedGardens {
-                _ = try? draftRepository.update(garden)
-            }
             combineGardens()
         } catch {
             print("[GardenStore] CloudKit fetch status: \(error.localizedDescription)")

@@ -11,11 +11,28 @@ struct AssessmentStatusViewModel {
         enum Phase { case finished, current, upcoming }
     }
 
-    let review: GardenReview
+    let status: ReviewStatus
     var detailEvents: [ProgressionStatusDetailEvent]? = nil
+    var plannedVisitDate: Date? = nil
+
+    init(
+        status: ReviewStatus = .submitted,
+        detailEvents: [ProgressionStatusDetailEvent]? = nil,
+        plannedVisitDate: Date? = nil
+    ) {
+        self.status = status
+        self.detailEvents = detailEvents
+        self.plannedVisitDate = plannedVisitDate
+    }
+
+    init(review: GardenReview, detailEvents: [ProgressionStatusDetailEvent]? = nil) {
+        self.status = review.status
+        self.detailEvents = detailEvents
+        self.plannedVisitDate = review.visitDate
+    }
 
     var sheetHeight: Double {
-        switch review.status {
+        switch status {
         case .submitted: 469
         case .scheduled: 489
         case .inReview, .completed: 509
@@ -46,15 +63,15 @@ struct AssessmentStatusViewModel {
 
         return ReviewStatus.allCases.map { stage in
             let phase: Step.Phase
-            if stage == review.status {
+            if stage == status {
                 phase = .current
             } else {
-                phase = stage.rawValue < review.status.rawValue ? .finished : .upcoming
+                phase = stage.rawValue < status.rawValue ? .finished : .upcoming
             }
 
             let (defaultTitle, defaultMessage) = copy(for: stage, phase: phase)
             let message = (phase != .upcoming && customMessages[stage] != nil) ? customMessages[stage]! : defaultMessage
-            let date = phase == .upcoming ? nil : (customDates[stage] ?? review.date(for: stage).map(Self.timestamp.string(from:)))
+            let date = phase == .upcoming ? nil : customDates[stage]
 
             return Step(
                 id: stage,
@@ -92,7 +109,7 @@ struct AssessmentStatusViewModel {
     }
 
     private var visitDate: String {
-        review.visitDate.map(Self.visit.string(from:)) ?? "hari yang disepakati"
+        plannedVisitDate.map(Self.visit.string(from:)) ?? "hari yang disepakati"
     }
 
     private static let timestamp = formatter("d MMM yyyy, HH.mm 'WIB'")
