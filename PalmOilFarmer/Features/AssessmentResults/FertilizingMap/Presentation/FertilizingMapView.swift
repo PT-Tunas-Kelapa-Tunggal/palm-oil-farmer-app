@@ -79,6 +79,7 @@ public struct FertilizingMapView: View {
                     mode: viewModel.areaDivision,
                     zones: item.zones,
                     selectedFertilizerName: item.selectedFertilizer.name,
+                    selectedFertilizerTotalDose: item.selectedFertilizer.totalDose,
                     selectedZone: viewModel.selectedZone,
                     userLocation: viewModel.userLocation,
                     orthomosaic: item.orthomosaic,

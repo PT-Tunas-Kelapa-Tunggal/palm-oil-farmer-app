@@ -9,6 +9,7 @@ struct FertilizingMapKitView: UIViewRepresentable {
     let data: FarmOrthomosaicMapData
     let zones: [FertilizingZoneDetail]
     let mode: AreaDivisionMode
+    let wholeFarmDoseText: String
     let selectedZone: FertilizingZoneDetail?
     let userLocation: CGPoint
     let onSelectZone: (FertilizingZoneDetail) -> Void
@@ -22,6 +23,7 @@ struct FertilizingMapKitView: UIViewRepresentable {
         map.isRotateEnabled = true
         map.isPitchEnabled = true
         context.coordinator.update(map, data: data, zones: zones, mode: mode,
+                                   wholeFarmDoseText: wholeFarmDoseText,
                                    selectedZone: selectedZone, userLocation: userLocation,
                                    onSelectZone: onSelectZone)
         return map
@@ -29,6 +31,7 @@ struct FertilizingMapKitView: UIViewRepresentable {
 
     func updateUIView(_ map: MKMapView, context: Context) {
         context.coordinator.update(map, data: data, zones: zones, mode: mode,
+                                   wholeFarmDoseText: wholeFarmDoseText,
                                    selectedZone: selectedZone, userLocation: userLocation,
                                    onSelectZone: onSelectZone)
     }
@@ -38,6 +41,7 @@ struct FertilizingMapKitView: UIViewRepresentable {
         private var lastData: FarmOrthomosaicMapData?
         private var lastZones: [FertilizingZoneDetail] = []
         private var lastMode: AreaDivisionMode?
+        private var lastWholeFarmDoseText: String?
         private var lastSelectedZoneID: Int?
         private var lastUserLocation: CGPoint?
         private var imageMapRect: MKMapRect?
@@ -49,6 +53,7 @@ struct FertilizingMapKitView: UIViewRepresentable {
             data: FarmOrthomosaicMapData,
             zones: [FertilizingZoneDetail],
             mode: AreaDivisionMode,
+            wholeFarmDoseText: String,
             selectedZone: FertilizingZoneDetail?,
             userLocation: CGPoint,
             onSelectZone: @escaping (FertilizingZoneDetail) -> Void
@@ -56,12 +61,14 @@ struct FertilizingMapKitView: UIViewRepresentable {
             self.onSelectZone = onSelectZone
             let selectedZoneID = selectedZone?.id
             guard lastData != data || lastZones != zones || lastMode != mode
+                    || lastWholeFarmDoseText != wholeFarmDoseText
                     || lastSelectedZoneID != selectedZoneID || lastUserLocation != userLocation else { return }
 
             let shouldReframe = lastData != data || lastMode != mode
             lastData = data
             lastZones = zones
             lastMode = mode
+            lastWholeFarmDoseText = wholeFarmDoseText
             lastSelectedZoneID = selectedZoneID
             lastUserLocation = userLocation
 
@@ -104,7 +111,16 @@ struct FertilizingMapKitView: UIViewRepresentable {
                 map.addOverlays(treePolygons, level: .aboveLabels)
 
             case .wholeFarm:
-                break
+                let boundaryCoordinates = data.farmBoundary.map {
+                    CLLocationCoordinate2D(latitude: $0.latitude, longitude: $0.longitude)
+                }
+                if boundaryCoordinates.count >= 3 {
+                    let boundary = MKPolygon(coordinates: boundaryCoordinates, count: boundaryCoordinates.count)
+                    boundary.title = "farm-boundary"
+                    map.addOverlay(boundary, level: .aboveLabels)
+                }
+                let center = MKMapPoint(x: farmRect.midX, y: farmRect.midY).coordinate
+                map.addAnnotation(FertilizingWholeFarmAnnotation(doseText: wholeFarmDoseText, coordinate: center))
             }
 
             let locationPixel = PixelPoint(
@@ -130,7 +146,11 @@ struct FertilizingMapKitView: UIViewRepresentable {
             }
             guard let polygon = overlay as? MKPolygon else { return MKOverlayRenderer(overlay: overlay) }
             let renderer = MKPolygonRenderer(polygon: polygon)
-            if polygon.title?.hasPrefix("tree-") == true {
+            if polygon.title == "farm-boundary" {
+                renderer.strokeColor = UIColor.white.withAlphaComponent(0.95)
+                renderer.fillColor = .clear
+                renderer.lineWidth = 2.5
+            } else if polygon.title?.hasPrefix("tree-") == true {
                 let treeID = Int64(polygon.title?.replacingOccurrences(of: "tree-", with: "") ?? "") ?? 0
                 let label = lastData?.trees.first(where: { $0.id == treeID })?.healthynessLabel ?? .unknown
                 let tint = UIColor(hex: Self.color(for: label))
@@ -140,9 +160,8 @@ struct FertilizingMapKitView: UIViewRepresentable {
             } else {
                 let zoneID = Int64(polygon.title?.replacingOccurrences(of: "zone-", with: "") ?? "") ?? 0
                 let isSelected = Int64(lastSelectedZoneID ?? -1) == zoneID
-                let tint = UIColor.systemTeal
-                renderer.strokeColor = tint.withAlphaComponent(0.98)
-                renderer.fillColor = tint.withAlphaComponent(isSelected ? 0.35 : 0.17)
+                renderer.strokeColor = UIColor.white.withAlphaComponent(isSelected ? 1 : 0.92)
+                renderer.fillColor = isSelected ? UIColor.white.withAlphaComponent(0.10) : .clear
                 renderer.lineWidth = isSelected ? 3 : 2
             }
             return renderer
@@ -161,16 +180,25 @@ struct FertilizingMapKitView: UIViewRepresentable {
                 return marker
             }
 
+            if let wholeFarm = annotation as? FertilizingWholeFarmAnnotation {
+                let reuseID = "fertilizing-whole-farm"
+                let label = (mapView.dequeueReusableAnnotationView(withIdentifier: reuseID) as? FertilizingZoneAnnotationView)
+                    ?? FertilizingZoneAnnotationView(annotation: annotation, reuseIdentifier: reuseID)
+                label.annotation = annotation
+                label.configure(name: "Seluruh Kebun", doseText: wholeFarm.doseText)
+                return label
+            }
+
             guard let zone = annotation as? FertilizingZoneAnnotation else { return nil }
             let reuseID = "fertilizing-zone"
-            let marker = (mapView.dequeueReusableAnnotationView(withIdentifier: reuseID) as? MKMarkerAnnotationView)
-                ?? MKMarkerAnnotationView(annotation: annotation, reuseIdentifier: reuseID)
-            marker.annotation = annotation
-            marker.glyphText = "\(zone.detail.id)"
-            marker.markerTintColor = .systemTeal
-            marker.canShowCallout = true
-            marker.displayPriority = .required
-            return marker
+            let label = (mapView.dequeueReusableAnnotationView(withIdentifier: reuseID) as? FertilizingZoneAnnotationView)
+                ?? FertilizingZoneAnnotationView(annotation: annotation, reuseIdentifier: reuseID)
+            label.annotation = annotation
+            label.configure(
+                name: zone.detail.name,
+                doseText: "\(zone.detail.doseKg.formatted(.number.precision(.fractionLength(0...1)))) kg"
+            )
+            return label
         }
 
         func mapView(_ mapView: MKMapView, didSelect view: MKAnnotationView) {
@@ -286,6 +314,66 @@ private final class FertilizingZoneAnnotation: NSObject, MKAnnotation {
 
     init(detail: FertilizingZoneDetail, coordinate: CLLocationCoordinate2D) {
         self.detail = detail
+        self.coordinate = coordinate
+    }
+}
+
+private final class FertilizingZoneAnnotationView: MKAnnotationView {
+    private let nameLabel = UILabel()
+    private let doseLabel = UILabel()
+    private let labels = UIStackView()
+
+    override init(annotation: MKAnnotation?, reuseIdentifier: String?) {
+        super.init(annotation: annotation, reuseIdentifier: reuseIdentifier)
+        frame = CGRect(x: 0, y: 0, width: 112, height: 48)
+        centerOffset = .zero
+        canShowCallout = false
+        displayPriority = .required
+
+        labels.axis = .vertical
+        labels.alignment = .center
+        labels.spacing = 0
+        labels.translatesAutoresizingMaskIntoConstraints = false
+        addSubview(labels)
+
+        nameLabel.font = .systemFont(ofSize: 14, weight: .medium)
+        doseLabel.font = .systemFont(ofSize: 19, weight: .bold)
+        [nameLabel, doseLabel].forEach {
+            $0.textColor = .white
+            $0.textAlignment = .center
+            $0.shadowColor = UIColor.black.withAlphaComponent(0.9)
+            $0.shadowOffset = CGSize(width: 0, height: 1)
+            $0.layer.shadowOpacity = 1
+            $0.layer.shadowRadius = 3
+        }
+        labels.addArrangedSubview(nameLabel)
+        labels.addArrangedSubview(doseLabel)
+        NSLayoutConstraint.activate([
+            labels.centerXAnchor.constraint(equalTo: centerXAnchor),
+            labels.centerYAnchor.constraint(equalTo: centerYAnchor),
+            labels.widthAnchor.constraint(equalTo: widthAnchor),
+            labels.heightAnchor.constraint(equalTo: heightAnchor)
+        ])
+    }
+
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+
+    func configure(name: String, doseText: String) {
+        nameLabel.text = name
+        doseLabel.text = doseText
+    }
+}
+
+private final class FertilizingWholeFarmAnnotation: NSObject, MKAnnotation {
+    let doseText: String
+    let coordinate: CLLocationCoordinate2D
+    var title: String? { "Seluruh Kebun" }
+    var subtitle: String? { doseText }
+
+    init(doseText: String, coordinate: CLLocationCoordinate2D) {
+        self.doseText = doseText
         self.coordinate = coordinate
     }
 }

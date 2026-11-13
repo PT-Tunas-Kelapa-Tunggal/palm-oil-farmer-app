@@ -4,6 +4,7 @@ public struct FertilizingMapCanvasView: View {
     public let mode: AreaDivisionMode
     public let zones: [FertilizingZoneDetail]
     public let selectedFertilizerName: String
+    public let selectedFertilizerTotalDose: String
     public let selectedZone: FertilizingZoneDetail?
     public let userLocation: CGPoint
     public let orthomosaic: FarmOrthomosaicMapData?
@@ -13,6 +14,7 @@ public struct FertilizingMapCanvasView: View {
         mode: AreaDivisionMode,
         zones: [FertilizingZoneDetail],
         selectedFertilizerName: String,
+        selectedFertilizerTotalDose: String = "",
         selectedZone: FertilizingZoneDetail?,
         userLocation: CGPoint,
         orthomosaic: FarmOrthomosaicMapData? = nil,
@@ -21,6 +23,7 @@ public struct FertilizingMapCanvasView: View {
         self.mode = mode
         self.zones = zones
         self.selectedFertilizerName = selectedFertilizerName
+        self.selectedFertilizerTotalDose = selectedFertilizerTotalDose
         self.selectedZone = selectedZone
         self.userLocation = userLocation
         self.orthomosaic = orthomosaic
@@ -37,6 +40,7 @@ public struct FertilizingMapCanvasView: View {
                         data: orthomosaic,
                         zones: zones,
                         mode: mode,
+                        wholeFarmDoseText: selectedFertilizerTotalDose,
                         selectedZone: selectedZone,
                         userLocation: userLocation,
                         onSelectZone: onSelectZone
