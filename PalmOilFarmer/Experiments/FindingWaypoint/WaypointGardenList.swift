@@ -35,6 +35,7 @@ private struct WaypointGardenCard: View {
     var body: some View {
         NavigationLink {
             SpreaderModeView(garden: garden, zones: zones)
+                .toolbar(.hidden, for: .tabBar)
         } label: {
             VStack(alignment: .leading, spacing: 12) {
                 WaypointZoneThumbnail(zones: zones)

@@ -11,6 +11,7 @@ struct FertilizerScheduleView: View {
             .environment(\.colorScheme, .dark)
             .navigationBarBackButtonHidden(true)
             .toolbarVisibility(.hidden, for: .navigationBar)
+            .toolbar(.hidden, for: .tabBar)
             .task { await viewModel.load() }
             .navigationDestination(item: $viewModel.destination) { destination in
                 switch destination {

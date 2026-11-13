@@ -29,6 +29,7 @@ struct ContentView: View {
                         .toolbar(.hidden, for: .navigationBar)
                         .navigationDestination(for: AppRoute.self) { route in
                             destination(for: route)
+                                .toolbar(.hidden, for: .tabBar)
                         }
                 }
                 .task {
