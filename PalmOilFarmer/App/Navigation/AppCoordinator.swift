@@ -5,6 +5,7 @@ enum AppRoute: Hashable {
     case gardenProfile(UUID)
     case requestAssessment(UUID)
     case resultOverview(gardenId: String)
+    case fertilizerSchedule(gardenId: String)
     case nutrientCondition(gardenId: String)
     case farmGreenIndex(gardenId: String)
     case fertilizerEstimation(gardenId: String)
@@ -59,6 +60,10 @@ final class AppCoordinator {
 
     func openResultOverview(gardenId: String) {
         path.append(.resultOverview(gardenId: gardenId))
+    }
+
+    func openFertilizerSchedule(gardenId: String) {
+        path.append(.fertilizerSchedule(gardenId: gardenId))
     }
 
     func openNutrientCondition(gardenId: String) {

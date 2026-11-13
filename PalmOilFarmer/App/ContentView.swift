@@ -97,6 +97,9 @@ struct ContentView: View {
                 onBack: {
                     coordinator.pop()
                 },
+                onOpenFertilizerSchedule: {
+                    coordinator.openFertilizerSchedule(gardenId: gardenId)
+                },
                 onOpenNutrientCondition: {
                     coordinator.openNutrientCondition(gardenId: gardenId)
                 },
@@ -107,6 +110,19 @@ struct ContentView: View {
                     coordinator.openFertilizerEstimation(gardenId: gardenId)
                 }
             )
+        case .fertilizerSchedule(let gardenId):
+            if let gardenID = UUID(uuidString: gardenId) {
+                FertilizerScheduleView(
+                    viewModel: FertilizerScheduleViewModel(
+                        gardenID: gardenID,
+                        repository: CloudKitFertilizerScheduleRepository(
+                            containerIdentifier: AppConfiguration.cloudKitContainerIdentifier
+                        )
+                    )
+                )
+            } else {
+                ContentUnavailableView("Kebun Tidak Ditemukan", systemImage: "leaf.fill")
+            }
         case .nutrientCondition(let gardenId):
             NutrientConditionView(
                 viewModel: NutrientConditionViewModel(gardenId: gardenId),
