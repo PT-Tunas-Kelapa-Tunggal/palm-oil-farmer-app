@@ -81,6 +81,7 @@ public struct FertilizingMapItem: Sendable {
     public let availableFertilizers: [FertilizerPeriodOption]
     public var zones: [FertilizingZoneDetail]
     public var isMarkedDone: Bool
+    public let orthomosaic: FarmOrthomosaicMapData?
 
     public var totalDoseKg: Double {
         zones.reduce(0) { $0 + $1.doseKg }
@@ -97,7 +98,8 @@ public struct FertilizingMapItem: Sendable {
         selectedFertilizer: FertilizerPeriodOption,
         availableFertilizers: [FertilizerPeriodOption],
         zones: [FertilizingZoneDetail],
-        isMarkedDone: Bool = false
+        isMarkedDone: Bool = false,
+        orthomosaic: FarmOrthomosaicMapData? = nil
     ) {
         self.id = id
         self.gardenId = gardenId
@@ -106,6 +108,7 @@ public struct FertilizingMapItem: Sendable {
         self.availableFertilizers = availableFertilizers
         self.zones = zones
         self.isMarkedDone = isMarkedDone
+        self.orthomosaic = orthomosaic
     }
 
     public var gardenUUID: UUID? {

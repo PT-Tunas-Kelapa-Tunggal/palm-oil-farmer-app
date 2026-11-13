@@ -146,7 +146,15 @@ struct ContentView: View {
             )
         case .farmGreenIndex(let gardenId):
             FarmGreenIndexView(
-                viewModel: FarmGreenIndexViewModel(gardenId: gardenId),
+                viewModel: FarmGreenIndexViewModel(
+                    gardenId: gardenId,
+                    repository: DummyFarmGreenIndexRepository(
+                        cloudKitRepository: CloudKitFarmGreenIndexRepository(
+                            containerIdentifier: AppConfiguration.cloudKitContainerIdentifier,
+                            loadsOrthomosaicImage: false
+                        )
+                    )
+                ),
                 onBack: {
                     coordinator.pop()
                 }

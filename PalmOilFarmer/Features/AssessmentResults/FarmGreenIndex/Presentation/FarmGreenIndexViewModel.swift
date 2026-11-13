@@ -25,7 +25,7 @@ public final class FarmGreenIndexViewModel {
     public private(set) var errorMessage: String? = nil
 
     /// Current state of the bottom sheet / card
-    public var sheetState: FarmGreenIndexSheetState = .legend
+    public var sheetState: FarmGreenIndexSheetState = .collapsed
 
     /// Currently selected area division mode
     public var selectedAreaDivision: FarmAreaDivisionMode = .perPohon
@@ -41,10 +41,10 @@ public final class FarmGreenIndexViewModel {
 
     public init(
         gardenId: String = "default-garden",
-        repository: any FarmGreenIndexRepositoryProtocol = DummyFarmGreenIndexRepository()
+        repository: (any FarmGreenIndexRepositoryProtocol)? = nil
     ) {
         self.gardenId = gardenId
-        self.repository = repository
+        self.repository = repository ?? DummyFarmGreenIndexRepository()
     }
 
     public func load() async {

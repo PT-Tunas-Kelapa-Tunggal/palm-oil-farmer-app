@@ -6,12 +6,8 @@ public struct FertilizingMapCanvasView: View {
     public let selectedFertilizerName: String
     public let selectedZone: FertilizingZoneDetail?
     public let userLocation: CGPoint
+    public let orthomosaic: FarmOrthomosaicMapData?
     public let onSelectZone: (FertilizingZoneDetail) -> Void
-
-    @State private var zoomScale: CGFloat = 1.0
-    @State private var lastZoomScale: CGFloat = 1.0
-    @State private var offset: CGSize = .zero
-    @State private var lastOffset: CGSize = .zero
 
     public init(
         mode: AreaDivisionMode,
@@ -19,6 +15,7 @@ public struct FertilizingMapCanvasView: View {
         selectedFertilizerName: String,
         selectedZone: FertilizingZoneDetail?,
         userLocation: CGPoint,
+        orthomosaic: FarmOrthomosaicMapData? = nil,
         onSelectZone: @escaping (FertilizingZoneDetail) -> Void
     ) {
         self.mode = mode
@@ -26,6 +23,7 @@ public struct FertilizingMapCanvasView: View {
         self.selectedFertilizerName = selectedFertilizerName
         self.selectedZone = selectedZone
         self.userLocation = userLocation
+        self.orthomosaic = orthomosaic
         self.onSelectZone = onSelectZone
     }
 
@@ -34,33 +32,19 @@ public struct FertilizingMapCanvasView: View {
             ZStack {
                 Color.black.ignoresSafeArea()
 
-                mapLayer(geometry: geometry)
-                    .scaleEffect(zoomScale)
-                    .offset(offset)
-                    .gesture(
-                        SimultaneousGesture(
-                            MagnificationGesture()
-                                .onChanged { value in
-                                    let delta = value / lastZoomScale
-                                    lastZoomScale = value
-                                    let newScale = zoomScale * delta
-                                    zoomScale = min(max(newScale, 0.8), 3.5)
-                                }
-                                .onEnded { _ in
-                                    lastZoomScale = 1.0
-                                },
-                            DragGesture()
-                                .onChanged { value in
-                                    offset = CGSize(
-                                        width: lastOffset.width + value.translation.width,
-                                        height: lastOffset.height + value.translation.height
-                                    )
-                                }
-                                .onEnded { _ in
-                                    lastOffset = offset
-                                }
-                        )
+                if let orthomosaic {
+                    FertilizingMapKitView(
+                        data: orthomosaic,
+                        zones: zones,
+                        mode: mode,
+                        selectedZone: selectedZone,
+                        userLocation: userLocation,
+                        onSelectZone: onSelectZone
                     )
+                    .frame(width: geometry.size.width, height: geometry.size.height)
+                } else {
+                    mapLayer(geometry: geometry)
+                }
             }
         }
     }

@@ -4,23 +4,29 @@ import SwiftUI
 /// Sliced from Sketch: "Hasil Peninjauan / Peta Kondisi Kebun / Collapsed" -> "Frame", "oil_palm_field_tree_vari_quartiles Background Removed", "Lokasi Saya"
 public struct FarmGreenIndexMapView: View {
     public let mapImageName: String?
+    public let orthomosaic: FarmOrthomosaicMapData?
     public let pins: [TreePinItem]
     public let selectedPin: TreePinItem?
+    public let showsZones: Bool
     public var onSelectPin: ((TreePinItem) -> Void)?
     public var onRecenter: (() -> Void)?
     public var onTapBackground: (() -> Void)?
 
     public init(
         mapImageName: String? = "FarmGreenIndexMap",
+        orthomosaic: FarmOrthomosaicMapData? = nil,
         pins: [TreePinItem] = [],
         selectedPin: TreePinItem? = nil,
+        showsZones: Bool = false,
         onSelectPin: ((TreePinItem) -> Void)? = nil,
         onRecenter: (() -> Void)? = nil,
         onTapBackground: (() -> Void)? = nil
     ) {
         self.mapImageName = mapImageName
+        self.orthomosaic = orthomosaic
         self.pins = pins
         self.selectedPin = selectedPin
+        self.showsZones = showsZones
         self.onSelectPin = onSelectPin
         self.onRecenter = onRecenter
         self.onTapBackground = onTapBackground
@@ -30,28 +36,38 @@ public struct FarmGreenIndexMapView: View {
         GeometryReader { geometry in
             ZStack(alignment: .topLeading) {
                 // Background Satellite NDVI Map
-                Group {
-                    if let mapImageName, let uiImage = UIImage(named: mapImageName) {
-                        Image(uiImage: uiImage)
-                            .resizable()
-                            .scaledToFill()
-                    } else if let fallback = UIImage(named: "FarmGreennessMap") ?? UIImage(named: "ResultOverviewMap") {
-                        Image(uiImage: fallback)
-                            .resizable()
-                            .scaledToFill()
-                    } else {
-                        LinearGradient(
-                            colors: [Color(red: 0.12, green: 0.22, blue: 0.16), Color(red: 0.08, green: 0.14, blue: 0.10)],
-                            startPoint: .topLeading,
-                            endPoint: .bottomTrailing
-                        )
+                if usesGeoreferencedOrthomosaic, let orthomosaic {
+                    OrthomosaicMapKitView(
+                        data: orthomosaic,
+                        pins: pins,
+                        selectedPin: selectedPin,
+                        showsZones: showsZones,
+                        showsTrees: !showsZones,
+                        onSelectPin: { onSelectPin?($0) }
+                    )
+                    .frame(width: geometry.size.width, height: geometry.size.height)
+                } else {
+                    Group {
+                        if let mapImageName, let uiImage = UIImage(named: mapImageName) {
+                            Image(uiImage: uiImage)
+                                .resizable()
+                                .scaledToFill()
+                        } else if let fallback = UIImage(named: "FarmGreennessMap") ?? UIImage(named: "ResultOverviewMap") {
+                            Image(uiImage: fallback)
+                                .resizable()
+                                .scaledToFill()
+                        } else {
+                            LinearGradient(
+                                colors: [Color(red: 0.12, green: 0.22, blue: 0.16), Color(red: 0.08, green: 0.14, blue: 0.10)],
+                                startPoint: .topLeading,
+                                endPoint: .bottomTrailing
+                            )
+                        }
                     }
-                }
-                .frame(width: geometry.size.width, height: geometry.size.height)
-                .clipped()
-                .contentShape(Rectangle())
-                .onTapGesture {
-                    onTapBackground?()
+                    .frame(width: geometry.size.width, height: geometry.size.height)
+                    .clipped()
+                    .contentShape(Rectangle())
+                    .onTapGesture { onTapBackground?() }
                 }
 
                 // Top gradient overlay for navigation bar readability
@@ -64,16 +80,18 @@ public struct FarmGreenIndexMapView: View {
                 .allowsHitTesting(false)
 
                 // Interactive Tree Marker Pins
-                ForEach(pins) { pin in
-                    let xPos = pin.coordinateX * geometry.size.width
-                    let yPos = pin.coordinateY * geometry.size.height
-                    let isSelected = selectedPin?.id == pin.id
+                if !usesGeoreferencedOrthomosaic {
+                    ForEach(pins) { pin in
+                        let xPos = pin.coordinateX * geometry.size.width
+                        let yPos = pin.coordinateY * geometry.size.height
+                        let isSelected = selectedPin?.id == pin.id
 
-                    Button(action: { onSelectPin?(pin) }) {
-                        treePinMarker(pin, isSelected: isSelected)
+                        Button(action: { onSelectPin?(pin) }) {
+                            treePinMarker(pin, isSelected: isSelected)
+                        }
+                        .buttonStyle(.plain)
+                        .position(x: xPos, y: yPos)
                     }
-                    .buttonStyle(.plain)
-                    .position(x: xPos, y: yPos)
                 }
 
                 // Floating "Lokasi Saya" button
@@ -98,6 +116,12 @@ public struct FarmGreenIndexMapView: View {
             }
         }
         .ignoresSafeArea()
+    }
+
+    private var usesGeoreferencedOrthomosaic: Bool {
+        guard let orthomosaic else { return false }
+        return orthomosaic.imageURL != nil && orthomosaic.imagePixelWidth > 0
+            && orthomosaic.imagePixelHeight > 0 && orthomosaic.farmBoundary.count >= 3
     }
 
     private func treePinMarker(_ pin: TreePinItem, isSelected: Bool) -> some View {

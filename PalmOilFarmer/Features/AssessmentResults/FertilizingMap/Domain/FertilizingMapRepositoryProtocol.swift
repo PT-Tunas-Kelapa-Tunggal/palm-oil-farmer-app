@@ -35,14 +35,24 @@ public struct DummyFertilizingMapRepository: FertilizingMapRepositoryProtocol {
             defaultDivision: .perZona
         )
 
-        let sampleZones = [
-            FertilizingZoneDetail(id: 1, name: "Zona 1", doseKg: 25, relativeX: 0.23, relativeY: 0.32),
-            FertilizingZoneDetail(id: 2, name: "Zona 2", doseKg: 25, relativeX: 0.50, relativeY: 0.32),
-            FertilizingZoneDetail(id: 3, name: "Zona 3", doseKg: 32, relativeX: 0.77, relativeY: 0.32),
-            FertilizingZoneDetail(id: 4, name: "Zona 4", doseKg: 32, relativeX: 0.23, relativeY: 0.68),
-            FertilizingZoneDetail(id: 5, name: "Zona 5", doseKg: 32, relativeX: 0.50, relativeY: 0.72),
-            FertilizingZoneDetail(id: 6, name: "Zona 6", doseKg: 32, relativeX: 0.77, relativeY: 0.68)
-        ]
+        let mapFixture = await DummyFarmGreenIndexFixture.makeItem()
+        let orthomosaic = mapFixture.orthomosaic
+        let sampleZones = (orthomosaic?.zones ?? []).map { zone in
+            let minX = zone.boundingBox.map(\.x).min() ?? 0
+            let maxX = zone.boundingBox.map(\.x).max() ?? 0
+            let minY = zone.boundingBox.map(\.y).min() ?? 0
+            let maxY = zone.boundingBox.map(\.y).max() ?? 0
+            let width = Double(max(orthomosaic?.imagePixelWidth ?? 1, 1))
+            let height = Double(max(orthomosaic?.imagePixelHeight ?? 1, 1))
+            let doseKg = zone.id <= 2 ? 25.0 : 32.0
+            return FertilizingZoneDetail(
+                id: Int(zone.id),
+                name: "Zona \(zone.id)",
+                doseKg: doseKg,
+                relativeX: CGFloat((minX + maxX) / 2 / width),
+                relativeY: CGFloat((minY + maxY) / 2 / height)
+            )
+        }
 
         return FertilizingMapItem(
             gardenId: gardenId,
@@ -50,7 +60,8 @@ public struct DummyFertilizingMapRepository: FertilizingMapRepositoryProtocol {
             selectedFertilizer: dolomit,
             availableFertilizers: [dolomit, npk, urea],
             zones: sampleZones,
-            isMarkedDone: false
+            isMarkedDone: false,
+            orthomosaic: orthomosaic
         )
     }
 
