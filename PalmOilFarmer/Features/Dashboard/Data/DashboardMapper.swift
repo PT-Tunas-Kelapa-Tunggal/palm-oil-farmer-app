@@ -15,7 +15,8 @@ struct DashboardMapper {
             boundary: garden.boundary.points.map { DashboardCoordinate(latitude: $0.latitude, longitude: $0.longitude) },
             stage: stage(of: garden),
             visitDate: garden.review?.visitDate,
-            createdAt: garden.createdAt
+            createdAt: garden.createdAt,
+            reviewStatus: garden.review?.status
         )
     }
 

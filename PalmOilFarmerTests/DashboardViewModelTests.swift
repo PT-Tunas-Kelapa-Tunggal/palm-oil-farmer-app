@@ -166,6 +166,50 @@ struct DashboardViewModelTests {
         dependencies.dashboardViewModel.registerGarden()
         #expect(dependencies.coordinator.registrationSheet == .guide)
     }
+
+    @Test func selectGardenShowsNoConnectionSheetOnlyWhenStatusNotFinishedAndOffline() {
+        var openedIDs: [UUID] = []
+        let monitor = NetworkMonitor()
+        monitor.isMockDisconnected = true
+
+        let inReviewGarden = mapper.map(garden(status: .inReview))
+        let completedGarden = mapper.map(garden(status: .completed))
+        let draftGarden = mapper.map(garden(complete: false))
+
+        let repository = DashboardRepositorySpy(gardens: [], drafts: [])
+        let viewModel = DashboardViewModel(
+            repository: repository,
+            networkMonitor: monitor,
+            onEvent: { event in
+                if case .openGarden(let id) = event {
+                    openedIDs.append(id)
+                }
+            }
+        )
+
+        // 1. In-review garden + offline -> shows sheet, does NOT open
+        viewModel.selectGarden(inReviewGarden)
+        #expect(viewModel.showsNoConnectionSheet == true)
+        #expect(openedIDs.isEmpty)
+
+        viewModel.showsNoConnectionSheet = false
+
+        // 2. Completed garden + offline -> opens normally, does NOT show sheet
+        viewModel.selectGarden(completedGarden)
+        #expect(viewModel.showsNoConnectionSheet == false)
+        #expect(openedIDs == [completedGarden.id])
+
+        // 3. Draft garden + offline -> opens normally, does NOT show sheet
+        viewModel.selectGarden(draftGarden)
+        #expect(viewModel.showsNoConnectionSheet == false)
+        #expect(openedIDs == [completedGarden.id, draftGarden.id])
+
+        // 4. In-review garden + online -> opens normally
+        monitor.isMockDisconnected = false
+        viewModel.selectGarden(inReviewGarden)
+        #expect(viewModel.showsNoConnectionSheet == false)
+        #expect(openedIDs == [completedGarden.id, draftGarden.id, inReviewGarden.id])
+    }
 }
 
 @MainActor
