@@ -1,6 +1,6 @@
 # Finding Waypoint — eksperimen
 
-Folder ini menyimpan entry point eksperimen (`FindingWaypointView.swift`), layar peta (`WaypointMapView.swift`), serta thumbnail/palette/preview data (`WaypointZoneThumbnail.swift`). Pada Part 2, file dipindahkan tanpa mengubah implementasi Swift, app entry point, model Garden, penyimpanan zona, assets, atau target pengujian.
+Eksperimen Finding Waypoint kini tersedia sebagai tab **Pemupukan** di `ContentView`, memakai `GardenStore` yang sama dengan tab Home. `WaypointGardenList.swift` berisi daftar kebun dan tautan ke mode pemupukan; folder ini juga menyimpan peta, thumbnail, geometri zona, dan preview pendukung.
 
 Pendukung eksperimen:
 
@@ -13,11 +13,10 @@ Semua file masih dikompilasi dalam module app yang sama. Pemindahan folder tidak
 
 ## Menjalankan
 
-- Buka FindingWaypointView.swift dan pilih preview “Finding Waypoint — data tersimpan” untuk tab Home/Pemupukan.
+- Jalankan app dan pilih tab **Pemupukan** untuk membuka daftar kebun dan mode pemupukan.
 - Preview “Pemupukan — contoh” dan “Zona 5” menggunakan data contoh yang tidak disimpan.
-- Untuk berjalan dengan GPS pada iPhone, ganti sementara ContentView() dengan FindingWaypointView() di WindowGroup PalmOilFarmerApp.swift, lalu Run ke iPhone. Build user testing memakai ContentView; panduan zona hanya tersedia melalui eksperimen ini.
 - Aktifkan internet dan izinkan lokasi saat aplikasi digunakan, termasuk Lokasi Tepat. Project sudah memiliki deskripsi izin lokasi.
-- Tab Home memakai GardenStore dan alur registrasi yang sudah ada: tambah/edit/hapus di Home memengaruhi data kebun asli.
+- Tab Home memakai alur dashboard dan registrasi yang sudah ada. Perubahan kebun di Home langsung terlihat di tab Pemupukan karena keduanya membaca store yang sama.
 - Pemupukan → pilih kebun → pilih zona 1–6 → Mulai panduan. Tombol lokasi mengikuti posisi; menggeser peta melepaskan follow. Tombol peta menampilkan kebun kembali.
 - GPS berhenti ketika layar ditutup, tab ditinggalkan, atau aplikasi tidak aktif. Tekan Mulai lagi setelah kembali.
 

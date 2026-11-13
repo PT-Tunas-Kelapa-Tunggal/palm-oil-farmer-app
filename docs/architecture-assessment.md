@@ -59,7 +59,7 @@ Detail perilaku yang perlu dipertahankan:
 7. Status diperoleh lewat refresh daftar atau fetch saat profil dibuka. API polling 5 detik ada, tetapi tidak ditemukan pemanggil dari UI.
 8. Hasil nyata diadaptasi dari CloudKit; masih ada fallback `DemoReviewReport` untuk status completed tanpa report. Download hasil pada layar status masih simulasi 8 detik.
 9. Rekomendasi berisi kebutuhan pupuk, estimasi biaya, alokasi area, dan tab curah hujan. Data hujan bisa kosong pada hasil nyata. Panduan area memakai GPS dan jarak langsung, bukan rute jalan.
-10. `FindingWaypointView` adalah entry point eksperimen, bukan root app. Geometri dan session GPS dari folder tersebut dipakai oleh flow hasil.
+10. Tab Pemupukan di `ContentView` memakai `GardenStore` yang sama dengan Home dan membuka daftar panduan zona dari modul FindingWaypoint.
 
 ## Kepemilikan data saat ini
 
