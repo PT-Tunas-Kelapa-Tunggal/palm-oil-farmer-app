@@ -90,9 +90,9 @@ public struct ResultOverviewView: View {
                             onTap: onOpenNutrientCondition
                         )
 
-                        // Card 3: Kehijauan Kebun
+                        // Card 3: Hasil Pemantauan Drone
                         FarmGreennessSummaryCardView(
-                            title: "Kehijauan Kebun",
+                            title: "Hasil Pemantauan Drone",
                             greenness: overview.greenness,
                             onTap: onOpenFarmGreenness
                         )

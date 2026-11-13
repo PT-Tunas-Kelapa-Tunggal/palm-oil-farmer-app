@@ -104,7 +104,11 @@ struct ContentView: View {
             }
         case .resultOverview(let gardenId):
             ResultOverviewView(
-                viewModel: ResultOverviewViewModel(gardenId: gardenId),
+                viewModel: ResultOverviewViewModel(
+                    gardenId: gardenId,
+                    gardenName: store.gardens.first(where: { $0.id.uuidString == gardenId })?.name,
+                    locationName: store.gardens.first(where: { $0.id.uuidString == gardenId })?.locationName
+                ),
                 onBack: {
                     coordinator.pop()
                 },
