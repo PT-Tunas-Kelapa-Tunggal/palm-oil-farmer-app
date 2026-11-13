@@ -1,6 +1,7 @@
 import SwiftUI
 
 struct ContentView: View {
+    @Namespace private var fertilizerScheduleTransition
     @State private var store: GardenStore
     @State private var dashboardViewModel: DashboardViewModel
     @State private var coordinator: AppCoordinator
@@ -100,6 +101,7 @@ struct ContentView: View {
                 onOpenFertilizerSchedule: {
                     coordinator.openFertilizerSchedule(gardenId: gardenId)
                 },
+                fertilizerScheduleTransitionNamespace: fertilizerScheduleTransition,
                 onOpenNutrientCondition: {
                     coordinator.openNutrientCondition(gardenId: gardenId)
                 },
@@ -115,11 +117,10 @@ struct ContentView: View {
                 FertilizerScheduleView(
                     viewModel: FertilizerScheduleViewModel(
                         gardenID: gardenID,
-                        repository: CloudKitFertilizerScheduleRepository(
-                            containerIdentifier: AppConfiguration.cloudKitContainerIdentifier
-                        )
+                        repository: DummyFertilizerScheduleRepository()
                     )
                 )
+                .navigationTransition(.zoom(sourceID: gardenId, in: fertilizerScheduleTransition))
             } else {
                 ContentUnavailableView("Kebun Tidak Ditemukan", systemImage: "leaf.fill")
             }
