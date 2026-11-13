@@ -51,7 +51,7 @@ final class GardenStore: GardenDataSource {
             submittedGardens = requests.map { Garden(reviewRequest: $0) }
             combineGardens()
         } catch {
-            print("[GardenStore] CloudKit fetch status: \(error.localizedDescription)")
+            errorMessage = "Data kebun dari iCloud belum dapat dimuat: \(error.localizedDescription)"
         }
     }
 

@@ -129,8 +129,8 @@ struct GardenProfileScreen: View {
             onBack: viewModel.close, onEditGarden: { viewModel.open(.details) },
             onEditProfile: { viewModel.open(.profile) },
             onReviewAction: {
-                guard viewModel.isComplete else { return }
                 if currentReviewStatus == nil {
+                    guard viewModel.isComplete else { return }
                     if !hideReviewIntroduction {
                         viewModel.open(.reviewInformation)
                     } else if let onOpenRequestAssessment {

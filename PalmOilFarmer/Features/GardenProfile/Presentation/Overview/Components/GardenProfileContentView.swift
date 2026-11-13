@@ -73,7 +73,7 @@ struct GardenProfileContentView: View {
                                     dataSection
                                         .transition(.opacity)
                                 }
-                            } else if isComplete {
+                            } else if isComplete || currentReviewStatus != nil {
                                 readyCard
                                 dataSection
                             } else {
