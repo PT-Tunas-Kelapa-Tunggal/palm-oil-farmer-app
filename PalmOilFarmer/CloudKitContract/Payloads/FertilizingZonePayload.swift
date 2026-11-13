@@ -1,7 +1,7 @@
 import Foundation
 
 /// 2D image-relative pixel coordinate point.
-public struct PixelPoint: Codable, Equatable, Sendable {
+nonisolated public struct PixelPoint: Codable, Equatable, Sendable {
     public let x: Double
     public let y: Double
 
@@ -12,7 +12,7 @@ public struct PixelPoint: Codable, Equatable, Sendable {
 }
 
 /// Fertilization zone defined in orthomosaic pixel space.
-public struct FertilizingZoneItem: Codable, Equatable, Sendable {
+nonisolated public struct FertilizingZoneItem: Codable, Equatable, Sendable {
     public let id: Int64
     public let treeCount: Int64
     public let boundingBox: [PixelPoint]
@@ -23,4 +23,3 @@ public struct FertilizingZoneItem: Codable, Equatable, Sendable {
         self.boundingBox = boundingBox
     }
 }
-

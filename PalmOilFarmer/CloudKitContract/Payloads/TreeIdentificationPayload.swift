@@ -1,7 +1,7 @@
 import Foundation
 
 /// Health classification label for an identified tree.
-public enum TreeHealthLabel: String, Codable, Equatable, Sendable {
+nonisolated public enum TreeHealthLabel: String, Codable, Equatable, Sendable {
     case normal = "Normal"
     case terindikasi = "Terindikasi"
     case defisiensi = "Defisiensi"
@@ -22,7 +22,7 @@ public enum TreeHealthLabel: String, Codable, Equatable, Sendable {
 }
 
 /// Single identified palm tree in the orthomosaic pixel space.
-public struct TreeIdentificationItem: Codable, Equatable, Sendable {
+nonisolated public struct TreeIdentificationItem: Codable, Equatable, Sendable {
     public let id: Int64
     public let boundingBox: [PixelPoint]
     public let zoneId: Int64
@@ -47,4 +47,3 @@ public struct TreeIdentificationItem: Codable, Equatable, Sendable {
         self.healthynessLabel = healthynessLabel
     }
 }
-

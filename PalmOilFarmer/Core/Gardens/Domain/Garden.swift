@@ -1,6 +1,6 @@
 import Foundation
 
-struct Garden: Identifiable, Codable {
+nonisolated struct Garden: Identifiable, Codable {
     let id: UUID
     let name: String
     let locationName: String
@@ -18,7 +18,7 @@ struct Garden: Identifiable, Codable {
     var profileUpdatedAt: Date? = nil
 }
 
-struct FertilizerRecord: Identifiable, Codable {
+nonisolated struct FertilizerRecord: Identifiable, Codable {
     var id = UUID()
     var name: String
     var bagWeightKg: Double?
@@ -27,7 +27,7 @@ struct FertilizerRecord: Identifiable, Codable {
     var composition: FertilizerComposition? = nil
 }
 
-struct HarvestRecord: Codable {
+nonisolated struct HarvestRecord: Codable {
     var frequencyPerMonth: Int
     var latestWeightKg: Double
     var averageMonthlyWeightKg: Double? = nil
@@ -37,7 +37,7 @@ struct HarvestRecord: Codable {
     }
 }
 
-enum SoilType: String, CaseIterable, Identifiable, Codable {
+nonisolated enum SoilType: String, CaseIterable, Identifiable, Codable {
     case mineral = "Mineral"
     case peat = "Gambut"
     case other = "Lainnya"

@@ -1,7 +1,7 @@
 import Foundation
 
 /// Represents the chemical composition breakdown of a fertilizer (e.g. Nitrogen 15%).
-public struct CompositionElement: Codable, Equatable, Sendable {
+nonisolated public struct CompositionElement: Codable, Equatable, Sendable {
     public let name: String
     public let value: String
     public let valueType: String
@@ -16,7 +16,7 @@ public struct CompositionElement: Codable, Equatable, Sendable {
 }
 
 /// Represents the tree dosage rules for a fertilizer.
-public struct DosagePerTree: Codable, Equatable, Sendable {
+nonisolated public struct DosagePerTree: Codable, Equatable, Sendable {
     public let value: String
     public let valueType: String
     public let valueUnit: String
@@ -29,7 +29,7 @@ public struct DosagePerTree: Codable, Equatable, Sendable {
 }
 
 /// One fertilizer item with optional composition and required dosage per tree.
-public struct FertilizerCompositionItem: Codable, Equatable, Sendable {
+nonisolated public struct FertilizerCompositionItem: Codable, Equatable, Sendable {
     public let fertilizerType: String
     public let composition: [CompositionElement]?
     public let dosagePerTree: DosagePerTree
@@ -44,4 +44,3 @@ public struct FertilizerCompositionItem: Codable, Equatable, Sendable {
         self.dosagePerTree = dosagePerTree
     }
 }
-

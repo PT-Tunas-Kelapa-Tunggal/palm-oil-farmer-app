@@ -1,7 +1,7 @@
 import Foundation
 
 /// Soil classification known to the plantation contract.
-public enum SoilType: Equatable, Sendable {
+nonisolated public enum ContractSoilType: Equatable, Sendable {
     case mineral
     case gambut
     case rawa
@@ -35,3 +35,4 @@ public enum SoilType: Equatable, Sendable {
     }
 }
 
+public typealias CKSoilType = ContractSoilType

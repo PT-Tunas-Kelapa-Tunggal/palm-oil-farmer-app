@@ -4,7 +4,7 @@ import Foundation
 
 /// Fault-tolerant reader wrapping a CloudKit `CKRecord` for `PlantationScanRequest`.
 /// Guarantees that no getter panics or throws unhandled errors; all field reads return `Result<T, FieldError>`.
-public struct ScanRequestRecord: Sendable {
+nonisolated public struct ScanRequestRecord: Sendable {
     public let record: CKRecord
 
     public init(_ record: CKRecord) {
@@ -75,8 +75,8 @@ public struct ScanRequestRecord: Sendable {
         read(RecordKeys.iOSOwned.plantingMonthAndYear, as: Date.self)
     }
 
-    public func soilType() -> Result<SoilType, FieldError> {
-        read(RecordKeys.iOSOwned.soilType, as: String.self).map { SoilType(rawValue: $0) }
+    public func soilType() -> Result<ContractSoilType, FieldError> {
+        read(RecordKeys.iOSOwned.soilType, as: String.self).map { ContractSoilType(rawValue: $0) }
     }
 
     public func fertilizingFrequencyPerYear() -> Result<Int64, FieldError> {

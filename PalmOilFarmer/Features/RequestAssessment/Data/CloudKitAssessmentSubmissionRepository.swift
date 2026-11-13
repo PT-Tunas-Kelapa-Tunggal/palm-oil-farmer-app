@@ -9,7 +9,7 @@ public final class CloudKitAssessmentSubmissionRepository: AssessmentSubmissionR
     private let gardenStore: GardenStore
     private let database: CKDatabase
 
-    public init(
+    init(
         gardenStore: GardenStore,
         database: CKDatabase? = nil
     ) {
@@ -22,7 +22,7 @@ public final class CloudKitAssessmentSubmissionRepository: AssessmentSubmissionR
         }
     }
 
-    public func submit(_ submission: AssessmentSubmission) async throws {
+    func submit(_ submission: AssessmentSubmission) async throws {
         // 1. Locate the selected garden from the store
         guard let garden = gardenStore.gardens.first(where: { $0.id == submission.gardenID }) else {
             throw CloudKitSubmissionError.gardenNotFound(submission.gardenID)
@@ -40,7 +40,7 @@ public final class CloudKitAssessmentSubmissionRepository: AssessmentSubmissionR
         let plantingDate = mapPlantingDate(year: garden.plantingYear, month: garden.plantingMonth)
 
         // 5. Map Soil Type to Contract enum
-        let contractSoilType = SoilType(rawValue: garden.soilType.rawValue)
+        let contractSoilType = ContractSoilType(rawValue: garden.soilType.rawValue)
 
         // 6. Map fertilizer history to FertilizerCompositionItem payload
         let fertilizerPayloads = mapFertilizerPayloads(from: garden.fertilizerRecords)
@@ -68,7 +68,9 @@ public final class CloudKitAssessmentSubmissionRepository: AssessmentSubmissionR
 
         // 8. Build the CKRecord and save via .changedKeys to Public Database
         let record = try writer.buildRecord()
+        print("☁️ [CloudKit] Submitting PlantationScanRequest '\(record.recordID.recordName)' to Public Database...")
         try await ScanRequestRecordWriter.save(record: record, to: database)
+        print("✅ [CloudKit] Successfully saved PlantationScanRequest '\(record.recordID.recordName)' to Public Database!")
 
         // 9. Update local Garden state with submitted review details
         var updatedGarden = garden

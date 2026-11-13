@@ -2,7 +2,7 @@ import Foundation
 
 /// Standard envelope wrapping JSON payload fields stored as CloudKit strings.
 /// Provides semver tracking and tolerant additive evolution.
-public struct JSONEnvelope<Payload: Codable & Sendable>: Codable, Sendable {
+nonisolated public struct JSONEnvelope<Payload: Codable & Sendable>: Codable, Sendable {
     public let version: String
     public let payload: Payload
 
@@ -44,11 +44,10 @@ public struct JSONEnvelope<Payload: Codable & Sendable>: Codable, Sendable {
         decoder.dateDecodingStrategy = .iso8601
 
         do {
-            let envelope = try decoder.decode(JSONEnvelope<Payload>.self, data: data)
+            let envelope = try decoder.decode(JSONEnvelope<Payload>.self, from: data)
             return .success(envelope.payload)
         } catch {
             return .failure(.decodingError(key: "envelope", errorDescription: error.localizedDescription))
         }
     }
 }
-

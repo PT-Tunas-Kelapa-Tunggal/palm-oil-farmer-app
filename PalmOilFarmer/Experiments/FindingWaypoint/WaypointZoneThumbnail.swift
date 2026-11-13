@@ -54,6 +54,7 @@ enum WaypointPalette {
 }
 
 #if DEBUG
+@MainActor
 enum WaypointPreviewData {
     static var garden: Garden {
         let coordinates = [

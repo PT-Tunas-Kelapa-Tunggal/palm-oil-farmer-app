@@ -1,7 +1,7 @@
 import Foundation
 
 /// Progression status levels for a plantation scan request.
-public enum ProgressionStatus: Equatable, Sendable {
+nonisolated public enum ProgressionStatus: Equatable, Sendable {
     case sent
     case scheduled
     case inProgress
@@ -30,7 +30,7 @@ public enum ProgressionStatus: Equatable, Sendable {
 }
 
 /// One event entry inside the progression status detail log.
-public struct ProgressionStatusDetailEvent: Codable, Equatable, Sendable {
+nonisolated public struct ProgressionStatusDetailEvent: Codable, Equatable, Sendable {
     public let dateTime: Date
     public let title: String
     public let desc: String
@@ -41,4 +41,3 @@ public struct ProgressionStatusDetailEvent: Codable, Equatable, Sendable {
         self.desc = desc
     }
 }
-

@@ -1,7 +1,7 @@
 import Foundation
 
 /// Granular error representing field-level read or parse failures.
-public enum FieldError: Error, Equatable, Sendable {
+nonisolated public enum FieldError: Error, Equatable, Sendable {
     /// The specified field key was not found or was nil on the record.
     case missing(key: String)
 

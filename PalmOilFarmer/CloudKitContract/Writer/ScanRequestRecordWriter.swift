@@ -4,7 +4,7 @@ import Foundation
 
 /// Writer for the iOS PalmOilFarmer application.
 /// Enforces field ownership by only writing iOS-owned fields and saving with `savePolicy = .changedKeys`.
-public struct ScanRequestRecordWriter: Sendable {
+nonisolated public struct ScanRequestRecordWriter: Sendable {
     public var recordName: String?
     public var farmBoundary: [CLLocation]?
     public var farmSize: Double?
@@ -13,7 +13,7 @@ public struct ScanRequestRecordWriter: Sendable {
     public var farmName: String?
     public var farmAddress: String?
     public var plantingMonthAndYear: Date?
-    public var soilType: SoilType?
+    public var soilType: ContractSoilType?
     public var fertilizingFrequencyPerYear: Int64?
     public var fertilizersCompositions: [FertilizerCompositionItem]?
     public var harvestFrequencyPerMonth: Int64?
@@ -32,7 +32,7 @@ public struct ScanRequestRecordWriter: Sendable {
         farmName: String? = nil,
         farmAddress: String? = nil,
         plantingMonthAndYear: Date? = nil,
-        soilType: SoilType? = nil,
+        soilType: ContractSoilType? = nil,
         fertilizingFrequencyPerYear: Int64? = nil,
         fertilizersCompositions: [FertilizerCompositionItem]? = nil,
         harvestFrequencyPerMonth: Int64? = nil,
@@ -119,6 +119,15 @@ public struct ScanRequestRecordWriter: Sendable {
         // Initialize progression status if creating a fresh record without an existing status
         if record[RecordKeys.MacOSOwned.progressionStatus] == nil {
             record[RecordKeys.MacOSOwned.progressionStatus] = ProgressionStatus.sent.rawValue as CKRecordValue
+        }
+        if record[RecordKeys.MacOSOwned.progressionStatusDetail] == nil {
+            let initialEvent = ProgressionStatusDetailEvent(
+                dateTime: submittedAt ?? Date(),
+                title: ProgressionStatus.sent.rawValue,
+                desc: "Permintaan peninjauan telah diajukan."
+            )
+            let jsonString = try JSONEnvelope.encodeToString([initialEvent])
+            record[RecordKeys.MacOSOwned.progressionStatusDetail] = jsonString as CKRecordValue
         }
     }
 

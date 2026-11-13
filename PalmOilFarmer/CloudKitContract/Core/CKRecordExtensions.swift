@@ -3,7 +3,7 @@ import Foundation
 
 extension CKRecord {
     /// Safe, fault-tolerant field reader matching the contract specification verbatim.
-    public func read<T>(_ key: String, as type: T.Type = T.self) -> Result<T, FieldError> {
+    nonisolated public func read<T>(_ key: String, as type: T.Type = T.self) -> Result<T, FieldError> {
         guard let rawValue = self[key] else {
             return .failure(.missing(key: key))
         }

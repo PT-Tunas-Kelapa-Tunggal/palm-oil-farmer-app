@@ -1,7 +1,7 @@
 import Foundation
 
 /// Canonical CloudKit Record Type and Field Keys agreed between iOS and macOS.
-public enum RecordKeys {
+nonisolated public enum RecordKeys {
     /// Dedicated CloudKit record type name.
     public static let recordType = "PlantationScanRequest"
 
@@ -10,7 +10,7 @@ public enum RecordKeys {
     public static let schemaVersion = "schemaVersion"
 
     // MARK: - iOS-Owned Fields (Palm Oil Farmer)
-    public enum iOSOwned {
+    nonisolated public enum iOSOwned {
         /// Sorted boundary coordinates of the plantation ([CLLocation]).
         public static let farmBoundary = "farmBoundary"
         /// Calculated farm size in hectares (Double).
@@ -56,7 +56,7 @@ public enum RecordKeys {
     }
 
     // MARK: - macOS-Owned Fields (Drone Operator)
-    public enum MacOSOwned {
+    nonisolated public enum MacOSOwned {
         /// Overall assessment progress status (String: Sent, Scheduled, In Progress, Finished).
         public static let progressionStatus = "progressionStatus"
         /// JSON envelope containing progression status event log (String).

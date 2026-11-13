@@ -1,7 +1,7 @@
 import Foundation
 
 /// Application scope of a recommended fertilizer dose.
-public enum FertilizerApplicationType: String, Codable, Equatable, Sendable {
+nonisolated public enum FertilizerApplicationType: String, Codable, Equatable, Sendable {
     case general = "general"
     case zoneSpecific = "zone_specific"
     case unknown = "unknown"
@@ -18,7 +18,7 @@ public enum FertilizerApplicationType: String, Codable, Equatable, Sendable {
 }
 
 /// Fertilizer requirement recommendation for the farm or specific zone.
-public struct FertilizerNeedItem: Codable, Equatable, Sendable {
+nonisolated public struct FertilizerNeedItem: Codable, Equatable, Sendable {
     public let fertilizerApplicationType: FertilizerApplicationType
     public let fertilizerType: String
     public let recommendedDosage: Double
@@ -51,4 +51,3 @@ public struct FertilizerNeedItem: Codable, Equatable, Sendable {
         self.zoneId = zoneId
     }
 }
-
