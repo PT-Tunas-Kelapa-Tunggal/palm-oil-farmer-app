@@ -9,8 +9,8 @@ enum SpreaderGATT {
     static let command: CBUUID? = nil
     /// Only list devices whose advertised name starts with this, e.g. "KROPS". nil = every named device.
     static let namePrefix: String? = nil
-    /// Text that stops the pump immediately, if the firmware has one. nil = no stop command.
-    static let stopCommand: String? = nil
+    /// UTF-8 text that stops the pump immediately.
+    static let stopCommand: String? = "S"
 }
 
 enum SpreaderLimits {
@@ -22,7 +22,7 @@ enum SpreaderLimits {
     static let maxLiters = 5.0
 }
 
-/// Firmware command: UTF-8 text "T:<milliseconds>", pump ON for that long.
+/// Firmware commands (UTF-8): "T:<milliseconds>" turns the pump on for that long, "S" stops it.
 enum SpreaderPulse {
     static func command(milliseconds: Int) -> Data {
         Data("T:\(milliseconds)".utf8)

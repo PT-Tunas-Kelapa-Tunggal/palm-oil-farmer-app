@@ -1,7 +1,7 @@
 import SwiftUI
 
 /// The six states drawn in Sketch (Pemupukan / Mode Pemupukan / …).
-enum FertilizingPanelState: Equatable {
+enum SpreaderModePanelState: Equatable {
     case notConnected, searching, found, ready, dispensing, disconnected
 
     init(_ spreader: SpreaderBLEManager) {
@@ -22,16 +22,16 @@ enum FertilizingPanelState: Equatable {
 }
 
 /// Bottom panel: device row, zone and dose, then the state-specific action.
-struct FertilizingPanel: View {
+struct SpreaderModePanel: View {
     let spreader: SpreaderBLEManager
     let zoneID: Int?
-    let plan: FertilizingZonePlan?
+    let plan: SpreaderZonePlan?
     let fertilizedTrees: Int
     /// Clock from the screen's TimelineView, for the dispensing progress ring.
     let now: Date
     let onDispense: () -> Void
 
-    private var state: FertilizingPanelState { FertilizingPanelState(spreader) }
+    private var state: SpreaderModePanelState { SpreaderModePanelState(spreader) }
 
     var body: some View {
         VStack(spacing: 20) {
@@ -45,22 +45,22 @@ struct FertilizingPanel: View {
         .padding(EdgeInsets(top: 10, leading: 16, bottom: 16, trailing: 16))
         .padding(EdgeInsets(top: 8, leading: 8, bottom: 26, trailing: 8))
         .frame(maxWidth: .infinity)
-        .background(FertilizingPalette.panel,
+        .background(SpreaderPalette.panel,
                     in: UnevenRoundedRectangle(topLeadingRadius: 32, topTrailingRadius: 32))
-        .foregroundStyle(FertilizingPalette.ink)
+        .foregroundStyle(SpreaderPalette.ink)
     }
 
     // MARK: Rows
 
     private var deviceRow: some View {
         HStack(spacing: 12) {
-            FertilizingIconBadge(isBrand: state == .ready || state == .dispensing,
+            SpreaderIconBadge(isBrand: state == .ready || state == .dispensing,
                                  slashed: state == .disconnected)
             VStack(alignment: .leading, spacing: 0) {
                 Text(deviceTitle).font(.headline)
                 Text(deviceSubtitle)
                     .font(.footnote)
-                    .foregroundStyle(FertilizingPalette.inkSecondary)
+                    .foregroundStyle(SpreaderPalette.inkSecondary)
                     .fixedSize(horizontal: false, vertical: true)
             }
             Spacer(minLength: 0)
@@ -75,7 +75,7 @@ struct FertilizingPanel: View {
         case .found:
             return "\(spreader.discovered.count) alat ditemukan"
         case .ready, .dispensing:
-            return FertilizingFormat.headerName(spreader.deviceName ?? "Alat pemupuk")
+            return SpreaderFormat.headerName(spreader.deviceName ?? "Alat pemupuk")
         case .disconnected:
             return "Koneksi alat terputus"
         }
@@ -99,13 +99,13 @@ struct FertilizingPanel: View {
     private var statsRow: some View {
         HStack(alignment: .top, spacing: 16) {
             stat(label: "Zona saat ini", value: zoneID.map { "Zona \($0)" } ?? "–")
-            stat(label: "Dosis per pohon", value: plan.map { FertilizingFormat.kilograms($0.dosePerTreeKg) } ?? "–")
+            stat(label: "Dosis per pohon", value: plan.map { SpreaderFormat.kilograms($0.dosePerTreeKg) } ?? "–")
         }
     }
 
     private func stat(label: String, value: String) -> some View {
         VStack(alignment: .leading, spacing: 2) {
-            Text(label).font(.footnote).foregroundStyle(FertilizingPalette.inkSecondary)
+            Text(label).font(.footnote).foregroundStyle(SpreaderPalette.inkSecondary)
             Text(value).font(.title.weight(.bold)).monospacedDigit()
         }
         .frame(maxWidth: .infinity, alignment: .leading)
@@ -146,24 +146,24 @@ struct FertilizingPanel: View {
             VStack(spacing: 2) {
                 Text("Alat belum terhubung").font(.subheadline.weight(.semibold))
                 Text("Nyalakan alat pemupuk di dekat Anda")
-                    .font(.footnote).foregroundStyle(FertilizingPalette.inkSecondary)
+                    .font(.footnote).foregroundStyle(SpreaderPalette.inkSecondary)
             }
             .multilineTextAlignment(.center)
         case .ready, .dispensing, .disconnected:
             if state == .ready, let message = spreader.message {
                 Label(message, systemImage: "exclamationmark.triangle.fill")
                     .font(.footnote.weight(.medium))
-                    .foregroundStyle(FertilizingPalette.brandDeep)
+                    .foregroundStyle(SpreaderPalette.brandDeep)
                     .multilineTextAlignment(.center)
             } else if zoneID == nil {
-                Text("Masuk ke salah satu zona atau ketuk label zona di peta")
+                Text("Masuk ke salah satu zona untuk mulai memupuk")
                     .font(.footnote)
-                    .foregroundStyle(FertilizingPalette.inkSecondary)
+                    .foregroundStyle(SpreaderPalette.inkSecondary)
                     .multilineTextAlignment(.center)
             } else if let zoneID, let plan {
                 Text("\(fertilizedTrees) dari \(plan.treeCount) pohon di Zona \(zoneID) sudah dipupuk")
                     .font(.footnote)
-                    .foregroundStyle(FertilizingPalette.inkSecondary)
+                    .foregroundStyle(SpreaderPalette.inkSecondary)
                     .multilineTextAlignment(.center)
                     .contentTransition(.numericText())
             }
@@ -193,7 +193,7 @@ private struct RoundActionButton: View {
                 if case .dispensing(let progress) = kind {
                     Circle()
                         .trim(from: 0, to: progress)
-                        .stroke(FertilizingPalette.brand.opacity(0.55),
+                        .stroke(SpreaderPalette.brand.opacity(0.55),
                                 style: StrokeStyle(lineWidth: 6, lineCap: .round))
                         .rotationEffect(.degrees(-90))
                         .padding(3)
@@ -212,9 +212,9 @@ private struct RoundActionButton: View {
 
     private var ringColor: Color {
         switch kind {
-        case .light: FertilizingPalette.ink.opacity(0.04)
-        case .dispense: FertilizingPalette.ink.opacity(0.08)
-        case .dispensing: FertilizingPalette.brandSoft
+        case .light: SpreaderPalette.ink.opacity(0.04)
+        case .dispense: SpreaderPalette.ink.opacity(0.08)
+        case .dispensing: SpreaderPalette.brandSoft
         }
     }
 
@@ -223,16 +223,16 @@ private struct RoundActionButton: View {
         switch kind {
         case .light:
             Circle().fill(.white)
-                .overlay(Circle().stroke(FertilizingPalette.ink.opacity(0.12), lineWidth: 1.5))
-                .shadow(color: FertilizingPalette.ink.opacity(0.12), radius: 10, y: 8)
+                .overlay(Circle().stroke(SpreaderPalette.ink.opacity(0.12), lineWidth: 1.5))
+                .shadow(color: SpreaderPalette.ink.opacity(0.12), radius: 10, y: 8)
         case .dispense:
-            Circle().fill(LinearGradient(colors: [FertilizingPalette.darkTop, FertilizingPalette.ink],
+            Circle().fill(LinearGradient(colors: [SpreaderPalette.darkTop, SpreaderPalette.ink],
                                          startPoint: .top, endPoint: .bottom))
-                .shadow(color: FertilizingPalette.ink.opacity(0.35), radius: 12, y: 14)
+                .shadow(color: SpreaderPalette.ink.opacity(0.35), radius: 12, y: 14)
         case .dispensing:
-            Circle().fill(LinearGradient(colors: [FertilizingPalette.brand, FertilizingPalette.brandDeep],
+            Circle().fill(LinearGradient(colors: [SpreaderPalette.brand, SpreaderPalette.brandDeep],
                                          startPoint: .top, endPoint: .bottom))
-                .shadow(color: FertilizingPalette.brandDeep.opacity(0.25), radius: 5, y: 4)
+                .shadow(color: SpreaderPalette.brandDeep.opacity(0.25), radius: 5, y: 4)
         }
     }
 
@@ -242,16 +242,16 @@ private struct RoundActionButton: View {
         case .light(let title, let hint, let slashed):
             VStack(spacing: 6) {
                 BluetoothGlyph(slashed: slashed).frame(height: 38).frame(height: 48)
-                Text(title).font(.title2.weight(.bold)).foregroundStyle(FertilizingPalette.ink)
+                Text(title).font(.title2.weight(.bold)).foregroundStyle(SpreaderPalette.ink)
                 if let hint {
-                    Text(hint).font(.footnote).foregroundStyle(FertilizingPalette.inkSecondary)
+                    Text(hint).font(.footnote).foregroundStyle(SpreaderPalette.inkSecondary)
                 }
             }
         case .dispense:
             VStack(spacing: 6) {
                 Image(systemName: "arrow.down.to.line.circle")
                     .font(.system(size: 40))
-                    .foregroundStyle(FertilizingPalette.brand)
+                    .foregroundStyle(SpreaderPalette.brand)
                     .frame(height: 48)
                 Text("Keluarkan Pupuk").font(.title2.weight(.bold)).foregroundStyle(.white)
             }
@@ -287,27 +287,27 @@ private struct SearchingCard: View {
     var body: some View {
         VStack(spacing: 28) {
             ZStack {
-                Circle().fill(FertilizingPalette.brandSoft.opacity(0.35)).frame(width: 132, height: 132)
+                Circle().fill(SpreaderPalette.brandSoft.opacity(0.35)).frame(width: 132, height: 132)
                     .scaleEffect(pulsing ? 1.08 : 0.9)
-                Circle().fill(FertilizingPalette.brandSoft.opacity(0.6)).frame(width: 104, height: 104)
+                Circle().fill(SpreaderPalette.brandSoft.opacity(0.6)).frame(width: 104, height: 104)
                     .scaleEffect(pulsing ? 1.05 : 0.94)
-                Circle().fill(FertilizingPalette.brandSoft).frame(width: 76, height: 76)
+                Circle().fill(SpreaderPalette.brandSoft).frame(width: 76, height: 76)
                 Circle()
-                    .fill(LinearGradient(colors: [FertilizingPalette.darkTop, FertilizingPalette.ink],
+                    .fill(LinearGradient(colors: [SpreaderPalette.darkTop, SpreaderPalette.ink],
                                          startPoint: .top, endPoint: .bottom))
                     .frame(width: 52, height: 52)
-                    .shadow(color: FertilizingPalette.ink.opacity(0.25), radius: 5, y: 6)
-                    .overlay { BluetoothGlyph(color: FertilizingPalette.brand).frame(height: 22) }
+                    .shadow(color: SpreaderPalette.ink.opacity(0.25), radius: 5, y: 6)
+                    .overlay { BluetoothGlyph(color: SpreaderPalette.brand).frame(height: 22) }
             }
             .frame(width: 140, height: 140)
             VStack(spacing: 2) {
                 Text(title).font(.headline)
                 Text("Biasanya hanya butuh beberapa detik")
-                    .font(.footnote).foregroundStyle(FertilizingPalette.inkSecondary)
+                    .font(.footnote).foregroundStyle(SpreaderPalette.inkSecondary)
             }
         }
         .frame(maxWidth: .infinity, minHeight: 316)
-        .background(FertilizingPalette.searchCard, in: RoundedRectangle(cornerRadius: 22))
+        .background(SpreaderPalette.searchCard, in: RoundedRectangle(cornerRadius: 22))
         .accessibilityElement(children: .combine)
         .onAppear {
             guard !reduceMotion else { return }
@@ -342,7 +342,7 @@ private struct DeviceList: View {
     private func row(for device: DiscoveredSpreader) -> some View {
         HStack(spacing: 16) {
             RoundedRectangle(cornerRadius: 14)
-                .fill(LinearGradient(colors: [FertilizingPalette.brandSoft, FertilizingPalette.panel],
+                .fill(LinearGradient(colors: [SpreaderPalette.brandSoft, SpreaderPalette.panel],
                                      startPoint: .top, endPoint: .bottom))
                 .frame(width: 52, height: 52)
                 .overlay {
@@ -352,16 +352,16 @@ private struct DeviceList: View {
                         .scaledToFit()
                         .frame(width: 40, height: 40)
                 }
-            Text(FertilizingFormat.deviceName(device.name))
+            Text(SpreaderFormat.deviceName(device.name))
                 .font(.headline)
-                .foregroundStyle(FertilizingPalette.ink)
+                .foregroundStyle(SpreaderPalette.ink)
             Spacer()
             if spreader.connectingID == device.id {
                 ProgressView()
             } else {
                 Image(systemName: "chevron.right")
                     .font(.body.weight(.semibold))
-                    .foregroundStyle(FertilizingPalette.inkTertiary)
+                    .foregroundStyle(SpreaderPalette.inkTertiary)
             }
         }
         .padding(.horizontal, 12)

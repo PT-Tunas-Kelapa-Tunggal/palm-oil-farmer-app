@@ -103,6 +103,8 @@ final class SpreaderBLEManager: NSObject {
     }
 
     func disconnect() {
+        // Leaving the screen mid-dose stops the pump first (best effort before the link closes).
+        if run != nil, let stopCommand = SpreaderGATT.stopCommand { write(Data(stopCommand.utf8)) }
         userDisconnected = true
         wantsScan = false
         timeout?.cancel()

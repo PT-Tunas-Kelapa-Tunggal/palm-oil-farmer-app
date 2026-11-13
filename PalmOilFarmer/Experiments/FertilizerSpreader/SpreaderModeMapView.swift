@@ -3,16 +3,15 @@ import MapKit
 import SwiftUI
 
 /// Satellite map with white zone lines, per-zone fertilizer totals, and the farmer's position.
-struct FertilizingMapView: View {
+struct SpreaderModeMapView: View {
     let garden: Garden
     let zones: [WaypointZone]
     let separators: [[CLLocationCoordinate2D]]
-    let plans: [Int: FertilizingZonePlan]
+    let plans: [Int: SpreaderZonePlan]
     let currentZoneID: Int?
     let fix: CLLocation?
     @Binding var camera: MapCameraPosition
     @Binding var followsUser: Bool
-    let onSelectZone: (Int) -> Void
 
     var body: some View {
         Map(position: $camera, interactionModes: [.pan, .zoom, .rotate]) {
@@ -32,7 +31,7 @@ struct FertilizingMapView: View {
                 Annotation("Zona \(zone.id)", coordinate: zone.destination) {
                     ZoneLabel(zoneID: zone.id, totalKg: plans[zone.id]?.totalKg,
                               isCurrent: zone.id == currentZoneID)
-                        .onTapGesture { onSelectZone(zone.id) }
+                        .allowsHitTesting(false)  // the current zone follows GPS only
                 }
                 .annotationTitles(.hidden)
             }
@@ -89,7 +88,7 @@ struct FertilizingMapView: View {
         }
         .font(.title3)
         .buttonStyle(.plain)
-        .foregroundStyle(FertilizingPalette.ink)
+        .foregroundStyle(SpreaderPalette.ink)
         .glassEffect(.regular.interactive(), in: Capsule())
     }
 
@@ -115,17 +114,14 @@ private struct ZoneLabel: View {
                 .padding(.horizontal, 4)
                 .background(.black.opacity(isCurrent ? 0.85 : 0.55), in: RoundedRectangle(cornerRadius: 3))
             if let totalKg {
-                Text(FertilizingFormat.kilograms(totalKg, maxFraction: 0))
+                Text(SpreaderFormat.kilograms(totalKg, maxFraction: 0))
                     .font(.headline.weight(.bold))
                     .shadow(color: .black.opacity(0.7), radius: 2, y: 1)
             }
         }
         .foregroundStyle(.white)
         .frame(minWidth: 80, minHeight: 44)
-        .contentShape(Rectangle())
         .accessibilityElement(children: .combine)
-        .accessibilityAddTraits(.isButton)
-        .accessibilityHint("Pilih sebagai zona saat ini")
     }
 }
 
@@ -134,13 +130,13 @@ private struct UserLocationMarker: View {
     var body: some View {
         ZStack {
             Circle()
-                .fill(FertilizingPalette.rgb(0xFF6F00, opacity: 0.25))
+                .fill(SpreaderPalette.rgb(0xFF6F00, opacity: 0.25))
                 .overlay(Circle().stroke(.white.opacity(0.8), lineWidth: 1.5))
                 .frame(width: 56, height: 56)
             Circle().fill(.white)
                 .frame(width: 26, height: 26)
                 .shadow(color: .black.opacity(0.25), radius: 3, y: 2)
-            Circle().fill(FertilizingPalette.brand)
+            Circle().fill(SpreaderPalette.brand)
                 .frame(width: 18, height: 18)
         }
         .accessibilityLabel("Posisi Anda")
@@ -148,7 +144,7 @@ private struct UserLocationMarker: View {
 }
 
 /// Back button and title, placed by the screen below the status bar (Sketch: Header, y 60, 48 pt).
-struct FertilizingHeader: View {
+struct SpreaderModeHeader: View {
     let onBack: () -> Void
     let backDisabled: Bool
 
@@ -156,7 +152,7 @@ struct FertilizingHeader: View {
         ZStack {
             Text("Mode Pemupukan")
                 .font(.title3.weight(.semibold))
-                .foregroundStyle(FertilizingPalette.ink)
+                .foregroundStyle(SpreaderPalette.ink)
                 .padding(.horizontal, 24)
                 .frame(height: 48)
                 .glassEffect(.regular, in: Capsule())
@@ -168,7 +164,7 @@ struct FertilizingHeader: View {
                         .frame(width: 44, height: 44)
                 }
                 .buttonStyle(.plain)
-                .foregroundStyle(FertilizingPalette.ink)
+                .foregroundStyle(SpreaderPalette.ink)
                 .glassEffect(.regular.interactive(), in: Circle())
                 .disabled(backDisabled)
                 .accessibilityLabel("Kembali")

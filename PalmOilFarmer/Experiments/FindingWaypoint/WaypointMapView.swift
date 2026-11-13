@@ -41,7 +41,7 @@ struct WaypointMapView: View {
             }
         }
         .fullScreenCover(isPresented: $showsSpreader) {
-            FertilizingModeView(garden: garden, zones: zones, initialZoneID: selectedZoneID)
+            SpreaderModeView(garden: garden, zones: zones)
         }
         .onAppear { frameGarden() }
         .task(id: tracking) {

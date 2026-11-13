@@ -283,12 +283,12 @@ Keputusan: pupuk berbentuk **larutan**, debit pompa **2,9 L/menit**. Konversi kg
 | `firmware/relay_blink/relay_blink.ino` | Tes relay saja (Fase 1) |
 | `Experiments/FertilizerSpreader/SpreaderProtocol.swift` | UUID, `SpreaderCommand`, `SpreaderStatus`, `SpreaderDose` |
 | `Experiments/FertilizerSpreader/SpreaderBLEManager.swift` | CoreBluetooth central (`@Observable`) |
-| `Experiments/FertilizerSpreader/FertilizingModeView.swift` | Layar **Mode Pemupukan** (desain Sketch HI-FID): peta + panel |
-| `Experiments/FertilizerSpreader/FertilizingMapView.swift` | Peta satelit, garis zona putih, label kg, posisi petani |
-| `Experiments/FertilizerSpreader/FertilizingPanel.swift` | 6 state: Not Connected, Searching, Found, Ready, Dispensing, Disconnected |
-| `Experiments/FertilizerSpreader/FertilizingStyle.swift` | Warna, ikon Bluetooth, dosis contoh, deteksi zona dari GPS |
+| `Experiments/FertilizerSpreader/SpreaderModeView.swift` | Layar **Mode Pemupukan** (desain Sketch HI-FID): peta + panel |
+| `Experiments/FertilizerSpreader/SpreaderModeMapView.swift` | Peta satelit, garis zona putih, label kg, posisi petani |
+| `Experiments/FertilizerSpreader/SpreaderModePanel.swift` | 6 state: Not Connected, Searching, Found, Ready, Dispensing, Disconnected |
+| `Experiments/FertilizerSpreader/SpreaderModeStyle.swift` | Warna, ikon Bluetooth, dosis contoh, deteksi zona dari GPS |
 | `Experiments/FertilizerSpreader/Assets/SpreaderDeviceIcon@2x/@3x.png` | Ikon alat dari Sketch |
-| `PalmOilFarmerTests/FertilizingModeTests.swift` | Dosis contoh, deteksi zona, format |
+| `PalmOilFarmerTests/SpreaderModeTests.swift` | Dosis contoh, deteksi zona, format |
 | `PalmOilFarmerTests/SpreaderProtocolTests.swift` | Format JSON & hitungan dosis |
 | `WaypointMapView.swift` | + tombol **Semprot** → layar penuh Mode Pemupukan |
 | `project.pbxproj` | + `NSBluetoothAlwaysUsageDescription` |
@@ -304,7 +304,7 @@ Keputusan: pupuk berbentuk **larutan**, debit pompa **2,9 L/menit**. Konversi kg
 LED onboard: kedip lambat = menunggu koneksi, menyala = terhubung, kedip cepat = relay ON. Tombol BOOT = STOP darurat.
 
 ### Belum dikerjakan
-- Dosis dari assessment result: ganti `FertilizingZonePlan.sample(for:)` (saat ini contoh: 136 pohon/ha, 1,5 kg/pohon, 0,5 L/kg → 0,75 L/pohon).
+- Dosis dari assessment result: ganti `SpreaderZonePlan.sample(for:)` (saat ini contoh: 136 pohon/ha, 1,5 kg/pohon, 0,5 L/kg → 0,75 L/pohon).
 - Penghitung pohon masih di memori (hilang saat layar ditutup).
 - UI kalibrasi (perintah `calibrate` / `set_rate` sudah ada di firmware & `SpreaderBLEManager`).
 - Pairing/bonding BLE.
