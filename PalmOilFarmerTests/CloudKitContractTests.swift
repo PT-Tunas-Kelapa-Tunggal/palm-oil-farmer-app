@@ -17,7 +17,7 @@ struct CloudKitContractTests {
         let plantingDate = Calendar.current.date(from: DateComponents(year: 2018, month: 4, day: 1))!
 
         let composition = FertilizerCompositionItem(
-            fertilizerType: "NPK 15-15-15",
+            fertilizerType: .npk,
             composition: [
                 CompositionElement(name: "Nitrogen", value: "15", valueType: "int", valueUnit: "percent"),
                 CompositionElement(name: "Phosphorus", value: "15", valueType: "int", valueUnit: "percent"),
@@ -74,7 +74,7 @@ struct CloudKitContractTests {
         // Verify JSON Envelope serialization for fertilizers
         let readCompositions = reader.fertilizersCompositions().orNil
         #expect(readCompositions?.count == 1)
-        #expect(readCompositions?.first?.fertilizerType == "NPK 15-15-15")
+        #expect(readCompositions?.first?.fertilizerType == .npk)
         #expect(readCompositions?.first?.composition?.count == 3)
         #expect(readCompositions?.first?.dosagePerTree.value == "1.5")
 
@@ -130,6 +130,155 @@ struct CloudKitContractTests {
         #expect(reader.plannedOperatorVisitDate().orNil != nil)
         // Farmer-owned field was updated
         #expect(reader.farmName().orNil == "Kebun Sawit Baru")
+    }
+
+    @Test func testStrictContractFertilizerTypeCastingAndErrors() throws {
+        #expect(try ContractFertilizerType("NPK") == .npk)
+        #expect(try ContractFertilizerType("NPK-15-15-15") == .npk15_15_15)
+        #expect(try ContractFertilizerType("NPK-12-6-22-3") == .npk12_6_22_3)
+        #expect(try ContractFertilizerType("NPK-13-6-27-4") == .npk13_6_27_4)
+        #expect(try ContractFertilizerType("NPK-13-8-27-4") == .npk13_8_27_4)
+        #expect(try ContractFertilizerType("NPK-16-16-16") == .npk16_16_16)
+        #expect(try ContractFertilizerType("  npk-12-6-22-3  ") == .npk12_6_22_3)
+        #expect(ContractFertilizerType.npk15_15_15.rawValue == "NPK-15-15-15")
+        #expect(ContractFertilizerType.npk12_6_22_3.rawValue == "NPK-12-6-22-3")
+        #expect(ContractFertilizerType.npk13_6_27_4.rawValue == "NPK-13-6-27-4")
+        #expect(ContractFertilizerType.npk13_8_27_4.rawValue == "NPK-13-8-27-4")
+        #expect(ContractFertilizerType.npk16_16_16.rawValue == "NPK-16-16-16")
+
+        #expect(try ContractFertilizerType("Dolomit") == .dolomite)
+        #expect(try ContractFertilizerType("KCl (MOP)") == .kcl)
+        #expect(try ContractFertilizerType("Kieserit") == .kieserite)
+        #expect(try ContractFertilizerType("Pupuk kandang") == .pupukKandang)
+        #expect(ContractFertilizerType(rawValue: "Pupuk Ajaib") == nil)
+
+        #expect(throws: ContractFertilizerTypeError.unknownFertilizerType("Pupuk Ajaib")) {
+            _ = try ContractFertilizerType("Pupuk Ajaib")
+        }
+        #expect(throws: ContractFertilizerTypeError.unknownFertilizerType("NPK 15-15-15")) {
+            _ = try ContractFertilizerType("NPK 15-15-15")
+        }
+        #expect(throws: ContractFertilizerTypeError.unknownFertilizerType("NPK15-15-15")) {
+            _ = try ContractFertilizerType("NPK15-15-15")
+        }
+        #expect(throws: ContractFertilizerTypeError.unknownFertilizerType("NPK-12-12-17-2")) {
+            _ = try ContractFertilizerType("NPK-12-12-17-2")
+        }
+    }
+
+    @Test func testNewNPKVariantsRoundTripAcrossContractPayloads() throws {
+        let npkTypes: [ContractFertilizerType] = [
+            .npk15_15_15,
+            .npk12_6_22_3,
+            .npk13_6_27_4,
+            .npk13_8_27_4,
+            .npk16_16_16
+        ]
+
+        let compositions = npkTypes.map { type in
+            FertilizerCompositionItem(
+                fertilizerType: type,
+                dosagePerTree: DosagePerTree(value: "1.5", valueType: "double", valueUnit: "kg")
+            )
+        }
+        let iosWriter = ScanRequestRecordWriter(
+            recordName: "test-npk-variants-ios",
+            fertilizersCompositions: compositions
+        )
+        let iosRecord = try iosWriter.buildRecord()
+        let iosReader = ScanRequestRecord(iosRecord)
+        #expect(iosReader.fertilizersCompositions().orNil == compositions)
+
+        let needs = npkTypes.map { type in
+            FertilizerNeedItem(
+                fertilizerApplicationType: .general,
+                fertilizerType: type,
+                recommendedDosage: 2.0,
+                dosageUnit: "kg",
+                currentDosage: 1.0
+            )
+        }
+        let baseDate = Date(timeIntervalSince1970: 1_700_000_000)
+        let schedule = [
+            FertilizationSchedulePeriodItem(
+                order: 1,
+                startDate: baseDate,
+                endDate: baseDate.addingTimeInterval(86400),
+                fertilizers: npkTypes.enumerated().map { index, type in
+                    FertilizationScheduleFertilizerItem(
+                        fertilizerType: type,
+                        step: index + 1,
+                        amountPerRoundKg: 50.0
+                    )
+                }
+            )
+        ]
+        let macWriter = MacOSScanRequestRecordWriter(
+            recordName: "test-npk-variants-mac",
+            fertilizerNeedPerZone: needs,
+            fertilizationScheduling: schedule
+        )
+        let macRecord = try macWriter.buildRecord()
+        let macReader = ScanRequestRecord(macRecord)
+        #expect(macReader.fertilizerNeedPerZone().orNil == needs)
+        #expect(macReader.fertilizationScheduling().orNil == schedule)
+    }
+
+    @Test func testFertilizerNeedAndScheduleRejectUnknownFertilizerTypeJSON() throws {
+        let needItem = FertilizerNeedItem(
+            fertilizerApplicationType: .zoneSpecific,
+            fertilizerType: .kcl,
+            recommendedDosage: 2.0,
+            dosageUnit: "kg",
+            currentDosage: 1.0,
+            zoneId: 1
+        )
+        let baseDate = Date(timeIntervalSince1970: 1_700_000_000)
+        let schedulePeriod = FertilizationSchedulePeriodItem(
+            order: 1,
+            startDate: baseDate,
+            endDate: baseDate.addingTimeInterval(86400),
+            fertilizers: [
+                FertilizationScheduleFertilizerItem(
+                    fertilizerType: .dolomite,
+                    step: 1,
+                    amountPerRoundKg: 50.0
+                )
+            ]
+        )
+
+        let macWriter = MacOSScanRequestRecordWriter(
+            recordName: "test-mac-record",
+            fertilizerNeedPerZone: [needItem],
+            fertilizationScheduling: [schedulePeriod]
+        )
+        let record = try macWriter.buildRecord()
+        let reader = ScanRequestRecord(record)
+
+        #expect(reader.fertilizerNeedPerZone().orNil == [needItem])
+        #expect(reader.fertilizationScheduling().orNil == [schedulePeriod])
+
+        let invalidNeedJSON = """
+        {"version":"1.0.0","payload":[{"fertilizer_application_type":"general","fertilizer_type":"UnknownBrand","recommended_dosage":1.0,"dosage_unit":"kg","current_dosage":0.5}]}
+        """
+        record[RecordKeys.MacOSOwned.fertilizerNeedPerZone] = invalidNeedJSON as CKRecordValue
+        switch reader.fertilizerNeedPerZone() {
+        case .failure(.decodingError(let key, _)):
+            #expect(key == RecordKeys.MacOSOwned.fertilizerNeedPerZone)
+        default:
+            Issue.record("Expected decodingError for unknown fertilizer_type")
+        }
+
+        let invalidCompositionJSON = """
+        {"version":"1.0.0","payload":[{"fertilizerType":"UnknownBrand","dosagePerTree":{"value":"1.0","valueType":"double","valueUnit":"kg"}}]}
+        """
+        record[RecordKeys.iOSOwned.fertilizersCompositions] = invalidCompositionJSON as CKRecordValue
+        switch reader.fertilizersCompositions() {
+        case .failure(.decodingError(let key, _)):
+            #expect(key == RecordKeys.iOSOwned.fertilizersCompositions)
+        default:
+            Issue.record("Expected decodingError for unknown fertilizerType")
+        }
     }
 }
 

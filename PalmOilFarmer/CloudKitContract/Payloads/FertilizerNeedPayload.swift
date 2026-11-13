@@ -20,7 +20,7 @@ nonisolated public enum FertilizerApplicationType: String, Codable, Equatable, S
 /// Fertilizer requirement recommendation for the farm or specific zone.
 nonisolated public struct FertilizerNeedItem: Codable, Equatable, Sendable {
     public let fertilizerApplicationType: FertilizerApplicationType
-    public let fertilizerType: String
+    public let fertilizerType: ContractFertilizerType
     public let recommendedDosage: Double
     public let dosageUnit: String
     public let currentDosage: Double
@@ -37,7 +37,7 @@ nonisolated public struct FertilizerNeedItem: Codable, Equatable, Sendable {
 
     public init(
         fertilizerApplicationType: FertilizerApplicationType,
-        fertilizerType: String,
+        fertilizerType: ContractFertilizerType,
         recommendedDosage: Double,
         dosageUnit: String,
         currentDosage: Double,

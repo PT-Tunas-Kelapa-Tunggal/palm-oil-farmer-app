@@ -30,12 +30,12 @@ nonisolated public struct DosagePerTree: Codable, Equatable, Sendable {
 
 /// One fertilizer item with optional composition and required dosage per tree.
 nonisolated public struct FertilizerCompositionItem: Codable, Equatable, Sendable {
-    public let fertilizerType: String
+    public let fertilizerType: ContractFertilizerType
     public let composition: [CompositionElement]?
     public let dosagePerTree: DosagePerTree
 
     public init(
-        fertilizerType: String,
+        fertilizerType: ContractFertilizerType,
         composition: [CompositionElement]? = nil,
         dosagePerTree: DosagePerTree
     ) {

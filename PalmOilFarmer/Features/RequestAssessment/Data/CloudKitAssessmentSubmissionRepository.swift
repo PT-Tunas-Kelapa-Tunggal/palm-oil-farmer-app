@@ -43,7 +43,7 @@ public final class CloudKitAssessmentSubmissionRepository: AssessmentSubmissionR
         let contractSoilType = ContractSoilType(rawValue: garden.soilType.rawValue)
 
         // 6. Map fertilizer history to FertilizerCompositionItem payload
-        let fertilizerPayloads = mapFertilizerPayloads(from: garden.fertilizerRecords)
+        let fertilizerPayloads = try mapFertilizerPayloads(from: garden.fertilizerRecords)
 
         // 7. Assemble ScanRequestRecordWriter with all user inputs
         let writer = ScanRequestRecordWriter(
@@ -100,9 +100,9 @@ public final class CloudKitAssessmentSubmissionRepository: AssessmentSubmissionR
         return Calendar(identifier: .gregorian).date(from: components) ?? Date()
     }
 
-    private func mapFertilizerPayloads(from records: [FertilizerRecord]?) -> [FertilizerCompositionItem]? {
+    private func mapFertilizerPayloads(from records: [FertilizerRecord]?) throws -> [FertilizerCompositionItem]? {
         guard let records, !records.isEmpty else { return nil }
-        return records.map { record in
+        return try records.map { record in
             var elements: [CompositionElement] = []
             if let composition = record.composition {
                 if let n = composition.nitrogen {
@@ -146,7 +146,7 @@ public final class CloudKitAssessmentSubmissionRepository: AssessmentSubmissionR
             )
 
             return FertilizerCompositionItem(
-                fertilizerType: record.name,
+                fertilizerType: try ContractFertilizerType(record.name),
                 composition: elements.isEmpty ? nil : elements,
                 dosagePerTree: dosage
             )
