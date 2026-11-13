@@ -146,6 +146,28 @@ nonisolated public struct ScanRequestRecordWriter: Sendable {
         return record
     }
 
+    /// Updates only `fertilizationScheduling` and `schemaVersion` on an existing `CKRecord`
+    /// so iOS can mark step `done_at` timestamps without touching other iOS or macOS fields.
+    public static func applyFertilizationScheduling(
+        _ periods: [FertilizationSchedulePeriodItem],
+        to record: CKRecord
+    ) throws {
+        record[RecordKeys.schemaVersion] = ContractInfo.version as CKRecordValue
+        let jsonString = try JSONEnvelope.encodeToString(periods)
+        record[RecordKeys.MacOSOwned.fertilizationScheduling] = jsonString as CKRecordValue
+    }
+
+    /// Applies `fertilizationScheduling` updates to an existing `CKRecord` and saves using `.changedKeys`.
+    @discardableResult
+    public static func saveFertilizationScheduling(
+        _ periods: [FertilizationSchedulePeriodItem],
+        on record: CKRecord,
+        to database: CKDatabase
+    ) async throws -> CKRecord {
+        try applyFertilizationScheduling(periods, to: record)
+        return try await save(record: record, to: database)
+    }
+
     /// Saves the record using `savePolicy = .changedKeys` to prevent overwriting macOS-owned fields.
     @discardableResult
     public static func save(

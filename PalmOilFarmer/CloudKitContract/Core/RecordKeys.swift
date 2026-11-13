@@ -73,12 +73,16 @@ nonisolated public enum RecordKeys {
         public static let plannedOperatorVisitDate = "plannedOperatorVisitDate"
         /// Date when operator dispatched the final assessment results (Date).
         public static let resultSentAt = "resultSentAt"
+        /// JSON envelope defining fertilization schedule periods and steps (String).
+        /// Initiated by macOS; step `done_at` timestamps are updated by iOS.
+        public static let fertilizationScheduling = "fertilizationScheduling"
 
         /// Set of all field keys owned by the macOS application.
         public static let allKeys: Set<String> = [
             progressionStatus, progressionStatusDetail, orthomosaicImage,
             fertilizingZone, fertilizerNeedPerZone, treeIdentification,
-            plannedOperatorVisitDate, resultSentAt, RecordKeys.schemaVersion
+            plannedOperatorVisitDate, resultSentAt, fertilizationScheduling,
+            RecordKeys.schemaVersion
         ]
     }
 }
