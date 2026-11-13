@@ -13,29 +13,18 @@ nonisolated public struct ScanRequestRecord: Sendable {
 
     // MARK: - Core Record Reader
 
-    /// Internal helper to safely read any expected type from the underlying CKRecord.
+    /// Safe typed reader delegating to `CKRecord.read(_:as:)` with integer/numeric promotion.
     public func read<T>(_ key: String, as type: T.Type) -> Result<T, FieldError> {
-        guard let rawValue = record[key] else {
-            return .failure(.missing(key: key))
-        }
+        record.read(key, as: type)
+    }
 
-        if let typed = rawValue as? T {
-            return .success(typed)
+    private func decodeEnvelope<Payload: Codable & Sendable>(
+        _ key: String,
+        as payloadType: Payload.Type = Payload.self
+    ) -> Result<Payload, FieldError> {
+        read(key, as: String.self).flatMap { rawJSON in
+            JSONEnvelope<Payload>.decodeFromString(rawJSON, key: key)
         }
-
-        // Support automatic integer promotion (e.g. Int to Int64)
-        if T.self == Int64.self, let intVal = rawValue as? Int {
-            return .success(Int64(intVal) as! T)
-        }
-        if T.self == Double.self, let num = rawValue as? NSNumber {
-            return .success(num.doubleValue as! T)
-        }
-
-        return .failure(.typeMismatch(
-            key: key,
-            expected: String(describing: T.self),
-            actual: String(describing: Swift.type(of: rawValue))
-        ))
     }
 
     // MARK: - Schema Metadata
@@ -84,10 +73,7 @@ nonisolated public struct ScanRequestRecord: Sendable {
     }
 
     public func fertilizersCompositions() -> Result<[FertilizerCompositionItem], FieldError> {
-        read(RecordKeys.iOSOwned.fertilizersCompositions, as: String.self)
-            .flatMap { rawJSON in
-                JSONEnvelope<[FertilizerCompositionItem]>.decodeFromString(rawJSON)
-            }
+        decodeEnvelope(RecordKeys.iOSOwned.fertilizersCompositions)
     }
 
     public func harvestFrequencyPerMonth() -> Result<Int64, FieldError> {
@@ -122,10 +108,7 @@ nonisolated public struct ScanRequestRecord: Sendable {
     }
 
     public func progressionStatusDetail() -> Result<[ProgressionStatusDetailEvent], FieldError> {
-        read(RecordKeys.MacOSOwned.progressionStatusDetail, as: String.self)
-            .flatMap { rawJSON in
-                JSONEnvelope<[ProgressionStatusDetailEvent]>.decodeFromString(rawJSON)
-            }
+        decodeEnvelope(RecordKeys.MacOSOwned.progressionStatusDetail)
     }
 
     public func orthomosaicImage() -> Result<CKAsset, FieldError> {
@@ -133,24 +116,15 @@ nonisolated public struct ScanRequestRecord: Sendable {
     }
 
     public func fertilizingZone() -> Result<[FertilizingZoneItem], FieldError> {
-        read(RecordKeys.MacOSOwned.fertilizingZone, as: String.self)
-            .flatMap { rawJSON in
-                JSONEnvelope<[FertilizingZoneItem]>.decodeFromString(rawJSON)
-            }
+        decodeEnvelope(RecordKeys.MacOSOwned.fertilizingZone)
     }
 
     public func fertilizerNeedPerZone() -> Result<[FertilizerNeedItem], FieldError> {
-        read(RecordKeys.MacOSOwned.fertilizerNeedPerZone, as: String.self)
-            .flatMap { rawJSON in
-                JSONEnvelope<[FertilizerNeedItem]>.decodeFromString(rawJSON)
-            }
+        decodeEnvelope(RecordKeys.MacOSOwned.fertilizerNeedPerZone)
     }
 
     public func treeIdentification() -> Result<[TreeIdentificationItem], FieldError> {
-        read(RecordKeys.MacOSOwned.treeIdentification, as: String.self)
-            .flatMap { rawJSON in
-                JSONEnvelope<[TreeIdentificationItem]>.decodeFromString(rawJSON)
-            }
+        decodeEnvelope(RecordKeys.MacOSOwned.treeIdentification)
     }
 
     public func plannedOperatorVisitDate() -> Result<Date, FieldError> {
@@ -159,6 +133,10 @@ nonisolated public struct ScanRequestRecord: Sendable {
 
     public func resultSentAt() -> Result<Date, FieldError> {
         read(RecordKeys.MacOSOwned.resultSentAt, as: Date.self)
+    }
+
+    public func fertilizationScheduling() -> Result<[FertilizationSchedulePeriodItem], FieldError> {
+        decodeEnvelope(RecordKeys.MacOSOwned.fertilizationScheduling)
     }
 }
 
