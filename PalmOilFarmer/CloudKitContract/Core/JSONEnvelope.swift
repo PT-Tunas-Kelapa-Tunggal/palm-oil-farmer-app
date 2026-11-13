@@ -34,10 +34,13 @@ nonisolated public struct JSONEnvelope<Payload: Codable & Sendable>: Codable, Se
         return version
     }
 
-    /// Decodes an envelope string into its payload.
-    public static func decodeFromString(_ rawJSON: String) -> Result<Payload, FieldError> {
+    /// Decodes an envelope string into its payload, optionally tagging errors with a field key.
+    public static func decodeFromString(
+        _ rawJSON: String,
+        key: String = "envelope"
+    ) -> Result<Payload, FieldError> {
         guard let data = rawJSON.data(using: .utf8) else {
-            return .failure(.decodingError(key: "envelope", errorDescription: "Invalid UTF-8 string data"))
+            return .failure(.decodingError(key: key, errorDescription: "Invalid UTF-8 string data"))
         }
 
         let decoder = JSONDecoder()
@@ -47,7 +50,7 @@ nonisolated public struct JSONEnvelope<Payload: Codable & Sendable>: Codable, Se
             let envelope = try decoder.decode(JSONEnvelope<Payload>.self, from: data)
             return .success(envelope.payload)
         } catch {
-            return .failure(.decodingError(key: "envelope", errorDescription: error.localizedDescription))
+            return .failure(.decodingError(key: key, errorDescription: error.localizedDescription))
         }
     }
 }
