@@ -3,6 +3,7 @@ import SwiftUI
 /// "Profil Kebun" screen, pushed from the garden list.
 struct GardenProfileScreen: View {
     @State private var viewModel: GardenProfileViewModel
+    @State private var assessment: AssessmentReviewViewModel?
     private let referenceMapImage: String?
     private let onOpenRequestAssessment: (() -> Void)?
     private let onOpenResultOverview: (() -> Void)?
@@ -11,6 +12,7 @@ struct GardenProfileScreen: View {
 
     init(
         viewModel: GardenProfileViewModel,
+        assessment: AssessmentReviewViewModel? = nil,
         referenceMapImage: String? = nil,
         onOpenRequestAssessment: (() -> Void)? = nil,
         onOpenResultOverview: (() -> Void)? = nil,
@@ -18,6 +20,7 @@ struct GardenProfileScreen: View {
         onOpenFertilizerEstimation: (() -> Void)? = nil
     ) {
         _viewModel = State(initialValue: viewModel)
+        _assessment = State(initialValue: assessment)
         self.referenceMapImage = referenceMapImage
         self.onOpenRequestAssessment = onOpenRequestAssessment
         self.onOpenResultOverview = onOpenResultOverview
@@ -28,7 +31,13 @@ struct GardenProfileScreen: View {
     @AppStorage("gardenReview.hideIntroduction") private var hideReviewIntroduction = false
     @Environment(\.dismiss) private var dismiss
     private var garden: Garden { viewModel.garden }
-    private var currentReviewStatus: ReviewStatus? { viewModel.reviewViewModel.activeStatus ?? garden.review?.status }
+    private var activePreviewReview: GardenReview? {
+        guard viewModel.reviewViewModel.activeStatus == nil, garden.review == nil else { return nil }
+        return assessment?.review
+    }
+    private var currentReviewStatus: ReviewStatus? {
+        viewModel.reviewViewModel.activeStatus ?? garden.review?.status ?? activePreviewReview?.status
+    }
     private var currentReport: FertilizerRecommendationReport? {
         viewModel.reviewViewModel.activeReport ?? (currentReviewStatus == .completed ? DemoReviewReport.make(for: garden) : nil)
     }
@@ -36,6 +45,46 @@ struct GardenProfileScreen: View {
     var body: some View {
         @Bindable var viewModel = viewModel
         profileContent
+        .blur(radius: assessment?.showsStatus == true ? 2 : 0)
+        .sheet(isPresented: Binding(
+            get: { assessment?.showsStatus ?? false },
+            set: { assessment?.showsStatus = $0 }
+        ), onDismiss: { assessment?.statusDidDismiss() }) {
+            if let assessment, let review = activePreviewReview {
+                @Bindable var assessment = assessment
+                AssessmentStatusView(viewModel: AssessmentStatusViewModel(review: review),
+                                     onAdvance: assessment.advancePreview)
+                    .alert("Status belum dapat diperbarui", isPresented: $assessment.showsReviewError) {
+                        Button("Mengerti", role: .cancel) {}
+                    }
+            }
+        }
+        .fullScreenCover(item: Binding(
+            get: { assessment?.results.confirmation },
+            set: { assessment?.results.confirmation = $0 }
+        ), onDismiss: { assessment?.confirmationDidDismiss() }) { confirmation in
+            AssessmentResultsConfirmationView(
+                confirmation: confirmation, gardenName: garden.name,
+                downloadWasSimulated: assessment?.results.downloadWasSimulated ?? false,
+                onContinue: { assessment?.results.confirmation = nil },
+                onViewHistory: { assessment?.viewHistory() }
+            )
+        }
+        .alert("Unduhan belum selesai", isPresented: Binding(
+            get: { assessment?.results.showsDownloadError ?? false },
+            set: { assessment?.results.showsDownloadError = $0 }
+        )) {
+            Button("Mengerti", role: .cancel) {}
+        } message: {
+            Text("Coba unduh hasil peninjauan kembali.")
+        }
+        .alert("Status belum dapat dimuat", isPresented: Binding(
+            get: { assessment?.showsReviewError == true && assessment?.showsStatus != true },
+            set: { assessment?.showsReviewError = $0 }
+        )) {
+            Button("Coba lagi") { assessment?.refresh() }
+            Button("Tutup", role: .cancel) {}
+        }
         .sheet(item: rootSheet, onDismiss: viewModel.sheetDidDismiss) { presentation in
             sheetContent(presentation)
         }
@@ -78,6 +127,7 @@ struct GardenProfileScreen: View {
         .onChange(of: viewModel.isFinished) { _, finished in
             if finished { dismiss() }
         }
+        .onAppear { assessment?.refresh() }
         .task { await viewModel.loadReview() }
     }
 
@@ -113,6 +163,10 @@ struct GardenProfileScreen: View {
             onBack: viewModel.close, onEditGarden: { viewModel.open(.details) },
             onEditProfile: { viewModel.open(.profile) },
             onReviewAction: {
+                if activePreviewReview != nil {
+                    assessment?.openReview()
+                    return
+                }
                 guard viewModel.isComplete else { return }
                 if currentReviewStatus == nil {
                     if !hideReviewIntroduction {
@@ -136,7 +190,12 @@ struct GardenProfileScreen: View {
             },
             onViewSummary: viewModel.openSummary,
             onViewReviewInformation: { viewModel.open(.reviewInformation) },
-            onDelete: deleteAction
+            onDelete: deleteAction,
+            assessmentContactName: activePreviewReview?.contact.name,
+            assessmentResultsState: activePreviewReview?.status == .completed
+                && assessment?.isPresentingReviewCompletion != true ? assessment?.results.state : nil,
+            assessmentCompletedAt: activePreviewReview?.date(for: .completed),
+            assessmentResultByteCount: assessment?.results.expectedByteCount
         )
     }
 

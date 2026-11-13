@@ -1,7 +1,7 @@
 import Foundation
 
 /// Stores the simulated review separately from the garden's CloudKit review.
-struct PlaceholderAssessmentSubmissionRepository: AssessmentSubmissionRepository {
+struct PlaceholderAssessmentSubmissionRepository: AssessmentSubmissionRepository, AssessmentReviewRepository {
     private let directory: URL
 
     init(directory: URL = URL.applicationSupportDirectory

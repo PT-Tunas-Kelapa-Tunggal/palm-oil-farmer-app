@@ -31,8 +31,14 @@ struct GardenProfileContentView: View {
     }
 
     private var usesLightAssessmentLayout: Bool {
-        colorScheme == .light && assessmentStatus != nil
+        colorScheme == .light && (assessmentStatus != nil || usesCompletedProfileLayout)
     }
+
+    private var usesCompletedProfileLayout: Bool {
+        colorScheme == .light && isComplete && currentReviewStatus == nil && assessmentStatus == nil
+    }
+
+    private let completedProfileAccent = Color(red: 1, green: 79 / 255, blue: 24 / 255)
 
     var body: some View {
         let assessmentStatus = self.assessmentStatus
@@ -44,11 +50,17 @@ struct GardenProfileContentView: View {
                     } else {
                         map.frame(height: 201)
                     }
-                    if usesLightAssessmentLayout, let assessmentStatus {
-                        VStack(spacing: -32) {
+                    if usesLightAssessmentLayout {
+                        VStack(spacing: -40) {
                             GardenMetricsView(garden: garden, metrics: metrics, usesAssessmentBand: true)
-                            assessmentCard(assessmentStatus)
-                                .zIndex(1)
+                            Group {
+                                if let assessmentStatus {
+                                    assessmentCard(assessmentStatus)
+                                } else {
+                                    completedProfileCard
+                                }
+                            }
+                            .zIndex(1)
                         }
                         .padding(.horizontal, 12)
                         .padding(.top, showsHeader ? -40 : 16)
@@ -152,20 +164,59 @@ struct GardenProfileContentView: View {
     }
 
     private var dataSection: some View {
-        VStack(spacing: 8) {
-            if profileJustSaved {
-                Label("Profil kebun baru saja disimpan", systemImage: "sparkles")
-                    .font(.caption).foregroundStyle(GardenProfileStyle.accent)
-                    .frame(maxWidth: .infinity, alignment: .leading).padding(.horizontal, 14).padding(.top, 10)
+        Group {
+            if usesCompletedProfileLayout {
+                VStack(spacing: 8) {
+                    dataSectionHeader
+                    if profileJustSaved {
+                        VStack(spacing: 0) {
+                            savedProfileLabel(accent: completedProfileAccent)
+                                .padding(.horizontal, 4)
+                                .padding(.bottom, 8)
+                            dataRows
+                        }
+                        .padding([.horizontal, .bottom], 8)
+                        .background(Color(red: 229 / 255, green: 229 / 255, blue: 234 / 255),
+                                    in: RoundedRectangle(cornerRadius: 24))
+                    } else {
+                        dataRows
+                    }
+                }
+            } else {
+                VStack(spacing: 8) {
+                    if profileJustSaved {
+                        savedProfileLabel(accent: GardenProfileStyle.accent)
+                    }
+                    dataSectionHeader
+                    dataRows
+                }
+                .padding(profileJustSaved ? 4 : 0)
+                .background(profileJustSaved ? GardenProfileStyle.accent.opacity(0.12) : .clear,
+                            in: RoundedRectangle(cornerRadius: 24))
             }
-            GardenProfileSectionHeader(title: "Data Kebun", message: "Data yang Anda isi dan menjadi dasar hasil peninjauan.")
-                .padding(.top, 8)
+        }
+        .foregroundStyle(usesLightAssessmentLayout ? AssessmentPalette.ink : Color.primary)
+    }
+
+    private var dataSectionHeader: some View {
+        GardenProfileSectionHeader(title: "Data Kebun", message: "Data yang Anda isi dan menjadi dasar hasil peninjauan.")
+            .padding(.top, 8)
+    }
+
+    private var dataRows: some View {
+        VStack(spacing: 8) {
             dataRow("Identitas Kebun", subtitle: "Lokasi, luas, tahun tanam, jenis tanah", symbol: "square.dashed.inset.filled", action: onEditGarden)
             dataRow("Riwayat Panen dan Pemupukan", subtitle: "Dasar perhitungan kondisi hara", symbol: "doc.text", action: onViewSummary)
         }
-        .foregroundStyle(usesLightAssessmentLayout ? AssessmentPalette.ink : Color.primary)
-        .padding(profileJustSaved ? 4 : 0)
-        .background(profileJustSaved ? GardenProfileStyle.accent.opacity(0.12) : .clear, in: RoundedRectangle(cornerRadius: 24))
+    }
+
+    private func savedProfileLabel(accent: Color) -> some View {
+        Label("Profil kebun baru saja disimpan", systemImage: "sparkles")
+            .font(.caption)
+            .foregroundStyle(accent)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(.horizontal, 14)
+            .padding(.top, 10)
     }
 
     private func dataRow(_ title: String, subtitle: String, symbol: String, action: @escaping () -> Void) -> some View {
@@ -184,13 +235,56 @@ struct GardenProfileContentView: View {
         }.buttonStyle(.plain)
     }
 
+    private var completedProfileCard: some View {
+        let palette = AssessmentPalette(isDark: false)
+        return AssessmentGardenStatusCard(lightCornerRadius: 40) {
+            Image(systemName: "checkmark.seal.fill")
+                .font(.system(size: 34))
+                .foregroundStyle(completedProfileAccent)
+                .frame(height: 41)
+                .accessibilityHidden(true)
+            Text("Kebun Siap Ditinjau")
+                .font(.title2.bold())
+                .accessibilityAddTraits(.isHeader)
+            Text(readyDescription)
+                .font(.body)
+                .foregroundStyle(palette.secondary)
+            Button(action: onViewReviewInformation) {
+                HStack(spacing: 4) {
+                    Text("Tentang Peninjauan Kebun")
+                    Image(systemName: "info.circle")
+                        .foregroundStyle(completedProfileAccent)
+                        .accessibilityHidden(true)
+                }
+                .font(.subheadline)
+                .padding(.vertical, 4)
+            }
+            .buttonStyle(.plain)
+        } actions: {
+            Button(action: onReviewAction) {
+                Text("Ajukan Peninjauan")
+                    .font(.headline)
+                    .frame(maxWidth: .infinity)
+                    .padding(.horizontal, 16)
+                    .padding(.vertical, 12)
+                    .frame(minHeight: 52)
+                    .contentShape(Capsule())
+            }
+            .buttonStyle(.plain)
+            .foregroundStyle(palette.buttonLabel)
+            .glassEffect(.regular.tint(palette.buttonTint).interactive(), in: Capsule())
+        }
+    }
+
+    private let readyDescription: LocalizedStringKey = "Profil kebun sudah lengkap. Ajukan peninjauan agar petugas memeriksa seluruh pohon di kebun Anda dan memberi rekomendasi pupuk yang lebih tepat."
+
     private var readyCard: some View {
         VStack(spacing: 12) {
             Image(systemName: "checkmark.seal.fill").font(.system(size: 36))
                 .foregroundStyle(GardenProfileStyle.accent).frame(height: 41).accessibilityHidden(true)
             Text(currentReviewStatus == nil ? "Kebun Siap Ditinjau" : "Peninjauan Kebun").font(.title2.bold())
             Text(currentReviewStatus == nil
-                 ? "Profil kebun sudah lengkap. Ajukan peninjauan agar petugas memeriksa seluruh pohon di kebun Anda dan memberi rekomendasi pupuk yang lebih tepat."
+                 ? readyDescription
                  : "Profil kebun sudah diajukan. Lihat perkembangan atau hasil peninjauan kebun Anda.")
                 .font(.body).foregroundStyle(.secondary)
             Button(action: onViewReviewInformation) {
@@ -221,5 +315,10 @@ struct GardenProfileContentView: View {
 }
 #Preview("Profil kebun · Siap ditinjau") {
     GardenProfileCanvasFixtures.content(complete: true)
+        .preferredColorScheme(.light)
+}
+#Preview("Profil kebun · Baru disimpan") {
+    GardenProfileCanvasFixtures.content(complete: true, justSaved: true)
+        .preferredColorScheme(.light)
 }
 #endif

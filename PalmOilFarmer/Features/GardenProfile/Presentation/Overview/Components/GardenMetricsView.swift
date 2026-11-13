@@ -32,7 +32,7 @@ struct GardenMetricsView: View {
         }
         .padding(.horizontal, usesAssessmentBand ? 20 : 16)
         .padding(.top, usesAssessmentBand ? 20 : 16)
-        .padding(.bottom, usesAssessmentBand ? 52 : 16)
+        .padding(.bottom, usesAssessmentBand ? 60 : 16)
         .background {
             if usesAssessmentBand {
                 UnevenRoundedRectangle(topLeadingRadius: 40, topTrailingRadius: 40)

@@ -59,6 +59,14 @@ struct ContentView: View {
             if let garden = store.gardens.first(where: { $0.id == id }) {
                 GardenProfileScreen(
                     viewModel: profileFactory.makeViewModel(garden: garden),
+                    assessment: AssessmentReviewViewModel(
+                        gardenID: id,
+                        repository: PlaceholderAssessmentSubmissionRepository(),
+                        results: AssessmentResultsViewModel(
+                            repository: PlaceholderAssessmentResultsDownloadRepository(),
+                            expectedByteCount: PlaceholderAssessmentResultsDownloadRepository.resultByteCount
+                        )
+                    ),
                     onOpenRequestAssessment: {
                         coordinator.openRequestAssessment(id)
                     },
@@ -81,9 +89,6 @@ struct ContentView: View {
                     areaHectares: max(garden.boundary.areaHectares, 0.1),
                     contactRepository: DeviceAssessmentContactRepository(),
                     submissionRepository: PlaceholderAssessmentSubmissionRepository(),
-                    onSubmitted: {
-                        coordinator.pop()
-                    },
                     onClose: {
                         coordinator.pop()
                     }

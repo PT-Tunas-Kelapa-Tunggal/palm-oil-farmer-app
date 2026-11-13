@@ -1,8 +1,9 @@
 import SwiftUI
 
-/// Shares the status card layout between the in-review and download states.
+/// Shares the status card layout across completed profiles and assessment states.
 struct AssessmentGardenStatusCard<Content: View, Actions: View>: View {
     @Environment(\.colorScheme) private var colorScheme
+    var lightCornerRadius: CGFloat = 30
     @ViewBuilder let content: () -> Content
     @ViewBuilder let actions: () -> Actions
 
@@ -10,7 +11,7 @@ struct AssessmentGardenStatusCard<Content: View, Actions: View>: View {
     private var palette: AssessmentPalette { .init(isDark: dark) }
 
     var body: some View {
-        let shape = RoundedRectangle(cornerRadius: dark ? 20 : 30)
+        let shape = RoundedRectangle(cornerRadius: dark ? 20 : lightCornerRadius)
         VStack(spacing: dark ? 12 : 0) {
             VStack(spacing: 12, content: content)
                 .padding(.top, dark ? 0 : 32)
