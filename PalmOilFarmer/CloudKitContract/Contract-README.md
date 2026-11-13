@@ -33,7 +33,8 @@ Self-contained contract defining the schema, codecs, readers, and writers for Cl
    - Writers strictly save with `savePolicy = .changedKeys`.
    - Never use `.allKeys` (which overwrites the other app's fields).
    - Never rely on default `.ifServerRecordUnchanged` (fails when the other app saved concurrently).
-   - iOS app writes **only** iOS-owned fields; macOS app writes **only** macOS-owned fields.
+   - `ScanRequestRecordWriter` (iOS) writes **only** iOS-owned fields; `MacOSScanRequestRecordWriter` (macOS) writes **only** macOS-owned fields.
+   - Exception by design: `fertilizationScheduling` is initiated by macOS, and iOS updates step `done_at` timestamps afterward via `ScanRequestRecordWriter.saveFertilizationScheduling(_:on:to:)`.
 
 ## Copy Procedure Between Repositories
 
