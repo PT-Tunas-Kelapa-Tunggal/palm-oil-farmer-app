@@ -12,8 +12,17 @@ struct FertilizerScheduleView: View {
             .navigationBarBackButtonHidden(true)
             .toolbarVisibility(.hidden, for: .navigationBar)
             .task { await viewModel.load() }
-            .navigationDestination(item: $viewModel.destination) { _ in
-                FertilizerExampleScreen()
+            .navigationDestination(item: $viewModel.destination) { destination in
+                switch destination {
+                case .fertilizingMap(let gardenID, let fertilizerName, let isInPeriod):
+                    FertilizingMapView(
+                        gardenId: gardenID.uuidString,
+                        initialFertilizerName: fertilizerName,
+                        isInPeriod: isInPeriod
+                    )
+                case .exampleScreen:
+                    FertilizerExampleScreen()
+                }
             }
             .sheet(item: presentedSheet) { sheet in
                 FertilizerPeriodSheet(sheet: sheet, onClose: viewModel.closePeriod, onSelectStep: viewModel.selectStep)

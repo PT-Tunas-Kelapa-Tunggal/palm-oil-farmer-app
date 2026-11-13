@@ -11,8 +11,17 @@ final class FertilizerScheduleViewModel {
     }
 
     enum Destination: Hashable, Identifiable {
+        case fertilizingMap(gardenID: UUID, fertilizerName: String, isInPeriod: Bool)
         case exampleScreen(stepID: UUID)
-        var id: Self { self }
+
+        var id: String {
+            switch self {
+            case .fertilizingMap(let gardenID, let fertilizerName, let isInPeriod):
+                return "map-\(gardenID)-\(fertilizerName)-\(isInPeriod)"
+            case .exampleScreen(let stepID):
+                return "example-\(stepID)"
+            }
+        }
     }
 
     private(set) var state: LoadState = .loading
@@ -58,6 +67,32 @@ final class FertilizerScheduleViewModel {
 
     func selectStep(_ id: UUID) {
         presentedPeriodID = nil
-        destination = .exampleScreen(stepID: id)
+        var stepName = "Dolomit"
+        var isInPeriod = true
+        if case .loaded(let presentation) = state {
+            for sheet in presentation.sheets.values {
+                for row in sheet.rows {
+                    if case .step(let step) = row, step.id == id {
+                        stepName = step.name
+                        break
+                    }
+                }
+            }
+            if let hero = presentation.hero {
+                switch hero {
+                case .active(_, _, _, let rows):
+                    for row in rows {
+                        if case .step(let step) = row, step.id == id {
+                            stepName = step.name
+                            isInPeriod = true
+                            break
+                        }
+                    }
+                case .upcoming:
+                    isInPeriod = false
+                }
+            }
+        }
+        destination = .fertilizingMap(gardenID: gardenID, fertilizerName: stepName, isInPeriod: isInPeriod)
     }
 }
