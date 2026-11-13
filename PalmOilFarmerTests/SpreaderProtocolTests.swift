@@ -9,6 +9,10 @@ struct SpreaderProtocolTests {
         #expect(String(data: SpreaderPulse.command(milliseconds: 10_000), encoding: .utf8) == "T:10000")
     }
 
+    @Test func stopCommandIsS() {
+        #expect(SpreaderGATT.stopCommand == "S")
+    }
+
     @Test func litersBecomeMillisecondsAtMeasuredFlow() {
         #expect(SpreaderLimits.litersPerMinute == 2.9)
         #expect(SpreaderPulse.milliseconds(liters: 0.75) == 15_517)

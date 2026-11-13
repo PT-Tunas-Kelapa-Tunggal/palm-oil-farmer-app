@@ -3,7 +3,7 @@ import SwiftUI
 
 // Shared pieces for the Mode Pemupukan experiment (Sketch: Pemupukan / Mode Pemupukan / *).
 
-enum FertilizingPalette {
+enum SpreaderPalette {
     static let ink = rgb(0x141517)
     static let inkSecondary = rgb(0x141517, opacity: 0.72)
     static let inkTertiary = rgb(0x141517, opacity: 0.55)
@@ -15,7 +15,7 @@ enum FertilizingPalette {
     static let darkTop = rgb(0x2E3034)
 }
 
-extension FertilizingPalette {
+extension SpreaderPalette {
     /// Kept inside the experiment: other features declare their own `Color(hex:)`.
     static func rgb(_ hex: UInt32, opacity: Double = 1) -> Color {
         Color(red: Double((hex >> 16) & 0xFF) / 255, green: Double((hex >> 8) & 0xFF) / 255,
@@ -23,7 +23,7 @@ extension FertilizingPalette {
     }
 }
 
-enum FertilizingFormat {
+enum SpreaderFormat {
     static let locale = Locale(identifier: "id_ID")
 
     static func kilograms(_ value: Double, maxFraction: Int = 1) -> String {
@@ -45,7 +45,7 @@ enum FertilizingFormat {
 
 /// Dose per zone. Sample values until the assessment result supplies real totals and tree counts.
 /// One dose is one "T:" command: 0.75 L at 2.9 L/min = T:15517.
-struct FertilizingZonePlan: Equatable {
+struct SpreaderZonePlan: Equatable {
     let zoneID: Int
     let treeCount: Int
     let dosePerTreeKg: Double
@@ -60,18 +60,18 @@ struct FertilizingZonePlan: Equatable {
     /// Placeholder conversion from fertilizer kg to solution liters (0.5 L per kg → 0.75 L per tree).
     private static let sampleLitersPerKg = 0.5
 
-    static func sample(for zones: [WaypointZone]) -> [Int: FertilizingZonePlan] {
+    static func sample(for zones: [WaypointZone]) -> [Int: SpreaderZonePlan] {
         Dictionary(uniqueKeysWithValues: zones.map { zone in
             let trees = max(Int((zone.areaSquareMeters / 10_000 * treesPerHectare).rounded()), 1)
             let zoneTotalLiters = Double(trees) * sampleDosePerTreeKg * sampleLitersPerKg
             let liters = SpreaderDose.litersPerTree(zoneTotalLiters: zoneTotalLiters, treeCount: trees) ?? 0
-            return (zone.id, FertilizingZonePlan(zoneID: zone.id, treeCount: trees,
+            return (zone.id, SpreaderZonePlan(zoneID: zone.id, treeCount: trees,
                                                  dosePerTreeKg: sampleDosePerTreeKg, litersPerTree: liters))
         })
     }
 }
 
-enum FertilizingGeometry {
+enum SpreaderGeometry {
     /// Zone containing the coordinate, if any.
     static func zoneID(containing coordinate: CLLocationCoordinate2D, in zones: [WaypointZone]) -> Int? {
         zones.first { zone in zone.fragments.contains { isInside(coordinate, polygon: $0) } }?.id
@@ -125,7 +125,7 @@ enum FertilizingGeometry {
 /// The Bluetooth rune drawn as strokes (SF Symbols has no public Bluetooth symbol).
 struct BluetoothGlyph: View {
     var slashed = false
-    var color: Color = FertilizingPalette.ink
+    var color: Color = SpreaderPalette.ink
 
     var body: some View {
         GeometryReader { proxy in
@@ -164,17 +164,17 @@ private struct BluetoothRune: Shape {
 }
 
 /// 36 pt status badge (Sketch: Atom / Icon Badge / Neutral, Brand).
-struct FertilizingIconBadge: View {
+struct SpreaderIconBadge: View {
     var isBrand = false
     var slashed = false
 
     var body: some View {
         Circle()
-            .fill(isBrand ? FertilizingPalette.brandSoft : FertilizingPalette.ink.opacity(0.08))
+            .fill(isBrand ? SpreaderPalette.brandSoft : SpreaderPalette.ink.opacity(0.08))
             .frame(width: 36, height: 36)
             .overlay {
                 BluetoothGlyph(slashed: slashed,
-                               color: isBrand ? FertilizingPalette.brand : FertilizingPalette.inkSecondary)
+                               color: isBrand ? SpreaderPalette.brand : SpreaderPalette.inkSecondary)
                     .frame(height: 17)
             }
     }

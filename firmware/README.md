@@ -161,14 +161,14 @@ Langkah ini membuktikan BLE bekerja sebelum melibatkan app kita.
 ## 10. Jalankan dari app iOS
 
 1. Buka `PalmOilFarmer.xcodeproj` di Xcode.
-2. Jalankan test `SpreaderProtocolTests` dan `FertilizingModeTests` (⌘U, atau klik ikon di samping nama test). Semua harus hijau.
+2. Jalankan test `SpreaderProtocolTests` dan `SpreaderModeTests` (⌘U, atau klik ikon di samping nama test). Semua harus hijau.
 3. Eksperimen ini belum menjadi layar utama app. Di `PalmOilFarmerApp.swift`, set `runsExperiment = true` (di bawah `#if DEBUG`).
 4. Pilih **iPhone asli** sebagai tujuan Run (bukan Simulator), lalu Run.
 5. Di app: tab **Pemupukan** → ketuk kartu kebun. Layar **Mode Pemupukan** langsung terbuka. (Dari peta panduan zona, tombol **Semprot** juga membuka layar yang sama.)
 6. Tekan **Hubungkan Alat**. Saat pertama kali, iOS meminta izin Bluetooth; pilih **Izinkan**.
 7. Layar berganti ke *Mencari alat pemupuk*, lalu daftar **Pilih alat yang ingin dihubungkan**. Ketuk `Spreader XXXX` (empat huruf terakhir sama dengan nama di Serial Monitor).
 8. Setelah terhubung, bagian atas panel menampilkan **KROPS Spreader XXXX** dan LED biru di board menyala terus.
-9. **Zona saat ini** mengikuti GPS saat kamu berada di dalam zona. Kamu juga bisa mengetuk label zona di peta.
+9. **Zona saat ini** hanya mengikuti GPS: terisi saat kamu berada di dalam zona dengan akurasi ±25 m atau lebih baik. Label zona di peta tidak bisa diketuk.
 10. Di depan pohon, tekan **Keluarkan Pupuk**. Tombol berubah oranye (**Pupuk Keluar**) dengan lingkar progres; ketuk lagi untuk berhenti. Setelah selesai, penghitung *x dari y pohon* bertambah satu.
 11. Kembalikan `runsExperiment` ke `false` di `PalmOilFarmerApp.swift` sebelum commit.
 

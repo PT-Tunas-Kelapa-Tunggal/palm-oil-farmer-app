@@ -95,7 +95,7 @@ private struct WaypointGardenCard: View {
 
     var body: some View {
         NavigationLink {
-            FertilizingModeView(garden: garden, zones: zones, initialZoneID: nil)
+            SpreaderModeView(garden: garden, zones: zones)
         } label: {
             VStack(alignment: .leading, spacing: 12) {
                 WaypointZoneThumbnail(zones: zones)
