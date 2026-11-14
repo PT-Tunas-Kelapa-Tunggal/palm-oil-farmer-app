@@ -9,6 +9,7 @@ final class GardenProfileReviewViewModel {
     private(set) var activeEntries: [ReviewTimelineEntry] = []
     private(set) var activeReport: FertilizerRecommendationReport?
     private(set) var detailEvents: [ProgressionStatusDetailEvent]?
+    private(set) var completedAt: Date?
     private var loadID: UUID?
 
     func load(for gardenID: UUID, repository: any FarmerReviewRepository) async {
@@ -21,6 +22,7 @@ final class GardenProfileReviewViewModel {
     func applyUpdate(_ request: PlantationReviewRequest) {
         activeStatus = request.status
         detailEvents = request.timeline.detailEvents
+        completedAt = request.timeline.completedAt
         activeEntries = request.timeline.entries(for: request.status)
         activeReport = request.makeRecommendationReport()
     }

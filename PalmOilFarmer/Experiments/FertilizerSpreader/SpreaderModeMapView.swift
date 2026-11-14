@@ -3,18 +3,39 @@ import MapKit
 import SwiftUI
 
 /// Satellite map with white zone lines, per-zone fertilizer totals, and the farmer's position.
+enum SpreaderModeTab: String, CaseIterable, Identifiable, Equatable {
+    case mode = "Mode Pemupukan"
+    case custom = "Custom"
+    var id: String { rawValue }
+}
+
 struct SpreaderModeMapView: View {
+
     let garden: Garden
     let zones: [WaypointZone]
     let separators: [[CLLocationCoordinate2D]]
     let plans: [Int: SpreaderZonePlan]
     let currentZoneID: Int?
+    let tab: SpreaderModeTab
+    let customZones: [WaypointZone]
+    let selectedCustomZoneID: Int?
+    let draftBoundary: [CLLocationCoordinate2D]
+    let isDrawingCustomZone: Bool
+    let onMapTap: (CLLocationCoordinate2D) -> Void
+    let onMoveBoundaryPoint: (Int, CLLocationCoordinate2D) -> Void
+    let onSelectCustomZone: (Int) -> Void
     let fix: CLLocation?
     @Binding var camera: MapCameraPosition
     @Binding var followsUser: Bool
+    @State private var draggingIndex: Int?
+    @State private var dragOffset: CGSize?
+    @GestureState private var isDraggingPoint = false
+    private let markerHitSize: CGFloat = 44
 
     var body: some View {
+        MapReader { proxy in
         Map(position: $camera, interactionModes: [.pan, .zoom, .rotate]) {
+            if tab == .mode {
             ForEach(zones) { zone in
                 if zone.id == currentZoneID {
                     ForEach(zone.fragments.indices, id: \.self) { index in
@@ -35,11 +56,75 @@ struct SpreaderModeMapView: View {
                 }
                 .annotationTitles(.hidden)
             }
+            } else {
+                ForEach(customZones) { zone in
+                    BoundaryGeometryMapContent(
+                        coordinates: zone.fragments.first ?? [],
+                        isClosed: true,
+                        fillOpacity: zone.id == selectedCustomZoneID ? 0.24 : 0.08
+                    )
+                    Annotation("Zona custom", coordinate: zone.destination) {
+                        Button { onSelectCustomZone(zone.id) } label: {
+                            ZoneLabel(zoneID: zone.id - 10_000,
+                                      totalKg: nil,
+                                      isCurrent: zone.id == selectedCustomZoneID)
+                        }
+                        .buttonStyle(.plain)
+                    }
+                    .annotationTitles(.hidden)
+                }
+                BoundaryGeometryMapContent(
+                    coordinates: draftBoundary,
+                    isClosed: !isDrawingCustomZone && draftBoundary.count >= 3,
+                    fillOpacity: 0.16
+                )
+                ForEach(draftBoundary.indices, id: \.self) { index in
+                    Annotation("Titik batas \(index + 1)", coordinate: draftBoundary[index], anchor: .center) {
+                        RegistrationBoundaryMarker(
+                            number: index + 1,
+                            isActive: index == (draggingIndex ?? draftBoundary.indices.last)
+                        )
+                        .frame(width: markerHitSize, height: markerHitSize)
+                        .contentShape(Circle())
+                        .highPriorityGesture(moveGesture(for: index, proxy: proxy))
+                        .accessibilityHint("Geser untuk memindahkan titik")
+                    }
+                    .annotationTitles(.hidden)
+                }
+                let edgeCount = draftBoundary.count >= 3 ? draftBoundary.count : max(0, draftBoundary.count - 1)
+                ForEach(0..<edgeCount, id: \.self) { index in
+                    let first = draftBoundary[index]
+                    let second = draftBoundary[(index + 1) % draftBoundary.count]
+                    Annotation("", coordinate: midpoint(first, second)) {
+                        Text(distance(first, second))
+                            .font(.caption2.weight(.medium))
+                            .foregroundStyle(.white)
+                            .padding(.horizontal, 4)
+                            .padding(.vertical, 1)
+                            .background(.black.opacity(0.7), in: Capsule())
+                    }
+                }
+            }
             if let fix {
                 Annotation("Posisi Anda", coordinate: fix.coordinate) {
                     UserLocationMarker()
                 }
                 .annotationTitles(.hidden)
+            }
+        }
+        .simultaneousGesture(SpatialTapGesture(coordinateSpace: .global).onEnded { tap in
+            Task { @MainActor in
+                try? await Task.sleep(for: .milliseconds(60))
+                guard isDrawingCustomZone, draggingIndex == nil,
+                      !isOnMarker(tap.location, proxy: proxy),
+                      let coordinate = proxy.convert(tap.location, from: .global) else { return }
+                onMapTap(coordinate)
+            }
+        })
+        .onChange(of: isDraggingPoint) { _, isDragging in
+            if !isDragging {
+                dragOffset = nil
+                draggingIndex = nil
             }
         }
         .mapStyle(.imagery(elevation: .flat))
@@ -49,9 +134,10 @@ struct SpreaderModeMapView: View {
         .overlay(alignment: .top) { topFade }
         .overlay(alignment: .topTrailing) {
             // Sketch: Kontrol Peta at x 338, y 210 from the top of the screen (the map runs under the status bar).
-            controls.padding(.top, 210).padding(.trailing, 16)
+            controls.padding(.top, tab == .custom ? 278 : 210).padding(.trailing, 16)
         }
         .onAppear { frameGarden() }
+        }
     }
 
     // MARK: Chrome
@@ -99,6 +185,41 @@ struct SpreaderModeMapView: View {
         let padding = max(rect.width, rect.height) * 0.2
         camera = .rect(rect.insetBy(dx: -padding, dy: -padding * 1.6))
     }
+
+    private func moveGesture(for index: Int, proxy: MapProxy) -> some Gesture {
+        DragGesture(minimumDistance: 1, coordinateSpace: .global)
+            .updating($isDraggingPoint) { _, isDragging, _ in isDragging = true }
+            .onChanged { drag in
+                guard isDrawingCustomZone, draftBoundary.indices.contains(index) else { return }
+                draggingIndex = index
+                if dragOffset == nil,
+                   let tip = proxy.convert(draftBoundary[index], to: .global) {
+                    dragOffset = CGSize(width: drag.startLocation.x - tip.x, height: drag.startLocation.y - tip.y)
+                }
+                let offset = dragOffset ?? .zero
+                let tip = CGPoint(x: drag.location.x - offset.width, y: drag.location.y - offset.height)
+                guard let coordinate = proxy.convert(tip, from: .global) else { return }
+                onMoveBoundaryPoint(index, coordinate)
+            }
+    }
+
+    private func isOnMarker(_ location: CGPoint, proxy: MapProxy) -> Bool {
+        draftBoundary.contains { coordinate in
+            guard let tip = proxy.convert(coordinate, to: .global) else { return false }
+            return hypot(location.x - tip.x, location.y - tip.y) < markerHitSize / 2
+        }
+    }
+
+    private func midpoint(_ first: CLLocationCoordinate2D, _ second: CLLocationCoordinate2D) -> CLLocationCoordinate2D {
+        CLLocationCoordinate2D(latitude: (first.latitude + second.latitude) / 2,
+                               longitude: (first.longitude + second.longitude) / 2)
+    }
+
+    private func distance(_ first: CLLocationCoordinate2D, _ second: CLLocationCoordinate2D) -> String {
+        CLLocation(latitude: first.latitude, longitude: first.longitude)
+            .distance(from: CLLocation(latitude: second.latitude, longitude: second.longitude))
+            .formatted(.number.precision(.fractionLength(0))) + " m"
+    }
 }
 
 /// Sketch: Atom / Map Label / Zone / Default.
@@ -145,18 +266,12 @@ private struct UserLocationMarker: View {
 
 /// Back button and title, placed by the screen below the status bar (Sketch: Header, y 60, 48 pt).
 struct SpreaderModeHeader: View {
+    @Binding var selectedTab: SpreaderModeTab
     let onBack: () -> Void
     let backDisabled: Bool
 
     var body: some View {
-        ZStack {
-            Text("Mode Pemupukan")
-                .font(.title3.weight(.semibold))
-                .foregroundStyle(SpreaderPalette.ink)
-                .padding(.horizontal, 24)
-                .frame(height: 48)
-                .glassEffect(.regular, in: Capsule())
-                .accessibilityAddTraits(.isHeader)
+        HStack(spacing: 10) {
             HStack {
                 Button(action: onBack) {
                     Image(systemName: "chevron.left")
@@ -170,7 +285,36 @@ struct SpreaderModeHeader: View {
                 .accessibilityLabel("Kembali")
                 Spacer()
             }
+            .frame(width: 44)
+
+            HStack(spacing: 2) {
+                ForEach(SpreaderModeTab.allCases) { tab in
+                    Button {
+                        selectedTab = tab
+                    } label: {
+                        Text(tab.rawValue)
+                            .font(.system(size: 13, weight: .semibold))
+                            .lineLimit(1)
+                            .minimumScaleFactor(0.8)
+                            .foregroundStyle(selectedTab == tab ? SpreaderPalette.ink : SpreaderPalette.inkSecondary)
+                            .padding(.horizontal, 12)
+                            .frame(height: 42)
+                            .background {
+                                if selectedTab == tab {
+                                    Capsule().fill(.white.opacity(0.72))
+                                }
+                            }
+                    }
+                    .buttonStyle(.plain)
+                    .disabled(backDisabled)
+                }
+            }
+            .padding(3)
+            .glassEffect(.regular, in: Capsule())
+
+            Color.clear.frame(width: 44, height: 44)
         }
         .padding(.horizontal, 16)
+        .padding(.top, 2)
     }
 }

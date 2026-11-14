@@ -152,7 +152,9 @@ struct GardenProfileScreen: View {
             },
             onViewSummary: viewModel.openSummary,
             onViewReviewInformation: { viewModel.open(.reviewInformation) },
-            onDelete: deleteAction
+            onDelete: deleteAction,
+            assessmentCompletedAt: viewModel.reviewViewModel.completedAt ?? garden.review?.date(for: .completed),
+            assessmentResultByteCount: currentReviewStatus == .completed ? PlaceholderAssessmentResultsDownloadRepository.resultByteCount : nil
         )
     }
 

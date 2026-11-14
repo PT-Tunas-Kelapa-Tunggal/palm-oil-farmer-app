@@ -25,6 +25,7 @@ enum SpreaderModePanelState: Equatable {
 struct SpreaderModePanel: View {
     let spreader: SpreaderBLEManager
     let zoneID: Int?
+    let zoneName: String?
     let plan: SpreaderZonePlan?
     let fertilizedTrees: Int
     /// Clock from the screen's TimelineView, for the dispensing progress ring.
@@ -34,7 +35,7 @@ struct SpreaderModePanel: View {
     private var state: SpreaderModePanelState { SpreaderModePanelState(spreader) }
 
     var body: some View {
-        VStack(spacing: 20) {
+        VStack(spacing: 12) {
             deviceRow
             statsRow
             main
@@ -42,8 +43,8 @@ struct SpreaderModePanel: View {
                 .animation(.easeInOut(duration: 0.25), value: state)
             footer
         }
-        .padding(EdgeInsets(top: 10, leading: 16, bottom: 16, trailing: 16))
-        .padding(EdgeInsets(top: 8, leading: 8, bottom: 26, trailing: 8))
+        .padding(EdgeInsets(top: 8, leading: 16, bottom: 10, trailing: 16))
+        .padding(EdgeInsets(top: 6, leading: 8, bottom: 20, trailing: 8))
         .frame(maxWidth: .infinity)
         .background(SpreaderPalette.panel,
                     in: UnevenRoundedRectangle(topLeadingRadius: 32, topTrailingRadius: 32))
@@ -98,7 +99,7 @@ struct SpreaderModePanel: View {
 
     private var statsRow: some View {
         HStack(alignment: .top, spacing: 16) {
-            stat(label: "Zona saat ini", value: zoneID.map { "Zona \($0)" } ?? "–")
+            stat(label: "Zona saat ini", value: zoneName ?? "–")
             stat(label: "Dosis per pohon", value: plan.map { SpreaderFormat.kilograms($0.dosePerTreeKg) } ?? "–")
         }
     }
@@ -161,7 +162,7 @@ struct SpreaderModePanel: View {
                     .foregroundStyle(SpreaderPalette.inkSecondary)
                     .multilineTextAlignment(.center)
             } else if let zoneID, let plan {
-                Text("\(fertilizedTrees) dari \(plan.treeCount) pohon di Zona \(zoneID) sudah dipupuk")
+                Text("\(fertilizedTrees) dari \(plan.treeCount) pohon di \(zoneName ?? "zona ini") sudah dipupuk")
                     .font(.footnote)
                     .foregroundStyle(SpreaderPalette.inkSecondary)
                     .multilineTextAlignment(.center)
@@ -200,10 +201,10 @@ private struct RoundActionButton: View {
                         .animation(.linear(duration: 0.5), value: progress)
                 }
                 fill
-                    .frame(width: 232, height: 232)
+            .frame(width: 190, height: 190)
                     .overlay { label }
             }
-            .frame(width: 256, height: 256)
+            .frame(width: 210, height: 210)
             .opacity(isEnabled ? 1 : 0.5)
         }
         .buttonStyle(PressScaleButtonStyle())
@@ -306,7 +307,7 @@ private struct SearchingCard: View {
                     .font(.footnote).foregroundStyle(SpreaderPalette.inkSecondary)
             }
         }
-        .frame(maxWidth: .infinity, minHeight: 316)
+        .frame(maxWidth: .infinity, minHeight: 260)
         .background(SpreaderPalette.searchCard, in: RoundedRectangle(cornerRadius: 22))
         .accessibilityElement(children: .combine)
         .onAppear {

@@ -26,12 +26,15 @@ struct GardenProfileContentView: View {
 
     private var assessmentStatus: AssessmentReviewStatusCard.Status? {
         if let assessmentResultsState { return .results(assessmentResultsState) }
+        if currentReviewStatus == .completed {
+            return .finished(completedAt: assessmentCompletedAt, byteCount: assessmentResultByteCount)
+        }
         if let assessmentContactName { return .inReview(contactName: assessmentContactName) }
         return nil
     }
 
     private var usesLightAssessmentLayout: Bool {
-        colorScheme == .light && assessmentStatus != nil
+        colorScheme == .light
     }
 
     var body: some View {
@@ -44,19 +47,33 @@ struct GardenProfileContentView: View {
                     } else {
                         map.frame(height: 201)
                     }
-                    if usesLightAssessmentLayout, let assessmentStatus {
+                    if usesLightAssessmentLayout {
                         VStack(spacing: -32) {
                             GardenMetricsView(garden: garden, metrics: metrics, usesAssessmentBand: true)
-                            assessmentCard(assessmentStatus)
-                                .zIndex(1)
+                            Group {
+                                if let assessmentStatus {
+                                    assessmentCard(assessmentStatus)
+                                } else if isComplete && currentReviewStatus == nil {
+                                    lightReadyCard
+                                } else if !isComplete {
+                                    lightCompletionCard
+                                } else {
+                                    readyCard
+                                }
+                            }
+                            .zIndex(1)
                         }
                         .padding(.horizontal, 12)
                         .padding(.top, showsHeader ? -40 : 16)
 
-                        dataSection
-                            .padding(.horizontal, 16)
-                            .padding(.top, 8)
-                            .padding(.bottom, 48)
+                        if isComplete || assessmentStatus != nil {
+                            dataSection
+                                .padding(.horizontal, 16)
+                                .padding(.top, 8)
+                                .padding(.bottom, 48)
+                        } else {
+                            Color.clear.frame(height: 48)
+                        }
                     } else {
                         GardenMetricsView(garden: garden, metrics: metrics)
                             .padding(.horizontal, 16)
@@ -204,6 +221,110 @@ struct GardenProfileContentView: View {
         .multilineTextAlignment(.center)
         .padding(.horizontal, 20).padding(.top, 24).padding(.bottom, 20)
         .background(GardenProfileStyle.card, in: RoundedRectangle(cornerRadius: 24))
+    }
+
+    private var lightReadyCard: some View {
+        AssessmentGardenStatusCard {
+            Image(systemName: "checkmark.seal.fill")
+                .font(.system(size: 38, weight: .semibold))
+                .foregroundStyle(AssessmentPalette(isDark: false).accent)
+                .frame(height: 44)
+                .accessibilityHidden(true)
+
+            VStack(spacing: 12) {
+                Text("Kebun Siap Ditinjau")
+                    .font(.title2.bold())
+                    .accessibilityAddTraits(.isHeader)
+                Text("Profil kebun sudah lengkap. Ajukan peninjauan agar petugas memeriksa seluruh pohon di kebun Anda dan memberi rekomendasi pupuk yang lebih tepat.")
+                    .font(.body)
+                    .foregroundStyle(AssessmentPalette(isDark: false).secondary)
+            }
+
+            Button(action: onViewReviewInformation) {
+                HStack(spacing: 5) {
+                    Text("Tentang Peninjauan Kebun")
+                    Image(systemName: "info.circle")
+                        .foregroundStyle(AssessmentPalette(isDark: false).accent)
+                }
+                .font(.subheadline)
+                .foregroundStyle(AssessmentPalette.ink)
+            }
+            .buttonStyle(.plain)
+        } actions: {
+            Button(action: onEditProfile) {
+                Text("Lengkapi Profil Kebun")
+                    .font(.headline)
+                    .frame(maxWidth: .infinity)
+                    .padding(.horizontal, 16)
+                    .padding(.vertical, 12)
+                    .frame(minHeight: 52)
+            }
+            .buttonStyle(.plain)
+            .foregroundStyle(.white)
+            .glassEffect(.regular.tint(AssessmentPalette.ink).interactive(), in: Capsule())
+        }
+    }
+
+    private var lightCompletionCard: some View {
+        AssessmentGardenStatusCard {
+            VStack(alignment: .leading, spacing: 20) {
+                VStack(alignment: .leading, spacing: 12) {
+                    Text("Lengkapi profil kebun")
+                        .font(.title2.bold())
+                        .accessibilityAddTraits(.isHeader)
+                    Text("Isi riwayat panen dan pemupukan agar hasil peninjauan lebih sesuai dengan kebun Anda.")
+                        .font(.body)
+                        .foregroundStyle(AssessmentPalette(isDark: false).secondary)
+                }
+                completionExplanation(
+                    "Riwayat Panen",
+                    message: "Membantu memperkirakan kebutuhan kebun dari hasil panen yang sudah didapat.",
+                    symbol: "chart.xyaxis.line"
+                )
+                completionExplanation(
+                    "Riwayat Pemupukan",
+                    message: "Menjadi pembanding antara pupuk yang sudah diberikan dan kebutuhan kebun.",
+                    symbol: "leaf"
+                )
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .multilineTextAlignment(.leading)
+        } actions: {
+            Button(action: currentReviewStatus == nil ? onEditProfile : onReviewAction) {
+                Text(currentReviewStatus == nil ? "Lengkapi Profil Kebun" : "Lihat Status Peninjauan")
+                    .font(.headline)
+                    .frame(maxWidth: .infinity)
+                    .padding(.horizontal, 16)
+                    .padding(.vertical, 12)
+                    .frame(minHeight: 52)
+            }
+            .buttonStyle(.plain)
+            .foregroundStyle(.white)
+            .glassEffect(.regular.tint(AssessmentPalette.ink).interactive(), in: Capsule())
+        }
+    }
+
+    private func completionExplanation(_ title: String, message: String, symbol: String) -> some View {
+        HStack(alignment: .top, spacing: 16) {
+            Image(systemName: symbol)
+                .font(.title2)
+                .foregroundStyle(AssessmentPalette(isDark: false).accent)
+                .frame(width: 36, height: 28)
+                .accessibilityHidden(true)
+            VStack(alignment: .leading, spacing: 4) {
+                Text(title)
+                    .fontWeight(.semibold)
+                    .multilineTextAlignment(.leading)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                Text(message)
+                    .font(.subheadline)
+                    .foregroundStyle(AssessmentPalette(isDark: false).secondary)
+                    .multilineTextAlignment(.leading)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
     }
 
     private var reviewTitle: String {
