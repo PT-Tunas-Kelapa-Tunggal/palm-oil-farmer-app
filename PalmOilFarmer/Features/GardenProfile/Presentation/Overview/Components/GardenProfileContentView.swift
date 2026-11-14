@@ -251,8 +251,8 @@ struct GardenProfileContentView: View {
             }
             .buttonStyle(.plain)
         } actions: {
-            Button(action: onEditProfile) {
-                Text("Lengkapi Profil Kebun")
+            Button(action: onViewReviewInformation) {
+                Text("Ajukan Peninjauan")
                     .font(.headline)
                     .frame(maxWidth: .infinity)
                     .padding(.horizontal, 16)

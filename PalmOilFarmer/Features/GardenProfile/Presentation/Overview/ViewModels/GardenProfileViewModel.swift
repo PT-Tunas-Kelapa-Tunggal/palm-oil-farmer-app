@@ -35,6 +35,7 @@ final class GardenProfileViewModel {
     var showsResults = false
     private(set) var profileJustSaved = false
     private(set) var isFinished = false
+    private(set) var profileWasCompleted = false
 
     private var activeSheet: GardenProfileSheet?
     private var pendingReviewAction: GardenProfileReviewAction?
@@ -48,6 +49,7 @@ final class GardenProfileViewModel {
          makeReviewRequest: GardenProfileReviewRequestMaker? = nil) {
         gardenID = garden.id
         initialGarden = garden
+        profileWasCompleted = garden.isProfileComplete
         self.source = source
         self.reviewRepository = reviewRepository
         makeReviewRequestFlow = makeReviewRequest
@@ -59,7 +61,7 @@ final class GardenProfileViewModel {
     var garden: Garden { currentGarden ?? initialGarden }
     var isAvailable: Bool { currentGarden != nil && !hasDeleted }
     var fertilizers: [FertilizerRecord] { garden.fertilizerRecords ?? [] }
-    var isComplete: Bool { garden.isProfileComplete }
+    var isComplete: Bool { profileWasCompleted || garden.isProfileComplete }
     var canDelete: Bool { source.canDeleteGardens && isAvailable }
     private var currentGarden: Garden? { source.gardens.first { $0.id == gardenID } }
 
@@ -78,21 +80,21 @@ final class GardenProfileViewModel {
         updated.fertilizationFrequencyPerYear = frequency
         updated.fertilizerRecords = fertilizers
         updated.profileUpdatedAt = .now
-        return source.update(updated)
+        return persist(updated)
     }
 
     func saveFertilizers(_ records: [FertilizerRecord]) -> Bool {
         guard !isFinished, !hasDeleted, var updated = currentGarden else { return false }
         updated.fertilizerRecords = records
         updated.profileUpdatedAt = .now
-        return source.update(updated)
+        return persist(updated)
     }
 
     func saveHarvest(_ record: HarvestRecord) -> Bool {
         guard !isFinished, !hasDeleted, var updated = currentGarden else { return false }
         updated.harvestRecord = record
         updated.profileUpdatedAt = .now
-        return source.update(updated)
+        return persist(updated)
     }
 
     func saveDetails(_ edited: Garden) -> Bool {
@@ -103,7 +105,13 @@ final class GardenProfileViewModel {
             fertilizerRecords: latest.fertilizerRecords, harvestRecord: latest.harvestRecord,
             review: latest.review, createdAt: latest.createdAt, fertilizationFrequencyPerYear: latest.fertilizationFrequencyPerYear, profileUpdatedAt: latest.profileUpdatedAt
         )
-        return source.update(updated)
+        return persist(updated)
+    }
+
+    private func persist(_ updated: Garden) -> Bool {
+        guard source.update(updated) else { return false }
+        profileWasCompleted = updated.isProfileComplete
+        return true
     }
 
     func updateReview(_ change: (inout GardenReview) -> Void) {
