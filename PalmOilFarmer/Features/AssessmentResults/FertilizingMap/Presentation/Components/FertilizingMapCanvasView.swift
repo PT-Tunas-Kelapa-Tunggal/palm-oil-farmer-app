@@ -109,7 +109,7 @@ public struct FertilizingMapCanvasView: View {
                     .font(.system(size: 11, weight: .medium))
                     .foregroundStyle(.white.opacity(0.8))
 
-                Text("\(Int(zone.doseKg)) kg")
+                Text("\(zone.doseKg.formatted(.number.precision(.fractionLength(0...1)))) kg")
                     .font(.system(size: 15, weight: .bold))
                     .foregroundStyle(.white)
             }

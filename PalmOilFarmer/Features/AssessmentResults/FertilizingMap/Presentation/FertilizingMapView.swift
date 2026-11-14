@@ -167,9 +167,7 @@ public struct FertilizingMapView: View {
                         selectedFertilizer: item.selectedFertilizer,
                         availableFertilizers: item.availableFertilizers,
                         onSelect: { selected in
-                            withAnimation(.spring(response: 0.35, dampingFraction: 0.8)) {
-                                viewModel.selectFertilizer(selected)
-                            }
+                            Task { await viewModel.selectFertilizer(selected) }
                         },
                         onClose: {
                             viewModel.closeActiveSheet()
