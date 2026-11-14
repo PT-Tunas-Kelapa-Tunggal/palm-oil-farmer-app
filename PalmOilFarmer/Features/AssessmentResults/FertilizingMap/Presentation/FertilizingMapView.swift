@@ -21,6 +21,7 @@ public struct FertilizingMapView: View {
 
     public init(
         gardenId: String = "garden-default",
+        repository: any FertilizingMapRepositoryProtocol = DummyFertilizingMapRepository(),
         initialFertilizerName: String? = nil,
         isInPeriod: Bool = true,
         initialAreaDivision: AreaDivisionMode = .perZona,
@@ -28,6 +29,7 @@ public struct FertilizingMapView: View {
     ) {
         _viewModel = State(
             initialValue: FertilizingMapViewModel(
+                repository: repository,
                 gardenId: gardenId,
                 initialFertilizerName: initialFertilizerName,
                 isInPeriod: isInPeriod,
@@ -39,6 +41,7 @@ public struct FertilizingMapView: View {
 
     public init(
         gardenId: UUID,
+        repository: any FertilizingMapRepositoryProtocol = DummyFertilizingMapRepository(),
         initialFertilizerName: String? = nil,
         isInPeriod: Bool = true,
         initialAreaDivision: AreaDivisionMode = .perZona,
@@ -46,6 +49,7 @@ public struct FertilizingMapView: View {
     ) {
         self.init(
             gardenId: gardenId.uuidString,
+            repository: repository,
             initialFertilizerName: initialFertilizerName,
             isInPeriod: isInPeriod,
             initialAreaDivision: initialAreaDivision,
@@ -55,6 +59,7 @@ public struct FertilizingMapView: View {
 
     public init(
         gardenID: UUID,
+        repository: any FertilizingMapRepositoryProtocol = DummyFertilizingMapRepository(),
         initialFertilizerName: String? = nil,
         isInPeriod: Bool = true,
         initialAreaDivision: AreaDivisionMode = .perZona,
@@ -62,6 +67,7 @@ public struct FertilizingMapView: View {
     ) {
         self.init(
             gardenId: gardenID.uuidString,
+            repository: repository,
             initialFertilizerName: initialFertilizerName,
             isInPeriod: isInPeriod,
             initialAreaDivision: initialAreaDivision,

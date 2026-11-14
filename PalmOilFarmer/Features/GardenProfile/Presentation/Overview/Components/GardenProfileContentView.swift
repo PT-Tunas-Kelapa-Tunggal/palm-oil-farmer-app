@@ -216,7 +216,10 @@ struct GardenProfileContentView: View {
                     Image(systemName: "info.circle")
                 }.font(.subheadline).foregroundStyle(GardenProfileStyle.accent).padding(.vertical, 4)
             }.buttonStyle(.plain)
-            GardenProfileActionButton(title: reviewTitle, action: onReviewAction)
+            GardenProfileActionButton(
+                title: reviewTitle,
+                action: currentReviewStatus == nil ? onViewReviewInformation : onReviewAction
+            )
         }
         .multilineTextAlignment(.center)
         .padding(.horizontal, 20).padding(.top, 24).padding(.bottom, 20)
@@ -251,8 +254,8 @@ struct GardenProfileContentView: View {
             }
             .buttonStyle(.plain)
         } actions: {
-            Button(action: onEditProfile) {
-                Text("Lengkapi Profil Kebun")
+            Button(action: onViewReviewInformation) {
+                Text("Ajukan Peninjauan")
                     .font(.headline)
                     .frame(maxWidth: .infinity)
                     .padding(.horizontal, 16)

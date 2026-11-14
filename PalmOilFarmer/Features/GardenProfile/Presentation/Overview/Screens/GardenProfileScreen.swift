@@ -196,6 +196,12 @@ struct GardenProfileScreen: View {
     @ViewBuilder
     private var resultsDestination: some View {
         NutrientConditionView(
+            viewModel: NutrientConditionViewModel(
+                repository: CloudKitNutrientConditionRepository(
+                    containerIdentifier: AppConfiguration.cloudKitContainerIdentifier
+                ),
+                gardenId: garden.id.uuidString
+            ),
             onBack: { viewModel.showsResults = false },
             onOpenFertilizerEstimation: onOpenFertilizerEstimation
         )

@@ -105,6 +105,13 @@ struct ContentView: View {
         case .resultOverview(let gardenId):
             ResultOverviewView(
                 viewModel: ResultOverviewViewModel(
+                    repository: CloudKitResultOverviewRepository(
+                        containerIdentifier: AppConfiguration.cloudKitContainerIdentifier
+                    ),
+                    farmGreenIndexRepository: CloudKitFarmGreenIndexRepository(
+                        containerIdentifier: AppConfiguration.cloudKitContainerIdentifier,
+                        loadsOrthomosaicImage: true
+                    ),
                     gardenId: gardenId,
                     gardenName: store.gardens.first(where: { $0.id.uuidString == gardenId })?.name,
                     locationName: store.gardens.first(where: { $0.id.uuidString == gardenId })?.locationName
@@ -131,7 +138,12 @@ struct ContentView: View {
                 FertilizerScheduleView(
                     viewModel: FertilizerScheduleViewModel(
                         gardenID: gardenID,
-                        repository: DummyFertilizerScheduleRepository()
+                        repository: CloudKitFertilizerScheduleRepository(
+                            containerIdentifier: AppConfiguration.cloudKitContainerIdentifier
+                        )
+                    ),
+                    mapRepository: CloudKitFertilizingMapRepository(
+                        containerIdentifier: AppConfiguration.cloudKitContainerIdentifier
                     )
                 )
                 .navigationTransition(.zoom(sourceID: gardenId, in: fertilizerScheduleTransition))
@@ -140,7 +152,12 @@ struct ContentView: View {
             }
         case .nutrientCondition(let gardenId):
             NutrientConditionView(
-                viewModel: NutrientConditionViewModel(gardenId: gardenId),
+                viewModel: NutrientConditionViewModel(
+                    repository: CloudKitNutrientConditionRepository(
+                        containerIdentifier: AppConfiguration.cloudKitContainerIdentifier
+                    ),
+                    gardenId: gardenId
+                ),
                 onBack: {
                     coordinator.pop()
                 },
@@ -152,11 +169,9 @@ struct ContentView: View {
             FarmGreenIndexView(
                 viewModel: FarmGreenIndexViewModel(
                     gardenId: gardenId,
-                    repository: DummyFarmGreenIndexRepository(
-                        cloudKitRepository: CloudKitFarmGreenIndexRepository(
-                            containerIdentifier: AppConfiguration.cloudKitContainerIdentifier,
-                            loadsOrthomosaicImage: false
-                        )
+                    repository: CloudKitFarmGreenIndexRepository(
+                        containerIdentifier: AppConfiguration.cloudKitContainerIdentifier,
+                        loadsOrthomosaicImage: true
                     )
                 ),
                 onBack: {
@@ -165,7 +180,12 @@ struct ContentView: View {
             )
         case .fertilizerEstimation(let gardenId):
             FertilizerEstimationView(
-                viewModel: FertilizerEstimationViewModel(gardenId: gardenId),
+                viewModel: FertilizerEstimationViewModel(
+                    repository: CloudKitFertilizerEstimationRepository(
+                        containerIdentifier: AppConfiguration.cloudKitContainerIdentifier
+                    ),
+                    gardenId: gardenId
+                ),
                 onBack: {
                     coordinator.pop()
                 }

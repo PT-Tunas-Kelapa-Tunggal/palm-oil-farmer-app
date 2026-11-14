@@ -67,7 +67,7 @@ public final class FertilizingMapViewModel {
                let match = loaded.availableFertilizers.first(where: {
                    $0.name.localizedCaseInsensitiveContains(initialName) || initialName.localizedCaseInsensitiveContains($0.name)
                }) {
-                loaded.selectedFertilizer = match
+                loaded = try await repository.selectFertilizer(fertilizerId: match.id, for: gardenId)
                 if match.defaultDivision == .wholeFarm {
                     areaDivision = .wholeFarm
                 }
