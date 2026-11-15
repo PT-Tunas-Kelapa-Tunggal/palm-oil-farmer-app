@@ -17,6 +17,9 @@ struct DashboardView: View {
             onOpenDeveloperMode: developerModeAction
         )
         .refreshable { await viewModel.refresh() }
+        .sheet(isPresented: $viewModel.showsNoConnectionSheet) {
+            NoConnectionBottomSheet(onRetry: viewModel.retryPendingGarden)
+        }
     }
 
     private var developerModeAction: (() -> Void)? {

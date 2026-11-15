@@ -18,12 +18,20 @@ enum DashboardEvent {
 @Observable
 final class DashboardViewModel {
     var selectedFilter = DashboardFilter.all
+    var showsNoConnectionSheet = false
+    private(set) var pendingGarden: DashboardGarden?
 
     private let repository: any DashboardRepositoryProtocol
     private let onEvent: (DashboardEvent) -> Void
+    let networkMonitor: NetworkMonitor
 
-    init(repository: any DashboardRepositoryProtocol, onEvent: @escaping (DashboardEvent) -> Void) {
+    init(
+        repository: any DashboardRepositoryProtocol,
+        networkMonitor: NetworkMonitor = .shared,
+        onEvent: @escaping (DashboardEvent) -> Void
+    ) {
         self.repository = repository
+        self.networkMonitor = networkMonitor
         self.onEvent = onEvent
     }
 
@@ -44,7 +52,26 @@ final class DashboardViewModel {
         repository.deleteDraft(id: draft.id)
     }
 
-    func selectGarden(_ garden: DashboardGarden) { onEvent(.openGarden(garden.id)) }
+    func selectGarden(_ garden: DashboardGarden) {
+        if garden.requiresOnlineConnection && !networkMonitor.isConnected {
+            pendingGarden = garden
+            showsNoConnectionSheet = true
+            return
+        }
+        onEvent(.openGarden(garden.id))
+    }
+
+    func retryPendingGarden() {
+        networkMonitor.refresh()
+        if networkMonitor.isConnected {
+            showsNoConnectionSheet = false
+            if let garden = pendingGarden {
+                pendingGarden = nil
+                onEvent(.openGarden(garden.id))
+            }
+        }
+    }
+
     func selectDraft(_ draft: DashboardDraft) { onEvent(.resumeDraft(draft)) }
     func registerGarden() { onEvent(.registerGarden) }
 

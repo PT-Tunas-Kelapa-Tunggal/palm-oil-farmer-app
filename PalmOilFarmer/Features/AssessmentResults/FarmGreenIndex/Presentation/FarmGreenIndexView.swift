@@ -34,9 +34,12 @@ public struct FarmGreenIndexView: View {
             if let item = viewModel.item {
                 // 1. Fullscreen Map Canvas
                 FarmGreenIndexMapView(
-                    mapImageName: viewModel.selectedAreaDivision == .perZona ? "FarmGreenIndexZoneMap" : item.mapImageName,
-                    pins: viewModel.selectedAreaDivision == .perPohon ? item.pins : [],
+                    mapImageName: item.orthomosaic?.imageURL == nil && viewModel.selectedAreaDivision == .perZona
+                        ? "FarmGreenIndexZoneMap" : item.mapImageName,
+                    orthomosaic: item.orthomosaic,
+                    pins: visiblePins(for: item),
                     selectedPin: viewModel.selectedPin,
+                    showsZones: viewModel.selectedAreaDivision == .perZona,
                     onSelectPin: { pin in
                         withAnimation(.spring(response: 0.35, dampingFraction: 0.8)) {
                             viewModel.selectPin(pin)
@@ -115,6 +118,14 @@ public struct FarmGreenIndexView: View {
             }
         }
         .toolbar(.hidden, for: .navigationBar)
+    }
+
+    private func visiblePins(for item: FarmGreenIndexItem) -> [TreePinItem] {
+        guard viewModel.selectedAreaDivision == .perPohon else { return [] }
+        if case .detail(let category) = viewModel.sheetState {
+            return item.pins.filter { $0.category == category }
+        }
+        return []
     }
 
     // MARK: - Bottom Sheet Builder

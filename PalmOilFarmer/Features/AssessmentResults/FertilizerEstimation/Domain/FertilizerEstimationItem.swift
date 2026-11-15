@@ -172,68 +172,76 @@ extension FertilizerEstimationOverview {
         id: "est-1",
         gardenName: "Kebun Belakang Rumah",
         periodDescription: "untuk kebutuhan 1 tahun",
-        budgetLimit: 9350000,
+        budgetLimit: 5000000,
         fertilizers: [
             FertilizerItem(
                 id: "dolomit",
                 name: "Dolomit",
-                pricePerBag: 75000,
+                pricePerBag: 100000,
                 bagWeightKg: 50,
-                weightKg: 400,
-                bagCount: 8,
-                totalPrice: 600000
+                weightKg: 48,
+                bagCount: 1,
+                totalPrice: 100000
             ),
             FertilizerItem(
                 id: "npk",
                 name: "NPK 15-15-15",
-                pricePerBag: 650000,
+                pricePerBag: 740000,
                 bagWeightKg: 50,
-                weightKg: 350,
-                bagCount: 7,
-                totalPrice: 4550000,
+                weightKg: 450,
+                bagCount: 9,
+                totalPrice: 6660000,
                 isCustomizableNPK: true,
-                savingsHint: "Ada pilihan NPK yang Rp350.000 lebih hemat."
+                savingsHint: "Ada pilihan NPK yang Rp1.710.000 lebih hemat."
             ),
             FertilizerItem(
                 id: "urea",
                 name: "Urea",
-                pricePerBag: 450000,
+                pricePerBag: 500000,
                 bagWeightKg: 50,
-                weightKg: 300,
-                bagCount: 6,
-                totalPrice: 2700000
+                weightKg: 2,
+                bagCount: 1,
+                totalPrice: 500000
             )
         ],
         npkOptions: [
             NPKOption(
                 id: "npk-15",
                 name: "NPK 15-15-15",
-                weightKg: 350,
-                bagCount: 7,
-                pricePerBag: 650000,
-                totalPrice: 4550000
+                weightKg: 450,
+                bagCount: 9,
+                pricePerBag: 740000,
+                totalPrice: 6660000
             ),
             NPKOption(
                 id: "npk-16",
                 name: "NPK 16-16-16",
-                weightKg: 330,
-                bagCount: 7,
-                pricePerBag: 700000,
-                totalPrice: 4900000
+                weightKg: 450,
+                bagCount: 9,
+                pricePerBag: 890000,
+                totalPrice: 8010000
             ),
             NPKOption(
-                id: "npk-12",
-                name: "NPK 12-12-17-2",
-                weightKg: 310,
-                bagCount: 7,
-                pricePerBag: 600000,
-                totalPrice: 4200000,
+                id: "npk-13-6-27-4",
+                name: "NPK 13-6-27-4",
+                weightKg: 450,
+                bagCount: 9,
+                pricePerBag: 550000,
+                totalPrice: 4950000,
                 tag: "Paling hemat",
-                savingsDifference: 350000
+                savingsDifference: 1710000
+            ),
+            NPKOption(
+                id: "npk-12-6-22-3",
+                name: "NPK 12-6-22-3",
+                weightKg: 400,
+                bagCount: 8,
+                pricePerBag: 630000,
+                totalPrice: 5040000
             )
         ],
         selectedNPKId: "npk-15",
-        footnote: "Harga perkiraan per sak 50 kg di toko pertanian sekitar Bintan, November 2026. Harga di toko bisa berbeda."
+        footnote: "Estimasi mengikuti konfigurasi pada data analisis; kebutuhan dan harga perlu disesuaikan dengan kondisi kebun."
     )
 }
 

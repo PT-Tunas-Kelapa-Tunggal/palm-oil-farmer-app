@@ -2,6 +2,7 @@ import SwiftUI
 
 struct FertilizerScheduleView: View {
     @Bindable var viewModel: FertilizerScheduleViewModel
+    var mapRepository: any FertilizingMapRepositoryProtocol = DummyFertilizingMapRepository()
     @Environment(\.dismiss) private var dismiss
 
     var body: some View {
@@ -11,12 +12,14 @@ struct FertilizerScheduleView: View {
             .environment(\.colorScheme, .dark)
             .navigationBarBackButtonHidden(true)
             .toolbarVisibility(.hidden, for: .navigationBar)
+            .toolbar(.hidden, for: .tabBar)
             .task { await viewModel.load() }
             .navigationDestination(item: $viewModel.destination) { destination in
                 switch destination {
                 case .fertilizingMap(let gardenID, let fertilizerName, let isInPeriod):
                     FertilizingMapView(
                         gardenId: gardenID.uuidString,
+                        repository: mapRepository,
                         initialFertilizerName: fertilizerName,
                         isInPeriod: isInPeriod
                     )

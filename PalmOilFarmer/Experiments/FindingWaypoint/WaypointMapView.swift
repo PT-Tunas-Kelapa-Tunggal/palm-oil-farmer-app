@@ -10,6 +10,7 @@ struct WaypointMapView: View {
     @State private var followsUser = false
     @State private var camera: MapCameraPosition = .automatic
     @State private var session = WaypointLocationSession()
+    @State private var showsSpreader = false
     @Environment(\.scenePhase) private var scenePhase
     @Environment(\.openURL) private var openURL
 
@@ -38,6 +39,9 @@ struct WaypointMapView: View {
                 }
                 .accessibilityLabel("Tampilkan seluruh kebun")
             }
+        }
+        .fullScreenCover(isPresented: $showsSpreader) {
+            SpreaderModeView(garden: garden, zones: zones)
         }
         .onAppear { frameGarden() }
         .task(id: tracking) {
@@ -189,6 +193,14 @@ struct WaypointMapView: View {
                         .frame(maxWidth: .infinity, minHeight: 36)
                 }
                 .buttonStyle(.borderedProminent)
+                .disabled(selectedZone == nil)
+                Button {
+                    showsSpreader = true
+                } label: {
+                    Label("Semprot", systemImage: "drop.fill")
+                        .frame(minHeight: 36)
+                }
+                .buttonStyle(.bordered)
                 .disabled(selectedZone == nil)
                 if session.needsSettings || session.reducedAccuracy {
                     Button("Pengaturan") {

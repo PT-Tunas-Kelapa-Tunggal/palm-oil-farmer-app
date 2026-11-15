@@ -101,6 +101,23 @@ public struct NutrientConditionView: View {
             .accessibilityLabel("Kembali")
 
             Spacer()
+
+            if let onOpenFertilizerEstimation {
+                Button(action: onOpenFertilizerEstimation) {
+                    HStack(spacing: 6) {
+                        Text("Biaya Pupuk")
+                            .font(.system(size: 14, weight: .semibold))
+                        Image(systemName: "chevron.right")
+                            .font(.system(size: 12, weight: .bold))
+                    }
+                    .foregroundStyle(Color(red: 0.08, green: 0.08, blue: 0.09))
+                    .padding(.horizontal, 14)
+                    .padding(.vertical, 10)
+                    .background(.ultraThinMaterial, in: Capsule())
+                }
+                .buttonStyle(.plain)
+                .accessibilityLabel("Buka Perkiraan Biaya Pupuk")
+            }
         }
         .padding(.horizontal, 16)
         .padding(.top, 8)

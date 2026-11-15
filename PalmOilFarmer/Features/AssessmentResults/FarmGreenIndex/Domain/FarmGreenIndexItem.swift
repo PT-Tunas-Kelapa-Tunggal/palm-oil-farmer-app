@@ -16,6 +16,7 @@ public enum TreeConditionCategory: String, CaseIterable, Identifiable, Equatable
     case terindikasi = "Terindikasi"
     case defisiensi = "Defisiensi"
     case tidakWajar = "Tidak wajar"
+    case unknown = "Belum diketahui"
 
     public var id: String { rawValue }
 
@@ -31,6 +32,8 @@ public enum TreeConditionCategory: String, CaseIterable, Identifiable, Equatable
             return "Pertumbuhan terganggu sejak lama."
         case .tidakWajar:
             return "Berbeda dari sekitarnya."
+        case .unknown:
+            return "Label kondisi pohon belum tersedia."
         }
     }
 
@@ -44,6 +47,8 @@ public enum TreeConditionCategory: String, CaseIterable, Identifiable, Equatable
             return "Pertumbuhan pohon sudah terganggu dalam waktu lama. Biasanya mengelompok dalam satu area."
         case .tidakWajar:
             return "Pohon ini berbeda jauh dari pohon di sekitarnya. Periksa langsung, bisa juga karena gangguan saat pemodelan."
+        case .unknown:
+            return "Kondisi pohon belum diklasifikasikan pada data hasil pemindaian."
         }
     }
 
@@ -58,6 +63,8 @@ public enum TreeConditionCategory: String, CaseIterable, Identifiable, Equatable
             return 0xC2682B // #C2682B Amber / Rust
         case .tidakWajar:
             return 0x9C9CA1 // #9C9CA1 Slate Gray
+        case .unknown:
+            return 0x6B7280 // Neutral gray for unclassified trees
         }
     }
 }
@@ -103,6 +110,47 @@ public struct TreePinItem: Identifiable, Equatable, Sendable {
     }
 }
 
+public struct FarmMapCoordinate: Equatable, Sendable {
+    public let latitude: Double
+    public let longitude: Double
+
+    public init(latitude: Double, longitude: Double) {
+        self.latitude = latitude
+        self.longitude = longitude
+    }
+}
+
+/// CloudKit analysis data positioned in the orthomosaic's pixel coordinate space.
+public struct FarmOrthomosaicMapData: Equatable, Sendable {
+    public let imageURL: URL?
+    public let imagePixelWidth: Int
+    public let imagePixelHeight: Int
+    public let farmBoundary: [FarmMapCoordinate]
+    public let zones: [FertilizingZoneItem]
+    public let trees: [TreeIdentificationItem]
+
+    public var zoneCount: Int {
+        let zoneIDs = Set(zones.map(\.id))
+        return zoneIDs.isEmpty ? Set(trees.map(\.zoneId)).count : zoneIDs.count
+    }
+
+    public init(
+        imageURL: URL?,
+        imagePixelWidth: Int,
+        imagePixelHeight: Int,
+        farmBoundary: [FarmMapCoordinate],
+        zones: [FertilizingZoneItem],
+        trees: [TreeIdentificationItem]
+    ) {
+        self.imageURL = imageURL
+        self.imagePixelWidth = imagePixelWidth
+        self.imagePixelHeight = imagePixelHeight
+        self.farmBoundary = farmBoundary
+        self.zones = zones
+        self.trees = trees
+    }
+}
+
 /// Domain entity representing the full Farm Green Index screen (Peta Kondisi Kebun).
 public struct FarmGreenIndexItem: Identifiable, Equatable, Sendable {
     public let id: String
@@ -113,6 +161,7 @@ public struct FarmGreenIndexItem: Identifiable, Equatable, Sendable {
     public let treesToPayAttentionCount: Int
     public let categories: [TreeConditionSummaryItem]
     public let pins: [TreePinItem]
+    public let orthomosaic: FarmOrthomosaicMapData?
 
     public init(
         id: String,
@@ -122,7 +171,8 @@ public struct FarmGreenIndexItem: Identifiable, Equatable, Sendable {
         totalTrees: Int = 228,
         treesToPayAttentionCount: Int = 108,
         categories: [TreeConditionSummaryItem],
-        pins: [TreePinItem] = []
+        pins: [TreePinItem] = [],
+        orthomosaic: FarmOrthomosaicMapData? = nil
     ) {
         self.id = id
         self.gardenName = gardenName
@@ -132,6 +182,7 @@ public struct FarmGreenIndexItem: Identifiable, Equatable, Sendable {
         self.treesToPayAttentionCount = treesToPayAttentionCount
         self.categories = categories
         self.pins = pins
+        self.orthomosaic = orthomosaic
     }
 }
 

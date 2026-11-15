@@ -331,12 +331,11 @@ struct AssessmentOverviewView: View {
 /// Presents the assessment screens within the host navigation stack.
 struct AssessmentRequestFlow: View {
     private enum Entry {
-        case loading, contactForm, overview, loadFailed
+        case loading, contactForm, overview, submitted, loadFailed
     }
 
     @State private var entry: Entry = .loading
     @State private var overview: AssessmentOverviewViewModel
-    @State private var showsOverview = false
     private enum ContactEditor: Identifiable {
         case add
         case edit(ReviewContactDetails)
@@ -355,7 +354,6 @@ struct AssessmentRequestFlow: View {
     }
 
     @State private var contactEditor: ContactEditor?
-    @State private var showsConfirmation = false
     private let gardenName: String
     private let onSubmitted: () -> Void
     private let onClose: (() -> Void)?
@@ -386,12 +384,16 @@ struct AssessmentRequestFlow: View {
             case .loading:
                 ProgressView()
             case .contactForm:
-                AssessmentContactEditor(overview: overview) { showsOverview = true }
-                    .navigationDestination(isPresented: $showsOverview) {
-                        overviewScreen
-                    }
+                AssessmentContactEditor(overview: overview) {
+                    withAnimation { entry = .overview }
+                }
             case .overview:
                 overviewScreen
+            case .submitted:
+                SubmissionSuccessView(
+                    viewModel: SubmissionSuccessViewModel(gardenName: gardenName, isPreview: false),
+                    onClose: onClose
+                )
             case .loadFailed:
                 ContentUnavailableView {
                     Label("Narahubung belum dapat dimuat", systemImage: "exclamationmark.circle")
@@ -412,15 +414,11 @@ struct AssessmentRequestFlow: View {
             onEditContact: { contactEditor = .edit($0) },
             onSubmitted: {
                 onSubmitted()
-                showsConfirmation = true
+                withAnimation {
+                    entry = .submitted
+                }
             }
         )
-        .navigationDestination(isPresented: $showsConfirmation) {
-            SubmissionSuccessView(
-                viewModel: SubmissionSuccessViewModel(gardenName: gardenName, isPreview: true),
-                onClose: onClose
-            )
-        }
         .sheet(item: $contactEditor) { editor in
             NavigationStack {
                 AssessmentContactEditor(overview: overview, contact: editor.contact) { contactEditor = nil }

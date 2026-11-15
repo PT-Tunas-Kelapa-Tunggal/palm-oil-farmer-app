@@ -1,6 +1,7 @@
 import SwiftUI
 
 struct ContentView: View {
+    @Namespace private var fertilizerScheduleTransition
     @State private var store: GardenStore
     @State private var dashboardViewModel: DashboardViewModel
     @State private var coordinator: AppCoordinator
@@ -21,17 +22,28 @@ struct ContentView: View {
 
     var body: some View {
         @Bindable var coordinator = coordinator
-        NavigationStack(path: $coordinator.path) {
-            DashboardView(viewModel: dashboardViewModel)
-                .toolbar(.hidden, for: .navigationBar)
-                .navigationDestination(for: AppRoute.self) { route in
-                    destination(for: route)
+        TabView {
+            Tab("Home", systemImage: "house") {
+                NavigationStack(path: $coordinator.path) {
+                    DashboardView(viewModel: dashboardViewModel)
+                        .toolbar(.hidden, for: .navigationBar)
+                        .navigationDestination(for: AppRoute.self) { route in
+                            destination(for: route)
+                                .toolbar(.hidden, for: .tabBar)
+                        }
                 }
-        }
-        .task {
-            await dashboardViewModel.refresh()
+                .task {
+                    await dashboardViewModel.refresh()
+                }
+            }
+            Tab("Pemupukan", systemImage: "leaf") {
+                NavigationStack {
+                    WaypointGardenList(gardens: store.gardens)
+                }
+            }
         }
         .environment(store)
+        .environment(coordinator)
         .sheet(item: $coordinator.registrationSheet, onDismiss: coordinator.registrationDidDismiss) { sheet in
             RegistrationIntroView(viewModel: registrationFactory.makeViewModel(
                 initialStep: sheet == .guide ? .guide : .search,
@@ -71,6 +83,8 @@ struct ContentView: View {
                         coordinator.openFertilizerEstimation(gardenId: id.uuidString)
                     }
                 )
+            } else {
+                ContentUnavailableView("Kebun Tidak Ditemukan", systemImage: "leaf.fill")
             }
         case .requestAssessment(let id):
             if let garden = store.gardens.first(where: { $0.id == id }) {
@@ -79,21 +93,36 @@ struct ContentView: View {
                     gardenName: garden.name,
                     areaHectares: max(garden.boundary.areaHectares, 0.1),
                     contactRepository: DeviceAssessmentContactRepository(),
-                    submissionRepository: PlaceholderAssessmentSubmissionRepository(),
-                    onSubmitted: {
-                        coordinator.pop()
-                    },
+                    submissionRepository: CloudKitAssessmentSubmissionRepository(gardenStore: store),
+                    onSubmitted: {},
                     onClose: {
                         coordinator.pop()
                     }
                 )
+            } else {
+                ContentUnavailableView("Kebun Tidak Ditemukan", systemImage: "leaf.fill")
             }
         case .resultOverview(let gardenId):
             ResultOverviewView(
-                viewModel: ResultOverviewViewModel(gardenId: gardenId),
+                viewModel: ResultOverviewViewModel(
+                    repository: CloudKitResultOverviewRepository(
+                        containerIdentifier: AppConfiguration.cloudKitContainerIdentifier
+                    ),
+                    farmGreenIndexRepository: CloudKitFarmGreenIndexRepository(
+                        containerIdentifier: AppConfiguration.cloudKitContainerIdentifier,
+                        loadsOrthomosaicImage: true
+                    ),
+                    gardenId: gardenId,
+                    gardenName: store.gardens.first(where: { $0.id.uuidString == gardenId })?.name,
+                    locationName: store.gardens.first(where: { $0.id.uuidString == gardenId })?.locationName
+                ),
                 onBack: {
                     coordinator.pop()
                 },
+                onOpenFertilizerSchedule: {
+                    coordinator.openFertilizerSchedule(gardenId: gardenId)
+                },
+                fertilizerScheduleTransitionNamespace: fertilizerScheduleTransition,
                 onOpenNutrientCondition: {
                     coordinator.openNutrientCondition(gardenId: gardenId)
                 },
@@ -104,9 +133,31 @@ struct ContentView: View {
                     coordinator.openFertilizerEstimation(gardenId: gardenId)
                 }
             )
+        case .fertilizerSchedule(let gardenId):
+            if let gardenID = UUID(uuidString: gardenId) {
+                FertilizerScheduleView(
+                    viewModel: FertilizerScheduleViewModel(
+                        gardenID: gardenID,
+                        repository: CloudKitFertilizerScheduleRepository(
+                            containerIdentifier: AppConfiguration.cloudKitContainerIdentifier
+                        )
+                    ),
+                    mapRepository: CloudKitFertilizingMapRepository(
+                        containerIdentifier: AppConfiguration.cloudKitContainerIdentifier
+                    )
+                )
+                .navigationTransition(.zoom(sourceID: gardenId, in: fertilizerScheduleTransition))
+            } else {
+                ContentUnavailableView("Kebun Tidak Ditemukan", systemImage: "leaf.fill")
+            }
         case .nutrientCondition(let gardenId):
             NutrientConditionView(
-                viewModel: NutrientConditionViewModel(gardenId: gardenId),
+                viewModel: NutrientConditionViewModel(
+                    repository: CloudKitNutrientConditionRepository(
+                        containerIdentifier: AppConfiguration.cloudKitContainerIdentifier
+                    ),
+                    gardenId: gardenId
+                ),
                 onBack: {
                     coordinator.pop()
                 },
@@ -116,14 +167,25 @@ struct ContentView: View {
             )
         case .farmGreenIndex(let gardenId):
             FarmGreenIndexView(
-                viewModel: FarmGreenIndexViewModel(gardenId: gardenId),
+                viewModel: FarmGreenIndexViewModel(
+                    gardenId: gardenId,
+                    repository: CloudKitFarmGreenIndexRepository(
+                        containerIdentifier: AppConfiguration.cloudKitContainerIdentifier,
+                        loadsOrthomosaicImage: true
+                    )
+                ),
                 onBack: {
                     coordinator.pop()
                 }
             )
         case .fertilizerEstimation(let gardenId):
             FertilizerEstimationView(
-                viewModel: FertilizerEstimationViewModel(gardenId: gardenId),
+                viewModel: FertilizerEstimationViewModel(
+                    repository: CloudKitFertilizerEstimationRepository(
+                        containerIdentifier: AppConfiguration.cloudKitContainerIdentifier
+                    ),
+                    gardenId: gardenId
+                ),
                 onBack: {
                     coordinator.pop()
                 }

@@ -1,6 +1,6 @@
 import Foundation
 
-public struct FertilizerComposition: Codable, Sendable, Equatable {
+nonisolated public struct FertilizerComposition: Codable, Sendable, Equatable {
     public var nitrogen: Double?
     public var phosphorus: Double?
     public var potassium: Double?

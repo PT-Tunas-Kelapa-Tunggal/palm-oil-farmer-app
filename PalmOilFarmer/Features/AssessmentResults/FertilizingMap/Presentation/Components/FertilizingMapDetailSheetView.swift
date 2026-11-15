@@ -48,9 +48,9 @@ public struct FertilizingMapDetailSheetView: View {
         switch mode {
         case .perZona:
             if let selectedZone {
-                return "\(Int(selectedZone.doseKg)) kg"
+                return "\(selectedZone.doseKg.formatted(.number.precision(.fractionLength(0...1)))) kg"
             }
-            return selectedFertilizer?.totalDose ?? "\(Int(totalDoseKg)) kg"
+            return selectedFertilizer?.totalDose ?? "\(totalDoseKg.formatted(.number.precision(.fractionLength(0...1)))) kg"
         case .perPohon:
             return selectedFertilizer?.perTreeDose ?? "3,5 kg"
         case .wholeFarm:

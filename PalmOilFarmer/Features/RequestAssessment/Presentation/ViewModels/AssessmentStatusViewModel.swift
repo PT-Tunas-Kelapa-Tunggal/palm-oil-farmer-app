@@ -11,10 +11,28 @@ struct AssessmentStatusViewModel {
         enum Phase { case finished, current, upcoming }
     }
 
-    let review: GardenReview
+    let status: ReviewStatus
+    var detailEvents: [ProgressionStatusDetailEvent]? = nil
+    var plannedVisitDate: Date? = nil
+
+    init(
+        status: ReviewStatus = .submitted,
+        detailEvents: [ProgressionStatusDetailEvent]? = nil,
+        plannedVisitDate: Date? = nil
+    ) {
+        self.status = status
+        self.detailEvents = detailEvents
+        self.plannedVisitDate = plannedVisitDate
+    }
+
+    init(review: GardenReview, detailEvents: [ProgressionStatusDetailEvent]? = nil) {
+        self.status = review.status
+        self.detailEvents = detailEvents
+        self.plannedVisitDate = review.visitDate
+    }
 
     var sheetHeight: Double {
-        switch review.status {
+        switch status {
         case .submitted: 469
         case .scheduled: 489
         case .inReview, .completed: 509
@@ -22,18 +40,46 @@ struct AssessmentStatusViewModel {
     }
 
     var steps: [Step] {
-        ReviewStatus.allCases.map { stage in
+        var customDates: [ReviewStatus: String] = [:]
+        var customMessages: [ReviewStatus: String] = [:]
+        if let detailEvents {
+            for event in detailEvents {
+                let stage: ReviewStatus?
+                switch event.title.lowercased() {
+                case "sent": stage = .submitted
+                case "scheduled": stage = .scheduled
+                case "in progress", "inprogress": stage = .inReview
+                case "finished": stage = .completed
+                default: stage = nil
+                }
+                if let stage {
+                    customDates[stage] = Self.timestamp.string(from: event.dateTime)
+                    if !event.desc.isEmpty {
+                        customMessages[stage] = event.desc
+                    }
+                }
+            }
+        }
+
+        return ReviewStatus.allCases.map { stage in
             let phase: Step.Phase
-            if stage == review.status {
+            if stage == status {
                 phase = .current
             } else {
-                phase = stage.rawValue < review.status.rawValue ? .finished : .upcoming
+                phase = stage.rawValue < status.rawValue ? .finished : .upcoming
             }
 
-            let (title, message) = copy(for: stage, phase: phase)
-            return Step(id: stage, title: title, message: message,
-                        date: phase == .upcoming ? nil : review.date(for: stage).map(Self.timestamp.string(from:)),
-                        phase: phase)
+            let (defaultTitle, defaultMessage) = copy(for: stage, phase: phase)
+            let message = (phase != .upcoming && customMessages[stage] != nil) ? customMessages[stage]! : defaultMessage
+            let date = phase == .upcoming ? nil : customDates[stage]
+
+            return Step(
+                id: stage,
+                title: defaultTitle,
+                message: message,
+                date: date,
+                phase: phase
+            )
         }
     }
 
@@ -63,7 +109,7 @@ struct AssessmentStatusViewModel {
     }
 
     private var visitDate: String {
-        review.visitDate.map(Self.visit.string(from:)) ?? "hari yang disepakati"
+        plannedVisitDate.map(Self.visit.string(from:)) ?? "hari yang disepakati"
     }
 
     private static let timestamp = formatter("d MMM yyyy, HH.mm 'WIB'")

@@ -9,6 +9,7 @@ public struct ResultOverviewView: View {
 
     public var onBack: (() -> Void)?
     public var onOpenFertilizerSchedule: (() -> Void)?
+    public var fertilizerScheduleTransitionNamespace: Namespace.ID?
     public var onOpenNutrientCondition: (() -> Void)?
     public var onOpenFarmGreenness: (() -> Void)?
     public var onOpenFertilizerEstimation: (() -> Void)?
@@ -20,6 +21,7 @@ public struct ResultOverviewView: View {
         viewModel: ResultOverviewViewModel,
         onBack: (() -> Void)? = nil,
         onOpenFertilizerSchedule: (() -> Void)? = nil,
+        fertilizerScheduleTransitionNamespace: Namespace.ID? = nil,
         onOpenNutrientCondition: (() -> Void)? = nil,
         onOpenFarmGreenness: (() -> Void)? = nil,
         onOpenFertilizerEstimation: (() -> Void)? = nil,
@@ -30,6 +32,7 @@ public struct ResultOverviewView: View {
         _viewModel = State(initialValue: viewModel)
         self.onBack = onBack
         self.onOpenFertilizerSchedule = onOpenFertilizerSchedule
+        self.fertilizerScheduleTransitionNamespace = fertilizerScheduleTransitionNamespace
         self.onOpenNutrientCondition = onOpenNutrientCondition
         self.onOpenFarmGreenness = onOpenFarmGreenness
         self.onOpenFertilizerEstimation = onOpenFertilizerEstimation
@@ -41,6 +44,7 @@ public struct ResultOverviewView: View {
     public init(
         onBack: (() -> Void)? = nil,
         onOpenFertilizerSchedule: (() -> Void)? = nil,
+        fertilizerScheduleTransitionNamespace: Namespace.ID? = nil,
         onOpenNutrientCondition: (() -> Void)? = nil,
         onOpenFarmGreenness: (() -> Void)? = nil,
         onOpenFertilizerEstimation: (() -> Void)? = nil,
@@ -51,6 +55,7 @@ public struct ResultOverviewView: View {
         _viewModel = State(initialValue: ResultOverviewViewModel())
         self.onBack = onBack
         self.onOpenFertilizerSchedule = onOpenFertilizerSchedule
+        self.fertilizerScheduleTransitionNamespace = fertilizerScheduleTransitionNamespace
         self.onOpenNutrientCondition = onOpenNutrientCondition
         self.onOpenFarmGreenness = onOpenFarmGreenness
         self.onOpenFertilizerEstimation = onOpenFertilizerEstimation
@@ -74,12 +79,7 @@ public struct ResultOverviewView: View {
                     // 2. Hub Content Cards (Overlapping bottom gradient of the map, gap: 12 matching Sketch)
                     VStack(spacing: 12) {
                         // Card 1: Rekomendasi Pemupukan
-                        FertilizerRecommendationCardView(
-                            title: overview.recommendationTitle,
-                            subtitle: overview.recommendationSubtitle,
-                            periods: overview.periods,
-                            onTap: onOpenFertilizerSchedule
-                        )
+                        recommendationCard(overview: overview)
 
                         // Card 2: Kondisi Hara
                         NutrientConditionSummaryCardView(
@@ -90,9 +90,9 @@ public struct ResultOverviewView: View {
                             onTap: onOpenNutrientCondition
                         )
 
-                        // Card 3: Kehijauan Kebun
+                        // Card 3: Hasil Pemantauan Drone
                         FarmGreennessSummaryCardView(
-                            title: "Kehijauan Kebun",
+                            title: "Hasil Pemantauan Drone",
                             greenness: overview.greenness,
                             onTap: onOpenFarmGreenness
                         )
@@ -154,6 +154,22 @@ public struct ResultOverviewView: View {
     }
 
     // MARK: - Actions
+
+    @ViewBuilder
+    private func recommendationCard(overview: ResultOverviewItem) -> some View {
+        let card = FertilizerRecommendationCardView(
+            title: overview.recommendationTitle,
+            subtitle: overview.recommendationSubtitle,
+            periods: overview.periods,
+            onTap: onOpenFertilizerSchedule
+        )
+
+        if let fertilizerScheduleTransitionNamespace {
+            card.matchedTransitionSource(id: viewModel.gardenId, in: fertilizerScheduleTransitionNamespace)
+        } else {
+            card
+        }
+    }
 
     private func handleBack() {
         if let onBack {

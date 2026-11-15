@@ -1,14 +1,13 @@
 import SwiftUI
 
-/// Summary card displaying tree deficiency metrics over the drone NDVI vegetation map.
-/// Sliced from Sketch: "Hasil Peninjauan / Ringkasan Hasil / Default" -> "Card / Kehijauan Kebun"
+/// Summary card displaying tree deficiency metrics over the dummy drone image.
 public struct FarmGreennessSummaryCardView: View {
     public let title: String
     public let greenness: FarmGreennessSummary
     public var onTap: (() -> Void)?
 
     public init(
-        title: String = "Kehijauan Kebun",
+        title: String = "Hasil Pemantauan Drone",
         greenness: FarmGreennessSummary,
         onTap: (() -> Void)? = nil
     ) {
@@ -23,7 +22,7 @@ public struct FarmGreennessSummaryCardView: View {
                 // Background Drone NDVI Map
                 Color.clear
                     .overlay {
-                        if let uiImage = UIImage(named: "FarmGreennessMap") {
+                        if let uiImage = UIImage(named: "DummyOrthomosaic") {
                             Image(uiImage: uiImage)
                                 .resizable()
                                 .scaledToFill()
@@ -71,7 +70,7 @@ public struct FarmGreennessSummaryCardView: View {
                                 .font(.system(size: 38, weight: .bold))
                                 .foregroundStyle(Color.white)
 
-                            Text("pohon")
+                            Text("dari \(greenness.totalTreeCount) pohon")
                                 .font(.system(size: 18, weight: .semibold))
                                 .foregroundStyle(Color.white.opacity(0.80))
                         }

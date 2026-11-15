@@ -11,6 +11,7 @@ struct AssessmentReviewStatusCard: View {
     enum Status {
         case inReview(contactName: String)
         case results(AssessmentResultsViewModel.State)
+        case finished(completedAt: Date?, byteCount: Int64?)
 
         var phase: Phase {
             switch self {
@@ -18,6 +19,7 @@ struct AssessmentReviewStatusCard: View {
             case .results(.ready): .ready
             case .results(.downloading): .downloading
             case .results(.downloaded): .downloaded
+            case .finished: .downloaded
             }
         }
     }
@@ -63,6 +65,9 @@ struct AssessmentReviewStatusCard: View {
             case .results(.downloaded(let receipt)):
                 metadata(prefix: "Diunduh", date: receipt.downloadedAt, bytes: receipt.byteCount)
                     .transition(.opacity)
+            case .finished(let completedAt, let byteCount):
+                metadata(prefix: "Diunduh", date: completedAt, bytes: byteCount)
+                    .transition(.opacity)
             }
         } actions: {
             switch status.phase {
@@ -85,7 +90,7 @@ struct AssessmentReviewStatusCard: View {
                     .buttonStyle(.plain)
                     .foregroundStyle(dark ? palette.primary : palette.accent)
             case .downloaded:
-                primaryButton("Lihat Hasil Peninjauan", enabled: false)
+                primaryButton("Lihat Hasil Peninjauan", enabled: true)
             }
         }
     }
@@ -146,6 +151,8 @@ struct AssessmentReviewStatusCard: View {
             receipt.localFileURL == nil
                 ? "Simulasi unduhan selesai. Peta kebun dan rekomendasi pupuk asli belum tersedia."
                 : "Peta kebun dan rekomendasi pupuk sudah tersimpan di ponsel Anda dan bisa dibuka tanpa sinyal."
+        case .finished:
+            "Peta kebun dan rekomendasi pupuk sudah tersimpan di ponsel Anda dan bisa dibuka tanpa sinyal."
         }
     }
 

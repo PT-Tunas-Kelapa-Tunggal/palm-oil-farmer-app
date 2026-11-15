@@ -1,6 +1,6 @@
 import Foundation
 
-struct GardenCoordinate: Codable, Hashable {
+nonisolated struct GardenCoordinate: Codable, Hashable {
     let latitude: Double
     let longitude: Double
 
@@ -10,7 +10,7 @@ struct GardenCoordinate: Codable, Hashable {
     }
 }
 
-struct GardenBoundary: Codable {
+nonisolated struct GardenBoundary: Codable {
     static let minimumMappingPointCount = 4
     var points: [GardenCoordinate] = []
 

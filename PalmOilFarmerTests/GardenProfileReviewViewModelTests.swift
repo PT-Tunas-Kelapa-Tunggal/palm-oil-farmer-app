@@ -67,4 +67,16 @@ struct GardenProfileReviewViewModelTests {
         await failed.value
         #expect(bridge.activeStatus == .completed)
     }
+
+    @Test func applyUpdatePropagatesStatusAndDetailEvents() {
+        let bridge = GardenProfileReviewViewModel()
+        var value = request(status: .inReview)
+        value.timeline.detailEvents = [
+            ProgressionStatusDetailEvent(dateTime: Date(timeIntervalSince1970: 5000), title: "In Progress", desc: "Drone sedang memotret kebun")
+        ]
+
+        bridge.applyUpdate(value)
+        #expect(bridge.activeStatus == .inReview)
+        #expect(bridge.detailEvents?.first?.desc == "Drone sedang memotret kebun")
+    }
 }

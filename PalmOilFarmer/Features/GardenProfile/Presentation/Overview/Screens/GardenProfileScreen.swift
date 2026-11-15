@@ -69,8 +69,16 @@ struct GardenProfileScreen: View {
                 }
             }
         }
-        .navigationDestination(isPresented: $viewModel.showsReviewStatus) {
-            statusDestination
+        .sheet(isPresented: $viewModel.showsReviewStatus) {
+            AssessmentStatusView(
+                viewModel: AssessmentStatusViewModel(
+                    status: currentReviewStatus ?? .submitted,
+                    detailEvents: viewModel.reviewViewModel.detailEvents
+                ),
+                onAdvance: {
+                    advanceAction?()
+                }
+            )
         }
         .navigationDestination(isPresented: $viewModel.showsResults) {
             resultsDestination
@@ -78,7 +86,15 @@ struct GardenProfileScreen: View {
         .onChange(of: viewModel.isFinished) { _, finished in
             if finished { dismiss() }
         }
-        .task { await viewModel.loadReview() }
+        .task {
+            await viewModel.loadReview()
+            if let stream = viewModel.observeReviewUpdates() {
+                for await update in stream {
+                    guard !Task.isCancelled else { break }
+                    viewModel.reviewViewModel.applyUpdate(update)
+                }
+            }
+        }
     }
 
     private var rootSheet: Binding<GardenProfileSheet?> {
@@ -113,8 +129,8 @@ struct GardenProfileScreen: View {
             onBack: viewModel.close, onEditGarden: { viewModel.open(.details) },
             onEditProfile: { viewModel.open(.profile) },
             onReviewAction: {
-                guard viewModel.isComplete else { return }
                 if currentReviewStatus == nil {
+                    guard viewModel.isComplete else { return }
                     if !hideReviewIntroduction {
                         viewModel.open(.reviewInformation)
                     } else if let onOpenRequestAssessment {
@@ -136,7 +152,9 @@ struct GardenProfileScreen: View {
             },
             onViewSummary: viewModel.openSummary,
             onViewReviewInformation: { viewModel.open(.reviewInformation) },
-            onDelete: deleteAction
+            onDelete: deleteAction,
+            assessmentCompletedAt: viewModel.reviewViewModel.completedAt ?? garden.review?.date(for: .completed),
+            assessmentResultByteCount: currentReviewStatus == .completed ? PlaceholderAssessmentResultsDownloadRepository.resultByteCount : nil
         )
     }
 
@@ -168,20 +186,7 @@ struct GardenProfileScreen: View {
         }
     }
 
-    @ViewBuilder
-    private var statusDestination: some View {
-        if let status = currentReviewStatus {
-            ReviewStatusView(
-                gardenName: garden.name, status: status,
-                entries: !viewModel.reviewViewModel.activeEntries.isEmpty ? viewModel.reviewViewModel.activeEntries
-                    : garden.review.map { ReviewTimelineEntry.entries(for: $0) } ?? [],
-                resultsDownloaded: viewModel.reviewViewModel.activeStatus == .completed || (garden.review?.resultsDownloaded ?? false),
-                onAdvance: advanceAction,
-                onDownloaded: { viewModel.updateReview { $0.resultsDownloaded = true } },
-                onViewResults: viewModel.openResults
-            )
-        }
-    }
+
 
     private var advanceAction: (() -> Void)? {
         guard garden.review != nil else { return nil }
@@ -190,11 +195,16 @@ struct GardenProfileScreen: View {
 
     @ViewBuilder
     private var resultsDestination: some View {
-        if let currentReport {
-            FertilizerRecommendationView(report: currentReport)
-        } else {
-            ContentUnavailableView("Hasil peninjauan belum tersedia", systemImage: "chart.bar.doc.horizontal")
-        }
+        NutrientConditionView(
+            viewModel: NutrientConditionViewModel(
+                repository: CloudKitNutrientConditionRepository(
+                    containerIdentifier: AppConfiguration.cloudKitContainerIdentifier
+                ),
+                gardenId: garden.id.uuidString
+            ),
+            onBack: { viewModel.showsResults = false },
+            onOpenFertilizerEstimation: onOpenFertilizerEstimation
+        )
     }
 
 }

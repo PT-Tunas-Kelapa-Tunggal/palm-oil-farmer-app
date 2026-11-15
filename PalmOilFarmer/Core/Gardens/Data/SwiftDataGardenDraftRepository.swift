@@ -44,6 +44,11 @@ final class SwiftDataGardenDraftRepository: GardenDraftRepository {
         existing.harvestRecord = garden.harvestRecord
         existing.fertilizationFrequencyPerYear = garden.fertilizationFrequencyPerYear
         existing.profileUpdatedAt = garden.profileUpdatedAt
+        if let contact = garden.review?.contact {
+            existing.farmerName = contact.name
+            existing.farmerPhone = contact.phone
+            existing.farmerAddress = contact.address
+        }
         try modelContext.save()
         return true
     }

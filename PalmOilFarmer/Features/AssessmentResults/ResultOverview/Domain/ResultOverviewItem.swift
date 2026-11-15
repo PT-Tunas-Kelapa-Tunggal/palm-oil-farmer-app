@@ -122,6 +122,28 @@ public struct ResultOverviewItem: Identifiable, Equatable, Sendable {
     public let fertilizerEstimation: FertilizerEstimationSummary
     public let gardenDataRows: [GardenDataSummaryRowItem]
 
+    public func replacingGardenDetails(
+        name: String?,
+        location: String?,
+        greenness: FarmGreennessSummary? = nil
+    ) -> ResultOverviewItem {
+        ResultOverviewItem(
+            id: id,
+            gardenName: name.flatMap { $0.isEmpty ? nil : $0 } ?? gardenName,
+            locationName: location.flatMap { $0.isEmpty ? nil : $0 } ?? locationName,
+            heroImageName: heroImageName,
+            recommendationTitle: recommendationTitle,
+            recommendationSubtitle: recommendationSubtitle,
+            periods: periods,
+            nutrientStatusTitle: nutrientStatusTitle,
+            nutrientStatusSummary: nutrientStatusSummary,
+            nutrients: nutrients,
+            greenness: greenness ?? self.greenness,
+            fertilizerEstimation: fertilizerEstimation,
+            gardenDataRows: gardenDataRows
+        )
+    }
+
     public init(
         id: String,
         gardenName: String,

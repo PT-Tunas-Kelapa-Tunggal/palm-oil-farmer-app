@@ -67,7 +67,7 @@ public final class FertilizingMapViewModel {
                let match = loaded.availableFertilizers.first(where: {
                    $0.name.localizedCaseInsensitiveContains(initialName) || initialName.localizedCaseInsensitiveContains($0.name)
                }) {
-                loaded.selectedFertilizer = match
+                loaded = try await repository.selectFertilizer(fertilizerId: match.id, for: gardenId)
                 if match.defaultDivision == .wholeFarm {
                     areaDivision = .wholeFarm
                 }
@@ -78,8 +78,14 @@ public final class FertilizingMapViewModel {
         }
     }
 
-    public func selectFertilizer(_ option: FertilizerPeriodOption) {
-        item?.selectedFertilizer = option
+    public func selectFertilizer(_ option: FertilizerPeriodOption) async {
+        do {
+            var updated = try await repository.selectFertilizer(fertilizerId: option.id, for: gardenId)
+            updated.isMarkedDone = item?.isMarkedDone ?? false
+            item = updated
+        } catch {
+            errorMessage = error.localizedDescription
+        }
         if option.defaultDivision == .wholeFarm {
             areaDivision = .wholeFarm
         } else if areaDivision == .wholeFarm {
@@ -109,7 +115,15 @@ public final class FertilizingMapViewModel {
         guard let current = item else { return }
         let newStatus = !current.isMarkedDone
         do {
-            item = try await repository.markAsFertilized(for: gardenId, isDone: newStatus)
+            var updated = try await repository.markAsFertilized(for: gardenId, isDone: newStatus)
+            if updated.selectedFertilizer.id != current.selectedFertilizer.id {
+                updated = try await repository.selectFertilizer(
+                    fertilizerId: current.selectedFertilizer.id,
+                    for: gardenId
+                )
+                updated.isMarkedDone = newStatus
+            }
+            item = updated
         } catch {
             errorMessage = error.localizedDescription
         }

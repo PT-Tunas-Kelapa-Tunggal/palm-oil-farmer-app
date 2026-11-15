@@ -21,6 +21,7 @@ public struct FertilizingMapView: View {
 
     public init(
         gardenId: String = "garden-default",
+        repository: any FertilizingMapRepositoryProtocol = DummyFertilizingMapRepository(),
         initialFertilizerName: String? = nil,
         isInPeriod: Bool = true,
         initialAreaDivision: AreaDivisionMode = .perZona,
@@ -28,6 +29,7 @@ public struct FertilizingMapView: View {
     ) {
         _viewModel = State(
             initialValue: FertilizingMapViewModel(
+                repository: repository,
                 gardenId: gardenId,
                 initialFertilizerName: initialFertilizerName,
                 isInPeriod: isInPeriod,
@@ -39,6 +41,7 @@ public struct FertilizingMapView: View {
 
     public init(
         gardenId: UUID,
+        repository: any FertilizingMapRepositoryProtocol = DummyFertilizingMapRepository(),
         initialFertilizerName: String? = nil,
         isInPeriod: Bool = true,
         initialAreaDivision: AreaDivisionMode = .perZona,
@@ -46,6 +49,7 @@ public struct FertilizingMapView: View {
     ) {
         self.init(
             gardenId: gardenId.uuidString,
+            repository: repository,
             initialFertilizerName: initialFertilizerName,
             isInPeriod: isInPeriod,
             initialAreaDivision: initialAreaDivision,
@@ -55,6 +59,7 @@ public struct FertilizingMapView: View {
 
     public init(
         gardenID: UUID,
+        repository: any FertilizingMapRepositoryProtocol = DummyFertilizingMapRepository(),
         initialFertilizerName: String? = nil,
         isInPeriod: Bool = true,
         initialAreaDivision: AreaDivisionMode = .perZona,
@@ -62,6 +67,7 @@ public struct FertilizingMapView: View {
     ) {
         self.init(
             gardenId: gardenID.uuidString,
+            repository: repository,
             initialFertilizerName: initialFertilizerName,
             isInPeriod: isInPeriod,
             initialAreaDivision: initialAreaDivision,
@@ -79,8 +85,10 @@ public struct FertilizingMapView: View {
                     mode: viewModel.areaDivision,
                     zones: item.zones,
                     selectedFertilizerName: item.selectedFertilizer.name,
+                    selectedFertilizerTotalDose: item.selectedFertilizer.totalDose,
                     selectedZone: viewModel.selectedZone,
                     userLocation: viewModel.userLocation,
+                    orthomosaic: item.orthomosaic,
                     onSelectZone: { zone in
                         withAnimation(.spring(response: 0.35, dampingFraction: 0.8)) {
                             viewModel.selectZone(zone)
@@ -165,9 +173,7 @@ public struct FertilizingMapView: View {
                         selectedFertilizer: item.selectedFertilizer,
                         availableFertilizers: item.availableFertilizers,
                         onSelect: { selected in
-                            withAnimation(.spring(response: 0.35, dampingFraction: 0.8)) {
-                                viewModel.selectFertilizer(selected)
-                            }
+                            Task { await viewModel.selectFertilizer(selected) }
                         },
                         onClose: {
                             viewModel.closeActiveSheet()
