@@ -155,12 +155,6 @@ struct GardenBoundaryView: View {
         } message: {
             Text("Lokasi tidak dapat disimpan di perangkat. Coba lagi.")
         }
-        .confirmationDialog("Keluar dari pemetaan?", isPresented: $viewModel.showsExitConfirmation, titleVisibility: .visible) {
-            Button("Keluar tanpa menyimpan", role: .destructive, action: viewModel.discardAndClose)
-            Button("Lanjutkan pemetaan", role: .cancel, action: viewModel.continueMapping)
-        } message: {
-            Text("Batas yang belum disimpan perlu dipetakan ulang saat kamu kembali.")
-        }
     }
 
     private func advanceGuide() {
@@ -188,13 +182,16 @@ struct GardenBoundaryView: View {
     }
 
     private var mappingContent: some View {
-        MapReader { proxy in
+        @Bindable var viewModel = viewModel
+        return MapReader { proxy in
             BoundaryEditorLayout(
                 boundary: boundary,
                 isClosed: viewModel.isClosed,
                 showsControls: isDrawing,
                 showsBottomPanel: false,
                 bottomSheetHeight: showsMapSheet ? mapSheetHeight : 0,
+                showsExitMenu: $viewModel.showsExitConfirmation,
+                onDiscard: viewModel.discardAndClose,
                 onClose: viewModel.close,
                 onSearch: searchAgain,
                 onUndo: viewModel.undo,

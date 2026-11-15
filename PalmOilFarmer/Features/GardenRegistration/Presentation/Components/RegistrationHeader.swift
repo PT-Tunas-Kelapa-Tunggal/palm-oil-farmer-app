@@ -4,6 +4,8 @@ struct RegistrationHeader: View {
     var title = ""
     var isMapHeader = false
     var closeSymbol = "xmark"
+    /// Matikan kalau tombol tutup digambar sendiri oleh layar (misalnya glass menu di peta).
+    var showsCloseButton = true
     var trailingSymbol: String? = nil
     var trailingLabel = ""
     var isTrailingEnabled = true
@@ -20,9 +22,11 @@ struct RegistrationHeader: View {
                 .padding(.vertical, isMapHeader ? 10 : 20)
                 .accessibilityAddTraits(.isHeader)
             HStack {
-                RegistrationIconButton(symbol: closeSymbol,
-                                       label: closeSymbol == "xmark" ? "Tutup" : "Kembali",
-                                       action: onClose)
+                if showsCloseButton {
+                    RegistrationIconButton(symbol: closeSymbol,
+                                           label: closeSymbol == "xmark" ? "Tutup" : "Kembali",
+                                           action: onClose)
+                }
                 Spacer(minLength: 0)
                 if let trailingSymbol, let onTrailing {
                     RegistrationIconButton(symbol: trailingSymbol, label: trailingLabel,
