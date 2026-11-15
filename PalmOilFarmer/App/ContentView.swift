@@ -38,7 +38,7 @@ struct ContentView: View {
         )) {
             Button("Mengerti", role: .cancel) { store.errorMessage = nil }
         } message: {
-            Text(store.errorMessage ?? "")
+            Text(store.errorMessage ?? "test")
         }
     }
 
