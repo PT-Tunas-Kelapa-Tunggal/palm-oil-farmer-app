@@ -126,7 +126,7 @@ public struct NutrientConditionView: View {
     private var heroSection: some View {
         VStack(alignment: .leading, spacing: 6) {
             Text(viewModel.overview?.title ?? "Kondisi Hara")
-                .font(.system(size: 34, weight: .bold, design: .rounded))
+                .font(.largeTitle.bold())
                 .foregroundStyle(Color(red: 0.08, green: 0.08, blue: 0.09))
 
             Text(viewModel.overview?.subtitle ?? "Belum seimbang, dihitung per tahun untuk seluruh kebun")

@@ -83,7 +83,7 @@ public struct FertilizingMapDetailSheetView: View {
                 Spacer()
 
                 Text(doseText)
-                    .font(.system(size: 32, weight: .bold, design: .rounded))
+                    .font(.largeTitle.bold())
                     .foregroundStyle(.white)
             }
             .padding(.horizontal, 20)

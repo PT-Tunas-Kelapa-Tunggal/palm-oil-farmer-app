@@ -4,6 +4,8 @@ import SwiftUI
 public struct NutrientBadgeView: View {
     public let symbol: String
     public var size: CGFloat = 44
+    /// Scales the badge with Dynamic Type so the symbol grows with the user's text size.
+    @ScaledMetric(relativeTo: .title3) private var scale: CGFloat = 1
 
     public init(symbol: String, size: CGFloat = 44) {
         self.symbol = symbol
@@ -14,10 +16,10 @@ public struct NutrientBadgeView: View {
         ZStack {
             Circle()
                 .fill(Color(red: 0.08, green: 0.08, blue: 0.09))
-                .frame(width: size, height: size)
+                .frame(width: size * scale, height: size * scale)
 
             Text(symbol)
-                .font(.system(size: size * 0.45, weight: .bold, design: .rounded))
+                .font(.system(size: size * 0.45 * scale, weight: .bold))
                 .foregroundStyle(.white)
         }
     }

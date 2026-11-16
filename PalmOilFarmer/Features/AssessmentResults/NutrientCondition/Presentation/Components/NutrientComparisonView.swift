@@ -18,7 +18,7 @@ public struct NutrientComparisonView: View {
 
                 HStack(alignment: .firstTextBaseline, spacing: 4) {
                     Text("\(comparison.currentPracticeValue)")
-                        .font(.system(size: 34, weight: .bold, design: .rounded))
+                        .font(.largeTitle.bold())
                         .foregroundStyle(.secondary)
 
                     Text(comparison.unit)
@@ -36,7 +36,7 @@ public struct NutrientComparisonView: View {
 
                 HStack(alignment: .firstTextBaseline, spacing: 4) {
                     Text("\(comparison.requiredValue)")
-                        .font(.system(size: 34, weight: .bold, design: .rounded))
+                        .font(.largeTitle.bold())
                         .foregroundStyle(Color(red: 0.08, green: 0.08, blue: 0.09))
 
                     Text(comparison.unit)
