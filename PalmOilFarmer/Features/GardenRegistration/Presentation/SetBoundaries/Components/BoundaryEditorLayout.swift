@@ -96,52 +96,15 @@ struct BoundaryEditorLayout<MapContent: View>: View {
 
     /// Tombol X yang membesar menjadi kartu konfirmasi keluar, bergaya dialog bawaan iOS.
     private func exitMenu(isExpanded: Binding<Bool>) -> some View {
-        ExpandableGlassMenu(
-            alignment: .topLeading,
-            progress: isExpanded.wrappedValue ? 1 : 0,
-            labelSize: CGSize(width: RegistrationStyle.controlSize, height: RegistrationStyle.controlSize),
-            // Saat tertutup radius otomatis dibatasi setengah ukuran → tetap lingkaran.
-            cornerRadius: 34
-        ) {
-            VStack(alignment: .leading, spacing: 0) {
-                Text("Buang batas kebun?")
-                    .font(.title3.weight(.semibold))
-                    .accessibilityAddTraits(.isHeader)
-                Text("Batas yang belum disimpan akan hilang.")
-                    .font(.body)
-                    .foregroundStyle(.secondary)
-                    .fixedSize(horizontal: false, vertical: true)
-                    .padding(.top, 8)
-                Button(role: .destructive, action: onDiscard) {
-                    Text("Buang")
-                        .font(.body)
-                        .frame(maxWidth: .infinity, minHeight: 50)
-                        .contentShape(.capsule)
-                }
-                .buttonStyle(.plain)
-                .foregroundStyle(.red)
-                .background(.fill.tertiary, in: .capsule)
-                .padding(.top, 22)
-            }
-            .padding(.horizontal, 22)
-            .padding(.top, 26)
-            .padding(.bottom, 14)
-            .frame(width: 270, alignment: .leading)
-        } label: {
-            // Ketukan X tidak langsung membuka menu: ViewModel yang memutuskan
-            // (batas kosong → langsung tutup, sudah ada titik → buka menu).
-            Button(action: onClose) {
-                Image(systemName: "xmark")
-                    .font(.system(size: 22))
-                    .frame(width: RegistrationStyle.controlSize, height: RegistrationStyle.controlSize)
-                    .contentShape(.rect)
-            }
-            .buttonStyle(.plain)
-            .accessibilityLabel("Tutup")
-        }
-        // Terbuka: kaca terang seperti dialog iOS. Tertutup: ikut gaya gelap header peta.
-        .environment(\.colorScheme, isExpanded.wrappedValue ? .light : .dark)
-        .animation(.glassMenu, value: isExpanded.wrappedValue)
+        // Ketukan X tidak langsung membuka kartu: ViewModel yang memutuskan
+        // (batas kosong → langsung tutup, sudah ada titik → buka kartu).
+        RegistrationDiscardMenu(
+            isExpanded: isExpanded,
+            title: "Buang batas kebun",
+            message: "Batas yang belum disimpan akan hilang.",
+            onClose: onClose,
+            onDiscard: onDiscard
+        )
     }
 }
 
@@ -160,6 +123,8 @@ struct BoundaryEditorLayout<MapContent: View>: View {
 #Preview("Layout editor batas · Menu keluar") {
     BoundaryEditorLayout(
         boundary: GardenPreviewData.boundary, metrics: GardenPreviewData.metrics,
+        // Panel bawah dimatikan: sheet menutupi canvas sehingga X dan kartu tidak terlihat.
+        showsBottomPanel: false,
         showsExitMenu: .constant(true),
         onClose: {}, onSearch: {}, onUndo: {}, onClear: {}, onConfirm: {}
     ) {

@@ -10,7 +10,7 @@ import SwiftUI
 
 extension Animation {
    
-    static let glassMenu: Animation = .bouncy(duration: 0.75, extraBounce: 0.02)
+    static let glassMenu: Animation = .bouncy(duration: 0.6, extraBounce: 0.02)
 }
 
 
