@@ -7,6 +7,9 @@ public struct FertilizerEstimationView: View {
     @Environment(\.dismiss) private var dismiss
     @State private var viewModel: FertilizerEstimationViewModel
     @State private var npkPillFrame: CGRect = .zero
+    @State private var saveAlertTitle = ""
+    @State private var saveAlertMessage = ""
+    @State private var isSaveAlertPresented = false
 
     public var onBack: (() -> Void)?
 
@@ -24,6 +27,7 @@ public struct FertilizerEstimationView: View {
     }
 
     public var body: some View {
+        GeometryReader { viewport in
         ZStack(alignment: .topLeading) {
             ScrollView {
                 VStack(alignment: .leading, spacing: 0) {
@@ -67,8 +71,19 @@ public struct FertilizerEstimationView: View {
 
                                 if viewModel.isSaveCompositionVisible {
                                     SaveCompositionButton {
-                                        viewModel.saveComposition()
+                                        Task {
+                                            do {
+                                                try await viewModel.saveComposition()
+                                                saveAlertTitle = "Komposisi Tersimpan"
+                                                saveAlertMessage = "Pilihan NPK Anda sudah digunakan di Jadwal Pemupukan."
+                                            } catch {
+                                                saveAlertTitle = "Gagal Menyimpan"
+                                                saveAlertMessage = error.localizedDescription
+                                            }
+                                            isSaveAlertPresented = true
+                                        }
                                     }
+                                    .disabled(viewModel.isSaving)
                                     .transition(.asymmetric(
                                         insertion: .opacity.combined(with: .move(edge: .bottom)),
                                         removal: .opacity
@@ -120,6 +135,13 @@ public struct FertilizerEstimationView: View {
 
             // Floating NPK Menu Overlay (In-place dropdown matching Sketch)
             if viewModel.isNPKPickerPresented, let overview = viewModel.overview {
+                let preferredHeight = NPKPickerMenuView.estimatedHeight(for: overview.npkOptions)
+                let spaceBelow = max(0, viewport.size.height - npkPillFrame.maxY - 16)
+                let spaceAbove = max(0, npkPillFrame.minY - 16)
+                let opensAbove = preferredHeight > spaceBelow && spaceAbove > spaceBelow
+                let availableHeight = opensAbove ? spaceAbove : spaceBelow
+                let menuHeight = min(preferredHeight, max(availableHeight, 120))
+
                 Color.black.opacity(0.001)
                     .ignoresSafeArea()
                     .onTapGesture {
@@ -131,6 +153,7 @@ public struct FertilizerEstimationView: View {
                 NPKPickerMenuView(
                     options: overview.npkOptions,
                     selectedOptionId: overview.selectedNPKId,
+                    height: menuHeight,
                     onSelect: { option in
                         withAnimation(.spring(response: 0.25, dampingFraction: 0.8)) {
                             viewModel.isNPKPickerPresented = false
@@ -142,7 +165,9 @@ public struct FertilizerEstimationView: View {
                 )
                 .offset(
                     x: max(16, npkPillFrame.minX - 8),
-                    y: npkPillFrame.maxY + 6
+                    y: opensAbove
+                        ? max(12, npkPillFrame.minY - menuHeight - 6)
+                        : npkPillFrame.maxY + 6
                 )
                 .transition(.asymmetric(
                     insertion: .opacity.combined(with: .scale(scale: 0.94, anchor: .topLeading)),
@@ -150,6 +175,7 @@ public struct FertilizerEstimationView: View {
                 ))
                 .zIndex(999)
             }
+        }
         }
         .background(Color(hex: 0xF2F4F7).ignoresSafeArea())
         .task {
@@ -161,6 +187,11 @@ public struct FertilizerEstimationView: View {
             await viewModel.refresh()
         }
         .toolbar(.hidden, for: .navigationBar)
+        .alert(saveAlertTitle, isPresented: $isSaveAlertPresented) {
+            Button("OK", role: .cancel) { }
+        } message: {
+            Text(saveAlertMessage)
+        }
     }
 
     // MARK: - Subviews

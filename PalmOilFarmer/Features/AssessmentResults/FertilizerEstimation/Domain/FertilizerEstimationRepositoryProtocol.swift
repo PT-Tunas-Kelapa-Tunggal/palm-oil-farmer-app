@@ -4,6 +4,7 @@ import Foundation
 public protocol FertilizerEstimationRepositoryProtocol: Sendable {
     func fetchEstimation(for gardenId: String) async throws -> FertilizerEstimationOverview
     func selectNPK(optionId: String, for gardenId: String) async throws -> FertilizerEstimationOverview
+    func saveNPK(optionId: String, for gardenId: String) async throws
 }
 
 /// In-memory mock repository conforming to `FertilizerEstimationRepositoryProtocol`.
@@ -63,6 +64,10 @@ public actor DummyFertilizerEstimationRepository: FertilizerEstimationRepository
 
         self.state = updatedOverview
         return updatedOverview
+    }
+
+    public func saveNPK(optionId: String, for gardenId: String) async throws {
+        _ = try await selectNPK(optionId: optionId, for: gardenId)
     }
 }
 
