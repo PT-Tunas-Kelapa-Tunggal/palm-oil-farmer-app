@@ -1,6 +1,9 @@
 # CloudKitContract Changelog
 
 Every modification to the `CloudKitContract` folder must be documented here and accompanied by a bump to `ContractInfo.version`.
+## 1 — 2026-11-16
+- Added the macOS-owned `farmNutrientComparisonStatus` JSON envelope with annual per-hectare (kg/ha/year) current and recommended values for Nitrogen, Fospor, Kalium, and Magnesium. These copy the ML baseline and recorded fertilizer supply; the iOS app chooses its own status label.
+- Added typed nutrient values, strict decoding, and reader/writer support. Schema deploy: REQUIRED (add `farmNutrientComparisonStatus` as a `STRING` field on `PlantationScanRequest`).
 
 ## 1 — 2026-11-12
 - Initial contract scaffolding for `PlantationScanRequest` synchronization between iOS (Farmer) and macOS (Drone Operator).
