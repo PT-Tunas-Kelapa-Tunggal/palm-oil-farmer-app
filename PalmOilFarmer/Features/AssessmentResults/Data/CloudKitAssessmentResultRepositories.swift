@@ -57,15 +57,27 @@ final class CloudKitNutrientConditionRepository: NutrientConditionRepositoryProt
                 current += max(0, need.currentDosage) * max(percent, 0) / 100
                 required += max(0, need.recommendedDosage) * max(percent, 0) / 100
             }
-            guard found else { return nil }
-            let currentValue = Int(current.rounded())
-            let requiredValue = Int(required.rounded())
+            throw error
+        }
+        guard !comparisons.isEmpty else { throw CloudKitAssessmentDataError.missingField("perbandingan unsur hara") }
+
+        let definitions: [(ContractNutrientType, String, String)] = [
+            (.nitrogen, "nitrogen", "N"),
+            (.phosphorus, "fosfor", "P"),
+            (.potassium, "kalium", "K"),
+            (.magnesium, "magnesium", "Mg")
+        ]
+        let items = definitions.compactMap { type, id, symbol -> NutrientItem? in
+            guard let comparison = comparisons.first(where: { $0.nutrientType == type }) else { return nil }
+            let name = type.rawValue
+            let currentValue = Int(comparison.current.rounded())
+            let requiredValue = Int(comparison.recommendation.rounded())
             let status: NutrientStatus = currentValue < requiredValue ? .deficient : currentValue > requiredValue ? .excess : .sufficient
             let verdict: String
             switch status {
-            case .deficient: verdict = "Dosis pupuk saat ini di bawah anjuran CloudKit."
-            case .excess: verdict = "Dosis pupuk saat ini melebihi anjuran CloudKit."
-            case .sufficient: verdict = "Dosis pupuk saat ini sesuai dengan anjuran CloudKit."
+            case .deficient: verdict = "Pasokan \(name.lowercased()) saat ini di bawah anjuran."
+            case .excess: verdict = "Pasokan \(name.lowercased()) saat ini melebihi anjuran."
+            case .sufficient: verdict = "Pasokan \(name.lowercased()) saat ini sesuai anjuran."
             }
             return NutrientItem(
                 id: id, name: name, symbol: symbol, title: "\(name) (\(symbol))",
@@ -79,13 +91,13 @@ final class CloudKitNutrientConditionRepository: NutrientConditionRepositoryProt
                 warningImpact: status == .sufficient ? nil : "Tinjau kembali dosis pupuk bersama petugas kebun."
             )
         }
-        guard !items.isEmpty else { throw CloudKitAssessmentDataError.missingField("komposisi unsur hara") }
+        guard !items.isEmpty else { throw CloudKitAssessmentDataError.missingField("perbandingan unsur hara") }
         let low = items.filter { $0.status == .deficient }.count
         let high = items.filter { $0.status == .excess }.count
         return NutrientConditionOverview(
             id: gardenId,
             title: "Kondisi Hara",
-            subtitle: "\(low) unsur kurang dan \(high) unsur berlebih berdasarkan data CloudKit.",
+            subtitle: "\(low) unsur kurang dan \(high) unsur berlebih per hektare per tahun.",
             nutrients: items
         )
     }
