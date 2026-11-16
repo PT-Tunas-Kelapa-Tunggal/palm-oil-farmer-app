@@ -36,10 +36,22 @@ struct GardenDetailsView: View {
             ? AnyLayout(VStackLayout(spacing: 7))
             : AnyLayout(HStackLayout(spacing: 7))
         VStack(spacing: 0) {
-            RegistrationHeader(title: viewModel.isEditing ? "Edit Kebun" : "Data Kebun") {
+            RegistrationHeader(
+                title: viewModel.isEditing ? "Edit Kebun" : "Data Kebun",
+                discardPrompt: RegistrationDiscardPrompt(
+                    isPresented: $viewModel.showsExitConfirmation,
+                    title: viewModel.isEditing ? "Buang perubahan" : "Buang data kebun",
+                    message: viewModel.isEditing
+                        ? "Perubahan yang belum disimpan akan hilang."
+                        : "Data yang belum disimpan akan hilang.",
+                    onDiscard: viewModel.discardAndClose
+                )
+            ) {
                 isNameFocused = false
-                viewModel.close()
+                viewModel.requestClose()
             }
+            // Kartu yang terbuka harus berada di atas ScrollView di bawahnya.
+            .zIndex(1)
             ScrollView {
                 VStack(spacing: 0) {
                     VStack(spacing: 0) {
@@ -135,6 +147,12 @@ struct GardenDetailsView: View {
                     .padding(.horizontal, 16)
                     .padding(.top, 16)
                     .padding(.bottom, 2)
+            }
+            .overlay {
+                // Selama kartu terbuka, ketukan di mana saja di bawah header menutup kartu.
+                if viewModel.showsExitConfirmation {
+                    Color.clear.collapsesGlassMenu($viewModel.showsExitConfirmation)
+                }
             }
         }
         .background(RegistrationStyle.background)

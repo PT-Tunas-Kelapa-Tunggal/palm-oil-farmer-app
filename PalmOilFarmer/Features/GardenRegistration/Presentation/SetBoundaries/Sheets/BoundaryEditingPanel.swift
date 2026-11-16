@@ -15,7 +15,7 @@ struct BoundaryEditingPanel: View {
             GeometryReader { geometry in
                 ScrollView {
                     VStack(spacing: 8) {
-                        Text(instructions)
+                        Text("Ketuk peta di setiap sudut kebun")
                             .font(.subheadline).foregroundStyle(.secondary)
                             .multilineTextAlignment(.center)
                             .fixedSize(horizontal: false, vertical: true)
@@ -51,16 +51,7 @@ struct BoundaryEditingPanel: View {
         .padding(.vertical, 8)
     }
 
-    private var instructions: String {
-        let remaining = GardenBoundary.minimumMappingPointCount - boundary.points.count
-        if boundary.points.isEmpty {
-            return "Ketuk peta untuk menandai minimal \(GardenBoundary.minimumMappingPointCount) sudut kebun."
-        }
-        if remaining > 0 {
-            return "Tambahkan \(remaining) sudut lagi. Geser titik untuk menyesuaikan posisinya."
-        }
-        return "Periksa batas kebun. Geser titik atau tambahkan sudut sebelum disimpan."
-    }
+    
 
     @ViewBuilder
     private var editingActions: some View {
