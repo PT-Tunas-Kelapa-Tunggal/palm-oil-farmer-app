@@ -218,7 +218,7 @@ struct GardenProfileContentView: View {
             }.buttonStyle(.plain)
             GardenProfileActionButton(
                 title: reviewTitle,
-                action: currentReviewStatus == nil ? onViewReviewInformation : onReviewAction
+                action: onReviewAction
             )
         }
         .multilineTextAlignment(.center)
@@ -254,7 +254,7 @@ struct GardenProfileContentView: View {
             }
             .buttonStyle(.plain)
         } actions: {
-            Button(action: onViewReviewInformation) {
+            Button(action: onReviewAction) {
                 Text("Ajukan Peninjauan")
                     .font(.headline)
                     .frame(maxWidth: .infinity)
