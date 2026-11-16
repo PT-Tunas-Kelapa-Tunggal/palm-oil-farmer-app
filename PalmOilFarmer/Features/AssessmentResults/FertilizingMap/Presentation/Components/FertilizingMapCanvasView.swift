@@ -6,7 +6,6 @@ public struct FertilizingMapCanvasView: View {
     public let selectedFertilizerName: String
     public let selectedFertilizerTotalDose: String
     public let selectedZone: FertilizingZoneDetail?
-    public let userLocation: CGPoint
     public let orthomosaic: FarmOrthomosaicMapData?
     public let onSelectZone: (FertilizingZoneDetail) -> Void
 
@@ -16,7 +15,6 @@ public struct FertilizingMapCanvasView: View {
         selectedFertilizerName: String,
         selectedFertilizerTotalDose: String = "",
         selectedZone: FertilizingZoneDetail?,
-        userLocation: CGPoint,
         orthomosaic: FarmOrthomosaicMapData? = nil,
         onSelectZone: @escaping (FertilizingZoneDetail) -> Void
     ) {
@@ -25,7 +23,6 @@ public struct FertilizingMapCanvasView: View {
         self.selectedFertilizerName = selectedFertilizerName
         self.selectedFertilizerTotalDose = selectedFertilizerTotalDose
         self.selectedZone = selectedZone
-        self.userLocation = userLocation
         self.orthomosaic = orthomosaic
         self.onSelectZone = onSelectZone
     }
@@ -42,7 +39,6 @@ public struct FertilizingMapCanvasView: View {
                         mode: mode,
                         wholeFarmDoseText: selectedFertilizerTotalDose,
                         selectedZone: selectedZone,
-                        userLocation: userLocation,
                         onSelectZone: onSelectZone
                     )
                     .frame(width: geometry.size.width, height: geometry.size.height)
@@ -91,8 +87,6 @@ public struct FertilizingMapCanvasView: View {
                 wholeFarmBadge(in: geometry)
             }
 
-            // User Location GPS Marker
-            userLocationMarker(in: geometry)
         }
     }
 
@@ -190,25 +184,4 @@ public struct FertilizingMapCanvasView: View {
         )
     }
 
-    private func userLocationMarker(in geometry: GeometryProxy) -> some View {
-        ZStack {
-            // Pulsing translucent outer ring
-            Circle()
-                .fill(Color(red: 0x00 / 255, green: 0x7A / 255, blue: 0xFF / 255).opacity(0.2))
-                .frame(width: 44, height: 44)
-
-            // Inner circle
-            Circle()
-                .fill(Color(red: 0x00 / 255, green: 0x7A / 255, blue: 0xFF / 255))
-                .frame(width: 18, height: 18)
-                .overlay(
-                    Circle().stroke(Color.white, lineWidth: 3)
-                )
-                .shadow(color: .black.opacity(0.25), radius: 4, x: 0, y: 2)
-        }
-        .position(
-            x: geometry.size.width * userLocation.x,
-            y: geometry.size.height * userLocation.y
-        )
-    }
 }

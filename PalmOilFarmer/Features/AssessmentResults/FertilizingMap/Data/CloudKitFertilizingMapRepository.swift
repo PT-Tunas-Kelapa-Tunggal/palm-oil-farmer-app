@@ -25,7 +25,9 @@ actor CloudKitFertilizingMapRepository: FertilizingMapRepositoryProtocol {
         var schedule = try reader.fertilizationScheduling().get()
         var updated = false
         for period in schedule.indices where !updated {
-            guard let step = schedule[period].fertilizers.firstIndex(where: { $0.fertilizerType == type }) else { continue }
+            guard let step = schedule[period].fertilizers.firstIndex(where: {
+                $0.fertilizerType == type || (Self.isNPK(type) && Self.isNPK($0.fertilizerType))
+            }) else { continue }
             schedule[period].fertilizers[step].doneAt = isDone ? Date() : nil
             updated = true
         }
@@ -45,13 +47,23 @@ actor CloudKitFertilizingMapRepository: FertilizingMapRepositoryProtocol {
         let farm = try await CloudKitFarmGreenIndexRepository(containerIdentifier: containerIdentifier)
             .fetchFarmGreenIndex(for: gardenId)
         guard let map = farm.orthomosaic else { throw CloudKitAssessmentDataError.missingField("peta kebun") }
-        let types = Array(Set(needs.map(\.fertilizerType))).sorted { $0.rawValue < $1.rawValue }
-        let type = selectedType[gardenId] ?? types[0]
-        selectedType[gardenId] = type
         let schedule = reader.fertilizationScheduling().or([])
+        let allTypes = Array(Set(needs.map(\.fertilizerType))).sorted { $0.rawValue < $1.rawValue }
+        let savedNPK = await SavedNPKSelectionStore.shared.selection(for: gardenId)
+        let savedNPKType = savedNPK.flatMap(ContractFertilizerType.init(rawValue:))
+        let scheduledNPKType = schedule.flatMap(\.fertilizers)
+            .map(\.fertilizerType).first(where: Self.isNPK)
+        let chosenNPKType = [savedNPKType, scheduledNPKType, allTypes.first(where: Self.isNPK)]
+            .compactMap { $0 }.first(where: allTypes.contains)
+        let types = allTypes.filter { !Self.isNPK($0) || $0 == chosenNPKType }
+        let type = selectedType[gardenId].flatMap { types.contains($0) ? $0 : nil } ?? types[0]
+        selectedType[gardenId] = type
         let isDone = doneState[gardenId] ?? schedule
             .flatMap(\.fertilizers)
-            .contains(where: { $0.fertilizerType == type && $0.doneAt != nil })
+            .contains(where: {
+                ($0.fertilizerType == type || (Self.isNPK(type) && Self.isNPK($0.fertilizerType)))
+                    && $0.doneAt != nil
+            })
         let options = types.map { optionType -> FertilizerPeriodOption in
             let matching = needs.filter { $0.fertilizerType == optionType }
             let amount = Self.totalAmount(matching, treeCount: farm.totalTrees)
@@ -89,6 +101,15 @@ actor CloudKitFertilizingMapRepository: FertilizingMapRepositoryProtocol {
             let unit = need.dosageUnit.lowercased()
             let multiplier = unit.contains("pohon") || unit.contains("tree") ? Double(max(treeCount, 1)) : 1
             return value + max(0, need.recommendedDosage) * multiplier
+        }
+    }
+
+    private static func isNPK(_ type: ContractFertilizerType) -> Bool {
+        switch type {
+        case .npk, .npk15_15_15, .npk12_6_22_3, .npk13_6_27_4, .npk13_8_27_4, .npk16_16_16:
+            true
+        default:
+            false
         }
     }
 

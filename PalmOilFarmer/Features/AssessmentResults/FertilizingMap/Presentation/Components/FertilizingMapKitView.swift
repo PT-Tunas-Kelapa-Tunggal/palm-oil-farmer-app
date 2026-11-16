@@ -1,4 +1,5 @@
 import ImageIO
+import CoreLocation
 import MapKit
 import SwiftUI
 import UIKit
@@ -11,7 +12,6 @@ struct FertilizingMapKitView: UIViewRepresentable {
     let mode: AreaDivisionMode
     let wholeFarmDoseText: String
     let selectedZone: FertilizingZoneDetail?
-    let userLocation: CGPoint
     let onSelectZone: (FertilizingZoneDetail) -> Void
 
     func makeCoordinator() -> Coordinator { Coordinator() }
@@ -22,9 +22,11 @@ struct FertilizingMapKitView: UIViewRepresentable {
         map.delegate = context.coordinator
         map.isRotateEnabled = true
         map.isPitchEnabled = true
+        map.showsUserLocation = true
+        context.coordinator.requestLocationAuthorization()
         context.coordinator.update(map, data: data, zones: zones, mode: mode,
                                    wholeFarmDoseText: wholeFarmDoseText,
-                                   selectedZone: selectedZone, userLocation: userLocation,
+                                   selectedZone: selectedZone,
                                    onSelectZone: onSelectZone)
         return map
     }
@@ -32,21 +34,27 @@ struct FertilizingMapKitView: UIViewRepresentable {
     func updateUIView(_ map: MKMapView, context: Context) {
         context.coordinator.update(map, data: data, zones: zones, mode: mode,
                                    wholeFarmDoseText: wholeFarmDoseText,
-                                   selectedZone: selectedZone, userLocation: userLocation,
+                                   selectedZone: selectedZone,
                                    onSelectZone: onSelectZone)
     }
 
     @MainActor
     final class Coordinator: NSObject, MKMapViewDelegate {
+        private let locationManager = CLLocationManager()
         private var lastData: FarmOrthomosaicMapData?
         private var lastZones: [FertilizingZoneDetail] = []
         private var lastMode: AreaDivisionMode?
         private var lastWholeFarmDoseText: String?
         private var lastSelectedZoneID: Int?
-        private var lastUserLocation: CGPoint?
         private var imageMapRect: MKMapRect?
         private var zoneAnnotations: [ObjectIdentifier: FertilizingZoneDetail] = [:]
         private var onSelectZone: ((FertilizingZoneDetail) -> Void)?
+
+        func requestLocationAuthorization() {
+            if locationManager.authorizationStatus == .notDetermined {
+                locationManager.requestWhenInUseAuthorization()
+            }
+        }
 
         func update(
             _ map: MKMapView,
@@ -55,14 +63,13 @@ struct FertilizingMapKitView: UIViewRepresentable {
             mode: AreaDivisionMode,
             wholeFarmDoseText: String,
             selectedZone: FertilizingZoneDetail?,
-            userLocation: CGPoint,
             onSelectZone: @escaping (FertilizingZoneDetail) -> Void
         ) {
             self.onSelectZone = onSelectZone
             let selectedZoneID = selectedZone?.id
             guard lastData != data || lastZones != zones || lastMode != mode
                     || lastWholeFarmDoseText != wholeFarmDoseText
-                    || lastSelectedZoneID != selectedZoneID || lastUserLocation != userLocation else { return }
+                    || lastSelectedZoneID != selectedZoneID else { return }
 
             let shouldReframe = lastData != data || lastMode != mode
             lastData = data
@@ -70,10 +77,9 @@ struct FertilizingMapKitView: UIViewRepresentable {
             lastMode = mode
             lastWholeFarmDoseText = wholeFarmDoseText
             lastSelectedZoneID = selectedZoneID
-            lastUserLocation = userLocation
 
             map.removeOverlays(map.overlays)
-            map.removeAnnotations(map.annotations)
+            map.removeAnnotations(map.annotations.filter { !($0 is MKUserLocation) })
             zoneAnnotations.removeAll()
 
             guard let imageURL = data.imageURL,
@@ -123,14 +129,6 @@ struct FertilizingMapKitView: UIViewRepresentable {
                 map.addAnnotation(FertilizingWholeFarmAnnotation(doseText: wholeFarmDoseText, coordinate: center))
             }
 
-            let locationPixel = PixelPoint(
-                x: userLocation.x * Double(data.imagePixelWidth),
-                y: userLocation.y * Double(data.imagePixelHeight)
-            )
-            if let coordinate = Self.coordinate(for: locationPixel, data: data, rect: imageRect) {
-                map.addAnnotation(FertilizingUserLocationAnnotation(coordinate: coordinate))
-            }
-
             if shouldReframe {
                 map.setVisibleMapRect(
                     farmRect,
@@ -168,18 +166,6 @@ struct FertilizingMapKitView: UIViewRepresentable {
         }
 
         func mapView(_ mapView: MKMapView, viewFor annotation: MKAnnotation) -> MKAnnotationView? {
-            if annotation is FertilizingUserLocationAnnotation {
-                let reuseID = "fertilizing-user-location"
-                let marker = (mapView.dequeueReusableAnnotationView(withIdentifier: reuseID) as? MKMarkerAnnotationView)
-                    ?? MKMarkerAnnotationView(annotation: annotation, reuseIdentifier: reuseID)
-                marker.annotation = annotation
-                marker.glyphImage = UIImage(systemName: "location.fill")
-                marker.markerTintColor = .systemBlue
-                marker.canShowCallout = false
-                marker.displayPriority = .required
-                return marker
-            }
-
             if let wholeFarm = annotation as? FertilizingWholeFarmAnnotation {
                 let reuseID = "fertilizing-whole-farm"
                 let label = (mapView.dequeueReusableAnnotationView(withIdentifier: reuseID) as? FertilizingZoneAnnotationView)
@@ -379,14 +365,6 @@ private final class FertilizingWholeFarmAnnotation: NSObject, MKAnnotation {
     }
 }
 
-private final class FertilizingUserLocationAnnotation: NSObject, MKAnnotation {
-    let coordinate: CLLocationCoordinate2D
-
-    init(coordinate: CLLocationCoordinate2D) {
-        self.coordinate = coordinate
-    }
-}
-
 private extension UIColor {
     convenience init(hex: UInt32) {
         self.init(
@@ -422,7 +400,6 @@ private extension UIColor {
             mode: .perZona,
             wholeFarmDoseText: "400 kg",
             selectedZone: zones.first,
-            userLocation: CGPoint(x: 0.5, y: 0.5),
             onSelectZone: { _ in }
         )
         .ignoresSafeArea()

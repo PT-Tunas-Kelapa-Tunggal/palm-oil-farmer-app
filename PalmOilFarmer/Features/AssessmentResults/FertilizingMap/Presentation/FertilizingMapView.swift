@@ -87,7 +87,6 @@ public struct FertilizingMapView: View {
                     selectedFertilizerName: item.selectedFertilizer.name,
                     selectedFertilizerTotalDose: item.selectedFertilizer.totalDose,
                     selectedZone: viewModel.selectedZone,
-                    userLocation: viewModel.userLocation,
                     orthomosaic: item.orthomosaic,
                     onSelectZone: { zone in
                         withAnimation(.spring(response: 0.35, dampingFraction: 0.8)) {
