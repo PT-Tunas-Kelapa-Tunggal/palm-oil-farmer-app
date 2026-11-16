@@ -12,10 +12,13 @@ public final class FertilizerEstimationViewModel {
     public var isLoading: Bool = false
     public var errorMessage: String?
     public var isNPKPickerPresented: Bool = false
+    public private(set) var savedNPKId: String?
+    public private(set) var isSaving: Bool = false
 
-    /// Indicates whether the farmer has selected an alternative NPK formulation differing from default.
+    /// The save action appears whenever the preview differs from the saved choice.
     public var isSaveCompositionVisible: Bool {
-        overview?.isNPKChangedFromDefault ?? false
+        guard let overview else { return false }
+        return overview.selectedNPKId != savedNPKId
     }
 
     public init(
@@ -32,7 +35,9 @@ public final class FertilizerEstimationViewModel {
         defer { isLoading = false }
 
         do {
-            overview = try await repository.fetchEstimation(for: gardenId)
+            let loaded = try await repository.fetchEstimation(for: gardenId)
+            if savedNPKId == nil { savedNPKId = loaded.selectedNPKId }
+            overview = loaded
         } catch {
             errorMessage = error.localizedDescription
         }
@@ -50,10 +55,12 @@ public final class FertilizerEstimationViewModel {
         }
     }
 
-    /// Saves the selected custom fertilizer composition.
-    /// Kept as no-op for now as requested.
-    public func saveComposition() {
-        // Intentionally no-op for now as requested
+    public func saveComposition() async throws {
+        guard let overview else { return }
+        isSaving = true
+        defer { isSaving = false }
+        try await repository.saveNPK(optionId: overview.selectedNPKId, for: gardenId)
+        savedNPKId = overview.selectedNPKId
     }
 }
 

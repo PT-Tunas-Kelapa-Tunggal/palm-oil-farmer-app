@@ -14,6 +14,8 @@ final class CloudKitFertilizerScheduleRepository: FertilizerScheduleRepositoryPr
         let record = try await database.record(for: recordID)
         let reader = ScanRequestRecord(record)
         let items = try reader.fertilizationScheduling().get()
+        let savedNPK = await SavedNPKSelectionStore.shared.selection(for: gardenID.uuidString)
+        let selectedNPKType = savedNPK.flatMap(ContractFertilizerType.init(rawValue:))
 
         let periods = items.map { period in
             FertilizerPeriod(
@@ -25,7 +27,9 @@ final class CloudKitFertilizerScheduleRepository: FertilizerScheduleRepositoryPr
                     FertilizerStep(
                         id: UUID(),
                         order: fertilizer.step,
-                        name: fertilizer.fertilizerType.rawValue,
+                        name: Self.isNPK(fertilizer.fertilizerType)
+                            ? (selectedNPKType?.rawValue ?? fertilizer.fertilizerType.rawValue)
+                            : fertilizer.fertilizerType.rawValue,
                         quantityKg: fertilizer.amountPerRoundKg,
                         gapBefore: nil,
                         givenDate: fertilizer.doneAt
@@ -39,5 +43,14 @@ final class CloudKitFertilizerScheduleRepository: FertilizerScheduleRepositoryPr
             locationName: record[RecordKeys.iOSOwned.farmAddress] as? String ?? "",
             periods: periods
         )
+    }
+
+    private static func isNPK(_ type: ContractFertilizerType) -> Bool {
+        switch type {
+        case .npk, .npk15_15_15, .npk12_6_22_3, .npk13_6_27_4, .npk13_8_27_4, .npk16_16_16:
+            true
+        default:
+            false
+        }
     }
 }

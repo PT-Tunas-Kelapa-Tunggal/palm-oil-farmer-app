@@ -128,7 +128,8 @@ final class CloudKitFertilizerEstimationRepository: FertilizerEstimationReposito
             Self.npkOption(type: type, doseKg: Self.amount(groups[type] ?? [], treeCount: treeCount))
         }
         let defaultID = options.min { $0.totalPrice < $1.totalPrice }?.id ?? ""
-        let selectedID = lock.withLock { selectedNPKByGarden[gardenId] } ?? defaultID
+        let savedID = await SavedNPKSelectionStore.shared.selection(for: gardenId)
+        let selectedID = lock.withLock { selectedNPKByGarden[gardenId] } ?? savedID ?? defaultID
         let selected = options.first(where: { $0.id == selectedID }) ?? options.first
 
         var products = groups.keys.filter { !Self.isNPK($0) }.sorted { $0.rawValue < $1.rawValue }.compactMap { type -> FertilizerItem? in
@@ -173,6 +174,14 @@ final class CloudKitFertilizerEstimationRepository: FertilizerEstimationReposito
     func selectNPK(optionId: String, for gardenId: String) async throws -> FertilizerEstimationOverview {
         lock.withLock { selectedNPKByGarden[gardenId] = optionId }
         return try await fetchEstimation(for: gardenId)
+    }
+
+    func saveNPK(optionId: String, for gardenId: String) async throws {
+        let estimation = try await fetchEstimation(for: gardenId)
+        guard estimation.npkOptions.contains(where: { $0.id == optionId }) else {
+            throw CloudKitAssessmentDataError.missingField("pilihan NPK")
+        }
+        await SavedNPKSelectionStore.shared.save(optionId, for: gardenId)
     }
 
     private static func amount(_ needs: [FertilizerNeedItem], treeCount: Int) -> Double {

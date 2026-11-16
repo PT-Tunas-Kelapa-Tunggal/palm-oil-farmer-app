@@ -147,6 +147,11 @@ public struct ResultOverviewView: View {
                 await viewModel.load()
             }
         }
+        .onAppear {
+            if viewModel.overview != nil {
+                Task { await viewModel.refresh() }
+            }
+        }
         .refreshable {
             await viewModel.refresh()
         }

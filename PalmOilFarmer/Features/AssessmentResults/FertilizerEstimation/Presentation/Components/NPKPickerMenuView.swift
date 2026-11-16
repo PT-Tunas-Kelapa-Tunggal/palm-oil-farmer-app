@@ -5,20 +5,30 @@ import SwiftUI
 public struct NPKPickerMenuView: View {
     public let options: [NPKOption]
     public let selectedOptionId: String
+    public let height: CGFloat?
     public let onSelect: (NPKOption) -> Void
 
     public init(
         options: [NPKOption],
         selectedOptionId: String,
+        height: CGFloat? = nil,
         onSelect: @escaping (NPKOption) -> Void
     ) {
         self.options = options
         self.selectedOptionId = selectedOptionId
+        self.height = height
         self.onSelect = onSelect
     }
 
+    public static func estimatedHeight(for options: [NPKOption]) -> CGFloat {
+        16 + options.reduce(CGFloat.zero) { total, option in
+            total + (option.tag == nil ? 64 : 82)
+        }
+    }
+
     public var body: some View {
-        VStack(alignment: .leading, spacing: 0) {
+        ScrollView {
+            LazyVStack(alignment: .leading, spacing: 0) {
             ForEach(options) { option in
                 Button {
                     onSelect(option)
@@ -60,8 +70,11 @@ public struct NPKPickerMenuView: View {
                 }
                 .buttonStyle(.plain)
             }
+            }
         }
+        .scrollIndicators(.visible)
         .padding(.vertical, 8)
+        .frame(height: height ?? Self.estimatedHeight(for: options))
         .frame(width: 250)
         .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 32, style: .continuous))
         .clipShape(RoundedRectangle(cornerRadius: 32, style: .continuous))
