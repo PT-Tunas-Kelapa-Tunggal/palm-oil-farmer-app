@@ -3,6 +3,7 @@
 Every modification to the `CloudKitContract` folder must be documented here and accompanied by a bump to `ContractInfo.version`.
 
 ## 1 — 2026-11-16
+- Tree health decoding accepts stored labels (`Normal`, `Terindikasi`, `Defisiensi`, `Tidak Wajar`) as well as VARI quartiles (`q1`–`q4`), preserving unknown values as `Unknown`. The schema version remains 1.
 - Added the macOS-owned `farmNutrientComparisonStatus` JSON envelope with annual per-hectare (kg/ha/year) current and recommended values for Nitrogen, Fospor, Kalium, and Magnesium. These copy the ML baseline and recorded fertilizer supply; the iOS app chooses its own status label.
 - Added typed nutrient values, strict decoding, and reader/writer support. Schema deploy: REQUIRED (add `farmNutrientComparisonStatus` as a `STRING` field on `PlantationScanRequest`).
 - Recorded the CloudKit payload change from commit `f8d0265` that was missing from the changelog: tree health labels now map VARI quartiles (`q1`–`q4`) to the contract labels.
