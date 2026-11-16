@@ -48,11 +48,11 @@ final class CloudKitNutrientConditionRepository: NutrientConditionRepositoryProt
             var required = 0.0
             var found = false
             for need in needs {
-                guard let composition = composition(for: need.fertilizerType, in: compositions),
-                      let element = composition.composition?.first(where: {
-                          aliases.contains($0.name.lowercased().trimmingCharacters(in: .whitespacesAndNewlines))
-                      }),
-                      let percent = Double(element.value.replacingOccurrences(of: ",", with: ".")) else { continue }
+                guard let percent = nutrientPercent(
+                    for: need.fertilizerType,
+                    nutrientAliases: aliases,
+                    compositions: compositions
+                ) else { continue }
                 found = true
                 current += max(0, need.currentDosage) * max(percent, 0) / 100
                 required += max(0, need.recommendedDosage) * max(percent, 0) / 100
@@ -69,7 +69,10 @@ final class CloudKitNutrientConditionRepository: NutrientConditionRepositoryProt
             }
             return NutrientItem(
                 id: id, name: name, symbol: symbol, title: "\(name) (\(symbol))",
-                sourceDescription: "Komposisi dan dosis dari CloudKit", status: status,
+                sourceDescription: compositions.contains(where: { $0.composition != nil })
+                    ? "Komposisi dan dosis dari CloudKit"
+                    : "Dosis CloudKit dipetakan berdasarkan jenis pupuk",
+                status: status,
                 description: "Perbandingan unsur hara dari dosis pupuk tersimpan dan dosis anjuran.",
                 comparison: NutrientComparison(currentPracticeValue: currentValue, requiredValue: requiredValue, unit: "kg"),
                 verdict: verdict,
@@ -97,6 +100,30 @@ final class CloudKitNutrientConditionRepository: NutrientConditionRepositoryProt
             ?? (Self.isNPK(fertilizerType)
                 ? compositions.first(where: { $0.fertilizerType == .npk })
                 : nil)
+    }
+
+    /// Some farmer-entered fertilizers intentionally omit a composition array.
+    /// For those, their contract type still identifies the nutrient group; treat
+    /// the reported fertilizer dose as the group's dose instead of dropping it.
+    private func nutrientPercent(
+        for fertilizerType: ContractFertilizerType,
+        nutrientAliases: [String],
+        compositions: [FertilizerCompositionItem]
+    ) -> Double? {
+        if let item = composition(for: fertilizerType, in: compositions),
+           let element = item.composition?.first(where: {
+               nutrientAliases.contains($0.name.lowercased().trimmingCharacters(in: .whitespacesAndNewlines))
+           }),
+           let percent = Double(element.value.replacingOccurrences(of: ",", with: ".")) {
+            return percent
+        }
+
+        switch (fertilizerType, nutrientAliases.first) {
+        case (.urea, "n"), (.za, "n"), (.dolomite, "mg"), (.kieserite, "mg"):
+            return 100
+        default:
+            return nil
+        }
     }
 
     private static func isNPK(_ type: ContractFertilizerType) -> Bool {

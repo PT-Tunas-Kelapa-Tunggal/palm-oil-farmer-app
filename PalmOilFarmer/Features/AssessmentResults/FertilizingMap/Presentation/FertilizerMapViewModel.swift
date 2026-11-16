@@ -1,6 +1,5 @@
 import Foundation
 import Observation
-import CoreGraphics
 
 @Observable
 @MainActor
@@ -22,7 +21,6 @@ public final class FertilizingMapViewModel {
     public var activeModalSheet: ActiveModalSheet?
     public var isLoading: Bool = false
     public var errorMessage: String?
-    public var userLocation: CGPoint = CGPoint(x: 0.42, y: 0.32)
 
     private let initialFertilizerName: String?
 

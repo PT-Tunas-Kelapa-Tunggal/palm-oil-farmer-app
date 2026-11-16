@@ -62,10 +62,45 @@ public struct FertilizingMapDetailSheetView: View {
         Group {
             if mode == .wholeFarm {
                 wholeFarmDoseCard
+            } else if mode == .perZona && selectedZone != nil {
+                selectedZoneDoseCard
             } else {
                 standardDetailSheet
             }
         }
+    }
+
+    private var selectedZoneDoseCard: some View {
+        VStack(spacing: 8) {
+            Text(titleText)
+                .font(.system(size: 19, weight: .medium))
+                .foregroundStyle(.secondary)
+
+            Text(doseText)
+                .font(.system(size: 38, weight: .bold, design: .rounded))
+                .foregroundStyle(.primary)
+
+            if isInPeriod {
+                Button(action: onToggleDone) {
+                    Label(
+                        isMarkedDone ? "Sudah Dipupuk" : "Tandai Sudah Dipupuk",
+                        systemImage: isMarkedDone ? "checkmark.circle.fill" : "circle"
+                    )
+                    .frame(maxWidth: .infinity)
+                }
+                .buttonStyle(.borderedProminent)
+                .tint(.black)
+                .padding(.top, 8)
+            }
+        }
+        .frame(maxWidth: .infinity)
+        .multilineTextAlignment(.center)
+        .padding(.horizontal, 24)
+        .padding(.vertical, 20)
+        .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 36, style: .continuous))
+        .environment(\.colorScheme, .light)
+        .padding(.horizontal, 16)
+        .padding(.bottom, 12)
     }
 
     private var wholeFarmDoseCard: some View {
@@ -100,11 +135,6 @@ public struct FertilizingMapDetailSheetView: View {
                         .font(.system(size: 17, weight: .semibold))
                         .foregroundStyle(.white)
 
-                    if mode == .perZona && selectedZone != nil {
-                        Text("Dosis anjuran zona")
-                            .font(.system(size: 13))
-                            .foregroundStyle(.white.opacity(0.65))
-                    }
                 }
 
                 Spacer()
