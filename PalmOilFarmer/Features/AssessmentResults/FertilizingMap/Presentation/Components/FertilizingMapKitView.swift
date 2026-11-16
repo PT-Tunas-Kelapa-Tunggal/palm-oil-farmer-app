@@ -396,3 +396,38 @@ private extension UIColor {
         )
     }
 }
+
+#if DEBUG
+#Preview("Fertilizing Map · Per Zona") {
+    let fixture = DummyFarmGreenIndexFixture.makeItem()
+    if let mapData = fixture.orthomosaic {
+        let zones = mapData.zones.map { zone in
+            let minX = zone.boundingBox.map(\.x).min() ?? 0
+            let maxX = zone.boundingBox.map(\.x).max() ?? 0
+            let minY = zone.boundingBox.map(\.y).min() ?? 0
+            let maxY = zone.boundingBox.map(\.y).max() ?? 0
+            return FertilizingZoneDetail(
+                id: Int(zone.id),
+                name: "Zona \(zone.id)",
+                doseKg: 25,
+                relativeX: CGFloat((minX + maxX) / 2 / Double(max(mapData.imagePixelWidth, 1))),
+                relativeY: CGFloat((minY + maxY) / 2 / Double(max(mapData.imagePixelHeight, 1)))
+            )
+        }
+
+        FertilizingMapKitView(
+            data: mapData,
+            zones: zones,
+            mode: .perZona,
+            wholeFarmDoseText: "400 kg",
+            selectedZone: zones.first,
+            userLocation: CGPoint(x: 0.5, y: 0.5),
+            onSelectZone: { _ in }
+        )
+        .ignoresSafeArea()
+        .frame(height: 760)
+    } else {
+        ContentUnavailableView("Peta contoh tidak tersedia", systemImage: "map")
+    }
+}
+#endif

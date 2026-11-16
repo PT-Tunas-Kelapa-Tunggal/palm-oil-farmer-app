@@ -22,52 +22,39 @@ public struct ChooseFertilizerSheetView: View {
     }
 
     public var body: some View {
-        VStack(spacing: 20) {
-            // Header
+        VStack(spacing: 12) {
             HStack(alignment: .center) {
-                Button(action: onClose) {
-                    Image(systemName: "xmark")
-                        .font(.system(size: 14, weight: .semibold))
-                        .foregroundStyle(.white.opacity(0.8))
-                        .frame(width: 32, height: 32)
-                        .background(Color.white.opacity(0.12), in: Circle())
-                }
-
+                Color.clear.frame(width: 44, height: 44)
                 Spacer()
-
                 VStack(spacing: 2) {
                     Text("Jenis Pupuk")
-                        .font(.system(size: 20, weight: .bold))
-                        .foregroundStyle(.white)
-
+                        .font(.system(size: 20, weight: .semibold))
                     Text(periodTitle)
-                        .font(.system(size: 13, weight: .regular))
-                        .foregroundStyle(.white.opacity(0.7))
+                        .font(.system(size: 14))
+                        .foregroundStyle(.secondary)
                 }
-
                 Spacer()
-
-                Color.clear
-                    .frame(width: 32, height: 32)
+                Button(action: onClose) {
+                    Image(systemName: "xmark")
+                        .font(.system(size: 18, weight: .medium))
+                        .frame(width: 44, height: 44)
+                        .background(.quaternary, in: Circle())
+                }
+                .buttonStyle(.plain)
             }
-            .padding(.top, 8)
 
-            // Fertilizer Options List
-            VStack(spacing: 12) {
-                ForEach(availableFertilizers) { fertilizer in
-                    fertilizerRow(fertilizer)
+            ScrollView {
+                LazyVStack(spacing: 4) {
+                    ForEach(availableFertilizers) { fertilizer in
+                        fertilizerRow(fertilizer)
+                    }
                 }
             }
-            .padding(.top, 4)
-
-            Spacer(minLength: 16)
+            .scrollIndicators(.hidden)
         }
-        .padding(.horizontal, 20)
-        .padding(.top, 16)
-        .background(
-            Color(red: 0x14 / 255, green: 0x15 / 255, blue: 0x17 / 255)
-                .ignoresSafeArea()
-        )
+        .padding(.horizontal, 16)
+        .padding(.top, 18)
+        .padding(.bottom, 12)
     }
 
     private func fertilizerRow(_ fertilizer: FertilizerPeriodOption) -> some View {
@@ -76,47 +63,39 @@ public struct ChooseFertilizerSheetView: View {
         return Button {
             onSelect(fertilizer)
         } label: {
-            HStack(spacing: 14) {
-                // Checkmark icon
-                ZStack {
-                    if isSelected {
-                        Image(systemName: "checkmark")
-                            .font(.system(size: 14, weight: .bold))
-                            .foregroundStyle(.white)
-                    } else {
-                        Color.clear
-                    }
+            HStack(spacing: 12) {
+                if isSelected {
+                    Image(systemName: "checkmark")
+                        .font(.body.weight(.semibold))
+                        .foregroundStyle(.tint)
+                        .frame(width: 20)
+                } else {
+                    Color.clear.frame(width: 20)
                 }
-                .frame(width: 20, height: 20)
 
-                // Info
                 VStack(alignment: .leading, spacing: 3) {
                     Text(fertilizer.name)
-                        .font(.system(size: 16, weight: .semibold))
-                        .foregroundStyle(.white)
-
+                        .font(.body.weight(.semibold))
                     Text(fertilizer.timingSubtitle)
-                        .font(.system(size: 13, weight: .regular))
-                        .foregroundStyle(.white.opacity(0.65))
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
                 }
 
-                Spacer()
+                Spacer(minLength: 8)
 
-                // Total dose
                 Text(fertilizer.totalDose)
-                    .font(.system(size: 16, weight: .semibold))
-                    .foregroundStyle(.white)
+                    .font(.body.weight(.semibold))
+                    .foregroundStyle(.primary)
             }
-            .padding(.horizontal, 14)
-            .padding(.vertical, 14)
-            .background(
-                RoundedRectangle(cornerRadius: 16, style: .continuous)
-                    .fill(isSelected ? Color.white.opacity(0.12) : Color.white.opacity(0.04))
-            )
-            .overlay(
-                RoundedRectangle(cornerRadius: 16, style: .continuous)
-                    .stroke(isSelected ? Color.white.opacity(0.3) : Color.clear, lineWidth: 1)
-            )
+            .padding(.horizontal, 12)
+            .padding(.vertical, 10)
+            .background {
+                if isSelected {
+                    RoundedRectangle(cornerRadius: 26, style: .continuous)
+                        .fill(Color.black.opacity(0.12))
+                }
+            }
+            .contentShape(RoundedRectangle(cornerRadius: 26, style: .continuous))
         }
         .buttonStyle(.plain)
     }
@@ -124,24 +103,9 @@ public struct ChooseFertilizerSheetView: View {
 
 #if DEBUG
 #Preview("Jenis Pupuk") {
-    let dolomit = FertilizerPeriodOption(
-        id: "dolomit",
-        name: "Dolomit",
-        timingSubtitle: "Awal periode",
-        totalDose: "400 kg"
-    )
-    let npk = FertilizerPeriodOption(
-        id: "npk",
-        name: "NPK 15-15-15",
-        timingSubtitle: "14 hari setelah Dolomit",
-        totalDose: "120 kg"
-    )
-    let urea = FertilizerPeriodOption(
-        id: "urea",
-        name: "Urea",
-        timingSubtitle: "Pemupukan 1, Januari–Februari 2027",
-        totalDose: "100 kg"
-    )
+    let dolomit = FertilizerPeriodOption(id: "dolomit", name: "Dolomit", timingSubtitle: "Awal periode", totalDose: "400 kg")
+    let npk = FertilizerPeriodOption(id: "npk", name: "NPK 15-15-15", timingSubtitle: "14 hari setelah Dolomit", totalDose: "120 kg")
+    let urea = FertilizerPeriodOption(id: "urea", name: "Urea", timingSubtitle: "1–7 hari setelah NPK 15-15-15", totalDose: "100 kg")
 
     ChooseFertilizerSheetView(
         selectedFertilizer: dolomit,
@@ -151,5 +115,3 @@ public struct ChooseFertilizerSheetView: View {
     )
 }
 #endif
-
-
