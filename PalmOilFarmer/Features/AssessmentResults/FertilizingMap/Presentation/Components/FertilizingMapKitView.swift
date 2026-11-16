@@ -259,7 +259,8 @@ struct FertilizingMapKitView: UIViewRepresentable {
                 kCGImageSourceThumbnailMaxPixelSize: 4_096,
                 kCGImageSourceShouldCacheImmediately: true
             ]
-            return CGImageSourceCreateThumbnailAtIndex(source, 0, options as CFDictionary)
+            return CGImageSourceCreateThumbnailAtIndex(source, 0, options as CFDictionary)?
+                .removingBlackNoData()
         }
 
         private static func color(for label: TreeHealthLabel) -> UInt32 {

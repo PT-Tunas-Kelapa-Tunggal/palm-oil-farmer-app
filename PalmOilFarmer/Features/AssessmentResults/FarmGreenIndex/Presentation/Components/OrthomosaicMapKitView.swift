@@ -216,7 +216,8 @@ struct OrthomosaicMapKitView: UIViewRepresentable {
                 kCGImageSourceThumbnailMaxPixelSize: maxPixelSize,
                 kCGImageSourceShouldCacheImmediately: true
             ]
-            return CGImageSourceCreateThumbnailAtIndex(source, 0, options as CFDictionary)
+            return CGImageSourceCreateThumbnailAtIndex(source, 0, options as CFDictionary)?
+                .removingBlackNoData()
         }
 
         private static func center(of points: [PixelPoint]) -> PixelPoint? {
