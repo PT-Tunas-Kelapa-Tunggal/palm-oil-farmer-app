@@ -119,7 +119,7 @@ public struct FertilizingMapView: View {
                 }
 
                 // 3. Bottom Detail Panel
-                if shouldShowDetailSheet {
+                if shouldShowDetailSheet && viewModel.activeModalSheet != .chooseFertilizer {
                     FertilizingMapDetailSheetView(
                         mode: viewModel.areaDivision,
                         selectedFertilizer: item.selectedFertilizer,
@@ -136,6 +136,7 @@ public struct FertilizingMapView: View {
                     )
                     .transition(.move(edge: .bottom).combined(with: .opacity))
                 }
+
             } else if viewModel.isLoading {
                 ProgressView()
                     .tint(.white)
@@ -175,12 +176,15 @@ public struct FertilizingMapView: View {
                         onSelect: { selected in
                             Task { await viewModel.selectFertilizer(selected) }
                         },
-                        onClose: {
-                            viewModel.closeActiveSheet()
-                        }
+                        onClose: viewModel.closeActiveSheet
                     )
-                    .presentationDetents([.height(340)])
+                    .environment(\.colorScheme, .light)
+                    .presentationDetents([.height(fertilizerSheetHeight(for: item.availableFertilizers.count))])
+                    .presentationContentInteraction(.scrolls)
                     .presentationDragIndicator(.hidden)
+                    .presentationBackground(.thickMaterial)
+                    .presentationCornerRadius(38)
+                    .presentationBackgroundInteraction(.enabled)
                 }
 
             case .chooseAreaDivision:
@@ -191,9 +195,7 @@ public struct FertilizingMapView: View {
                             viewModel.selectAreaDivision(mode)
                         }
                     },
-                    onClose: {
-                        viewModel.closeActiveSheet()
-                    }
+                    onClose: viewModel.closeActiveSheet
                 )
                 .presentationDetents([.height(290)])
                 .presentationDragIndicator(.hidden)
@@ -206,6 +208,10 @@ public struct FertilizingMapView: View {
         if viewModel.isInPeriod { return true }
         if viewModel.areaDivision == .perPohon || viewModel.areaDivision == .wholeFarm { return true }
         return viewModel.selectedZone != nil
+    }
+
+    private func fertilizerSheetHeight(for itemCount: Int) -> CGFloat {
+        min(CGFloat(100 + max(itemCount, 1) * 55), 650)
     }
 }
 

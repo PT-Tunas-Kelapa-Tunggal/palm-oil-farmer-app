@@ -59,6 +59,33 @@ public struct FertilizingMapDetailSheetView: View {
     }
 
     public var body: some View {
+        Group {
+            if mode == .wholeFarm {
+                wholeFarmDoseCard
+            } else {
+                standardDetailSheet
+            }
+        }
+    }
+
+    private var wholeFarmDoseCard: some View {
+        VStack(spacing: 3) {
+            Text("Dosis setiap pohon")
+                .font(.system(size: 17, weight: .medium))
+                .foregroundStyle(.secondary)
+
+            Text(doseText)
+                .font(.system(size: 38, weight: .bold, design: .rounded))
+                .foregroundStyle(.primary)
+        }
+        .frame(maxWidth: .infinity)
+        .padding(.vertical, 20)
+        .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 36, style: .continuous))
+        .padding(.horizontal, 16)
+        .padding(.bottom, 12)
+    }
+
+    private var standardDetailSheet: some View {
         VStack(spacing: 16) {
             // Grabber Handle
             Capsule()
