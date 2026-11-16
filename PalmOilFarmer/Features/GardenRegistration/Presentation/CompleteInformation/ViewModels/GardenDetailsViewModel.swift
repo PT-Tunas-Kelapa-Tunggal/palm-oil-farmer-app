@@ -15,6 +15,8 @@ final class GardenDetailsViewModel {
     private(set) var hasSaved = false
     var showsPlantingDate = false
     private(set) var isFinished = false
+    /// Kartu konfirmasi "Buang" di tombol X sedang terbuka.
+    var showsExitConfirmation = false
     let boundary: GardenBoundary
 
     private let locationName: String
@@ -25,6 +27,15 @@ final class GardenDetailsViewModel {
     private let now: () -> Date
     private let isActive: () -> Bool
     private let closesAfterSaving: Bool
+    private let initialForm: FormSnapshot
+
+    /// Isi form pada satu saat; dibandingkan dengan keadaan awal untuk tahu ada perubahan atau tidak.
+    private struct FormSnapshot: Equatable {
+        var name: String
+        var plantingYear: Int?
+        var plantingMonth: Int
+        var soilType: SoilType?
+    }
 
     /// - Parameter closesAfterSaving: close the sheet itself after a successful save. The boundary
     ///   map closes it instead (it waits for the dismissal), so registration passes `false`.
@@ -40,8 +51,11 @@ final class GardenDetailsViewModel {
         // Older gardens without a stored month retain the existing October fallback.
         let defaultMonth = garden == nil ? Calendar.current.component(.month, from: now()) : 10
         let storedMonth = garden?.plantingMonth ?? defaultMonth
-        plantingMonth = (1...12).contains(storedMonth) ? storedMonth : defaultMonth
+        let month = (1...12).contains(storedMonth) ? storedMonth : defaultMonth
+        plantingMonth = month
         soilType = garden?.soilType
+        initialForm = FormSnapshot(name: garden?.name ?? "", plantingYear: garden?.plantingYear,
+                                   plantingMonth: month, soilType: garden?.soilType)
         self.makeID = makeID
         self.now = now
         self.isActive = isActive
@@ -57,7 +71,29 @@ final class GardenDetailsViewModel {
         showsPlantingDate = true
     }
 
+    /// Ada isian yang berubah dan belum disimpan.
+    var hasUnsavedChanges: Bool {
+        !hasSaved && FormSnapshot(name: name, plantingYear: plantingYear,
+                                  plantingMonth: plantingMonth, soilType: soilType) != initialForm
+    }
+
     func close() { isFinished = true }
+
+    /// Ketukan pada tombol X: tanya dulu kalau ada perubahan, kalau tidak langsung tutup.
+    func requestClose() {
+        guard !isFinished else { return }
+        if hasUnsavedChanges {
+            showsExitConfirmation = true
+        } else {
+            close()
+        }
+    }
+
+    /// Tombol "Buang" pada kartu konfirmasi.
+    func discardAndClose() {
+        showsExitConfirmation = false
+        close()
+    }
 
     @discardableResult
     func save() -> Bool {

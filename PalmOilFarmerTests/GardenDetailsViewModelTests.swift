@@ -101,4 +101,34 @@ struct GardenDetailsViewModelTests {
             #expect(saved?.id == original.id && saved?.createdAt == nil && saved?.plantingYear == 1800)
         }
     }
+
+    @Test func closingUntouchedFormFinishesWithoutAsking() {
+        let model = GardenDetailsViewModel(locationName: "Dumai", boundary: GardenBoundary(),
+            onSave: { _ in true }, onSaved: {})
+        #expect(!model.hasUnsavedChanges)
+        model.requestClose()
+        #expect(model.isFinished && !model.showsExitConfirmation)
+    }
+
+    @Test func closingChangedFormAsksThenDiscardFinishes() {
+        let model = GardenDetailsViewModel(locationName: "Dumai", boundary: GardenBoundary(),
+            onSave: { _ in true }, onSaved: {})
+        model.name = "Kebun baru"
+        #expect(model.hasUnsavedChanges)
+        model.requestClose()
+        #expect(model.showsExitConfirmation && !model.isFinished)
+        model.discardAndClose()
+        #expect(model.isFinished && !model.showsExitConfirmation)
+    }
+
+    @Test func revertingEditsOrSavingClearsUnsavedChanges() {
+        let model = GardenDetailsViewModel(locationName: "Dumai", boundary: GardenBoundary(),
+            onSave: { _ in true }, onSaved: {})
+        model.name = "Kebun"
+        model.name = ""
+        #expect(!model.hasUnsavedChanges)
+        model.name = "Kebun"; model.plantingYear = 2016; model.soilType = .other
+        #expect(model.save())
+        #expect(!model.hasUnsavedChanges)
+    }
 }

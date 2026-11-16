@@ -12,6 +12,10 @@ struct BoundaryEditorLayout<MapContent: View>: View {
     var showsControls = true
     var showsBottomPanel = true
     var bottomSheetHeight: CGFloat = 0
+    /// Diisi → tombol X menjadi glass menu "Keluar dari pemetaan?".
+    /// Kosong (nil) → tombol X biasa yang langsung memanggil `onClose`.
+    var showsExitMenu: Binding<Bool>? = nil
+    var onDiscard: () -> Void = {}
     let onClose: () -> Void
     let onSearch: () -> Void
     let onUndo: () -> Void
@@ -29,10 +33,20 @@ struct BoundaryEditorLayout<MapContent: View>: View {
                 Color.clear.frame(height: bottomSheetHeight).allowsHitTesting(false)
             }
             .ignoresSafeArea()
+            .overlay {
+                // Selama menu terbuka, ketukan di peta menutup menu, bukan menambah titik.
+                if let showsExitMenu, showsExitMenu.wrappedValue {
+                    Color.clear
+                        .ignoresSafeArea()
+                        .collapsesGlassMenu(showsExitMenu)
+                }
+            }
             .overlay(alignment: .top) {
                 if showsControls {
                     VStack(spacing: 12) {
-                        RegistrationHeader(title: title, isMapHeader: true, onClose: onClose)
+                        RegistrationHeader(title: title, isMapHeader: true,
+                                           showsCloseButton: showsExitMenu == nil,
+                                           onClose: onClose)
                         if !showsMetricsInPanel {
                             BoundaryMetricsView(boundary: boundary, metrics: metrics, isClosed: isClosed)
                                 .frame(maxWidth: dynamicTypeSize.isAccessibilitySize ? .infinity : 237)
@@ -57,6 +71,12 @@ struct BoundaryEditorLayout<MapContent: View>: View {
                             .ignoresSafeArea(edges: .top)
                             .allowsHitTesting(false)
                     }
+                    .overlay(alignment: .topLeading) {
+                        if let showsExitMenu {
+                            exitMenu(isExpanded: showsExitMenu)
+                                .padding(.leading, 16)
+                        }
+                    }
                     .environment(\.colorScheme, .dark)
                 }
             }
@@ -74,12 +94,38 @@ struct BoundaryEditorLayout<MapContent: View>: View {
             .ignoresSafeArea(.container, edges: .bottom)
     }
 
+    /// Tombol X yang membesar menjadi kartu konfirmasi keluar, bergaya dialog bawaan iOS.
+    private func exitMenu(isExpanded: Binding<Bool>) -> some View {
+        // Ketukan X tidak langsung membuka kartu: ViewModel yang memutuskan
+        // (batas kosong → langsung tutup, sudah ada titik → buka kartu).
+        RegistrationDiscardMenu(
+            isExpanded: isExpanded,
+            title: "Buang batas kebun",
+            message: "Batas yang belum disimpan akan hilang.",
+            onClose: onClose,
+            onDiscard: onDiscard
+        )
+    }
 }
 
 #if DEBUG
 #Preview("Layout editor batas") {
     BoundaryEditorLayout(
         boundary: GardenPreviewData.boundary, metrics: GardenPreviewData.metrics,
+        onClose: {}, onSearch: {}, onUndo: {}, onClear: {}, onConfirm: {}
+    ) {
+        Color.clear
+            .overlay { Image("MappingSatelliteSource").resizable().scaledToFill() }
+            .clipped()
+    }
+}
+
+#Preview("Layout editor batas · Menu keluar") {
+    BoundaryEditorLayout(
+        boundary: GardenPreviewData.boundary, metrics: GardenPreviewData.metrics,
+        // Panel bawah dimatikan: sheet menutupi canvas sehingga X dan kartu tidak terlihat.
+        showsBottomPanel: false,
+        showsExitMenu: .constant(true),
         onClose: {}, onSearch: {}, onUndo: {}, onClear: {}, onConfirm: {}
     ) {
         Color.clear
