@@ -46,7 +46,8 @@ nonisolated public struct MacOSScanRequestRecordWriter: Sendable {
         if let progressionStatus {
             record[RecordKeys.MacOSOwned.progressionStatus] = progressionStatus.rawValue as CKRecordValue
         }
-        try encodeEnvelope(progressionStatusDetail, forKey: RecordKeys.MacOSOwned.progressionStatusDetail, into: record)
+        try encodeEnvelope(
+            progressionStatusDetail, forKey: RecordKeys.MacOSOwned.progressionStatusDetail, into: record)
         if let orthomosaicImageURL {
             record[RecordKeys.MacOSOwned.orthomosaicImage] = CKAsset(fileURL: orthomosaicImageURL)
         }
@@ -59,7 +60,8 @@ nonisolated public struct MacOSScanRequestRecordWriter: Sendable {
         if let resultSentAt {
             record[RecordKeys.MacOSOwned.resultSentAt] = resultSentAt as CKRecordValue
         }
-        try encodeEnvelope(fertilizationScheduling, forKey: RecordKeys.MacOSOwned.fertilizationScheduling, into: record)
+        try encodeEnvelope(
+            fertilizationScheduling, forKey: RecordKeys.MacOSOwned.fertilizationScheduling, into: record)
     }
 
     /// Constructs or updates a `CKRecord` with the macOS-owned values applied.
@@ -68,7 +70,8 @@ nonisolated public struct MacOSScanRequestRecordWriter: Sendable {
         if let existing {
             record = existing
         } else if let recordName {
-            record = CKRecord(recordType: RecordKeys.recordType, recordID: CKRecord.ID(recordName: recordName))
+            record = CKRecord(
+                recordType: RecordKeys.recordType, recordID: CKRecord.ID(recordName: recordName))
         } else {
             record = CKRecord(recordType: RecordKeys.recordType)
         }
