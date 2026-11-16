@@ -186,7 +186,7 @@ public struct FertilizerEstimationView: View {
     private var heroSection: some View {
         VStack(alignment: .leading, spacing: 6) {
             Text("Perkiraan Biaya Pupuk")
-                .font(.system(size: 34, weight: .bold, design: .rounded))
+                .font(.largeTitle.bold())
                 .foregroundStyle(Color(red: 0.08, green: 0.08, blue: 0.09))
 
             Text("\(viewModel.overview?.gardenName ?? "Kebun"), \(viewModel.overview?.periodDescription ?? "untuk kebutuhan 1 tahun")")

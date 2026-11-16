@@ -32,7 +32,7 @@ public struct FertilizerTotalCostCard: View {
 
             // Total Amount
             Text(totalCost)
-                .font(.system(size: 34, weight: .bold, design: .rounded))
+                .font(.largeTitle.bold())
                 .foregroundStyle(Color(red: 0.08, green: 0.08, blue: 0.09))
                 .padding(.top, 2)
 
