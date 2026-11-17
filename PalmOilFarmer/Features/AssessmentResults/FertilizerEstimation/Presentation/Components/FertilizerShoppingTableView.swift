@@ -55,13 +55,13 @@ public struct FertilizerShoppingTableView: View {
             HStack(alignment: .center) {
                 Text("Total")
                     .font(.callout.weight(.bold))
-                    .foregroundStyle(Color(red: 0.08, green: 0.08, blue: 0.09))
+                    .foregroundStyle(KropsTheme.labelPrimary)
 
                 Spacer()
 
                 Text(totalCost)
                     .font(.callout.weight(.bold))
-                    .foregroundStyle(Color(red: 0.08, green: 0.08, blue: 0.09))
+                    .foregroundStyle(KropsTheme.labelPrimary)
             }
             .padding(.vertical, 14)
         }
@@ -83,6 +83,6 @@ public struct FertilizerShoppingTableView: View {
         totalCost: FertilizerEstimationOverview.sample.formattedTotalCost
     )
     .padding()
-    .background(Color(red: 0.95, green: 0.96, blue: 0.97))
+    .background(KropsTheme.surfaceBackground)
 }
 

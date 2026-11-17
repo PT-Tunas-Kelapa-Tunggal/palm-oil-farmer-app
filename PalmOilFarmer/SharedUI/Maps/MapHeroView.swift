@@ -65,7 +65,7 @@ struct HeroToolbar: View {
                                     } icon: {
                                         // System menus tint template icons; a pre-coloured image keeps the trash red.
                                         Image(uiImage: UIImage(systemName: "trash")?
-                                            .withTintColor(.systemRed, renderingMode: .alwaysOriginal) ?? UIImage())
+                                            .withTintColor(UIColor(KropsTheme.statusCritical), renderingMode: .alwaysOriginal) ?? UIImage())
                                     }
                                 }
                             }

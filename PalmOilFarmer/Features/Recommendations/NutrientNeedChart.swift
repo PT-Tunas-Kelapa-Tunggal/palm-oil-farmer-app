@@ -58,7 +58,7 @@ struct NutrientNeedChart: View {
             .chartYAxis {
                 AxisMarks(position: .leading, values: .stride(by: 50)) { value in
                     AxisGridLine(stroke: StrokeStyle(lineWidth: 0.5))
-                        .foregroundStyle(Color(uiColor: .separator))
+                        .foregroundStyle(KropsTheme.separatorDefault)
                     AxisValueLabel {
                         if let percent = value.as(Double.self) {
                             Text("\(Int(percent))%").font(.caption2)

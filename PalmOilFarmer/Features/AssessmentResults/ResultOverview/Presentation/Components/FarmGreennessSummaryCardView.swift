@@ -28,7 +28,7 @@ public struct FarmGreennessSummaryCardView: View {
                                 .scaledToFill()
                         } else {
                             LinearGradient(
-                                colors: [Color(red: 0.12, green: 0.22, blue: 0.16), Color(red: 0.08, green: 0.14, blue: 0.10)],
+                                colors: [KropsTheme.surfaceInverseRaised, KropsTheme.surfaceInverse],
                                 startPoint: .topLeading,
                                 endPoint: .bottomTrailing
                             )
@@ -96,5 +96,5 @@ public struct FarmGreennessSummaryCardView: View {
         greenness: ResultOverviewItem.sample.greenness
     )
     .padding()
-    .background(Color(red: 0.95, green: 0.96, blue: 0.97))
+    .background(KropsTheme.surfaceBackground)
 }

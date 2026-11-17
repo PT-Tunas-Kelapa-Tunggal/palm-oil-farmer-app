@@ -132,7 +132,7 @@ public struct ResultOverviewView: View {
                             Task { await viewModel.load() }
                         }
                         .buttonStyle(.borderedProminent)
-                        .tint(Color(red: 0.18, green: 0.42, blue: 0.25))
+                        .tint(KropsTheme.surfaceInverse)
                     }
                     .padding(32)
                     .frame(maxWidth: .infinity, minHeight: 300)
@@ -141,7 +141,7 @@ public struct ResultOverviewView: View {
             .frame(maxWidth: .infinity)
         }
         .ignoresSafeArea(edges: .top)
-        .background(Color(hex: 0xF2F4F7).ignoresSafeArea())
+        .background(KropsTheme.surfaceBackground.ignoresSafeArea())
         .task {
             if viewModel.overview == nil {
                 await viewModel.load()
@@ -200,17 +200,6 @@ public struct ResultOverviewView: View {
 
 // MARK: - Color Hex Helper
 
-private extension Color {
-    init(hex: UInt32, alpha: Double = 1.0) {
-        self.init(
-            .sRGB,
-            red: Double((hex >> 16) & 0xFF) / 255.0,
-            green: Double((hex >> 8) & 0xFF) / 255.0,
-            blue: Double(hex & 0xFF) / 255.0,
-            opacity: alpha
-        )
-    }
-}
 
 // MARK: - Previews
 

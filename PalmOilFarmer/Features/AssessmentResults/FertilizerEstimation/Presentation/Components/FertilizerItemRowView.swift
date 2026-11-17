@@ -5,7 +5,6 @@ public struct FertilizerItemRowView: View {
     public let item: FertilizerItem
     public var onTapNPK: (() -> Void)?
 
-    private let alertColor = Color(red: 1.0, green: 0.31, blue: 0.09) // #FF4F18
 
     public init(item: FertilizerItem, onTapNPK: (() -> Void)? = nil) {
         self.item = item
@@ -24,11 +23,11 @@ public struct FertilizerItemRowView: View {
                             HStack(spacing: 4) {
                                 Text(item.name)
                                     .font(.callout.weight(.semibold))
-                                    .foregroundStyle(Color(red: 0.08, green: 0.08, blue: 0.09))
+                                    .foregroundStyle(KropsTheme.labelPrimary)
 
                                 Image(systemName: "chevron.up.chevron.down")
                                     .font(.system(size: 11, weight: .bold))
-                                    .foregroundStyle(alertColor)
+                                    .foregroundStyle(KropsTheme.accentHero)
                             }
                             .padding(.horizontal, 8)
                             .padding(.vertical, 4)
@@ -47,7 +46,7 @@ public struct FertilizerItemRowView: View {
                     } else {
                         Text(item.name)
                             .font(.callout.weight(.medium))
-                            .foregroundStyle(Color(red: 0.08, green: 0.08, blue: 0.09))
+                            .foregroundStyle(KropsTheme.labelPrimary)
                     }
 
                     Text(item.formattedPricePerBag)
@@ -60,7 +59,7 @@ public struct FertilizerItemRowView: View {
                 VStack(alignment: .trailing, spacing: 2) {
                     Text("\(item.weightKg) kg")
                         .font(.callout.weight(.medium))
-                        .foregroundStyle(Color(red: 0.08, green: 0.08, blue: 0.09))
+                        .foregroundStyle(KropsTheme.labelPrimary)
 
                     Text("\(item.bagCount) sak")
                         .font(.footnote)
@@ -72,7 +71,7 @@ public struct FertilizerItemRowView: View {
                 VStack(alignment: .trailing, spacing: 2) {
                     Text(item.formattedTotalPrice)
                         .font(.callout.weight(.medium))
-                        .foregroundStyle(Color(red: 0.08, green: 0.08, blue: 0.09))
+                        .foregroundStyle(KropsTheme.labelPrimary)
                 }
                 .frame(width: 110, alignment: .trailing)
             }
@@ -81,7 +80,7 @@ public struct FertilizerItemRowView: View {
             if let hint = item.savingsHint {
                 Text(hint)
                     .font(.footnote)
-                    .foregroundStyle(Color(red: 0.08, green: 0.08, blue: 0.09))
+                    .foregroundStyle(KropsTheme.labelPrimary)
                     .padding(.top, 4)
             }
         }

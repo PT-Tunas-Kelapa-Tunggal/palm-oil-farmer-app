@@ -15,7 +15,7 @@ public struct NutrientBadgeView: View {
     public var body: some View {
         ZStack {
             Circle()
-                .fill(Color(red: 0.08, green: 0.08, blue: 0.09))
+                .fill(KropsTheme.surfaceInverse)
                 .frame(width: size * scale, height: size * scale)
 
             Text(symbol)

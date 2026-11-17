@@ -48,7 +48,7 @@ struct PrimaryActionButton: View {
     }
     .padding(24)
     .frame(width: 402)
-    .background(KropsTheme.background)
+    .background(KropsTheme.surfaceBackground)
 }
 
 #Preview("Primary Button Style", traits: .sizeThatFitsLayout) {

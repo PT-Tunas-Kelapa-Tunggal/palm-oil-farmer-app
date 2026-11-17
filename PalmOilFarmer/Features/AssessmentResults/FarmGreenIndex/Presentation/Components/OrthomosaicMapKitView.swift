@@ -149,13 +149,13 @@ struct OrthomosaicMapKitView: UIViewRepresentable {
             if let polygon = overlay as? MKPolygon {
                 let renderer = MKPolygonRenderer(polygon: polygon)
                 if let pin = treeOverlayPins[ObjectIdentifier(polygon)] {
-                    let categoryColor = UIColor(hex: pin.category.colorHex)
+                    let categoryColor = UIColor(pin.category.color)
                     renderer.strokeColor = categoryColor.withAlphaComponent(0.98)
-                    renderer.fillColor = UIColor(hex: pin.category.colorHex).withAlphaComponent(0.58)
+                    renderer.fillColor = UIColor(pin.category.color).withAlphaComponent(0.58)
                     renderer.lineWidth = pin.id == selectedPinID ? 2.5 : 1.5
                 } else {
-                    renderer.strokeColor = UIColor.systemTeal.withAlphaComponent(0.9)
-                    renderer.fillColor = UIColor.systemTeal.withAlphaComponent(0.12)
+                    renderer.strokeColor = UIColor(KropsTheme.fillWhite55)
+                    renderer.fillColor = UIColor(KropsTheme.fillWhite6)
                     renderer.lineWidth = 2
                 }
                 return renderer
@@ -302,13 +302,3 @@ private final class FarmZoneAnnotation: NSObject, MKAnnotation {
     }
 }
 
-private extension UIColor {
-    convenience init(hex: UInt32) {
-        self.init(
-            red: CGFloat((hex >> 16) & 0xFF) / 255,
-            green: CGFloat((hex >> 8) & 0xFF) / 255,
-            blue: CGFloat(hex & 0xFF) / 255,
-            alpha: 1
-        )
-    }
-}

@@ -39,7 +39,7 @@ public struct NPKPickerMenuView: View {
                             if option.id == selectedOptionId {
                                 Image(systemName: "checkmark")
                                     .font(.system(size: 15, weight: .medium))
-                                    .foregroundStyle(Color(red: 0.08, green: 0.08, blue: 0.09))
+                                    .foregroundStyle(KropsTheme.labelPrimary)
                             } else {
                                 Color.clear
                             }
@@ -50,16 +50,16 @@ public struct NPKPickerMenuView: View {
                         VStack(alignment: .leading, spacing: 2) {
                             Text(option.name)
                                 .font(.system(size: 17, weight: .regular))
-                                .foregroundStyle(Color(red: 0.08, green: 0.08, blue: 0.09))
+                                .foregroundStyle(KropsTheme.labelPrimary)
 
                             Text("\(option.weightKg) kg, \(option.formattedPrice)")
                                 .font(.system(size: 13))
-                                .foregroundStyle(Color(red: 0.08, green: 0.08, blue: 0.09).opacity(0.72))
+                                .foregroundStyle(KropsTheme.labelSecondary)
 
                             if let tag = option.tag {
                                 Text(tag)
                                     .font(.system(size: 13))
-                                    .foregroundStyle(Color(red: 0.08, green: 0.08, blue: 0.09).opacity(0.72))
+                                    .foregroundStyle(KropsTheme.labelSecondary)
                             }
                         }
                         .frame(maxWidth: .infinity, alignment: .leading)
@@ -88,7 +88,7 @@ public struct NPKPickerMenuView: View {
 
 #Preview {
     ZStack {
-        Color(red: 0.95, green: 0.96, blue: 0.97).ignoresSafeArea()
+        KropsTheme.surfaceBackground.ignoresSafeArea()
 
         NPKPickerMenuView(
             options: FertilizerEstimationOverview.sample.npkOptions,

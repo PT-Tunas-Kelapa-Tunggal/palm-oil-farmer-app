@@ -6,7 +6,6 @@ public struct FarmGreenIndexCollapsedPillView: View {
     public let subtitle: String
     public var onExpand: (() -> Void)?
 
-    private let darkPrimary = Color(red: 0.08, green: 0.08, blue: 0.09) // #141517
 
     public init(
         subtitle: String = "108 dari 228 pohon perlu diperhatikan",
@@ -21,18 +20,18 @@ public struct FarmGreenIndexCollapsedPillView: View {
             VStack(spacing: 6) {
                 // Grabber handle matching Sketch & reference screenshot
                 Capsule()
-                    .fill(darkPrimary.opacity(0.25))
+                    .fill(KropsTheme.fillBlack20)
                     .frame(width: 36, height: 4)
 
                 // Title & Subtitle centered matching Sketch
                 VStack(spacing: 3) {
                     Text("Kondisi Pohon")
                         .font(.system(size: 17, weight: .bold))
-                        .foregroundStyle(darkPrimary)
+                        .foregroundStyle(KropsTheme.labelPrimary)
 
                     Text(subtitle)
                         .font(.system(size: 13, weight: .regular))
-                        .foregroundStyle(darkPrimary.opacity(0.65))
+                        .foregroundStyle(KropsTheme.labelSecondary)
                 }
                 .multilineTextAlignment(.center)
             }

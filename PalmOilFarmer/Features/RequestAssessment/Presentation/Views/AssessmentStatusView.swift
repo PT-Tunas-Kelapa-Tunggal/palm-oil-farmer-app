@@ -9,10 +9,8 @@ struct AssessmentStatusView: View {
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
 
     private var dark: Bool { colorScheme == .dark }
-    private var palette: AssessmentPalette { .init(isDark: dark) }
     private var track: Color {
-        dark ? Color(red: 56 / 255, green: 56 / 255, blue: 58 / 255)
-            : Color(red: 198 / 255, green: 198 / 255, blue: 200 / 255)
+        KropsTheme.separatorOpaque
     }
 
     var body: some View {
@@ -30,12 +28,12 @@ struct AssessmentStatusView: View {
             }
         }
         .padding(.top, 12)
-        .foregroundStyle(palette.primary)
+        .foregroundStyle(KropsTheme.labelPrimary)
         .presentationDetents(dynamicTypeSize.isAccessibilitySize ? [.large] : [.height(viewModel.sheetHeight), .large])
         .presentationDragIndicator(dark ? .visible : .hidden)
         .presentationCornerRadius(38)
         .presentationBackground {
-            if dark { palette.card } else { Rectangle().fill(.regularMaterial) }
+            Rectangle().fill(.regularMaterial)
         }
     }
 
@@ -78,14 +76,14 @@ struct AssessmentStatusView: View {
                 if let date = step.date {
                     Text(date)
                         .font(.footnote)
-                        .foregroundStyle(palette.secondary)
+                        .foregroundStyle(KropsTheme.labelSecondary)
                 }
                 Text(step.title)
                     .font(step.phase == .current ? .title3.weight(.semibold) : .headline)
-                    .foregroundStyle(step.phase == .upcoming ? palette.secondary : palette.primary)
+                    .foregroundStyle(step.phase == .upcoming ? KropsTheme.labelSecondary : KropsTheme.labelPrimary)
                 Text(step.message)
                     .font(.subheadline)
-                    .foregroundStyle(step.phase == .upcoming ? palette.tertiary : palette.secondary)
+                    .foregroundStyle(step.phase == .upcoming ? KropsTheme.labelTertiary : KropsTheme.labelSecondary)
             }
             .frame(maxWidth: .infinity, alignment: .leading)
             .fixedSize(horizontal: false, vertical: true)
@@ -95,7 +93,7 @@ struct AssessmentStatusView: View {
         .overlay(alignment: .topLeading) {
             if step.id != .completed || !dark {
                 Rectangle()
-                    .fill(!dark && step.phase == .finished ? AssessmentPalette.graphite : track)
+                    .fill(step.phase == .finished ? KropsTheme.surfaceInverseRaised : track)
                     .frame(width: 2)
                     .padding(.top, 32)
                     .padding(.bottom, 2)
@@ -113,18 +111,18 @@ struct AssessmentStatusView: View {
         case .finished:
             Image(systemName: "checkmark.circle.fill")
                 .font(.system(size: dark ? 20 : 17, weight: dark ? .regular : .semibold))
-                .foregroundStyle(palette.accent)
+                .foregroundStyle(KropsTheme.accentHero)
                 .frame(width: 24, height: 24)
         case .current:
             Circle()
-                .fill(AssessmentPalette.graphite)
+                .fill(KropsTheme.surfaceInverseRaised)
                 .overlay { if dark { Circle().strokeBorder(track, lineWidth: 4) } }
                 .frame(width: dark ? 24 : 16, height: dark ? 24 : 16)
                 .frame(width: 24, height: 24)
         case .upcoming:
             Circle()
-                .fill(dark ? palette.card : palette.background)
-                .overlay { Circle().strokeBorder(dark ? palette.secondary : track, lineWidth: 2) }
+                .fill(KropsTheme.surfaceBackground)
+                .overlay { Circle().strokeBorder(track, lineWidth: 2) }
                 .frame(width: 12, height: 12)
                 .frame(width: 24, height: 24)
         }
@@ -147,7 +145,7 @@ private struct AssessmentStatusPreview: View {
             AssessmentReviewStatusCard(status: .inReview(contactName: review.contact.name)) { showsStatus = true }
                 .padding(16)
         }
-        .background(Color(uiColor: .systemGroupedBackground).ignoresSafeArea())
+        .background(KropsTheme.surfaceBackground.ignoresSafeArea())
         .sheet(isPresented: $showsStatus) {
             AssessmentStatusView(viewModel: AssessmentStatusViewModel(review: review)) {
                 review.advance()

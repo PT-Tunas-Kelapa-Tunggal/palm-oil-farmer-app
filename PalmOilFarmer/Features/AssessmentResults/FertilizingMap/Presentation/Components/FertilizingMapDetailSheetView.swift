@@ -152,18 +152,18 @@ public struct FertilizingMapDetailSheetView: View {
                         if isMarkedDone {
                             Image(systemName: "checkmark.circle.fill")
                                 .font(.system(size: 18, weight: .semibold))
-                                .foregroundStyle(Color.green)
+                                .foregroundStyle(KropsTheme.accentSuccess)
                         }
 
                         Text(isMarkedDone ? "Sudah Dipupuk" : "Tandai Sudah Dipupuk")
                             .font(.system(size: 17, weight: .semibold))
-                            .foregroundStyle(isMarkedDone ? .white : .black)
+                            .foregroundStyle(isMarkedDone ? KropsTheme.labelInversePrimary : KropsTheme.labelPrimary)
                     }
                     .frame(maxWidth: .infinity)
                     .frame(height: 52)
                     .background(
                         Capsule()
-                            .fill(isMarkedDone ? Color(white: 0.2) : Color.white)
+                            .fill(isMarkedDone ? KropsTheme.surfaceInverseRaised : KropsTheme.surfaceCard)
                     )
                 }
                 .buttonStyle(.plain)
@@ -175,7 +175,7 @@ public struct FertilizingMapDetailSheetView: View {
         }
         .background {
             RoundedRectangle(cornerRadius: 32, style: .continuous)
-                .fill(Color(red: 28 / 255, green: 28 / 255, blue: 30 / 255).opacity(0.92))
+                .fill(KropsTheme.surfaceInverse.opacity(0.92))
                 .overlay {
                     RoundedRectangle(cornerRadius: 32, style: .continuous)
                         .strokeBorder(Color.white.opacity(0.15), lineWidth: 1)

@@ -22,7 +22,7 @@ struct DeveloperModeView: View {
                 }
                 Section {
                     Toggle("Filter Semua / Draf / Peninjauan", isOn: $showsHomeFilter)
-                        .tint(KropsTheme.primary)
+                        .tint(KropsTheme.accentHero)
                 } header: {
                     Text("Tampilan beranda")
                 } footer: {
@@ -52,7 +52,7 @@ struct DeveloperModeView: View {
             }
             .scrollContentBackground(.hidden)
         }
-        .background(KropsTheme.background.ignoresSafeArea())
+        .background(KropsTheme.surfaceBackground.ignoresSafeArea())
         .toolbar(.hidden, for: .navigationBar)
         .confirmationDialog("Hapus semua data kebun?", isPresented: $confirmsErase, titleVisibility: .visible) {
             Button("Hapus semua", role: .destructive) {

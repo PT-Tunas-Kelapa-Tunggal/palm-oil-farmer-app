@@ -33,7 +33,7 @@ public struct FertilizerTotalCostCard: View {
             // Total Amount
             Text(totalCost)
                 .font(.largeTitle.bold())
-                .foregroundStyle(Color(red: 0.08, green: 0.08, blue: 0.09))
+                .foregroundStyle(KropsTheme.labelPrimary)
                 .padding(.top, 2)
 
             // Unit / Scope
@@ -47,11 +47,11 @@ public struct FertilizerTotalCostCard: View {
                 GeometryReader { geo in
                     ZStack(alignment: .leading) {
                         Capsule()
-                            .fill(Color(red: 0.95, green: 0.96, blue: 0.97)) // #F2F4F7
+                            .fill(KropsTheme.surfaceCardRaised) // #F2F4F7
                             .frame(height: 8)
 
                         Capsule()
-                            .fill(Color(red: 1.0, green: 0.31, blue: 0.09)) // #FF4F18
+                            .fill(KropsTheme.accentHero) // #FF4F18
                             .frame(width: max(0, min(geo.size.width, geo.size.width * CGFloat(budgetProgress))), height: 8)
                     }
                 }
@@ -61,7 +61,7 @@ public struct FertilizerTotalCostCard: View {
                 HStack {
                     Text("Di bawah anggaran \(budgetLimit)")
                         .font(.footnote)
-                        .foregroundStyle(Color(red: 0.08, green: 0.08, blue: 0.09))
+                        .foregroundStyle(KropsTheme.labelPrimary)
 
                     Spacer()
 
@@ -87,6 +87,6 @@ public struct FertilizerTotalCostCard: View {
         budgetProgress: 0.84
     )
     .padding()
-    .background(Color(red: 0.95, green: 0.96, blue: 0.97))
+    .background(KropsTheme.surfaceBackground)
 }
 

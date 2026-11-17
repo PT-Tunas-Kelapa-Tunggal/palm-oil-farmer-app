@@ -7,7 +7,6 @@ struct AssessmentGardenStatusCard<Content: View, Actions: View>: View {
     @ViewBuilder let actions: () -> Actions
 
     private var dark: Bool { colorScheme == .dark }
-    private var palette: AssessmentPalette { .init(isDark: dark) }
 
     var body: some View {
         let shape = RoundedRectangle(cornerRadius: dark ? 20 : 30)
@@ -26,9 +25,9 @@ struct AssessmentGardenStatusCard<Content: View, Actions: View>: View {
         .padding(.top, dark ? 24 : 0)
         .padding(.bottom, dark ? 20 : 0)
         .frame(maxWidth: .infinity)
-        .foregroundStyle(palette.primary)
+        .foregroundStyle(KropsTheme.labelPrimary)
         .background {
-            palette.card
+            KropsTheme.surfaceCard
                 .overlay(alignment: .top) {
                     if dark {
                         LinearGradient(colors: [.white.opacity(0.08), .clear],

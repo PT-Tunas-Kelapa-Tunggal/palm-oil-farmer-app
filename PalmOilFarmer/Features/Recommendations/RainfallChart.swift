@@ -41,7 +41,7 @@ struct RainfallChart: View {
         .chartYAxis {
             AxisMarks(position: .leading, values: .stride(by: 10)) { value in
                 AxisGridLine(stroke: StrokeStyle(lineWidth: 0.5))
-                    .foregroundStyle(Color(uiColor: .separator))
+                    .foregroundStyle(KropsTheme.separatorDefault)
                 AxisValueLabel {
                     if let millimeters = value.as(Double.self) {
                         Text(millimeters == 0 ? "0" : "\(millimeters.formatted())").font(.caption2)
@@ -58,7 +58,7 @@ struct RainfallChart: View {
                             Image(systemName: day.symbol)
                                 .symbolRenderingMode(.palette)
                                 .foregroundStyle(Color.secondary,
-                                                 day.millimeters >= 5 ? KropsTheme.Chart.lightRain : Color.orange)
+                                                 day.millimeters >= 5 ? KropsTheme.Chart.lightRain : KropsTheme.accentHero)
                                 .font(.body)
                             Text(weekday).font(.caption2)
                         }

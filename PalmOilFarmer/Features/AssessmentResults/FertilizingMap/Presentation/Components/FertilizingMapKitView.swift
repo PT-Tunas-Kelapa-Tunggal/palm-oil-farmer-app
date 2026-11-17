@@ -151,7 +151,7 @@ struct FertilizingMapKitView: UIViewRepresentable {
             } else if polygon.title?.hasPrefix("tree-") == true {
                 let treeID = Int64(polygon.title?.replacingOccurrences(of: "tree-", with: "") ?? "") ?? 0
                 let label = lastData?.trees.first(where: { $0.id == treeID })?.healthynessLabel ?? .unknown
-                let tint = UIColor(hex: Self.color(for: label))
+                let tint = Self.color(for: label)
                 renderer.strokeColor = tint.withAlphaComponent(0.95)
                 renderer.fillColor = tint.withAlphaComponent(0.42)
                 renderer.lineWidth = 1.2
@@ -249,13 +249,13 @@ struct FertilizingMapKitView: UIViewRepresentable {
                 .removingBlackNoData()
         }
 
-        private static func color(for label: TreeHealthLabel) -> UInt32 {
+        private static func color(for label: TreeHealthLabel) -> UIColor {
             switch label {
-            case .normal: TreeConditionCategory.normal.colorHex
-            case .terindikasi: TreeConditionCategory.terindikasi.colorHex
-            case .defisiensi: TreeConditionCategory.defisiensi.colorHex
-            case .tidakWajar: TreeConditionCategory.tidakWajar.colorHex
-            case .unknown: TreeConditionCategory.unknown.colorHex
+            case .normal: UIColor(TreeConditionCategory.normal.color)
+            case .terindikasi: UIColor(TreeConditionCategory.terindikasi.color)
+            case .defisiensi: UIColor(TreeConditionCategory.defisiensi.color)
+            case .tidakWajar: UIColor(TreeConditionCategory.tidakWajar.color)
+            case .unknown: UIColor(TreeConditionCategory.unknown.color)
             }
         }
     }
@@ -365,16 +365,6 @@ private final class FertilizingWholeFarmAnnotation: NSObject, MKAnnotation {
     }
 }
 
-private extension UIColor {
-    convenience init(hex: UInt32) {
-        self.init(
-            red: CGFloat((hex >> 16) & 0xFF) / 255,
-            green: CGFloat((hex >> 8) & 0xFF) / 255,
-            blue: CGFloat(hex & 0xFF) / 255,
-            alpha: 1
-        )
-    }
-}
 
 #if DEBUG
 #Preview("Fertilizing Map · Per Zona") {

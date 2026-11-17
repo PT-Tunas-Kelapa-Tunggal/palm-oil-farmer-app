@@ -62,7 +62,7 @@ public struct AreaDivisionSheetView: View {
         .padding(.horizontal, 20)
         .padding(.top, 16)
         .background(
-            Color(red: 0x14 / 255, green: 0x15 / 255, blue: 0x17 / 255)
+            KropsTheme.surfaceInverse
                 .ignoresSafeArea()
         )
     }

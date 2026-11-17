@@ -23,7 +23,7 @@ struct PalmOilFarmerApp: App {
                 profileFactory: dependencies.profileFactory
             )
             .environment(\.farmerReviewRepository, dependencies.reviewRepository)
-            .tint(KropsTheme.primaryText)
+            .tint(KropsTheme.accentPrimary)
         }
         .modelContainer(dependencies.modelContainer)
     }

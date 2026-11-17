@@ -27,6 +27,6 @@ struct StepIndicator: View {
     }
     .frame(width: 338)
     .padding()
-    .background(KropsTheme.background)
+    .background(KropsTheme.surfaceBackground)
 }
 #endif

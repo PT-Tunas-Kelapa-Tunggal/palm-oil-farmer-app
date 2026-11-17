@@ -5,10 +5,8 @@ struct SubmissionSuccessView: View {
     var onClose: (() -> Void)? = nil
 
     @Environment(\.dismiss) private var dismiss
-    @Environment(\.colorScheme) private var colorScheme
     @ScaledMetric(relativeTo: .body) private var buttonHeight = 52.0
 
-    private var palette: AssessmentPalette { .init(isDark: colorScheme == .dark) }
 
     var body: some View {
         GeometryReader { geometry in
@@ -18,7 +16,7 @@ struct SubmissionSuccessView: View {
                         .resizable()
                         .scaledToFit()
                         .frame(maxWidth: 370)
-                        .background(Color(white: 15 / 255), in: RoundedRectangle(cornerRadius: 20))
+                        .background(KropsTheme.surfaceCardRaised, in: RoundedRectangle(cornerRadius: 20))
                         .accessibilityHidden(true)
 
                     VStack(spacing: 8) {
@@ -37,8 +35,8 @@ struct SubmissionSuccessView: View {
                 .padding(.bottom, 16)
             }
         }
-        .foregroundStyle(palette.primary)
-        .background(palette.background.ignoresSafeArea())
+        .foregroundStyle(KropsTheme.labelPrimary)
+        .background(KropsTheme.surfaceBackground.ignoresSafeArea())
         .toolbar(.hidden, for: .navigationBar)
         .safeAreaInset(edge: .bottom, spacing: 0) {
             Button(action: close) {
@@ -52,11 +50,11 @@ struct SubmissionSuccessView: View {
                     .frame(minHeight: buttonHeight)
             }
             .buttonStyle(.plain)
-            .foregroundStyle(palette.buttonLabel)
-            .glassEffect(.regular.tint(palette.buttonTint), in: Capsule())
+            .foregroundStyle(KropsTheme.labelInversePrimary)
+            .glassEffect(.regular.tint(KropsTheme.surfaceInverse), in: Capsule())
             .padding(.horizontal, 16)
             .padding(.bottom, 8)
-            .background(palette.background)
+            .background(KropsTheme.surfaceBackground)
         }
     }
 

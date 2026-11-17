@@ -106,7 +106,7 @@ public struct FarmGreenIndexView: View {
                             Task { await viewModel.load() }
                         }
                         .buttonStyle(.borderedProminent)
-                        .tint(Color(red: 0.18, green: 0.42, blue: 0.25))
+                        .tint(KropsTheme.surfaceInverse)
                     }
                     .padding(32)
                 }

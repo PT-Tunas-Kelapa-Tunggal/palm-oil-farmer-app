@@ -7,7 +7,6 @@ public struct FarmGreenIndexAreaPickerSheetView: View {
     public var onSelectMode: ((FarmAreaDivisionMode) -> Void)?
     public var onClose: (() -> Void)?
 
-    private let darkPrimary = Color(red: 0.08, green: 0.08, blue: 0.09) // #141517
 
     public init(
         selectedMode: FarmAreaDivisionMode = .perPohon,
@@ -31,7 +30,7 @@ public struct FarmGreenIndexAreaPickerSheetView: View {
 
                 Text("Pembagian Area")
                     .font(.system(size: 18, weight: .bold))
-                    .foregroundStyle(darkPrimary)
+                    .foregroundStyle(KropsTheme.labelPrimary)
 
                 Spacer()
 
@@ -39,7 +38,7 @@ public struct FarmGreenIndexAreaPickerSheetView: View {
                 Button(action: { onClose?() }) {
                     Image(systemName: "xmark")
                         .font(.system(size: 13, weight: .bold))
-                        .foregroundStyle(darkPrimary)
+                        .foregroundStyle(KropsTheme.labelPrimary)
                         .frame(width: 36, height: 36)
                 }
                 .buttonStyle(.plain)
@@ -84,7 +83,7 @@ public struct FarmGreenIndexAreaPickerSheetView: View {
                     .overlay(
                         RoundedRectangle(cornerRadius: 22, style: .continuous)
                             .stroke(
-                                isSelected ? Color.white : darkPrimary.opacity(0.20),
+                                isSelected ? KropsTheme.labelInversePrimary : KropsTheme.fillBlack20,
                                 lineWidth: isSelected ? 5 : 1
                             )
                     )
@@ -98,7 +97,7 @@ public struct FarmGreenIndexAreaPickerSheetView: View {
                 // Label
                 Text(mode.title)
                     .font(.system(size: 14, weight: isSelected ? .bold : .medium))
-                    .foregroundStyle(isSelected ? darkPrimary : darkPrimary.opacity(0.70))
+                    .foregroundStyle(isSelected ? KropsTheme.labelPrimary : KropsTheme.labelSecondary)
             }
         }
         .buttonStyle(.plain)

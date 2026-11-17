@@ -10,11 +10,11 @@ struct ConsentCheckbox: View {
             HStack(alignment: .center, spacing: 12) {
                 Image(systemName: isChecked ? "checkmark.circle.fill" : "circle")
                     .font(.title3)
-                    .foregroundStyle(isChecked ? GardenProfileStyle.accent : (showError ? Color.red : Color.secondary))
+                    .foregroundStyle(isChecked ? KropsTheme.accentHero : (showError ? KropsTheme.statusCritical : KropsTheme.labelSecondary))
                     .accessibilityHidden(true)
                 Text(text)
                     .font(.footnote)
-                    .foregroundStyle(showError ? Color.red : Color.primary)
+                    .foregroundStyle(showError ? KropsTheme.statusCritical : KropsTheme.labelPrimary)
                     .multilineTextAlignment(.leading)
                     .frame(maxWidth: .infinity, alignment: .leading)
             }

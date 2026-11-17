@@ -1,23 +1,23 @@
 import SwiftUI
 
-/// Values from the Sketch "Jadwal Pemupukan" frames. Cards stay light in both appearances, so their ink is fixed.
+/// Roles used by the "Jadwal Pemupukan" screens, mapped to KROPS Light tokens.
 enum FertilizerScheduleStyle {
-    static let accent = Color(red: 1, green: 0x4F / 255, blue: 0x18 / 255)
-    static let accentSoft = Color(red: 1, green: 0xEA / 255, blue: 0xE3 / 255)
-    static let ink = Color(red: 0x14 / 255, green: 0x15 / 255, blue: 0x17 / 255)
-    static let inkSecondary = ink.opacity(0.72)
-    static let inkTertiary = ink.opacity(0.55)
-    static let inkGap = ink.opacity(0.9)
-    static let numberFill = Color(red: 0x78 / 255, green: 0x78 / 255, blue: 0x80 / 255).opacity(0.16)
-    static let raisedFill = Color(red: 0xF2 / 255, green: 0xF4 / 255, blue: 0xF7 / 255)
-    static let chipFill = ink.opacity(0.04)
-    static let gapBar = ink.opacity(0.12)
-    static let headerSecondary = Color.white.opacity(0.8)
+    static let accent = KropsTheme.accentHero
+    static let accentSoft = KropsTheme.accentSoft
+    static let ink = KropsTheme.labelPrimary
+    static let inkSecondary = KropsTheme.labelSecondary
+    static let inkTertiary = KropsTheme.labelTertiary
+    static let inkGap = KropsTheme.labelEmphasis
+    static let numberFill = KropsTheme.fillGray2
+    static let raisedFill = KropsTheme.surfaceCardRaised
+    static let chipFill = KropsTheme.fillBlack4
+    static let gapBar = KropsTheme.fillBlack12
+    static let headerSecondary = KropsTheme.labelInverseSecondary
     static let highlight = LinearGradient(
-        colors: [ink, Color(red: 0x2E / 255, green: 0x30 / 255, blue: 0x34 / 255)], startPoint: .top, endPoint: .bottom
+        colors: [KropsTheme.surfaceInverse, KropsTheme.surfaceInverseRaised], startPoint: .top, endPoint: .bottom
     )
     static let screenBackground = LinearGradient(
-        colors: [Color(white: 0.17), Color(white: 0.02)], startPoint: .topTrailing, endPoint: .bottomLeading
+        colors: [KropsTheme.surfaceInverseRaised, KropsTheme.surfaceInverse], startPoint: .topTrailing, endPoint: .bottomLeading
     )
     static let heroRadius: CGFloat = 28
     static let cardRadius: CGFloat = 20

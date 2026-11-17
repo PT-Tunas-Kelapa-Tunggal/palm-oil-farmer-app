@@ -21,7 +21,7 @@ public struct SaveCompositionButton: View {
                 .foregroundStyle(.white)
                 .frame(maxWidth: .infinity)
                 .frame(height: 52)
-                .background(Color(red: 0.08, green: 0.08, blue: 0.09))
+                .background(KropsTheme.surfaceInverse)
                 .clipShape(Capsule())
                 .contentShape(Capsule())
         }

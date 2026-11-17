@@ -24,7 +24,7 @@ struct ReviewContactFormView: View {
                 reviewSummaryContent
             }
         }
-        .background(GardenProfileStyle.formBackground)
+        .background(KropsTheme.surfaceBackground)
         .alert("Pengajuan belum dikirim", isPresented: Binding(
             get: { model.errorMessage != nil },
             set: { if !$0 { model.errorMessage = nil } }
@@ -76,7 +76,7 @@ struct ReviewContactFormView: View {
                     .padding(16)
                     .background {
                         RoundedRectangle(cornerRadius: 20)
-                            .fill(GardenProfileStyle.card)
+                            .fill(KropsTheme.surfaceCard)
                             .onTapGesture { focusedField = nil }
                     }
                 }
@@ -99,7 +99,7 @@ struct ReviewContactFormView: View {
             }
         }
         .background {
-            GardenProfileStyle.formBackground
+            KropsTheme.surfaceBackground
                 .ignoresSafeArea()
                 .onTapGesture { focusedField = nil }
         }
@@ -114,7 +114,7 @@ struct ReviewContactFormView: View {
                 .padding(.horizontal, 16)
                 .padding(.top, 12)
                 .padding(.bottom, 24)
-                .background(GardenProfileStyle.formBackground)
+                .background(KropsTheme.surfaceBackground)
             }
         }
     }
@@ -148,7 +148,7 @@ struct ReviewContactFormView: View {
             }
             .padding(.horizontal, 14)
             .frame(minHeight: 52)
-            .background(Color(uiColor: .tertiarySystemFill), in: RoundedRectangle(cornerRadius: 12))
+            .background(KropsTheme.surfaceCardRaised, in: RoundedRectangle(cornerRadius: 12))
             .contentShape(Rectangle())
             .onTapGesture { focusedField = field }
         }
@@ -175,7 +175,7 @@ struct ReviewContactFormView: View {
             .padding(.horizontal, 14)
             .padding(.vertical, 14)
             .frame(minHeight: 96, alignment: .topLeading)
-            .background(Color(uiColor: .tertiarySystemFill), in: RoundedRectangle(cornerRadius: 12))
+            .background(KropsTheme.surfaceCardRaised, in: RoundedRectangle(cornerRadius: 12))
             .contentShape(Rectangle())
             .onTapGesture { focusedField = .address }
         }
@@ -211,7 +211,7 @@ struct ReviewContactFormView: View {
                             Label("Tambah narahubung lain", systemImage: "plus")
                                 .font(.subheadline.weight(.medium))
                                 .frame(maxWidth: .infinity, minHeight: 36)
-                                .foregroundStyle(GardenProfileStyle.accent)
+                                .foregroundStyle(KropsTheme.accentPrimary)
                         }
                         .buttonStyle(.plain)
                     }
@@ -248,7 +248,7 @@ struct ReviewContactFormView: View {
             .padding(.horizontal, 16)
             .padding(.top, 12)
             .padding(.bottom, 24)
-            .background(GardenProfileStyle.formBackground)
+            .background(KropsTheme.surfaceBackground)
         }
     }
 
@@ -261,7 +261,7 @@ struct ReviewContactFormView: View {
             HStack(alignment: .center, spacing: 14) {
                 Image(systemName: isSelected ? "checkmark.circle.fill" : "circle")
                     .font(.title3)
-                    .foregroundStyle(isSelected ? GardenProfileStyle.accent : .secondary)
+                    .foregroundStyle(isSelected ? KropsTheme.accentHero : KropsTheme.labelSecondary)
                     .accessibilityHidden(true)
 
                 VStack(alignment: .leading, spacing: 4) {
@@ -279,7 +279,7 @@ struct ReviewContactFormView: View {
                 .frame(maxWidth: .infinity, alignment: .leading)
             }
             .padding(16)
-            .background(GardenProfileStyle.card, in: RoundedRectangle(cornerRadius: 20))
+            .background(KropsTheme.surfaceCard, in: RoundedRectangle(cornerRadius: 20))
         }
         .buttonStyle(.plain)
         .accessibilityElement(children: .combine)
@@ -305,14 +305,14 @@ struct ReviewContactFormView: View {
                     in: ReviewContactFormViewModel.budgetRange,
                     step: ReviewContactFormViewModel.budgetStep
                 )
-                .tint(GardenProfileStyle.accent)
+                .tint(KropsTheme.surfaceInverseRaised)
                 .accessibilityLabel("Anggaran pupuk per hektar per tahun")
                 .accessibilityValue(model.formattedBudgetPerHectare)
 
                 HStack(spacing: 0) {
                     ForEach(0..<10, id: \.self) { index in
                         Circle()
-                            .fill(Color(uiColor: .tertiaryLabel))
+                            .fill(KropsTheme.fillBlack12)
                             .frame(width: 4, height: 4)
                         if index < 9 {
                             Spacer(minLength: 0)
@@ -345,7 +345,7 @@ struct ReviewContactFormView: View {
             }
         }
         .padding(16)
-        .background(GardenProfileStyle.card, in: RoundedRectangle(cornerRadius: 20))
+        .background(KropsTheme.surfaceCard, in: RoundedRectangle(cornerRadius: 20))
     }
 
     // MARK: - Screen 3: Pengajuan Terkirim
