@@ -29,33 +29,13 @@ final class CloudKitNutrientConditionRepository: NutrientConditionRepositoryProt
 
     func fetchNutrientCondition(for gardenId: String) async throws -> NutrientConditionOverview {
         let (_, _, reader) = try await AssessmentRecordAccess.fetch(gardenId, containerIdentifier: containerIdentifier)
-        let needs = try reader.fertilizerNeedPerZone().get()
-        // Preserve CloudKit decoding errors instead of converting a malformed or
-        // differently wrapped payload into an empty list and reporting missing data.
-        let compositions = try reader.fertilizersCompositions().get()
-        guard !needs.isEmpty, !compositions.isEmpty else {
-            throw CloudKitAssessmentDataError.missingField("kebutuhan dan komposisi pupuk")
-        }
-
-        let definitions: [(String, String, String, [String])] = [
-            ("nitrogen", "Nitrogen", "N", ["n", "nitrogen"]),
-            ("fosfor", "Fosfor", "P", ["p", "p2o5", "fosfor", "phosphorus"]),
-            ("kalium", "Kalium", "K", ["k", "k2o", "kalium", "potassium"]),
-            ("magnesium", "Magnesium", "Mg", ["mg", "mgo", "magnesium"])
-        ]
-        let items = definitions.compactMap { id, name, symbol, aliases -> NutrientItem? in
-            var current = 0.0
-            var required = 0.0
-            var found = false
-            for need in needs {
-                guard let percent = nutrientPercent(
-                    for: need.fertilizerType,
-                    nutrientAliases: aliases,
-                    compositions: compositions
-                ) else { continue }
-                found = true
-                current += max(0, need.currentDosage) * max(percent, 0) / 100
-                required += max(0, need.recommendedDosage) * max(percent, 0) / 100
+        let comparisons: [FarmNutrientComparisonStatusItem]
+        switch reader.farmNutrientComparisonStatus() {
+        case .success(let decoded):
+            comparisons = decoded
+        case .failure(let error):
+            if error.isMissing {
+                throw CloudKitAssessmentDataError.missingField("perbandingan unsur hara")
             }
             throw error
         }
@@ -81,12 +61,9 @@ final class CloudKitNutrientConditionRepository: NutrientConditionRepositoryProt
             }
             return NutrientItem(
                 id: id, name: name, symbol: symbol, title: "\(name) (\(symbol))",
-                sourceDescription: compositions.contains(where: { $0.composition != nil })
-                    ? "Komposisi dan dosis dari CloudKit"
-                    : "Dosis CloudKit dipetakan berdasarkan jenis pupuk",
-                status: status,
-                description: "Perbandingan unsur hara dari dosis pupuk tersimpan dan dosis anjuran.",
-                comparison: NutrientComparison(currentPracticeValue: currentValue, requiredValue: requiredValue, unit: "kg"),
+                sourceDescription: "Hasil peninjauan drone", status: status,
+                description: "Perbandingan pasokan dan kebutuhan per hektare dalam satu tahun.",
+                comparison: NutrientComparison(currentPracticeValue: currentValue, requiredValue: requiredValue, unit: "kg/ha/tahun"),
                 verdict: verdict,
                 warningImpact: status == .sufficient ? nil : "Tinjau kembali dosis pupuk bersama petugas kebun."
             )
@@ -100,51 +77,6 @@ final class CloudKitNutrientConditionRepository: NutrientConditionRepositoryProt
             subtitle: "\(low) unsur kurang dan \(high) unsur berlebih per hektare per tahun.",
             nutrients: items
         )
-    }
-
-    /// A generic composition such as `NPK` applies to specific NPK dose rows
-    /// (for example `NPK-15-15-15`) when no blend-specific composition exists.
-    private func composition(
-        for fertilizerType: ContractFertilizerType,
-        in compositions: [FertilizerCompositionItem]
-    ) -> FertilizerCompositionItem? {
-        compositions.first(where: { $0.fertilizerType == fertilizerType })
-            ?? (Self.isNPK(fertilizerType)
-                ? compositions.first(where: { $0.fertilizerType == .npk })
-                : nil)
-    }
-
-    /// Some farmer-entered fertilizers intentionally omit a composition array.
-    /// For those, their contract type still identifies the nutrient group; treat
-    /// the reported fertilizer dose as the group's dose instead of dropping it.
-    private func nutrientPercent(
-        for fertilizerType: ContractFertilizerType,
-        nutrientAliases: [String],
-        compositions: [FertilizerCompositionItem]
-    ) -> Double? {
-        if let item = composition(for: fertilizerType, in: compositions),
-           let element = item.composition?.first(where: {
-               nutrientAliases.contains($0.name.lowercased().trimmingCharacters(in: .whitespacesAndNewlines))
-           }),
-           let percent = Double(element.value.replacingOccurrences(of: ",", with: ".")) {
-            return percent
-        }
-
-        switch (fertilizerType, nutrientAliases.first) {
-        case (.urea, "n"), (.za, "n"), (.dolomite, "mg"), (.kieserite, "mg"):
-            return 100
-        default:
-            return nil
-        }
-    }
-
-    private static func isNPK(_ type: ContractFertilizerType) -> Bool {
-        switch type {
-        case .npk, .npk15_15_15, .npk12_6_22_3, .npk13_6_27_4, .npk13_8_27_4, .npk16_16_16:
-            true
-        default:
-            false
-        }
     }
 }
 
@@ -214,7 +146,7 @@ final class CloudKitFertilizerEstimationRepository: FertilizerEstimationReposito
         lock.withLock { selectedNPKByGarden[gardenId] = optionId }
         return try await fetchEstimation(for: gardenId)
     }
-
+    
     func saveNPK(optionId: String, for gardenId: String) async throws {
         let estimation = try await fetchEstimation(for: gardenId)
         guard estimation.npkOptions.contains(where: { $0.id == optionId }) else {
