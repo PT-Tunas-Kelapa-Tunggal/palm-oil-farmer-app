@@ -89,9 +89,7 @@ public struct FertilizingMapView: View {
                     selectedZone: viewModel.selectedZone,
                     orthomosaic: item.orthomosaic,
                     onSelectZone: { zone in
-                        withAnimation(.spring(response: 0.35, dampingFraction: 0.8)) {
-                            viewModel.selectZone(zone)
-                        }
+                        viewModel.selectZone(zone)
                     }
                 )
                 .ignoresSafeArea()

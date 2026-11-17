@@ -48,6 +48,7 @@ struct FertilizingMapKitView: UIViewRepresentable {
         private var lastSelectedZoneID: Int?
         private var imageMapRect: MKMapRect?
         private var zoneAnnotations: [ObjectIdentifier: FertilizingZoneDetail] = [:]
+        private var zonePolygons: [Int64: MKPolygon] = [:]
         private var onSelectZone: ((FertilizingZoneDetail) -> Void)?
 
         func requestLocationAuthorization() {
@@ -67,20 +68,39 @@ struct FertilizingMapKitView: UIViewRepresentable {
         ) {
             self.onSelectZone = onSelectZone
             let selectedZoneID = selectedZone?.id
-            guard lastData != data || lastZones != zones || lastMode != mode
-                    || lastWholeFarmDoseText != wholeFarmDoseText
-                    || lastSelectedZoneID != selectedZoneID else { return }
+            let dataChanged = lastData != data
+            let zonesChanged = lastZones != zones
+            let modeChanged = lastMode != mode
+            let doseChanged = lastWholeFarmDoseText != wholeFarmDoseText
+            let previousSelectedZoneID = lastSelectedZoneID
+            let selectionChanged = previousSelectedZoneID != selectedZoneID
+            guard dataChanged || zonesChanged || modeChanged || doseChanged || selectionChanged else { return }
 
-            let shouldReframe = lastData != data || lastMode != mode
+            let shouldReframe = dataChanged || modeChanged
             lastData = data
             lastZones = zones
             lastMode = mode
             lastWholeFarmDoseText = wholeFarmDoseText
             lastSelectedZoneID = selectedZoneID
 
-            map.removeOverlays(map.overlays)
+            if selectionChanged && !dataChanged && !zonesChanged && !modeChanged && !doseChanged {
+                if let previousSelectedZoneID {
+                    refreshZoneOutline(Int64(previousSelectedZoneID), on: map)
+                }
+                if let selectedZoneID {
+                    refreshZoneOutline(Int64(selectedZoneID), on: map)
+                }
+                return
+            }
+
+            if dataChanged {
+                map.removeOverlays(map.overlays)
+            } else {
+                map.removeOverlays(map.overlays.filter { !($0 is FertilizingImageOverlay) })
+            }
             map.removeAnnotations(map.annotations.filter { !($0 is MKUserLocation) })
             zoneAnnotations.removeAll()
+            zonePolygons.removeAll()
 
             guard let imageURL = data.imageURL,
                   data.imagePixelWidth > 0, data.imagePixelHeight > 0,
@@ -89,17 +109,20 @@ struct FertilizingMapKitView: UIViewRepresentable {
                   let imageRect = Self.imageRect(for: data, inside: farmRect) else { return }
             imageMapRect = imageRect
 
-            if let image = Self.downsampledImage(at: imageURL) {
+            if dataChanged, let image = Self.downsampledImage(at: imageURL) {
                 map.addOverlay(FertilizingImageOverlay(image: image, rect: imageRect), level: .aboveLabels)
             }
 
             switch mode {
             case .perZona:
                 let zonesByID = Dictionary(uniqueKeysWithValues: zones.map { (Int64($0.id), $0) })
-                let zonePolygons = data.zones.compactMap { zone -> MKPolygon? in
-                    polygon(for: zone.boundingBox, data: data, rect: imageRect, title: "zone-\(zone.id)")
+                let polygons = data.zones.compactMap { zone -> MKPolygon? in
+                    guard let polygon = polygon(for: zone.boundingBox, data: data,
+                                                rect: imageRect, title: "zone-\(zone.id)") else { return nil }
+                    zonePolygons[zone.id] = polygon
+                    return polygon
                 }
-                map.addOverlays(zonePolygons, level: .aboveLabels)
+                map.addOverlays(polygons, level: .aboveLabels)
 
                 for zone in data.zones {
                     guard let detail = zonesByID[zone.id],
@@ -136,6 +159,16 @@ struct FertilizingMapKitView: UIViewRepresentable {
                     animated: false
                 )
             }
+        }
+
+        private func refreshZoneOutline(_ id: Int64, on map: MKMapView) {
+            guard let polygon = zonePolygons[id],
+                  let renderer = map.renderer(for: polygon) as? MKPolygonRenderer else { return }
+            let isSelected = Int64(lastSelectedZoneID ?? -1) == id
+            renderer.strokeColor = UIColor.white.withAlphaComponent(isSelected ? 1 : 0.92)
+            renderer.fillColor = isSelected ? UIColor.white.withAlphaComponent(0.10) : .clear
+            renderer.lineWidth = isSelected ? 3 : 2
+            renderer.setNeedsDisplay()
         }
 
         func mapView(_ mapView: MKMapView, rendererFor overlay: MKOverlay) -> MKOverlayRenderer {
