@@ -12,6 +12,7 @@ public final class ResultOverviewViewModel {
     private let gardenName: String?
     private let locationName: String?
     public var overview: ResultOverviewItem?
+    public var farmBoundary: [FarmMapCoordinate] = []
     public var isLoading: Bool = false
     public var errorMessage: String?
 
@@ -37,6 +38,7 @@ public final class ResultOverviewViewModel {
         do {
             let fetchedOverview = try await repository.fetchOverview(for: gardenId)
             let farmIndex = try await farmGreenIndexRepository.fetchFarmGreenIndex(for: gardenId)
+            farmBoundary = farmIndex.orthomosaic?.farmBoundary ?? []
             let deficientTreeCount = farmIndex.categories
                 .filter { $0.category == .defisiensi || $0.category == .tidakWajar }
                 .reduce(0) { $0 + $1.treeCount }
