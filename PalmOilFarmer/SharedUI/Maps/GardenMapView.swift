@@ -46,7 +46,7 @@ struct BoundaryPointMarker: View {
                 .font(.caption2)
                 .foregroundStyle(.white)
                 .frame(minWidth: markerSize, minHeight: markerSize)
-                .background(KropsTheme.primary, in: Circle())
+                .background(KropsTheme.accentHero, in: Circle())
                 .overlay { Circle().stroke(.white, lineWidth: 1.5) }
             Image(systemName: "triangle.fill")
                 .font(.caption2)

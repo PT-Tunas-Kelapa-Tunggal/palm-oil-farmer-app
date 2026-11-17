@@ -15,7 +15,7 @@ struct GardenProfileCompletionCard: View {
             GardenProfileActionButton(title: "Lengkapi Profil Kebun", action: onComplete)
         }
         .font(.body).padding(20)
-        .background(GardenProfileStyle.card, in: RoundedRectangle(cornerRadius: 24))
+        .background(KropsTheme.surfaceCard, in: RoundedRectangle(cornerRadius: 24))
     }
 
     private func explanation(_ title: String, message: String, symbol: String) -> some View {
@@ -24,7 +24,7 @@ struct GardenProfileCompletionCard: View {
             : AnyLayout(HStackLayout(alignment: .top, spacing: 16))
         return layout {
             Image(systemName: symbol).font(.title2)
-                .foregroundStyle(GardenProfileStyle.accent)
+                .foregroundStyle(KropsTheme.accentHero)
                 .frame(width: 36, height: 28)
                 .accessibilityHidden(true)
             VStack(alignment: .leading, spacing: 4) {

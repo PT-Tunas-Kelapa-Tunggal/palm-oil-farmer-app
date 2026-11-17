@@ -35,7 +35,7 @@ struct PhotoSelectionContent: View {
                     Divider()
                     if hasNoLocation {
                         HStack(alignment: .center, spacing: 14) {
-                            Image(systemName: "exclamationmark.triangle.fill").foregroundStyle(.orange)
+                            Image(systemName: "exclamationmark.triangle.fill").foregroundStyle(KropsTheme.accentHero)
                             VStack(alignment: .leading, spacing: 4) {
                                 Text("Lokasi tidak tersimpan di foto").font(.footnote).foregroundStyle(.secondary)
                                 Text("Foto ini tidak bisa dipakai").font(.headline)
@@ -52,7 +52,7 @@ struct PhotoSelectionContent: View {
                 }
                 .padding(16)
                 .frame(maxWidth: .infinity, alignment: .leading)
-                .background(RegistrationStyle.surface, in: RoundedRectangle(cornerRadius: 20))
+                .background(KropsTheme.surfaceCard, in: RoundedRectangle(cornerRadius: 20))
             }
             .padding(.horizontal, 16)
             .padding(.top, 8)
@@ -62,7 +62,7 @@ struct PhotoSelectionContent: View {
 
     private func metadataRow(symbol: String, caption: String, value: String) -> some View {
         HStack(spacing: 14) {
-            Image(systemName: symbol).foregroundStyle(RegistrationStyle.actionTint)
+            Image(systemName: symbol).foregroundStyle(KropsTheme.accentHero)
             VStack(alignment: .leading, spacing: 4) {
                 Text(caption).font(.footnote).foregroundStyle(.secondary)
                 Text(value).font(.headline)
@@ -76,17 +76,17 @@ struct PhotoSelectionContent: View {
     PhotoSelectionContent(location: GardenRegistrationPreview.photoLocation,
                           image: UIImage(named: "RegistrationPhotoReference"),
                           creationDate: Date(timeIntervalSince1970: 1_793_582_040))
-        .background(RegistrationStyle.background)
+        .background(KropsTheme.surfaceBackground)
 }
 
 #Preview("Foto terpilih · Tanpa lokasi") {
     PhotoSelectionContent(image: UIImage(named: "RegistrationPhotoReference"),
                           creationDate: Date(timeIntervalSince1970: 1_793_582_040), hasNoLocation: true)
-        .background(RegistrationStyle.background)
+        .background(KropsTheme.surfaceBackground)
 }
 
 #Preview("Foto terpilih · Memuat") {
     PhotoSelectionContent(isLoadingImage: true)
-        .background(RegistrationStyle.background)
+        .background(KropsTheme.surfaceBackground)
 }
 #endif

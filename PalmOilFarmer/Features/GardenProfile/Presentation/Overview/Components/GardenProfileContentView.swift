@@ -108,7 +108,7 @@ struct GardenProfileContentView: View {
             .scrollIndicators(.hidden)
             .ignoresSafeArea(edges: showsHeader ? .top : [])
         }
-        .background((usesLightAssessmentLayout ? AssessmentPalette.lightBackground : GardenProfileStyle.background).ignoresSafeArea())
+        .background(KropsTheme.surfaceBackground.ignoresSafeArea())
         .toolbar(.hidden, for: .navigationBar)
     }
 
@@ -130,7 +130,7 @@ struct GardenProfileContentView: View {
             HStack(alignment: .top, spacing: 16) {
                 Button(action: onBack) {
                     // The icon stays inside its 44 pt touch target at every text size.
-                    Image(systemName: "chevron.left").font(.system(size: 22)).foregroundStyle(Color(uiColor: .label))
+                    Image(systemName: "chevron.left").font(.system(size: 22)).foregroundStyle(KropsTheme.labelPrimary)
                         .frame(width: 44, height: 44)
                 }
                 .buttonStyle(.plain).glassEffect(.regular.interactive(), in: Circle())
@@ -144,7 +144,7 @@ struct GardenProfileContentView: View {
                     Button("Ubah data kebun", systemImage: "pencil", action: onEditGarden)
                     if let onDelete { Button("Hapus kebun", systemImage: "trash", role: .destructive, action: onDelete) }
                 } label: {
-                    Image(systemName: "ellipsis").font(.title2).foregroundStyle(Color(uiColor: .label)).frame(width: 44, height: 44)
+                    Image(systemName: "ellipsis").font(.title2).foregroundStyle(KropsTheme.labelPrimary).frame(width: 44, height: 44)
                 }
                 .buttonStyle(.plain).glassEffect(.regular.interactive(), in: Circle())
                 .accessibilityLabel("Pilihan kebun")
@@ -172,7 +172,7 @@ struct GardenProfileContentView: View {
         VStack(spacing: 8) {
             if profileJustSaved {
                 Label("Profil kebun baru saja disimpan", systemImage: "sparkles")
-                    .font(.caption).foregroundStyle(GardenProfileStyle.accent)
+                    .font(.caption).foregroundStyle(KropsTheme.accentPrimary)
                     .frame(maxWidth: .infinity, alignment: .leading).padding(.horizontal, 14).padding(.top, 10)
             }
             GardenProfileSectionHeader(title: "Data Kebun", message: "Data yang Anda isi dan menjadi dasar hasil peninjauan.")
@@ -180,16 +180,16 @@ struct GardenProfileContentView: View {
             dataRow("Identitas Kebun", subtitle: "Lokasi, luas, tahun tanam, jenis tanah", symbol: "square.dashed.inset.filled", action: onEditGarden)
             dataRow("Riwayat Panen dan Pemupukan", subtitle: "Dasar perhitungan kondisi hara", symbol: "doc.text", action: onViewSummary)
         }
-        .foregroundStyle(usesLightAssessmentLayout ? AssessmentPalette.ink : Color.primary)
+        .foregroundStyle(KropsTheme.labelPrimary)
         .padding(profileJustSaved ? 4 : 0)
-        .background(profileJustSaved ? GardenProfileStyle.accent.opacity(0.12) : .clear, in: RoundedRectangle(cornerRadius: 24))
+        .background(profileJustSaved ? KropsTheme.accentSoft : .clear, in: RoundedRectangle(cornerRadius: 24))
     }
 
     private func dataRow(_ title: String, subtitle: String, symbol: String, action: @escaping () -> Void) -> some View {
         Button(action: action) {
             HStack(spacing: 12) {
                 Image(systemName: symbol).font(.subheadline).foregroundStyle(.secondary)
-                    .frame(width: 36, height: 36).background(Color(uiColor: .tertiarySystemFill), in: Circle())
+                    .frame(width: 36, height: 36).background(KropsTheme.fillBlack8, in: Circle())
                 VStack(alignment: .leading, spacing: 4) {
                     Text(title).font(.headline)
                     Text(subtitle).font(.subheadline).foregroundStyle(.secondary)
@@ -197,14 +197,14 @@ struct GardenProfileContentView: View {
                 Image(systemName: "chevron.right").font(.subheadline).foregroundStyle(.tertiary)
             }
             .padding(16).frame(minHeight: 76)
-            .background(usesLightAssessmentLayout ? .white : GardenProfileStyle.card, in: RoundedRectangle(cornerRadius: 24))
+            .background(KropsTheme.surfaceCard, in: RoundedRectangle(cornerRadius: 24))
         }.buttonStyle(.plain)
     }
 
     private var readyCard: some View {
         VStack(spacing: 12) {
             Image(systemName: "checkmark.seal.fill").font(.system(size: 36))
-                .foregroundStyle(GardenProfileStyle.accent).frame(height: 41).accessibilityHidden(true)
+                .foregroundStyle(KropsTheme.accentHero).frame(height: 41).accessibilityHidden(true)
             Text(currentReviewStatus == nil ? "Kebun Siap Ditinjau" : "Peninjauan Kebun").font(.title2.bold())
             Text(currentReviewStatus == nil
                  ? "Profil kebun sudah lengkap. Ajukan peninjauan agar petugas memeriksa seluruh pohon di kebun Anda dan memberi rekomendasi pupuk yang lebih tepat."
@@ -213,8 +213,8 @@ struct GardenProfileContentView: View {
             Button(action: onViewReviewInformation) {
                 HStack(spacing: 4) {
                     Text("Tentang Peninjauan Kebun")
-                    Image(systemName: "info.circle")
-                }.font(.subheadline).foregroundStyle(GardenProfileStyle.accent).padding(.vertical, 4)
+                    Image(systemName: "info.circle").foregroundStyle(KropsTheme.accentHero)
+                }.font(.subheadline).foregroundStyle(KropsTheme.labelPrimary).padding(.vertical, 4)
             }.buttonStyle(.plain)
             GardenProfileActionButton(
                 title: reviewTitle,
@@ -223,14 +223,14 @@ struct GardenProfileContentView: View {
         }
         .multilineTextAlignment(.center)
         .padding(.horizontal, 20).padding(.top, 24).padding(.bottom, 20)
-        .background(GardenProfileStyle.card, in: RoundedRectangle(cornerRadius: 24))
+        .background(KropsTheme.surfaceCard, in: RoundedRectangle(cornerRadius: 24))
     }
 
     private var lightReadyCard: some View {
         AssessmentGardenStatusCard {
             Image(systemName: "checkmark.seal.fill")
                 .font(.system(size: 38, weight: .semibold))
-                .foregroundStyle(AssessmentPalette(isDark: false).accent)
+                .foregroundStyle(KropsTheme.accentHero)
                 .frame(height: 44)
                 .accessibilityHidden(true)
 
@@ -240,17 +240,17 @@ struct GardenProfileContentView: View {
                     .accessibilityAddTraits(.isHeader)
                 Text("Profil kebun sudah lengkap. Ajukan peninjauan agar petugas memeriksa seluruh pohon di kebun Anda dan memberi rekomendasi pupuk yang lebih tepat.")
                     .font(.body)
-                    .foregroundStyle(AssessmentPalette(isDark: false).secondary)
+                    .foregroundStyle(KropsTheme.labelSecondary)
             }
 
             Button(action: onViewReviewInformation) {
                 HStack(spacing: 5) {
                     Text("Tentang Peninjauan Kebun")
                     Image(systemName: "info.circle")
-                        .foregroundStyle(AssessmentPalette(isDark: false).accent)
+                        .foregroundStyle(KropsTheme.accentHero)
                 }
                 .font(.subheadline)
-                .foregroundStyle(AssessmentPalette.ink)
+                .foregroundStyle(KropsTheme.labelPrimary)
             }
             .buttonStyle(.plain)
         } actions: {
@@ -264,7 +264,7 @@ struct GardenProfileContentView: View {
             }
             .buttonStyle(.plain)
             .foregroundStyle(.white)
-            .glassEffect(.regular.tint(AssessmentPalette.ink).interactive(), in: Capsule())
+            .glassEffect(.regular.tint(KropsTheme.surfaceInverse).interactive(), in: Capsule())
         }
     }
 
@@ -277,7 +277,7 @@ struct GardenProfileContentView: View {
                         .accessibilityAddTraits(.isHeader)
                     Text("Isi riwayat panen dan pemupukan agar hasil peninjauan lebih sesuai dengan kebun Anda.")
                         .font(.body)
-                        .foregroundStyle(AssessmentPalette(isDark: false).secondary)
+                        .foregroundStyle(KropsTheme.labelSecondary)
                 }
                 completionExplanation(
                     "Riwayat Panen",
@@ -303,7 +303,7 @@ struct GardenProfileContentView: View {
             }
             .buttonStyle(.plain)
             .foregroundStyle(.white)
-            .glassEffect(.regular.tint(AssessmentPalette.ink).interactive(), in: Capsule())
+            .glassEffect(.regular.tint(KropsTheme.surfaceInverse).interactive(), in: Capsule())
         }
     }
 
@@ -311,7 +311,7 @@ struct GardenProfileContentView: View {
         HStack(alignment: .top, spacing: 16) {
             Image(systemName: symbol)
                 .font(.title2)
-                .foregroundStyle(AssessmentPalette(isDark: false).accent)
+                .foregroundStyle(KropsTheme.accentHero)
                 .frame(width: 36, height: 28)
                 .accessibilityHidden(true)
             VStack(alignment: .leading, spacing: 4) {
@@ -321,7 +321,7 @@ struct GardenProfileContentView: View {
                     .frame(maxWidth: .infinity, alignment: .leading)
                 Text(message)
                     .font(.subheadline)
-                    .foregroundStyle(AssessmentPalette(isDark: false).secondary)
+                    .foregroundStyle(KropsTheme.labelSecondary)
                     .multilineTextAlignment(.leading)
                     .frame(maxWidth: .infinity, alignment: .leading)
             }

@@ -13,14 +13,14 @@ struct RegistrationPrimaryButton: View {
                 Text(title)
             }
             .font(.body.weight(.semibold))
-            .foregroundStyle(RegistrationStyle.onAction)
+            .foregroundStyle(KropsTheme.labelInversePrimary)
             .multilineTextAlignment(.center)
             .fixedSize(horizontal: false, vertical: true)
             .frame(maxWidth: .infinity, minHeight: 20)
         }
         .buttonStyle(.glassProminent)
         .buttonBorderShape(.capsule)
-        .tint(RegistrationStyle.actionTint)
+        .tint(KropsTheme.surfaceInverse)
         .controlSize(.large)
     }
 }
@@ -35,6 +35,6 @@ struct RegistrationPrimaryButton: View {
     }
     .padding(24)
     .frame(width: 402)
-    .background(RegistrationStyle.background)
+    .background(KropsTheme.surfaceBackground)
 }
 #endif

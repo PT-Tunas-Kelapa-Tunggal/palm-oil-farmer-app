@@ -6,5 +6,7 @@
 	<string>$(CLOUDKIT_CONTAINER_ID)</string>
 	<key>CKEnvironment</key>
 	<string>$(CLOUDKIT_ENVIRONMENT)</string>
+	<key>UIUserInterfaceStyle</key>
+	<string>Light</string>
 </dict>
 </plist>

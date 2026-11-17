@@ -19,7 +19,7 @@ struct GardenProfileActionButton: View {
             .frame(maxWidth: .infinity, minHeight: 22)
         }
         .buttonStyle(.glassProminent).buttonBorderShape(.capsule)
-        .controlSize(.large).tint(GardenProfileStyle.accent)
+        .controlSize(.large).tint(KropsTheme.surfaceInverse)
     }
 }
 

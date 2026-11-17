@@ -27,7 +27,7 @@ struct BoundaryMetricsView: View {
         layout {
             metric("Luas", value: isClosed || boundary.points.isEmpty ? displayMetrics.area : "–")
             if !dynamicTypeSize.isAccessibilitySize {
-                Rectangle().fill(Color(uiColor: .separator)).frame(width: 1, height: 12)
+                Rectangle().fill(KropsTheme.separatorDefault).frame(width: 1, height: 12)
                     .accessibilityHidden(true)
             }
             metric("Keliling", value: displayMetrics.perimeter)

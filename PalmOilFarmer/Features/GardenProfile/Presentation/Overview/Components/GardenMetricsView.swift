@@ -36,10 +36,10 @@ struct GardenMetricsView: View {
         .background {
             if usesAssessmentBand {
                 UnevenRoundedRectangle(topLeadingRadius: 40, topTrailingRadius: 40)
-                    .fill(AssessmentPalette.ink)
+                    .fill(KropsTheme.surfaceInverse)
             } else {
                 RoundedRectangle(cornerRadius: 20)
-                    .fill(GardenProfileStyle.card)
+                    .fill(KropsTheme.surfaceCard)
             }
         }
     }
@@ -47,7 +47,7 @@ struct GardenMetricsView: View {
     private var divider: some View {
         Divider()
             .overlay {
-                if usesAssessmentBand { Color.white.opacity(0.2) }
+                if usesAssessmentBand { KropsTheme.fillWhite12 }
             }
             .frame(width: 1, height: 36)
     }
@@ -55,10 +55,10 @@ struct GardenMetricsView: View {
     private func tile(_ title: String, value: String, symbol: String) -> some View {
         VStack(alignment: .leading, spacing: 2) {
             HStack(spacing: 4) {
-                Image(systemName: symbol).foregroundStyle(usesAssessmentBand ? .white : GardenProfileStyle.accent)
-                Text(title).foregroundStyle(usesAssessmentBand ? Color.white : .secondary)
+                Image(systemName: symbol).foregroundStyle(usesAssessmentBand ? KropsTheme.labelInversePrimary : KropsTheme.accentHero)
+                Text(title).foregroundStyle(usesAssessmentBand ? KropsTheme.labelInversePrimary : KropsTheme.labelSecondary)
             }.font(.caption2)
-            Text(value).font(.title2.bold()).foregroundStyle(usesAssessmentBand ? Color.white : .primary)
+            Text(value).font(.title2.bold()).foregroundStyle(usesAssessmentBand ? KropsTheme.labelInversePrimary : KropsTheme.labelPrimary)
         }
         .frame(maxWidth: .infinity, minHeight: 43, alignment: .leading)
         .accessibilityElement(children: .combine)
@@ -68,6 +68,6 @@ struct GardenMetricsView: View {
 #if DEBUG
 #Preview("Metrik kebun", traits: .sizeThatFitsLayout) {
     GardenMetricsView(garden: GardenProfileCanvasFixtures.emptyGarden, metrics: GardenPreviewData.metrics)
-        .padding().frame(width: 402).background(GardenProfileStyle.background)
+        .padding().frame(width: 402).background(KropsTheme.surfaceBackground)
 }
 #endif

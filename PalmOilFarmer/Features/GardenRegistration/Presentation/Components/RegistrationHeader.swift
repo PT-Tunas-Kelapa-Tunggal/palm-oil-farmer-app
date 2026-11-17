@@ -73,6 +73,6 @@ struct RegistrationHeader: View {
             .environment(\.colorScheme, .dark)
     }
     .frame(width: 402)
-    .background(RegistrationStyle.background)
+    .background(KropsTheme.surfaceBackground)
 }
 #endif

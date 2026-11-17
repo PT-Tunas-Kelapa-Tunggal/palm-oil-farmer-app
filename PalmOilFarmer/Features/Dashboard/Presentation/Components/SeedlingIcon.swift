@@ -48,8 +48,8 @@ struct SeedlingIcon: View {
 #if DEBUG
 #Preview("Seedling Icon", traits: .sizeThatFitsLayout) {
     SeedlingIcon()
-        .foregroundStyle(KropsTheme.secondaryText)
+        .foregroundStyle(KropsTheme.labelSecondary)
         .padding(24)
-        .background(KropsTheme.background)
+        .background(KropsTheme.surfaceBackground)
 }
 #endif

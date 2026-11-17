@@ -12,7 +12,7 @@ struct RegistrationFormField<Content: View>: View {
                 .font(KropsTheme.Typography.body)
                 .frame(minHeight: 52)
                 .padding(.horizontal, KropsTheme.Spacing.field)
-                .background(KropsTheme.secondaryFill, in: RoundedRectangle(cornerRadius: 12))
+                .background(KropsTheme.surfaceCard, in: RoundedRectangle(cornerRadius: 12))
         }
         .padding(.top, 16)
         .frame(maxWidth: .infinity, alignment: .leading)
@@ -32,6 +32,6 @@ struct RegistrationFormField<Content: View>: View {
     }
     .padding(16)
     .frame(width: 402)
-    .background(RegistrationStyle.surface)
+    .background(KropsTheme.surfaceCard)
 }
 #endif

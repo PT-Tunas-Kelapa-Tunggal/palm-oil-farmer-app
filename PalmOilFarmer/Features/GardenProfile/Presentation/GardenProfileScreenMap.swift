@@ -11,7 +11,7 @@ private struct ProfileScreenFrame<Content: View>: View {
             NavigationStack { content() }
                 .frame(width: 402, height: 874)
                 .clipShape(RoundedRectangle(cornerRadius: 44))
-                .overlay { RoundedRectangle(cornerRadius: 44).stroke(Color(uiColor: .separator)) }
+                .overlay { RoundedRectangle(cornerRadius: 44).stroke(KropsTheme.separatorOpaque) }
         }
     }
 }

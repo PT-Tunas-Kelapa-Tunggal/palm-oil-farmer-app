@@ -32,7 +32,7 @@ struct GardenReviewInformationView: View {
                         Button { hideIntroduction.toggle() } label: {
                             HStack(spacing: 14) {
                                 Image(systemName: hideIntroduction ? "checkmark.circle.fill" : "circle")
-                                    .font(.title2).foregroundStyle(hideIntroduction ? GardenProfileStyle.accent : Color(uiColor: .tertiaryLabel))
+                                    .font(.title2).foregroundStyle(hideIntroduction ? KropsTheme.accentHero : KropsTheme.labelTertiary)
                                 Text("Jangan tampilkan lagi").font(.subheadline)
                                 Spacer()
                             }.padding(.horizontal, 10).frame(minHeight: 44)
@@ -44,7 +44,7 @@ struct GardenReviewInformationView: View {
                 .padding(.horizontal, 24).padding(.top, 16).padding(.bottom, 34)
             }
         }
-        .background(GardenProfileStyle.card)
+        .background(KropsTheme.surfaceCard)
     }
 
     private func explanation(_ step: Int, title: String, image: String, message: String) -> some View {
@@ -52,7 +52,7 @@ struct GardenReviewInformationView: View {
             Image(image).resizable().aspectRatio(354.0 / 150.0, contentMode: .fit)
                 .clipShape(RoundedRectangle(cornerRadius: 20)).accessibilityHidden(true)
             VStack(alignment: .leading, spacing: 6) {
-                Text("Langkah \(step)").font(.footnote.weight(.semibold)).foregroundStyle(GardenProfileStyle.accent)
+                Text("Langkah \(step)").font(.footnote.weight(.semibold)).foregroundStyle(KropsTheme.accentSectionLabel)
                 Text(title).font(.body.weight(.semibold))
                 Text(message).font(.body).foregroundStyle(.secondary)
             }

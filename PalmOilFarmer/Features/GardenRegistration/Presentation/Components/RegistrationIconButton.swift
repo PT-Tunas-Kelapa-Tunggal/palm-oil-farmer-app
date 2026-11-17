@@ -14,9 +14,9 @@ struct RegistrationIconButton: View {
                 .contentShape(Circle())
         }
         .buttonStyle(.plain)
-        .foregroundStyle(isProminent ? RegistrationStyle.onAction : .primary)
+        .foregroundStyle(isProminent ? KropsTheme.labelInversePrimary : .primary)
         .background {
-            if isProminent { Circle().fill(RegistrationStyle.actionTint) }
+            if isProminent { Circle().fill(KropsTheme.surfaceInverse) }
         }
         .glassEffect(.regular.interactive(), in: Circle())
         .accessibilityLabel(label)
@@ -64,8 +64,8 @@ struct RegistrationDiscardMenu: View {
                         .contentShape(.capsule)
                 }
                 .buttonStyle(.plain)
-                .foregroundStyle(.red)
-                .background(Color(uiColor: .tertiarySystemFill), in: .capsule)
+                .foregroundStyle(KropsTheme.statusCritical)
+                .background(KropsTheme.fillBlack8, in: .capsule)
             }
             .padding(14)
             .frame(width: 260, alignment: .leading)
@@ -94,6 +94,6 @@ struct RegistrationDiscardMenu: View {
         RegistrationIconButton(symbol: "checkmark", label: "Selesai", isProminent: true) {}
     }
     .padding(24)
-    .background(RegistrationStyle.background)
+    .background(KropsTheme.surfaceBackground)
 }
 #endif

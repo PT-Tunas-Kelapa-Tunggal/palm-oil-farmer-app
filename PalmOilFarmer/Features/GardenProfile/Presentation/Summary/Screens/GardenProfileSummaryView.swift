@@ -34,7 +34,7 @@ struct GardenProfileSummaryView: View {
                 .padding(.horizontal, 16).padding(.top, 20).padding(.bottom, 34)
             }
         }
-        .background(GardenProfileStyle.formBackground)
+        .background(KropsTheme.surfaceBackground)
         .toolbar(.hidden, for: .navigationBar)
     }
     private var subtitle: String {

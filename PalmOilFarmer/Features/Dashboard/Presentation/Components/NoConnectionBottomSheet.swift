@@ -6,16 +6,12 @@ struct NoConnectionBottomSheet: View {
     let onRetry: () -> Void
 
     @Environment(\.dismiss) private var dismiss
-    @Environment(\.colorScheme) private var colorScheme
-
-    private var dark: Bool { colorScheme == .dark }
-    private var palette: AssessmentPalette { .init(isDark: dark) }
 
     var body: some View {
         VStack(spacing: 0) {
             // Grabber handle
             Capsule()
-                .fill(dark ? Color(white: 0.3) : Color(red: 20 / 255, green: 21 / 255, blue: 23 / 255, opacity: 0.2))
+                .fill(KropsTheme.fillBlack20)
                 .frame(width: 36, height: 5)
                 .padding(.top, 6)
                 .padding(.bottom, 12)
@@ -23,24 +19,24 @@ struct NoConnectionBottomSheet: View {
             VStack(spacing: 16) {
                 // Icon (64x64 Circle with wifi.slash)
                 Circle()
-                    .fill(dark ? Color(white: 0.18) : Color(red: 20 / 255, green: 21 / 255, blue: 23 / 255, opacity: 0.08))
+                    .fill(KropsTheme.fillBlack8)
                     .frame(width: 64, height: 64)
                     .overlay {
                         Image(systemName: "wifi.slash")
                             .font(.system(size: 28, weight: .semibold))
-                            .foregroundStyle(palette.primary.opacity(0.72))
+                            .foregroundStyle(KropsTheme.labelSecondary)
                     }
 
                 // Text
                 VStack(spacing: 6) {
                     Text("Tidak ada koneksi internet")
                         .font(.title3.bold())
-                        .foregroundStyle(palette.primary)
+                        .foregroundStyle(KropsTheme.labelPrimary)
                         .multilineTextAlignment(.center)
 
                     Text("Periksa sinyal atau data seluler Anda, lalu coba lagi untuk membuka kebun ini.")
                         .font(.subheadline)
-                        .foregroundStyle(palette.secondary)
+                        .foregroundStyle(KropsTheme.labelSecondary)
                         .multilineTextAlignment(.center)
                         .fixedSize(horizontal: false, vertical: true)
                 }
@@ -52,8 +48,8 @@ struct NoConnectionBottomSheet: View {
                         .font(.headline)
                         .frame(maxWidth: .infinity)
                         .frame(height: 50)
-                        .foregroundStyle(palette.buttonLabel)
-                        .background(palette.buttonTint, in: Capsule())
+                        .foregroundStyle(KropsTheme.labelInversePrimary)
+                        .background(KropsTheme.surfaceInverse, in: Capsule())
                 }
                 .buttonStyle(.plain)
                 .padding(.horizontal, 16)
@@ -66,7 +62,7 @@ struct NoConnectionBottomSheet: View {
         .presentationCornerRadius(38)
         .presentationDragIndicator(.hidden)
         .presentationBackground {
-            if dark { palette.card } else { Rectangle().fill(.regularMaterial) }
+            Rectangle().fill(.regularMaterial)
         }
     }
 }

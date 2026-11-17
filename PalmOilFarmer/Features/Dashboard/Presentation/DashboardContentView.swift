@@ -69,7 +69,7 @@ struct DashboardContentView: View {
                                 Image(systemName: filter.emptySymbol)
                                     .font(.system(size: 40, weight: .regular))
                                     .frame(width: 88, height: 88)
-                                    .background(KropsTheme.cardFill, in: Circle())
+                                    .background(KropsTheme.fillBlack8, in: Circle())
                             }
                             .frame(maxWidth: .infinity, minHeight: geometry.size.height * 0.8)
                         }
@@ -121,14 +121,7 @@ struct DashboardContentView: View {
             }
         }
         .background {
-            if state.isEmpty && downloads.isEmpty {
-                Color(uiColor: .systemBackground).ignoresSafeArea()
-                RadialGradient(colors: [RegistrationStyle.actionTint.opacity(0.12), .clear],
-                               center: .center, startRadius: 30, endRadius: 320)
-                    .ignoresSafeArea()
-            } else {
-                GardenProfileStyle.background.ignoresSafeArea()
-            }
+            KropsTheme.surfaceBackground.ignoresSafeArea()
         }
         .safeAreaInset(edge: .bottom, spacing: 0) {
             if state.isEmpty && downloads.isEmpty {

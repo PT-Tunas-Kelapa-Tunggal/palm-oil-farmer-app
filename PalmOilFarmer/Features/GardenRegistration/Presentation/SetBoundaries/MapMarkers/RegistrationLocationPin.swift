@@ -5,14 +5,14 @@ struct RegistrationLocationPin: View {
     var body: some View {
         VStack(spacing: -2) {
             Circle()
-                .fill(RegistrationStyle.actionTint)
+                .fill(KropsTheme.accentHero)
                 .frame(width: 42, height: 42)
-                .overlay { Image(systemName: "mappin").foregroundStyle(.white) }
-                .overlay { Circle().stroke(RegistrationStyle.onAction, lineWidth: 3) }
+                .overlay { Image(systemName: "mappin").foregroundStyle(KropsTheme.labelInversePrimary) }
+                .overlay { Circle().stroke(KropsTheme.labelInversePrimary, lineWidth: 3) }
             Image(systemName: "triangle.fill")
                 .font(.system(size: 12))
                 .rotationEffect(.degrees(180))
-                .foregroundStyle(RegistrationStyle.onAction)
+                .foregroundStyle(KropsTheme.labelInversePrimary)
         }
         .accessibilityHidden(true)
     }

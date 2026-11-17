@@ -82,8 +82,8 @@ struct LocationSearchContent: View {
             }
             .scrollDismissesKeyboard(.immediately)
         }
-        .background(RegistrationStyle.background)
-        .presentationBackground(RegistrationStyle.background)
+        .background(KropsTheme.surfaceBackground)
+        .presentationBackground(KropsTheme.surfaceCardRaised)
     }
 }
 

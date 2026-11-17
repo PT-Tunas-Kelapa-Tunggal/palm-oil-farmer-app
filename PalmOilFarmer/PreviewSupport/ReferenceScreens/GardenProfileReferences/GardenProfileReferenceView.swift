@@ -43,7 +43,7 @@ struct GardenProfileReferenceView: View {
                 }
             }
         }
-        .background(GardenProfileStyle.background)
+        .background(KropsTheme.surfaceBackground)
     }
 
     private var map: some View {

@@ -4,11 +4,11 @@ import SwiftUI
 struct RegistrationUserLocationMarker: View {
     var body: some View {
         Circle()
-            .fill(RegistrationStyle.actionTint)
+            .fill(KropsTheme.accentHero)
             .frame(width: 22, height: 22)
             .overlay { Circle().stroke(.white, lineWidth: 4) }
             .padding(15)
-            .background(RegistrationStyle.actionTint.opacity(0.35), in: Circle())
+            .background(KropsTheme.fillBlack30, in: Circle())
             .overlay { Circle().stroke(.white.opacity(0.7), lineWidth: 1.5) }
             .accessibilityLabel("Posisi Anda sekarang")
     }

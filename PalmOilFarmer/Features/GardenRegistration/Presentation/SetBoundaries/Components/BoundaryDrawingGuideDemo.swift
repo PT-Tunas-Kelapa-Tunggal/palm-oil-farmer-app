@@ -105,7 +105,7 @@ struct BoundaryDrawingGuideDemo: View {
             touchIndicator(unit: unit).offset(x: offset, y: offset)
             Image(systemName: "hand.pinch.fill")
                 .font(.system(size: 56 * unit))
-                .foregroundStyle(RegistrationStyle.onAction)
+                .foregroundStyle(KropsTheme.labelInversePrimary)
                 .shadow(color: .black.opacity(0.35), radius: 10, y: 4)
                 .offset(x: 35 * unit, y: -13 * unit)
         }
@@ -113,11 +113,11 @@ struct BoundaryDrawingGuideDemo: View {
 
     private func touchIndicator(unit: CGFloat) -> some View {
         Circle()
-            .fill(RegistrationStyle.onAction)
+            .fill(KropsTheme.labelInversePrimary)
             .frame(width: 28 * unit, height: 28 * unit)
             .background {
                 Circle()
-                    .stroke(RegistrationStyle.onAction.opacity(0.6), lineWidth: 1.5)
+                    .stroke(KropsTheme.labelInversePrimary.opacity(0.6), lineWidth: 1.5)
                     .frame(width: 48 * unit, height: 48 * unit)
             }
     }
@@ -128,16 +128,16 @@ struct BoundaryDrawingGuideDemo: View {
                 path.addLines(corners)
                 path.closeSubpath()
             }
-            .fill(RegistrationStyle.onAction.opacity(0.12))
+            .fill(KropsTheme.labelInversePrimary.opacity(0.12))
             .opacity(isFilled ? 1 : 0)
 
             ForEach(0..<4, id: \.self) { index in
                 segment(from: corners[index], to: corners[(index + 1) % 4])
                     .trim(from: 0, to: drawn[index])
-                    .stroke(RegistrationStyle.onAction, style: StrokeStyle(lineWidth: 3, lineCap: .round))
+                    .stroke(KropsTheme.labelInversePrimary, style: StrokeStyle(lineWidth: 3, lineCap: .round))
             }
             segment(from: corners[2], to: corners[0])
-                .stroke(RegistrationStyle.onAction.opacity(0.7),
+                .stroke(KropsTheme.labelInversePrimary.opacity(0.7),
                         style: StrokeStyle(lineWidth: 2.5, lineCap: .round, dash: [6, 6]))
                 .opacity(showsClosingHint ? 1 : 0)
 
@@ -155,7 +155,7 @@ struct BoundaryDrawingGuideDemo: View {
             }
             Image(systemName: "hand.tap.fill")
                 .font(.system(size: 56 * unit))
-                .foregroundStyle(RegistrationStyle.onAction)
+                .foregroundStyle(KropsTheme.labelInversePrimary)
                 .shadow(color: .black.opacity(0.35), radius: 10, y: 4)
                 .scaleEffect(isPressing ? 0.88 : 1)
                 .position(x: corners[hand].x + 22 * unit, y: corners[hand].y + 34 * unit)
@@ -270,8 +270,8 @@ private struct BoundaryGuideRipple: View {
 
     var body: some View {
         Circle()
-            .fill(RegistrationStyle.onAction.opacity(0.18))
-            .overlay { Circle().stroke(RegistrationStyle.onAction.opacity(0.6), lineWidth: 1.5) }
+            .fill(KropsTheme.labelInversePrimary.opacity(0.18))
+            .overlay { Circle().stroke(KropsTheme.labelInversePrimary.opacity(0.6), lineWidth: 1.5) }
             .frame(width: 60 * unit, height: 60 * unit)
             .scaleEffect(grown ? 1 : 0.4)
             .opacity(grown ? 1 : 0.2)

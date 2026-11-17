@@ -18,7 +18,7 @@ struct FrequencyStepper: View {
                 }.disabled(value >= range.upperBound)
             }
             .font(.title3.weight(.semibold))
-            .background(Color(uiColor: .tertiarySystemFill), in: Capsule())
+            .background(KropsTheme.surfaceCardRaised, in: Capsule())
         }
         .buttonStyle(.plain)
         .accessibilityElement(children: .ignore)

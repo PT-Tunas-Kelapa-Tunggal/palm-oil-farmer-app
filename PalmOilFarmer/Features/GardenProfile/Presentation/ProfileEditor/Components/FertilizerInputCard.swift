@@ -28,7 +28,7 @@ struct FertilizerInputCard: View {
                     }
                     .font(.title3)
                     .padding(.horizontal, 14).frame(minHeight: 52)
-                    .background(Color(uiColor: .tertiarySystemFill), in: RoundedRectangle(cornerRadius: 12)).contentShape(Rectangle())
+                    .background(KropsTheme.surfaceCardRaised, in: RoundedRectangle(cornerRadius: 12)).contentShape(Rectangle())
                 }
                 .buttonStyle(.plain)
                 .accessibilityLabel("Jenis pupuk").accessibilityValue(draft.name.isEmpty ? "Belum dipilih" : draft.name)
@@ -51,7 +51,7 @@ struct FertilizerInputCard: View {
                     Text("kg").font(.body).foregroundStyle(.secondary)
                 }
                 .font(.title3).padding(.horizontal, 14).frame(minHeight: 52)
-                .background(Color(uiColor: .tertiarySystemFill), in: RoundedRectangle(cornerRadius: 12))
+                .background(KropsTheme.surfaceCardRaised, in: RoundedRectangle(cornerRadius: 12))
             }
             .padding(.top, draft.kind == .npk ? 16 : 8).padding(.bottom, 8)
             if showsDeleteButton {
@@ -70,7 +70,7 @@ struct FertilizerInputCard: View {
         .padding(.horizontal, 16).padding(.bottom, 8)
         .background {
             RoundedRectangle(cornerRadius: 24)
-                .fill(GardenProfileStyle.card)
+                .fill(KropsTheme.surfaceCard)
                 .onTapGesture { focusedField.wrappedValue = nil }
         }
     }

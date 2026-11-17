@@ -44,11 +44,11 @@ struct GardenProfileEditorView: View {
                                         .frame(minWidth: 48, idealWidth: 64, maxWidth: dynamicTypeSize.isAccessibilitySize ? .infinity : 64)
                                         .accessibilityLabel("Rata-rata berat panen per bulan, kilogram")
                                     Text("kg").font(.body).foregroundStyle(.secondary)
-                                }.padding(10).background(Color(uiColor: .tertiarySystemFill), in: RoundedRectangle(cornerRadius: 12))
+                                }.padding(10).background(KropsTheme.surfaceCardRaised, in: RoundedRectangle(cornerRadius: 12))
                             }
                         }.padding(.horizontal, 16).background {
                             RoundedRectangle(cornerRadius: 20)
-                                .fill(GardenProfileStyle.card)
+                                .fill(KropsTheme.surfaceCard)
                                 .onTapGesture { focusedField = nil }
                         }
                     }
@@ -59,7 +59,7 @@ struct GardenProfileEditorView: View {
                                                     label: "Frekuensi pemupukan per tahun")
                         }.padding(.horizontal, 16).background {
                             RoundedRectangle(cornerRadius: 20)
-                                .fill(GardenProfileStyle.card)
+                                .fill(KropsTheme.surfaceCard)
                                 .onTapGesture { focusedField = nil }
                         }
                     }
@@ -84,7 +84,7 @@ struct GardenProfileEditorView: View {
                         Button { viewModel.addFertilizer() } label: {
                             Label("Tambah jenis pupuk", systemImage: "plus")
                                 .font(.body).frame(maxWidth: .infinity, minHeight: 52)
-                                .foregroundStyle(GardenProfileStyle.accent)
+                                .foregroundStyle(KropsTheme.accentPrimary)
                         }
                         .buttonStyle(.plain)
                     }
@@ -109,7 +109,7 @@ struct GardenProfileEditorView: View {
             }
         }
         .background {
-            GardenProfileStyle.formBackground
+            KropsTheme.surfaceBackground
                 .ignoresSafeArea()
                 .onTapGesture { focusedField = nil }
         }

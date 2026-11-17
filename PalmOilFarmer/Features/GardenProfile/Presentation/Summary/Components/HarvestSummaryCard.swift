@@ -10,7 +10,7 @@ struct HarvestSummaryCard: View {
         }
         .padding(.horizontal, 16)
         .padding(.vertical, 12)
-        .background(GardenProfileStyle.field, in: RoundedRectangle(cornerRadius: 18))
+        .background(KropsTheme.surfaceCard, in: RoundedRectangle(cornerRadius: 18))
     }
 }
 

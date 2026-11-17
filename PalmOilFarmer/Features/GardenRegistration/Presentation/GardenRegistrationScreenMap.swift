@@ -11,9 +11,9 @@ private struct RegistrationScreenFrame<Content: View>: View {
             Text(title).font(.title3.bold())
             content()
                 .frame(width: 402, height: 874)
-                .background(RegistrationStyle.background)
+                .background(KropsTheme.surfaceBackground)
                 .clipShape(RoundedRectangle(cornerRadius: 44))
-                .overlay { RoundedRectangle(cornerRadius: 44).stroke(Color(uiColor: .separator)) }
+                .overlay { RoundedRectangle(cornerRadius: 44).stroke(KropsTheme.separatorOpaque) }
         }
     }
 }
@@ -44,7 +44,7 @@ private struct RegistrationScreenFrame<Content: View>: View {
                         LocationConfirmationPanel(location: GardenRegistrationPreview.searchLocation,
                                                   onBack: {}, onContinue: {})
                             .frame(height: 230)
-                            .background(RegistrationStyle.surface)
+                            .background(KropsTheme.surfaceCard)
                     }
             }
             RegistrationScreenFrame(title: "2b · Batas Kebun") {
@@ -59,7 +59,7 @@ private struct RegistrationScreenFrame<Content: View>: View {
                     BoundaryEditingPanel(boundary: GardenPreviewData.boundary,
                                          onUndo: {}, onClear: {}, onConfirm: {})
                         .frame(height: 180)
-                        .background(RegistrationStyle.surface)
+                        .background(KropsTheme.surfaceCard)
                 }
             }
             RegistrationScreenFrame(title: "3a · Data Kebun") {

@@ -36,7 +36,7 @@ struct NPKCompositionInputView: View {
                 Text("%").foregroundStyle(.secondary)
             }
             .font(.title3).padding(8).frame(minHeight: 44)
-            .background(Color(uiColor: .tertiarySystemFill), in: RoundedRectangle(cornerRadius: 12))
+            .background(KropsTheme.surfaceCardRaised, in: RoundedRectangle(cornerRadius: 12))
         }
     }
 }
