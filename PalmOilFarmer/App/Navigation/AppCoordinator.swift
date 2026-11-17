@@ -3,6 +3,7 @@ import Observation
 
 enum AppRoute: Hashable {
     case gardenProfile(UUID)
+    case gardenHistory(UUID)
     case requestAssessment(UUID)
     case resultOverview(gardenId: String)
     case fertilizerSchedule(gardenId: String)
@@ -52,6 +53,10 @@ final class AppCoordinator {
 
     func openGarden(_ id: UUID) {
         path.append(.gardenProfile(id))
+    }
+
+    func openGardenHistory(_ id: UUID) {
+        path.append(.gardenHistory(id))
     }
 
     func openRequestAssessment(_ id: UUID) {

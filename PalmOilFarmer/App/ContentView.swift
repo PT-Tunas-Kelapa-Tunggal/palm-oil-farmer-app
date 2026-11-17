@@ -5,6 +5,7 @@ struct ContentView: View {
     @State private var store: GardenStore
     @State private var dashboardViewModel: DashboardViewModel
     @State private var coordinator: AppCoordinator
+    @State private var identityGarden: Garden?
     private let registrationFactory: GardenRegistrationFactory
     private let mappingFactory: GardenMappingFactory
     private let profileFactory: GardenProfileFactory
@@ -50,6 +51,16 @@ struct ContentView: View {
                 onLocate: coordinator.locatedGarden, onCancel: coordinator.cancelRegistration
             ))
         }
+        .sheet(item: $identityGarden) { garden in
+            GardenDetailsView(viewModel: GardenDetailsViewModel(
+                locationName: garden.locationName,
+                boundary: garden.boundary,
+                editing: garden,
+                closesAfterSaving: true,
+                onSave: { store.update($0) },
+                onSaved: {}
+            ))
+        }
         .fullScreenCover(item: $coordinator.mappingLocation, onDismiss: coordinator.mappingDidDismiss) { location in
             GardenBoundaryView(viewModel: mappingFactory.makeViewModel(location: location, onFinish: coordinator.mappingFinished))
         }
@@ -82,6 +93,16 @@ struct ContentView: View {
                     onOpenFertilizerEstimation: {
                         coordinator.openFertilizerEstimation(gardenId: id.uuidString)
                     }
+                )
+            } else {
+                ContentUnavailableView("Kebun Tidak Ditemukan", systemImage: "leaf.fill")
+            }
+        case .gardenHistory(let id):
+            if let garden = store.gardens.first(where: { $0.id == id }) {
+                GardenHistoryDestination(
+                    garden: garden,
+                    onBack: { coordinator.pop() },
+                    onSave: { store.update($0) }
                 )
             } else {
                 ContentUnavailableView("Kebun Tidak Ditemukan", systemImage: "leaf.fill")
@@ -133,6 +154,13 @@ struct ContentView: View {
                 },
                 onOpenFertilizerEstimation: {
                     coordinator.openFertilizerEstimation(gardenId: gardenId)
+                },
+                onOpenGardenIdentity: {
+                    identityGarden = store.gardens.first(where: { $0.id.uuidString == gardenId })
+                },
+                onOpenGardenLogs: {
+                    guard let id = UUID(uuidString: gardenId) else { return }
+                    coordinator.openGardenHistory(id)
                 }
             )
         case .fertilizerSchedule(let gardenId):
@@ -200,6 +228,34 @@ struct ContentView: View {
             }
         #endif
         }
+    }
+}
+
+private struct GardenHistoryDestination: View {
+    let garden: Garden
+    let onBack: () -> Void
+    let onSave: (Garden) -> Bool
+    @State private var isEditing = false
+
+    var body: some View {
+        GardenProfileSummaryView(garden: garden, onClose: onBack, onEdit: { isEditing = true })
+            .sheet(isPresented: $isEditing) {
+                GardenProfileEditorView(
+                    viewModel: GardenProfileEditorViewModel(
+                        garden: garden,
+                        onSave: { harvest, frequency, fertilizers in
+                            var updated = garden
+                            updated.harvestRecord = harvest
+                            updated.fertilizationFrequencyPerYear = frequency
+                            updated.fertilizerRecords = fertilizers
+                            updated.profileUpdatedAt = .now
+                            return onSave(updated)
+                        },
+                        onSaved: { isEditing = false }
+                    ),
+                    onClose: { isEditing = false }
+                )
+            }
     }
 }
 
