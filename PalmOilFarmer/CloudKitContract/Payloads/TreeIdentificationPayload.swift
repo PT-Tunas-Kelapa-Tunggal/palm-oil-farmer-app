@@ -8,16 +8,25 @@ nonisolated public enum TreeHealthLabel: String, Codable, Equatable, Sendable {
     case tidakWajar = "Tidak Wajar"
     case unknown = "Unknown"
 
-    public init(from decoder: Decoder) throws {
-        let container = try decoder.singleValueContainer()
-        let raw = try container.decode(String.self)
-        switch raw.lowercased() {
-        case "normal": self = .normal
-        case "terindikasi": self = .terindikasi
-        case "defisiensi": self = .defisiensi
-        case "tidak wajar", "tidakwajar": self = .tidakWajar
+    /// Accepts both the VARI quartile and the stored contract label.
+    /// The engine may vary casing and whitespace, so normalize before matching.
+    public init(engineValue: String?) {
+        let normalized = (engineValue ?? "")
+            .lowercased()
+            .filter { !$0.isWhitespace && $0 != "_" && $0 != "-" }
+
+        switch normalized {
+        case "q1", "tidakwajar": self = .tidakWajar
+        case "q2", "defisiensi": self = .defisiensi
+        case "q3", "terindikasi": self = .terindikasi
+        case "q4", "normal": self = .normal
         default: self = .unknown
         }
+    }
+
+    public init(from decoder: Decoder) throws {
+        let container = try decoder.singleValueContainer()
+        self.init(engineValue: try? container.decode(String.self))
     }
 }
 

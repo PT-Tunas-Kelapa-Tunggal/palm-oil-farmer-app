@@ -8,8 +8,11 @@ nonisolated public struct MacOSScanRequestRecordWriter: Sendable {
     public var progressionStatus: ProgressionStatus?
     public var progressionStatusDetail: [ProgressionStatusDetailEvent]?
     public var orthomosaicImageURL: URL?
+    public var variPlainZoneOverlayImageURL: URL?
+    public var variTreeQuartileOverlayImageURL: URL?
     public var fertilizingZone: [FertilizingZoneItem]?
     public var fertilizerNeedPerZone: [FertilizerNeedItem]?
+    public var farmNutrientComparisonStatus: [FarmNutrientComparisonStatusItem]?
     public var treeIdentification: [TreeIdentificationItem]?
     public var plannedOperatorVisitDate: Date?
     public var resultSentAt: Date?
@@ -20,8 +23,11 @@ nonisolated public struct MacOSScanRequestRecordWriter: Sendable {
         progressionStatus: ProgressionStatus? = nil,
         progressionStatusDetail: [ProgressionStatusDetailEvent]? = nil,
         orthomosaicImageURL: URL? = nil,
+        variPlainZoneOverlayImageURL: URL? = nil,
+        variTreeQuartileOverlayImageURL: URL? = nil,
         fertilizingZone: [FertilizingZoneItem]? = nil,
         fertilizerNeedPerZone: [FertilizerNeedItem]? = nil,
+        farmNutrientComparisonStatus: [FarmNutrientComparisonStatusItem]? = nil,
         treeIdentification: [TreeIdentificationItem]? = nil,
         plannedOperatorVisitDate: Date? = nil,
         resultSentAt: Date? = nil,
@@ -31,8 +37,11 @@ nonisolated public struct MacOSScanRequestRecordWriter: Sendable {
         self.progressionStatus = progressionStatus
         self.progressionStatusDetail = progressionStatusDetail
         self.orthomosaicImageURL = orthomosaicImageURL
+        self.variPlainZoneOverlayImageURL = variPlainZoneOverlayImageURL
+        self.variTreeQuartileOverlayImageURL = variTreeQuartileOverlayImageURL
         self.fertilizingZone = fertilizingZone
         self.fertilizerNeedPerZone = fertilizerNeedPerZone
+        self.farmNutrientComparisonStatus = farmNutrientComparisonStatus
         self.treeIdentification = treeIdentification
         self.plannedOperatorVisitDate = plannedOperatorVisitDate
         self.resultSentAt = resultSentAt
@@ -46,12 +55,27 @@ nonisolated public struct MacOSScanRequestRecordWriter: Sendable {
         if let progressionStatus {
             record[RecordKeys.MacOSOwned.progressionStatus] = progressionStatus.rawValue as CKRecordValue
         }
-        try encodeEnvelope(progressionStatusDetail, forKey: RecordKeys.MacOSOwned.progressionStatusDetail, into: record)
+        try encodeEnvelope(
+            progressionStatusDetail, forKey: RecordKeys.MacOSOwned.progressionStatusDetail, into: record)
         if let orthomosaicImageURL {
             record[RecordKeys.MacOSOwned.orthomosaicImage] = CKAsset(fileURL: orthomosaicImageURL)
         }
+        if let variPlainZoneOverlayImageURL {
+            record[RecordKeys.MacOSOwned.variPlainZoneOverlayImage] = CKAsset(
+                fileURL: variPlainZoneOverlayImageURL)
+        }
+        if let variTreeQuartileOverlayImageURL {
+            record[RecordKeys.MacOSOwned.variTreeQuartileOverlayImage] = CKAsset(
+                fileURL: variTreeQuartileOverlayImageURL)
+        }
         try encodeEnvelope(fertilizingZone, forKey: RecordKeys.MacOSOwned.fertilizingZone, into: record)
-        try encodeEnvelope(fertilizerNeedPerZone, forKey: RecordKeys.MacOSOwned.fertilizerNeedPerZone, into: record)
+        try encodeEnvelope(
+            fertilizerNeedPerZone, forKey: RecordKeys.MacOSOwned.fertilizerNeedPerZone, into: record)
+        try encodeEnvelope(
+            farmNutrientComparisonStatus,
+            forKey: RecordKeys.MacOSOwned.farmNutrientComparisonStatus,
+            into: record
+        )
         try encodeEnvelope(treeIdentification, forKey: RecordKeys.MacOSOwned.treeIdentification, into: record)
         if let plannedOperatorVisitDate {
             record[RecordKeys.MacOSOwned.plannedOperatorVisitDate] = plannedOperatorVisitDate as CKRecordValue
@@ -59,7 +83,8 @@ nonisolated public struct MacOSScanRequestRecordWriter: Sendable {
         if let resultSentAt {
             record[RecordKeys.MacOSOwned.resultSentAt] = resultSentAt as CKRecordValue
         }
-        try encodeEnvelope(fertilizationScheduling, forKey: RecordKeys.MacOSOwned.fertilizationScheduling, into: record)
+        try encodeEnvelope(
+            fertilizationScheduling, forKey: RecordKeys.MacOSOwned.fertilizationScheduling, into: record)
     }
 
     /// Constructs or updates a `CKRecord` with the macOS-owned values applied.
@@ -68,7 +93,8 @@ nonisolated public struct MacOSScanRequestRecordWriter: Sendable {
         if let existing {
             record = existing
         } else if let recordName {
-            record = CKRecord(recordType: RecordKeys.recordType, recordID: CKRecord.ID(recordName: recordName))
+            record = CKRecord(
+                recordType: RecordKeys.recordType, recordID: CKRecord.ID(recordName: recordName))
         } else {
             record = CKRecord(recordType: RecordKeys.recordType)
         }

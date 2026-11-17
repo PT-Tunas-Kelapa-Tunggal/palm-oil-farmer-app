@@ -19,7 +19,8 @@ nonisolated public struct JSONEnvelope<Payload: Codable & Sendable>: Codable, Se
         encoder.outputFormatting = [.sortedKeys]
         let data = try encoder.encode(envelope)
         guard let string = String(data: data, encoding: .utf8) else {
-            throw FieldError.decodingError(key: "envelope", errorDescription: "Failed to convert encoded JSON to UTF-8 string")
+            throw FieldError.decodingError(
+                key: "envelope", errorDescription: "Failed to convert encoded JSON to UTF-8 string")
         }
         return string
     }
@@ -27,8 +28,9 @@ nonisolated public struct JSONEnvelope<Payload: Codable & Sendable>: Codable, Se
     /// Inspects the version tag inside a raw JSON string without decoding the entire payload.
     public static func inspectVersion(from rawJSON: String) -> String? {
         guard let data = rawJSON.data(using: .utf8),
-              let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
-              let version = json["version"] as? String else {
+            let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+            let version = json["version"] as? String
+        else {
             return nil
         }
         return version
@@ -50,7 +52,9 @@ nonisolated public struct JSONEnvelope<Payload: Codable & Sendable>: Codable, Se
             let envelope = try decoder.decode(JSONEnvelope<Payload>.self, from: data)
             return .success(envelope.payload)
         } catch {
-            return .failure(.decodingError(key: key, errorDescription: error.localizedDescription))
+            // Preserve the coding path and missing key in diagnostics. The localized
+            // description alone usually says only that the data could not be read.
+            return .failure(.decodingError(key: key, errorDescription: String(describing: error)))
         }
     }
 }

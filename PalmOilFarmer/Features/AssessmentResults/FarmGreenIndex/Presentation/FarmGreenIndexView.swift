@@ -125,7 +125,7 @@ public struct FarmGreenIndexView: View {
         if case .detail(let category) = viewModel.sheetState {
             return item.pins.filter { $0.category == category }
         }
-        return []
+        return item.pins
     }
 
     // MARK: - Bottom Sheet Builder

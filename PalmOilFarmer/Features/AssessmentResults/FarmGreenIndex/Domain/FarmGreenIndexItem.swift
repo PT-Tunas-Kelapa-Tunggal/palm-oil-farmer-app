@@ -15,7 +15,7 @@ public enum TreeConditionCategory: String, CaseIterable, Identifiable, Equatable
     case normal = "Normal"
     case terindikasi = "Terindikasi"
     case defisiensi = "Defisiensi"
-    case tidakWajar = "Tidak wajar"
+    case tidakWajar = "Tidak Wajar"
     case unknown = "Belum diketahui"
 
     public var id: String { rawValue }
