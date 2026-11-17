@@ -35,7 +35,7 @@ struct FertilizerSummaryCard: View {
             }
         }
         .padding(.horizontal, 16).frame(maxWidth: .infinity, alignment: .leading)
-        .background(GardenProfileStyle.card, in: RoundedRectangle(cornerRadius: 20))
+        .background(KropsTheme.surfaceCard, in: RoundedRectangle(cornerRadius: 20))
     }
 
     private var title: some View {
@@ -47,16 +47,16 @@ struct FertilizerSummaryCard: View {
         Text(record.name.hasPrefix("NPK") ? "Majemuk" : "Tunggal")
             .font(.footnote.weight(.medium)).foregroundStyle(.secondary)
             .padding(.horizontal, 10).padding(.vertical, 5)
-            .background(Color(uiColor: .tertiarySystemFill), in: Capsule())
+            .background(KropsTheme.fillBlack4, in: Capsule())
     }
 
     @ViewBuilder
     private func nutrient(_ label: String, value: Double?) -> some View {
         if let value {
             Text("\(label) \(value.formatted())%")
-                .font(.footnote.weight(.medium)).foregroundStyle(GardenProfileStyle.accent)
+                .font(.footnote.weight(.medium)).foregroundStyle(KropsTheme.labelPrimary)
                 .padding(.horizontal, 10).padding(.vertical, 5)
-                .background(Color(uiColor: .tertiarySystemFill), in: Capsule())
+                .background(KropsTheme.fillBlack4, in: Capsule())
         }
     }
 }

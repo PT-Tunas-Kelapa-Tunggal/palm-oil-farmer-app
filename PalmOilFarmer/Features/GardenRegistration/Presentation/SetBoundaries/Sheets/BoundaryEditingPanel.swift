@@ -78,7 +78,7 @@ private struct BoundaryActionButton: View {
                 .contentShape(Capsule())
         }
         .buttonStyle(.plain)
-        .foregroundStyle(isDestructive ? Color(uiColor: .systemRed) : .primary)
+        .foregroundStyle(isDestructive ? KropsTheme.statusCritical : .primary)
         .glassEffect(.regular.interactive(), in: Capsule())
         .disabled(!isAvailable)
     }

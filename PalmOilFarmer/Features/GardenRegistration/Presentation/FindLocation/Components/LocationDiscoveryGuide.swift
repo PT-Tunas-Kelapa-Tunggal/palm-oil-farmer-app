@@ -42,7 +42,7 @@ struct LocationDiscoveryGuide: View {
             }
             .scrollBounceBehavior(.basedOnSize)
         }
-        .background(RegistrationStyle.surface)
+        .background(KropsTheme.surfaceCard)
         .safeAreaInset(edge: .bottom, spacing: 0) {
             RegistrationPrimaryButton(title: "Cari Lokasi Kebun", action: onContinue)
                 .padding(.horizontal, 24)
@@ -56,7 +56,7 @@ struct LocationDiscoveryGuide: View {
         HStack(alignment: .top, spacing: 20) {
             Image(systemName: symbol)
                 .font(.title2)
-                .foregroundStyle(RegistrationStyle.actionTint)
+                .foregroundStyle(KropsTheme.accentHero)
                 .frame(width: 32, height: 32)
                 .accessibilityHidden(true)
             VStack(alignment: .leading, spacing: 4) {

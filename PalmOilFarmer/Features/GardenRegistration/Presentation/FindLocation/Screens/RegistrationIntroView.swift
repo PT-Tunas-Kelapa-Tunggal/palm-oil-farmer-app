@@ -32,7 +32,7 @@ struct RegistrationIntroView: View {
                 LocationSearchView(viewModel: viewModel)
             }
         }
-        .presentationBackground(RegistrationStyle.background)
+        .presentationBackground(KropsTheme.surfaceCardRaised)
         .presentationBackgroundInteraction(.disabled)
     }
 }

@@ -9,10 +9,10 @@ struct RegistrationBoundaryMarker: View {
     var body: some View {
         Text(number.formatted())
             .font(.footnote)
-            .foregroundStyle(isActive ? .white : RegistrationStyle.actionTint)
+            .foregroundStyle(isActive ? KropsTheme.labelInversePrimary : KropsTheme.accentHero)
             .frame(minWidth: size, minHeight: size)
-            .background(isActive ? RegistrationStyle.actionTint : .white, in: Circle())
-            .overlay { Circle().stroke(RegistrationStyle.actionTint, lineWidth: 2) }
+            .background(isActive ? KropsTheme.accentHero : KropsTheme.surfaceCard, in: Circle())
+            .overlay { Circle().stroke(KropsTheme.accentHero, lineWidth: 2) }
             .accessibilityLabel("Titik \(number)")
     }
 }

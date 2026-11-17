@@ -33,7 +33,7 @@ struct PhotoLocationCard: View {
             .frame(height: 160)
             .clipped()
         }
-        .background(RegistrationStyle.surface, in: RoundedRectangle(cornerRadius: RegistrationStyle.cardRadius))
+        .background(KropsTheme.surfaceCard, in: RoundedRectangle(cornerRadius: RegistrationStyle.cardRadius))
         .clipShape(RoundedRectangle(cornerRadius: RegistrationStyle.cardRadius))
     }
 }

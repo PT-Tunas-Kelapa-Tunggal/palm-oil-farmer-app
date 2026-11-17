@@ -70,7 +70,7 @@ struct GardenDetailsView: View {
                         .padding(.horizontal, 16)
                         .padding(.vertical, 14)
                     }
-                    .background(RegistrationStyle.surface)
+                    .background(KropsTheme.surfaceCard)
                     .clipShape(RoundedRectangle(cornerRadius: 24))
                     .padding(.horizontal, 16)
                     .padding(.top, 8)
@@ -124,7 +124,7 @@ struct GardenDetailsView: View {
                     .padding(.bottom, 16)
                     .background {
                         RoundedRectangle(cornerRadius: RegistrationStyle.cardRadius)
-                            .fill(RegistrationStyle.surface)
+                            .fill(KropsTheme.surfaceCard)
                             .onTapGesture { isNameFocused = false }
                     }
                     .padding(.horizontal, 16)
@@ -155,14 +155,14 @@ struct GardenDetailsView: View {
                 }
             }
         }
-        .background(RegistrationStyle.background)
+        .background(KropsTheme.surfaceBackground)
         .sheet(isPresented: $viewModel.showsPlantingDate) {
             PlantingDatePickerView(month: viewModel.plantingMonth, year: viewModel.plantingYear ?? Calendar.current.component(.year, from: .now)) { month, year in
                 viewModel.plantingMonth = month
                 viewModel.plantingYear = year
             }
         }
-        .presentationBackground(RegistrationStyle.background)
+        .presentationBackground(KropsTheme.surfaceCardRaised)
         .onChange(of: viewModel.isFinished) { _, finished in
             if finished { dismiss() }
         }
@@ -177,7 +177,7 @@ struct GardenDetailsView: View {
         HStack(spacing: 8) {
             Image(systemName: symbol).foregroundStyle(.secondary).accessibilityHidden(true)
             Text(value ?? placeholder)
-                .foregroundStyle(value == nil ? Color(uiColor: .placeholderText) : .primary)
+                .foregroundStyle(value == nil ? KropsTheme.labelQuaternary : KropsTheme.labelPrimary)
                 .fixedSize(horizontal: false, vertical: true)
             Spacer(minLength: 0)
             Image(systemName: trailing).font(.footnote).foregroundStyle(.tertiary)
@@ -207,7 +207,7 @@ struct GardenDetailsView: View {
 private struct RegistrationMetricLabelStyle: LabelStyle {
     func makeBody(configuration: Configuration) -> some View {
         HStack(spacing: 4) {
-            configuration.icon.foregroundStyle(RegistrationStyle.actionTint)
+            configuration.icon.foregroundStyle(KropsTheme.accentHero)
             configuration.title
         }
     }

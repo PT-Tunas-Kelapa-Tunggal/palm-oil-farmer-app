@@ -72,8 +72,8 @@ struct GardenPhotoPickerView: View {
                 .padding(.vertical, 12)
             }
         }
-        .background(RegistrationStyle.background)
-        .presentationBackground(RegistrationStyle.background)
+        .background(KropsTheme.surfaceBackground)
+        .presentationBackground(KropsTheme.surfaceCardRaised)
         .task { await viewModel.load() }
         .onDisappear { viewModel.cancelLoading() }
     }

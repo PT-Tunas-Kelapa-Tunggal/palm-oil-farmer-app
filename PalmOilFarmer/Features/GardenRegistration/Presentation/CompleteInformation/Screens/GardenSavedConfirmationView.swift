@@ -31,7 +31,7 @@ struct GardenSavedConfirmationView: View {
         }
         .padding(.horizontal, KropsTheme.Spacing.screen)
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .background(Color(uiColor: .systemBackground))
+        .background(KropsTheme.surfaceCard)
         .interactiveDismissDisabled()
         .task(id: voiceOverEnabled) {
             guard !voiceOverEnabled else { return }

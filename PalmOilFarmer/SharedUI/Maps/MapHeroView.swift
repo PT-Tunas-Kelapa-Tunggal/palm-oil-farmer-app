@@ -79,12 +79,12 @@ struct HeroToolbar: View {
                     .buttonStyle(.plain)
                     .glassEffect(.regular.interactive(), in: Circle())
                     // Without this, menu icons take the app's green tint; destructive items stay red.
-                    .tint(Color(uiColor: .label))
+                    .tint(KropsTheme.labelPrimary)
                     .accessibilityLabel("Opsi kebun")
                     .padding(.trailing, 12)
                 }
             }
-            .foregroundStyle(isOverContent ? Color.primary : Color.white)
+            .foregroundStyle(isOverContent ? KropsTheme.labelPrimary : KropsTheme.labelInversePrimary)
             .environment(\.colorScheme, isOverContent ? .light : .dark)
             .animation(.easeOut(duration: 0.2), value: isOverContent)
     }

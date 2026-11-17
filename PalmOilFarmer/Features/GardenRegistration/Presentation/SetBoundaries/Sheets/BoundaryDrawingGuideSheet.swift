@@ -23,7 +23,7 @@ struct BoundaryDrawingGuideSheet: View {
                         HStack(spacing: KropsTheme.Spacing.compact) {
                             ForEach(BoundaryDrawingGuideStep.allCases, id: \.self) { page in
                                 Circle()
-                                    .fill(page == step ? RegistrationStyle.onAction : RegistrationStyle.onAction.opacity(0.3))
+                                    .fill(page == step ? KropsTheme.labelInversePrimary : KropsTheme.labelInversePrimary.opacity(0.3))
                                     .frame(width: 7, height: 7)
                             }
                         }

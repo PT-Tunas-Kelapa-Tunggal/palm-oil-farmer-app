@@ -90,7 +90,7 @@ struct CodedUI5Preview: View {
                     }
             }
         }
-        .background(RegistrationStyle.background)
+        .background(KropsTheme.surfaceBackground)
         .environment(\.locale, Locale(identifier: "id_ID"))
     }
 

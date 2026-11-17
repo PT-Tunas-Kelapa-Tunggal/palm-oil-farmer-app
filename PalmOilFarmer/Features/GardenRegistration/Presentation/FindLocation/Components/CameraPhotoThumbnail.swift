@@ -8,7 +8,7 @@ struct CameraPhotoThumbnail: View {
     @State private var image: UIImage?
 
     var body: some View {
-        Color(uiColor: .systemBackground)
+        KropsTheme.surfaceCard
             .aspectRatio(1, contentMode: .fit)
             .overlay {
                 if let image {

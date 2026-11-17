@@ -19,9 +19,9 @@ struct LocationOptionRow: View {
             layout {
                 Image(systemName: symbol)
                     .font(.title3)
-                    .foregroundStyle(isBrand ? RegistrationStyle.actionTint : Color.secondary)
+                    .foregroundStyle(isBrand ? KropsTheme.accentHero : KropsTheme.labelSecondary)
                     .frame(width: iconSize, height: iconSize)
-                    .background(isBrand ? RegistrationStyle.actionTint.opacity(0.1) : Color(uiColor: .systemGray5), in: Circle())
+                    .background(isBrand ? KropsTheme.accentSoft : KropsTheme.fillBlack8, in: Circle())
                     .accessibilityHidden(true)
                 VStack(alignment: .leading, spacing: 0) {
                     Text(title).font(.headline)
@@ -37,7 +37,7 @@ struct LocationOptionRow: View {
             }
             .padding(16)
             .frame(maxWidth: .infinity, minHeight: 74, alignment: .leading)
-            .background(RegistrationStyle.surface, in: RoundedRectangle(cornerRadius: RegistrationStyle.cardRadius))
+            .background(KropsTheme.surfaceCard, in: RoundedRectangle(cornerRadius: RegistrationStyle.cardRadius))
             .contentShape(RoundedRectangle(cornerRadius: RegistrationStyle.cardRadius))
         }
         .buttonStyle(.plain)
@@ -60,6 +60,6 @@ struct LocationOptionRow: View {
                           symbol: "photo.fill") {}
     }
     .padding(16)
-    .background(RegistrationStyle.background)
+    .background(KropsTheme.surfaceBackground)
 }
 #endif
