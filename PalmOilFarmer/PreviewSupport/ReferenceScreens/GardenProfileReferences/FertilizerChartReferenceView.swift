@@ -35,7 +35,7 @@ struct FertilizerChartReferenceView: View {
                 .font(.subheadline.weight(.semibold))
                 .padding(.horizontal, 16)
                 .frame(maxWidth: .infinity, minHeight: 52)
-                .background(KropsTheme.cardFill, in: Capsule())
+                .background(KropsTheme.fillBlack4, in: Capsule())
             }
             .buttonStyle(.plain)
         }

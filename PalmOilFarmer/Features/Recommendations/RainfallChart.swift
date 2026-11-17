@@ -14,7 +14,7 @@ struct RainfallChart: View {
         Chart {
             RuleMark(y: .value("Batas hujan lebat", RainfallDay.heavyThreshold))
                 .lineStyle(StrokeStyle(lineWidth: 1, dash: [3, 4]))
-                .foregroundStyle(KropsTheme.secondaryText)
+                .foregroundStyle(KropsTheme.labelSecondary)
                 .annotation(position: .top, alignment: .leading, spacing: 2) {
                     Text("Hujan lebat")
                         .font(.caption2)

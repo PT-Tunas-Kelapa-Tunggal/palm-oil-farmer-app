@@ -23,7 +23,7 @@ struct WaypointGardenList: View {
             }
             .padding()
         }
-        .background(KropsTheme.background)
+        .background(KropsTheme.surfaceBackground)
         .navigationTitle("Pemupukan")
     }
 }
