@@ -100,7 +100,7 @@ actor CloudKitFertilizingMapRepository: FertilizingMapRepositoryProtocol {
         needs.reduce(0) { value, need in
             let unit = need.dosageUnit.lowercased()
             let multiplier = unit.contains("pohon") || unit.contains("tree") ? Double(max(treeCount, 1)) : 1
-            return value + max(0, need.recommendedDosage) * multiplier
+            return value + max(0, need.recommendedDosagePerZonePerYear) * multiplier
         }
     }
 
