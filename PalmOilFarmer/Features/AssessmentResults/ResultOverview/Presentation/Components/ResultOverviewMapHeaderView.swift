@@ -1,4 +1,5 @@
 import SwiftUI
+import MapKit
 
 /// Hero header view showing the satellite map with gradient fades, screen title, and back button.
 /// Sliced from Sketch: "Hasil Peninjauan / Ringkasan Hasil / Default" -> "Frame", "Judul Layar", "Tombol Kembali"
@@ -6,26 +7,64 @@ public struct ResultOverviewMapHeaderView: View {
     public let gardenName: String
     public let locationName: String
     public let heroImageName: String?
+    public let gardenBoundaryCoordinates: [FarmMapCoordinate]
     public var onBack: (() -> Void)?
 
     public init(
         gardenName: String,
         locationName: String,
         heroImageName: String? = nil,
+        gardenBoundaryCoordinates: [FarmMapCoordinate] = [],
         onBack: (() -> Void)? = nil
     ) {
         self.gardenName = gardenName
         self.locationName = locationName
         self.heroImageName = heroImageName
+        self.gardenBoundaryCoordinates = gardenBoundaryCoordinates
         self.onBack = onBack
+    }
+
+    private var mapRegion: MKCoordinateRegion? {
+        guard gardenBoundaryCoordinates.count >= 3,
+              gardenBoundaryCoordinates.allSatisfy({
+                  $0.latitude.isFinite && $0.longitude.isFinite
+                      && (-90...90).contains($0.latitude)
+                      && (-180...180).contains($0.longitude)
+              }) else { return nil }
+
+        let latitudes = gardenBoundaryCoordinates.map(\.latitude)
+        let longitudes = gardenBoundaryCoordinates.map(\.longitude)
+        guard let minLatitude = latitudes.min(), let maxLatitude = latitudes.max(),
+              let minLongitude = longitudes.min(), let maxLongitude = longitudes.max() else { return nil }
+
+        return MKCoordinateRegion(
+            center: CLLocationCoordinate2D(
+                latitude: (minLatitude + maxLatitude) / 2,
+                longitude: (minLongitude + maxLongitude) / 2
+            ),
+            span: MKCoordinateSpan(
+                latitudeDelta: max((maxLatitude - minLatitude) * 1.8, 0.0007),
+                longitudeDelta: max((maxLongitude - minLongitude) * 1.8, 0.0007)
+            )
+        )
     }
 
     public var body: some View {
         ZStack(alignment: .top) {
-            // Background Satellite Map (contained within screen bounds)
+            // Use the saved garden boundary to center the live satellite map.
             Color.clear
                 .overlay {
-                    if let heroImageName, let uiImage = UIImage(named: heroImageName) {
+                    if let mapRegion {
+                        Map(initialPosition: .region(mapRegion), interactionModes: []) {
+                            MapPolygon(coordinates: gardenBoundaryCoordinates.map {
+                                CLLocationCoordinate2D(latitude: $0.latitude, longitude: $0.longitude)
+                            })
+                            .foregroundStyle(.white.opacity(0.25))
+                            .stroke(.white.opacity(0.9), lineWidth: 2)
+                        }
+                        .mapStyle(.imagery)
+                        .allowsHitTesting(false)
+                    } else if let heroImageName, let uiImage = UIImage(named: heroImageName) {
                         Image(uiImage: uiImage)
                             .resizable()
                             .scaledToFill()
