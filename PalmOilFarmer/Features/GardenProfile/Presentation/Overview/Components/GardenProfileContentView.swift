@@ -23,6 +23,10 @@ struct GardenProfileContentView: View {
 
     @Environment(\.colorScheme) private var colorScheme
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @State private var isAtScrollTop = true
+    @State private var refreshPullDistance: CGFloat = 0
+
+    private let heroHeight: CGFloat = 360
 
     private var assessmentStatus: AssessmentReviewStatusCard.Status? {
         if let assessmentResultsState { return .results(assessmentResultsState) }
@@ -40,13 +44,18 @@ struct GardenProfileContentView: View {
     var body: some View {
         let assessmentStatus = self.assessmentStatus
         GeometryReader { geometry in
-            ScrollView {
-                VStack(spacing: 0) {
-                    if showsHeader {
-                        hero(topInset: geometry.safeAreaInsets.top)
-                    } else {
-                        map.frame(height: 201)
-                    }
+            ZStack(alignment: .top) {
+                if showsHeader {
+                    heroBackground(height: heroHeight + refreshPullDistance)
+                }
+
+                ScrollView {
+                    VStack(spacing: 0) {
+                        if showsHeader {
+                            Color.clear.frame(height: heroHeight)
+                        } else {
+                            map.frame(height: 201)
+                        }
                     if usesLightAssessmentLayout {
                         VStack(spacing: -32) {
                             GardenMetricsView(garden: garden, metrics: metrics, usesAssessmentBand: true)
@@ -101,15 +110,56 @@ struct GardenProfileContentView: View {
                         .padding(.top, 8)
                         .padding(.bottom, 48)
                     }
+                    }
+                    .animation(reduceMotion || assessmentResultsState == nil ? nil : .smooth(duration: 0.35),
+                               value: assessmentStatus?.phase)
                 }
-                .animation(reduceMotion || assessmentResultsState == nil ? nil : .smooth(duration: 0.35),
-                           value: assessmentStatus?.phase)
+                .scrollIndicators(.hidden)
+                .onScrollGeometryChange(for: CGFloat.self) { scrollGeometry in
+                    scrollGeometry.contentOffset.y + scrollGeometry.contentInsets.top
+                } action: { _, offset in
+                    isAtScrollTop = offset < 48
+                    refreshPullDistance = showsHeader ? max(0, -offset) : 0
+                }
+
+                if showsHeader && isAtScrollTop {
+                    heroNavigation(topInset: geometry.safeAreaInsets.top)
+                }
             }
-            .scrollIndicators(.hidden)
             .ignoresSafeArea(edges: showsHeader ? .top : [])
         }
         .background(KropsTheme.surfaceBackground.ignoresSafeArea())
-        .toolbar(.hidden, for: .navigationBar)
+        .navigationBarBackButtonHidden()
+        .navigationTitle(isAtScrollTop ? "" : garden.name)
+        .navigationBarTitleDisplayMode(.inline)
+        .toolbar {
+            ToolbarItem(placement: .topBarLeading) {
+                if !isAtScrollTop {
+                    Button(action: onBack) {
+                        Image(systemName: "chevron.left")
+                    }
+                    .tint(.white)
+                    .accessibilityLabel("Kembali")
+                }
+            }
+            ToolbarItem(placement: .topBarTrailing) {
+                if !isAtScrollTop {
+                    Menu {
+                        Button("Ubah data kebun", systemImage: "pencil", action: onEditGarden)
+                        if let onDelete {
+                            Button("Hapus kebun", systemImage: "trash", role: .destructive, action: onDelete)
+                        }
+                    } label: {
+                        Image(systemName: "ellipsis")
+                    }
+                    .tint(.white)
+                    .accessibilityLabel("Pilihan kebun")
+                }
+            }
+        }
+        .toolbarBackground(Color.black.opacity(0.78), for: .navigationBar)
+        .toolbarBackground(isAtScrollTop ? .hidden : .visible, for: .navigationBar)
+        .toolbarColorScheme(.dark, for: .navigationBar)
     }
 
     private func assessmentCard(_ status: AssessmentReviewStatusCard.Status) -> some View {
@@ -125,43 +175,67 @@ struct GardenProfileContentView: View {
         GardenMapView(boundary: garden.boundary, referenceImage: referenceMapImage)
     }
 
-    private func hero(topInset: CGFloat) -> some View {
-        VStack(spacing: 0) {
-            HStack(alignment: .top, spacing: 16) {
-                Button(action: onBack) {
-                    // The icon stays inside its 44 pt touch target at every text size.
-                    Image(systemName: "chevron.left").font(.system(size: 22)).foregroundStyle(KropsTheme.labelPrimary)
-                        .frame(width: 44, height: 44)
+    private func heroNavigation(topInset: CGFloat) -> some View {
+        HStack(alignment: .center) {
+            Button(action: onBack) {
+                Image(systemName: "chevron.left")
+                    .font(.system(size: 18, weight: .semibold))
+                    .foregroundStyle(.white)
+                    .frame(width: 44, height: 44)
+                    .background(.ultraThinMaterial, in: Circle())
+            }
+            .buttonStyle(.plain)
+            .accessibilityLabel("Kembali")
+
+            Spacer()
+
+            VStack(spacing: 2) {
+                Text(garden.name)
+                    .font(.system(size: 17, weight: .semibold))
+                    .foregroundStyle(.white)
+                Text(garden.locationName)
+                    .font(.system(size: 13))
+                    .foregroundStyle(.white.opacity(0.85))
+            }
+            .multilineTextAlignment(.center)
+            .shadow(color: .black.opacity(0.4), radius: 6, y: 2)
+
+            Spacer()
+
+            Menu {
+                Button("Ubah data kebun", systemImage: "pencil", action: onEditGarden)
+                if let onDelete {
+                    Button("Hapus kebun", systemImage: "trash", role: .destructive, action: onDelete)
                 }
-                .buttonStyle(.plain).glassEffect(.regular.interactive(), in: Circle())
-                .accessibilityLabel("Kembali")
-                VStack(spacing: 0) {
-                    Text(garden.name).font(.headline)
-                    Text(garden.locationName).font(.subheadline).foregroundStyle(.white.opacity(0.7))
-                }
+            } label: {
+                Image(systemName: "ellipsis")
+                    .font(.system(size: 18, weight: .semibold))
+                    .foregroundStyle(.white)
+                    .frame(width: 44, height: 44)
+                    .background(.ultraThinMaterial, in: Circle())
+            }
+            .accessibilityLabel("Pilihan kebun")
+        }
+        .padding(.horizontal, 16)
+        .padding(.top, max(topInset, 60))
+    }
+
+    private func heroBackground(height: CGFloat) -> some View {
+        ZStack(alignment: .top) {
+            // Keep the MapKit viewport fixed while revealing more of it during a pull.
+            map
                 .frame(maxWidth: .infinity)
-                Menu {
-                    Button("Ubah data kebun", systemImage: "pencil", action: onEditGarden)
-                    if let onDelete { Button("Hapus kebun", systemImage: "trash", role: .destructive, action: onDelete) }
-                } label: {
-                    Image(systemName: "ellipsis").font(.title2).foregroundStyle(KropsTheme.labelPrimary).frame(width: 44, height: 44)
-                }
-                .buttonStyle(.plain).glassEffect(.regular.interactive(), in: Circle())
-                .accessibilityLabel("Pilihan kebun")
-            }
-            .foregroundStyle(.white)
-            .padding(.horizontal, 16).padding(.top, topInset)
-            // Let long names and accessibility text expand the map header naturally.
-            Spacer(minLength: 160)
+                .frame(height: 720)
+                .offset(y: -180)
+                .frame(height: height, alignment: .top)
+                .clipped()
+
+            LinearGradient(colors: [.black.opacity(0.55), .clear], startPoint: .top, endPoint: .bottom)
+                .frame(height: height)
+                .allowsHitTesting(false)
         }
-        .frame(minHeight: 360)
-        .background {
-            map.overlay(alignment: .top) {
-                // Satellite imagery needs a dark scrim for readable white map labels.
-                LinearGradient(colors: [.black.opacity(0.55), .clear], startPoint: .top, endPoint: .bottom)
-                    .allowsHitTesting(false)
-            }
-        }
+        .frame(height: height)
+        .clipped()
         .contextMenu {
             Button("Ubah data kebun", systemImage: "pencil", action: onEditGarden)
             if let onDelete { Button("Hapus kebun", systemImage: "trash", role: .destructive, action: onDelete) }
