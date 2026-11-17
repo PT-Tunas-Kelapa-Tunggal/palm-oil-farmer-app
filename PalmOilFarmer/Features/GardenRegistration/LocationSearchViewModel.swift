@@ -1,0 +1,81 @@
+import Foundation
+import Observation
+
+@MainActor
+@Observable
+final class LocationSearchViewModel {
+    var query: String
+    private(set) var results: [GardenLocation]
+    private(set) var isSearching = false
+    private(set) var errorMessage: String?
+    private(set) var isLocating = false
+    private(set) var locationRequestID: UUID?
+
+    private let repository: any GardenLocationRepository
+    private let debounce: () async throws -> Void
+    private let onSelect: (GardenLocation) -> Void
+    private var searchRequestID: UUID?
+
+    init(repository: any GardenLocationRepository,
+         initialQuery: String = "", initialResults: [GardenLocation] = [],
+         debounce: @escaping () async throws -> Void = { try await Task.sleep(for: .milliseconds(350)) },
+         onSelect: @escaping (GardenLocation) -> Void) {
+        self.repository = repository
+        query = initialQuery
+        results = initialResults
+        self.debounce = debounce
+        self.onSelect = onSelect
+    }
+
+    func search() async {
+        let requestID = UUID()
+        searchRequestID = requestID
+        results = []
+        errorMessage = nil
+        let text = query.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !text.isEmpty else { isSearching = false; return }
+        isSearching = true
+        defer { if searchRequestID == requestID { isSearching = false } }
+        do {
+            try await debounce()
+            try Task.checkCancellation()
+            let locations = try await repository.search(text)
+            try Task.checkCancellation()
+            guard searchRequestID == requestID, query.trimmingCharacters(in: .whitespacesAndNewlines) == text else { return }
+            results = locations
+        } catch {
+            guard !Task.isCancelled, !(error is CancellationError), searchRequestID == requestID,
+                  query.trimmingCharacters(in: .whitespacesAndNewlines) == text else { return }
+            errorMessage = "Pencarian gagal. Periksa koneksi internet lalu coba lagi."
+        }
+    }
+
+    func selectResult(_ location: GardenLocation) { onSelect(location) }
+
+    func requestCurrentLocation() {
+        guard !isLocating else { return }
+        isLocating = true
+        locationRequestID = UUID()
+    }
+
+    func locateCurrentIfRequested() async {
+        guard let requestID = locationRequestID, isLocating else { return }
+        defer { if locationRequestID == requestID { isLocating = false } }
+        do {
+            let location = try await repository.currentLocation()
+            try Task.checkCancellation()
+            guard locationRequestID == requestID else { return }
+            onSelect(location)
+        } catch {
+            guard !Task.isCancelled, !(error is CancellationError), locationRequestID == requestID else { return }
+            errorMessage = "Lokasi tidak dapat diperoleh. Periksa izin lokasi dan coba lagi."
+        }
+    }
+
+    func cancelPendingWork() {
+        searchRequestID = nil
+        locationRequestID = nil
+        isSearching = false
+        isLocating = false
+    }
+}

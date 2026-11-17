@@ -3,6 +3,7 @@ import SwiftUI
 struct EmptyStateView<Illustration: View>: View {
     let title: String
     let message: String
+    var messageFont: Font = .title2
     @ViewBuilder let illustration: () -> Illustration
 
     var body: some View {
@@ -14,10 +15,10 @@ struct EmptyStateView<Illustration: View>: View {
             VStack(spacing: 2) {
                 Text(title)
                     .font(.title2.bold())
-                    .foregroundStyle(KropsTheme.primaryText)
+                    .foregroundStyle(.primary)
 
                 Text(message)
-                    .font(.title2)
+                    .font(messageFont)
                     .foregroundStyle(KropsTheme.secondaryText)
             }
             .multilineTextAlignment(.center)
@@ -32,7 +33,7 @@ struct EmptyStateView<Illustration: View>: View {
 #Preview("Empty State", traits: .sizeThatFitsLayout) {
     EmptyStateView(
         title: "Belum ada kebun terdaftar",
-        message: "Gambar batas kebun di peta untuk mulai memantau kondisi dan hasil panen."
+        message: "Daftarkan kebun Anda untuk mulai memantau kondisi kebun dan mendapatkan rekomendasi pemupukan."
     ) {
         SeedlingIcon()
     }

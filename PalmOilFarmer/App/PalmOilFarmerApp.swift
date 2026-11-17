@@ -6,12 +6,25 @@
 //
 
 import SwiftUI
+import SwiftData
 
 @main
 struct PalmOilFarmerApp: App {
+    private let dependencies = AppDependencies.live()
+
     var body: some Scene {
         WindowGroup {
-            FindingWaypointView()
+            ContentView(
+                store: dependencies.gardenStore,
+                listViewModel: dependencies.gardenListViewModel,
+                coordinator: dependencies.coordinator,
+                registrationFactory: dependencies.registrationFactory,
+                mappingFactory: dependencies.mappingFactory,
+                profileFactory: dependencies.profileFactory
+            )
+                .environment(\.farmerReviewRepository, dependencies.reviewRepository)
+                .tint(KropsTheme.primaryText)
         }
+        .modelContainer(dependencies.modelContainer)
     }
 }

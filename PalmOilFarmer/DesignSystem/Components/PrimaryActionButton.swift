@@ -4,6 +4,8 @@ struct PrimaryActionButton: View {
     let title: String
     var systemImage: String? = nil
     var imagePlacement: ImagePlacement = .leading
+    /// A lighter appearance for an action that only shows information, such as a status.
+    var isProminent = true
     let action: () -> Void
 
     enum ImagePlacement {
@@ -30,7 +32,7 @@ struct PrimaryActionButton: View {
             .frame(maxWidth: .infinity)
             .contentShape(Capsule())
         }
-        .buttonStyle(PrimaryActionButtonStyle())
+        .buttonStyle(PrimaryActionButtonStyle(isProminent: isProminent))
     }
 }
 
@@ -41,6 +43,8 @@ struct PrimaryActionButton: View {
         PrimaryActionButton(title: "Daftarkan Kebun", systemImage: "plus", action: {})
         PrimaryActionButton(title: "Simpan", action: {})
             .disabled(true)
+        PrimaryActionButton(title: "Lihat status peninjauan", systemImage: "chevron.right",
+                            imagePlacement: .trailing, isProminent: false, action: {})
     }
     .padding(24)
     .frame(width: 402)
