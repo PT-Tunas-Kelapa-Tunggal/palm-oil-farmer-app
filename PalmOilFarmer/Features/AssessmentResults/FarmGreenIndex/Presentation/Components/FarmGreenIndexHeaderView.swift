@@ -29,7 +29,7 @@ public struct FarmGreenIndexHeaderView: View {
             Button(action: { onBack?() }) {
                 Image(systemName: "chevron.left")
                     .font(.system(size: 18, weight: .semibold))
-                    .foregroundStyle(Color(red: 0.08, green: 0.08, blue: 0.09))
+                    .foregroundStyle(KropsTheme.labelPrimary)
                     .frame(width: 44, height: 44)
             }
             .buttonStyle(.plain)
@@ -64,7 +64,7 @@ public struct FarmGreenIndexHeaderView: View {
             }) {
                 Image(systemName: "map")
                     .font(.system(size: 16, weight: .semibold))
-                    .foregroundStyle(Color(red: 0.08, green: 0.08, blue: 0.09))
+                    .foregroundStyle(KropsTheme.labelPrimary)
                     .frame(width: 44, height: 44)
             }
             .buttonStyle(.plain)

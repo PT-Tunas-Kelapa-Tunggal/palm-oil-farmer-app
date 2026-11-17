@@ -51,22 +51,6 @@ public enum TreeConditionCategory: String, CaseIterable, Identifiable, Equatable
             return "Kondisi pohon belum diklasifikasikan pada data hasil pemindaian."
         }
     }
-
-    /// Color hex integer for the status badge / indicator dot.
-    public var colorHex: UInt32 {
-        switch self {
-        case .normal:
-            return 0x34C759 // #34C759 iOS Green
-        case .terindikasi:
-            return 0xC9C94A // #C9C94A Yellow / Chartreuse
-        case .defisiensi:
-            return 0xC2682B // #C2682B Amber / Rust
-        case .tidakWajar:
-            return 0x9C9CA1 // #9C9CA1 Slate Gray
-        case .unknown:
-            return 0x6B7280 // Neutral gray for unclassified trees
-        }
-    }
 }
 
 /// Summary item representing one condition category row in the legend & detail.

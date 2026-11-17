@@ -47,7 +47,7 @@ struct SelectionListView: View {
                 .padding(.top, 13)
             }
         }
-        .background(Color(uiColor: .systemGroupedBackground).ignoresSafeArea())
+        .background(KropsTheme.surfaceCardRaised.ignoresSafeArea())
         .toolbar(.hidden, for: .navigationBar)
     }
 }

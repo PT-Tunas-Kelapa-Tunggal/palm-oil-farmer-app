@@ -17,7 +17,7 @@ struct FormSelectionRow: View {
                         Image(systemName: systemImage).foregroundStyle(.secondary)
                     }
                     Text(value ?? placeholder)
-                        .foregroundStyle(value == nil ? Color(uiColor: .placeholderText) : .primary)
+                        .foregroundStyle(value == nil ? KropsTheme.labelQuaternary : KropsTheme.labelPrimary)
                     Spacer()
                     Image(systemName: trailingImage).font(.footnote).foregroundStyle(.tertiary)
                 }

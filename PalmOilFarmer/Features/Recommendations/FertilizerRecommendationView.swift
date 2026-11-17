@@ -41,8 +41,8 @@ struct FertilizerRecommendationView: View {
                     switch selectedTab {
                     case .nutrients:
                         BoundarySilhouette(points: report.outline)
-                            .fill(KropsTheme.primary.opacity(0.25))
-                            .overlay { BoundarySilhouette(points: report.outline).stroke(KropsTheme.primaryText, lineWidth: 2) }
+                            .fill(KropsTheme.accentSoft)
+                            .overlay { BoundarySilhouette(points: report.outline).stroke(KropsTheme.accentHero, lineWidth: 2) }
                             .frame(width: 134, height: 158)
                             .frame(maxWidth: .infinity)
                             .frame(height: 206)
@@ -105,7 +105,7 @@ struct FertilizerRecommendationView: View {
             }
             .scrollIndicators(.hidden)
         }
-        .background(KropsTheme.background.ignoresSafeArea())
+        .background(KropsTheme.surfaceBackground.ignoresSafeArea())
         .toolbar(.hidden, for: .navigationBar)
         .sheet(item: $reference) { reference in
             NutrientReferenceView(reference: reference)
@@ -192,7 +192,7 @@ struct FertilizerCostTable: View {
             .frame(minHeight: 32)
         }
         .font(.subheadline)
-        .background(KropsTheme.cardFill.opacity(0.35), in: RoundedRectangle(cornerRadius: 8))
+        .background(KropsTheme.fillBlack4, in: RoundedRectangle(cornerRadius: 8))
         .clipShape(RoundedRectangle(cornerRadius: 8))
     }
 
@@ -237,7 +237,7 @@ struct FertilizerAllocationSection: View {
                 }
             }
             .padding(.horizontal, 16)
-            .background(KropsTheme.cardFill, in: RoundedRectangle(cornerRadius: 24))
+            .background(KropsTheme.surfaceCard, in: RoundedRectangle(cornerRadius: 24))
         }
     }
 }

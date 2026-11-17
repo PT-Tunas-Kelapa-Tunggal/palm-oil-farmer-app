@@ -111,7 +111,7 @@ public struct FertilizingMapCanvasView: View {
             .padding(.vertical, 6)
             .background(
                 RoundedRectangle(cornerRadius: 12, style: .continuous)
-                    .fill(Color(red: 0x14 / 255, green: 0x15 / 255, blue: 0x17 / 255).opacity(0.88))
+                    .fill(KropsTheme.surfaceInverse.opacity(0.88))
             )
             .overlay(
                 RoundedRectangle(cornerRadius: 12, style: .continuous)
@@ -144,7 +144,7 @@ public struct FertilizingMapCanvasView: View {
         .padding(.vertical, 6)
         .background(
             RoundedRectangle(cornerRadius: 12, style: .continuous)
-                .fill(Color(red: 0x14 / 255, green: 0x15 / 255, blue: 0x17 / 255).opacity(0.92))
+                .fill(KropsTheme.surfaceInverse.opacity(0.92))
         )
         .overlay(
             RoundedRectangle(cornerRadius: 12, style: .continuous)
@@ -171,7 +171,7 @@ public struct FertilizingMapCanvasView: View {
         .padding(.vertical, 8)
         .background(
             RoundedRectangle(cornerRadius: 14, style: .continuous)
-                .fill(Color(red: 0x14 / 255, green: 0x15 / 255, blue: 0x17 / 255).opacity(0.92))
+                .fill(KropsTheme.surfaceInverse.opacity(0.92))
         )
         .overlay(
             RoundedRectangle(cornerRadius: 14, style: .continuous)

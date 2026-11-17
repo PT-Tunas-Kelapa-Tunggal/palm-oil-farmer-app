@@ -37,11 +37,11 @@ public struct NutrientComparisonView: View {
                 HStack(alignment: .firstTextBaseline, spacing: 4) {
                     Text("\(comparison.requiredValue)")
                         .font(.largeTitle.bold())
-                        .foregroundStyle(Color(red: 0.08, green: 0.08, blue: 0.09))
+                        .foregroundStyle(KropsTheme.labelPrimary)
 
                     Text(comparison.unit)
                         .font(.callout)
-                        .foregroundStyle(Color(red: 0.08, green: 0.08, blue: 0.09))
+                        .foregroundStyle(KropsTheme.labelPrimary)
                 }
             }
             .frame(maxWidth: .infinity, alignment: .leading)

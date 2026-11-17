@@ -15,9 +15,9 @@ struct NutrientNeedChart: View {
     /// Shortfall reads as a warning and excess as the accent; the status word itself carries the meaning.
     static func statusColor(_ status: String) -> Color {
         switch status {
-        case "Kurang", "Sangat kurang": KropsTheme.warningText
-        case "Berlebih": KropsTheme.accent
-        default: KropsTheme.primaryText
+        case "Kurang", "Sangat kurang": KropsTheme.accentPrimary
+        case "Berlebih": KropsTheme.accentPrimary
+        default: KropsTheme.labelPrimary
         }
     }
 
@@ -52,13 +52,13 @@ struct NutrientNeedChart: View {
                 }
                 RuleMark(y: .value("Kebutuhan", 100))
                     .lineStyle(StrokeStyle(lineWidth: 1, dash: [3, 4]))
-                    .foregroundStyle(KropsTheme.secondaryText)
+                    .foregroundStyle(KropsTheme.labelSecondary)
             }
             .chartYScale(domain: 0...yMaximum)
             .chartYAxis {
                 AxisMarks(position: .leading, values: .stride(by: 50)) { value in
                     AxisGridLine(stroke: StrokeStyle(lineWidth: 0.5))
-                        .foregroundStyle(Color(uiColor: .separator))
+                        .foregroundStyle(KropsTheme.separatorDefault)
                     AxisValueLabel {
                         if let percent = value.as(Double.self) {
                             Text("\(Int(percent))%").font(.caption2)
@@ -109,7 +109,7 @@ struct NutrientLegend: View {
             }
             legendItem("Kebutuhan") {
                 Rectangle()
-                    .stroke(KropsTheme.secondaryText, style: StrokeStyle(lineWidth: 1, dash: [3, 2]))
+                    .stroke(KropsTheme.labelSecondary, style: StrokeStyle(lineWidth: 1, dash: [3, 2]))
                     .frame(width: 14, height: 1)
             }
         }

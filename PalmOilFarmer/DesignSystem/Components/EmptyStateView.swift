@@ -9,7 +9,7 @@ struct EmptyStateView<Illustration: View>: View {
     var body: some View {
         VStack(spacing: KropsTheme.Spacing.section) {
             illustration()
-                .foregroundStyle(KropsTheme.secondaryText)
+                .foregroundStyle(KropsTheme.labelSecondary)
                 .accessibilityHidden(true)
 
             VStack(spacing: 2) {
@@ -19,7 +19,7 @@ struct EmptyStateView<Illustration: View>: View {
 
                 Text(message)
                     .font(messageFont)
-                    .foregroundStyle(KropsTheme.secondaryText)
+                    .foregroundStyle(KropsTheme.labelSecondary)
             }
             .multilineTextAlignment(.center)
             .fixedSize(horizontal: false, vertical: true)
@@ -39,6 +39,6 @@ struct EmptyStateView<Illustration: View>: View {
     }
     .frame(width: 402)
     .padding(.vertical, 32)
-    .background(KropsTheme.background)
+    .background(KropsTheme.surfaceBackground)
 }
 #endif

@@ -18,7 +18,7 @@ struct GardenPickerField<Options: View>: View {
                         .font(.title2)
                         .foregroundStyle(.secondary)
                     Text(value ?? placeholder)
-                        .foregroundStyle(value == nil ? Color(uiColor: .placeholderText) : .primary)
+                        .foregroundStyle(value == nil ? KropsTheme.labelQuaternary : KropsTheme.labelPrimary)
                     Spacer()
                     Image(systemName: "chevron.up.chevron.down")
                         .font(.caption)

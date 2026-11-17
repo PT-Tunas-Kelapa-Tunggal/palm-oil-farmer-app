@@ -4,7 +4,6 @@ import SwiftUI
 public struct NutrientStatusPill: View {
     public let status: NutrientStatus
 
-    private let alertColor = Color(red: 1.0, green: 0.31, blue: 0.09) // #FF4F18
 
     public init(status: NutrientStatus) {
         self.status = status
@@ -24,7 +23,7 @@ public struct NutrientStatusPill: View {
         .background {
             if status == .excess {
                 Capsule()
-                    .strokeBorder(alertColor, lineWidth: 1)
+                    .strokeBorder(KropsTheme.accentPrimary, lineWidth: 1)
             } else {
                 Capsule()
                     .fill(backgroundColor)
@@ -48,16 +47,16 @@ public struct NutrientStatusPill: View {
         case .deficient:
             return .white
         case .excess:
-            return alertColor
+            return KropsTheme.accentPrimary
         case .sufficient:
-            return Color(red: 0.08, green: 0.08, blue: 0.09)
+            return KropsTheme.labelPrimary
         }
     }
 
     private var backgroundColor: Color {
         switch status {
         case .deficient:
-            return alertColor
+            return KropsTheme.accentHero
         case .excess:
             return .clear
         case .sufficient:

@@ -20,7 +20,7 @@ struct KeyboardActionBar: View {
                 Text("Selesai").fontWeight(.semibold)
             }
             .buttonStyle(.glassProminent)
-            .tint(KropsTheme.buttonBackground)
+            .tint(KropsTheme.surfaceInverse)
         }
         // Regular (medium) controls stay readable without pulling focus from the field.
         .buttonBorderShape(.capsule)

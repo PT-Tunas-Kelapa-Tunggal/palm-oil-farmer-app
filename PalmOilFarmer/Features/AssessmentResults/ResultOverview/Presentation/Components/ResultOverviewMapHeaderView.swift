@@ -35,7 +35,7 @@ public struct ResultOverviewMapHeaderView: View {
                             .scaledToFill()
                     } else {
                         LinearGradient(
-                            colors: [Color(red: 0.16, green: 0.28, blue: 0.22), Color(red: 0.10, green: 0.18, blue: 0.14)],
+                            colors: [KropsTheme.surfaceInverseRaised, KropsTheme.surfaceInverse],
                             startPoint: .topLeading,
                             endPoint: .bottomTrailing
                         )
@@ -58,7 +58,7 @@ public struct ResultOverviewMapHeaderView: View {
             VStack {
                 Spacer()
                 LinearGradient(
-                    colors: [Color.clear, Color(red: 0.95, green: 0.96, blue: 0.97)],
+                    colors: [Color.clear, KropsTheme.surfaceBackground],
                     startPoint: .top,
                     endPoint: .bottom
                 )

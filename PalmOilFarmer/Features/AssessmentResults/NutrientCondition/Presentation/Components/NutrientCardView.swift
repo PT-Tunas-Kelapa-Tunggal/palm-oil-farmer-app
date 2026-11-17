@@ -19,7 +19,7 @@ public struct NutrientCardView: View {
                 VStack(alignment: .leading, spacing: 2) {
                     Text(item.title)
                         .font(.title3.weight(.semibold))
-                        .foregroundStyle(Color(red: 0.08, green: 0.08, blue: 0.09))
+                        .foregroundStyle(KropsTheme.labelPrimary)
 
                     Text(item.sourceDescription)
                         .font(.footnote)
@@ -45,7 +45,7 @@ public struct NutrientCardView: View {
             // Actionable Verdict
             Text(item.verdict)
                 .font(.callout.weight(.medium))
-                .foregroundStyle(Color(red: 0.08, green: 0.08, blue: 0.09))
+                .foregroundStyle(KropsTheme.labelPrimary)
                 .fixedSize(horizontal: false, vertical: true)
 
             // Warning Impact (only shown for deficiency or excess)

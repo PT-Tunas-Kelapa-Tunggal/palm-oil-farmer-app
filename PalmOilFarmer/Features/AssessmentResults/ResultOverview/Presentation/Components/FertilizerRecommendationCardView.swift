@@ -8,7 +8,6 @@ public struct FertilizerRecommendationCardView: View {
     public let periods: [FertilizerPeriodItem]
     public var onTap: (() -> Void)?
 
-    private let orangeAccent = Color(red: 1.0, green: 0.31, blue: 0.09)
 
     public init(
         title: String = "Rekomendasi Pemupukan",
@@ -29,7 +28,7 @@ public struct FertilizerRecommendationCardView: View {
                 HStack(alignment: .top, spacing: 10) {
                     Image(systemName: "calendar.badge.clock")
                         .font(.system(size: 20, weight: .semibold))
-                        .foregroundStyle(orangeAccent)
+                        .foregroundStyle(KropsTheme.accentHero)
                         .frame(width: 24, height: 24)
 
                     VStack(alignment: .leading, spacing: 2) {
@@ -65,7 +64,7 @@ public struct FertilizerRecommendationCardView: View {
                 }
             }
             .padding(16)
-            .background(Color(red: 0.08, green: 0.08, blue: 0.09))
+            .background(KropsTheme.surfaceInverse)
             .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
         }
         .buttonStyle(.plain)
@@ -97,6 +96,6 @@ public struct FertilizerRecommendationCardView: View {
         periods: ResultOverviewItem.sample.periods
     )
     .padding()
-    .background(Color(red: 0.95, green: 0.96, blue: 0.97))
+    .background(KropsTheme.surfaceBackground)
 }
 

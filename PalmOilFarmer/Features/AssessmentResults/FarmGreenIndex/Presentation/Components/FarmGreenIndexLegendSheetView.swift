@@ -7,7 +7,6 @@ public struct FarmGreenIndexLegendSheetView: View {
     public var onSelectCategory: ((TreeConditionCategory) -> Void)?
     public var onCollapse: (() -> Void)?
 
-    private let darkPrimary = Color(red: 0.08, green: 0.08, blue: 0.09) // #141517
 
     public init(
         categories: [TreeConditionSummaryItem],
@@ -26,7 +25,7 @@ public struct FarmGreenIndexLegendSheetView: View {
                 Spacer()
                 Button(action: { onCollapse?() }) {
                     Capsule()
-                        .fill(darkPrimary.opacity(0.20))
+                        .fill(KropsTheme.fillBlack20)
                         .frame(width: 44, height: 4)
                         .padding(.vertical, 6)
                 }
@@ -39,11 +38,11 @@ public struct FarmGreenIndexLegendSheetView: View {
             VStack(alignment: .leading, spacing: 3) {
                 Text("Kondisi Pohon")
                     .font(.system(size: 22, weight: .bold))
-                    .foregroundStyle(darkPrimary)
+                    .foregroundStyle(KropsTheme.labelPrimary)
 
                 Text("Warna pada peta menunjukkan kesehatan setiap pohon.")
                     .font(.system(size: 14, weight: .regular))
-                    .foregroundStyle(darkPrimary.opacity(0.72))
+                    .foregroundStyle(KropsTheme.labelSecondary)
             }
             .padding(.horizontal, 4)
 
@@ -73,7 +72,7 @@ public struct FarmGreenIndexLegendSheetView: View {
     }
 
     private func categoryRow(_ item: TreeConditionSummaryItem) -> some View {
-        let dotColor = Color(hex: item.category.colorHex)
+        let dotColor = item.category.color
 
         return HStack(spacing: 12) {
             // Condition color dot
@@ -85,11 +84,11 @@ public struct FarmGreenIndexLegendSheetView: View {
             VStack(alignment: .leading, spacing: 2) {
                 Text(item.category.title)
                     .font(.system(size: 16, weight: .semibold))
-                    .foregroundStyle(darkPrimary)
+                    .foregroundStyle(KropsTheme.labelPrimary)
 
                 Text(item.category.shortLegend)
                     .font(.system(size: 13, weight: .regular))
-                    .foregroundStyle(darkPrimary.opacity(0.65))
+                    .foregroundStyle(KropsTheme.labelSecondary)
                     .lineLimit(1)
             }
 
@@ -98,11 +97,11 @@ public struct FarmGreenIndexLegendSheetView: View {
             // Tree count (Right-aligned bold text)
             Text("\(item.treeCount)")
                 .font(.system(size: 16, weight: .semibold))
-                .foregroundStyle(darkPrimary)
+                .foregroundStyle(KropsTheme.labelPrimary)
 
             Image(systemName: "chevron.right")
                 .font(.system(size: 13, weight: .semibold))
-                .foregroundStyle(darkPrimary.opacity(0.35))
+                .foregroundStyle(KropsTheme.labelQuaternary)
         }
         .padding(.horizontal, 16)
         .padding(.vertical, 14)
@@ -111,17 +110,6 @@ public struct FarmGreenIndexLegendSheetView: View {
     }
 }
 
-private extension Color {
-    init(hex: UInt32, alpha: Double = 1.0) {
-        self.init(
-            .sRGB,
-            red: Double((hex >> 16) & 0xFF) / 255.0,
-            green: Double((hex >> 8) & 0xFF) / 255.0,
-            blue: Double(hex & 0xFF) / 255.0,
-            opacity: alpha
-        )
-    }
-}
 
 #Preview {
     ZStack {

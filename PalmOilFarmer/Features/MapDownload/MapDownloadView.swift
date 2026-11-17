@@ -55,7 +55,7 @@ struct MapDownloadProgressView: View {
         }
         .padding(.horizontal, 16)
         .padding(.vertical, usesCardBackground ? 16 : 8)
-        .background(usesCardBackground ? KropsTheme.cardFill : .clear, in: RoundedRectangle(cornerRadius: 24))
+        .background(usesCardBackground ? KropsTheme.surfaceCard : .clear, in: RoundedRectangle(cornerRadius: 24))
     }
 }
 
@@ -97,7 +97,7 @@ struct MapDownloadView: View {
             }
             .ignoresSafeArea(edges: .top)
         }
-        .background(KropsTheme.background.ignoresSafeArea())
+        .background(KropsTheme.surfaceBackground.ignoresSafeArea())
         .safeAreaInset(edge: .bottom) {
             if case .completed = state {
                 PrimaryActionButton(title: "Petakan Batas Kebun", action: onMapBoundary)

@@ -14,7 +14,6 @@ struct AssessmentOverviewView: View {
     @ScaledMetric(relativeTo: .title3) private var checkSize = 22.0
 
     private var dark: Bool { colorScheme == .dark }
-    private var palette: AssessmentPalette { .init(isDark: dark) }
 
     var body: some View {
         @Bindable var model = viewModel
@@ -31,8 +30,8 @@ struct AssessmentOverviewView: View {
                 .disabled(model.isSubmitting || model.hasSubmitted)
             }
         }
-        .foregroundStyle(palette.primary)
-        .background(palette.background.ignoresSafeArea())
+        .foregroundStyle(KropsTheme.labelPrimary)
+        .background(KropsTheme.surfaceBackground.ignoresSafeArea())
         .toolbar(.hidden, for: .navigationBar)
         .safeAreaInset(edge: .bottom, spacing: 0) {
             actions
@@ -81,16 +80,16 @@ struct AssessmentOverviewView: View {
                     }
                 }
                 .padding(.horizontal, 16)
-                .background(dark ? palette.card : AssessmentPalette.ink, in: RoundedRectangle(cornerRadius: 20))
+                .background(KropsTheme.surfaceInverse, in: RoundedRectangle(cornerRadius: 20))
             }
 
             Button(action: onAddContact) {
                 HStack(spacing: 8) {
                     Image(systemName: "plus")
-                        .foregroundStyle(palette.accent)
+                        .foregroundStyle(KropsTheme.accentHero)
                         .accessibilityHidden(true)
                     Text("Tambah narahubung lain")
-                        .foregroundStyle(dark ? palette.primary : palette.accent)
+                        .foregroundStyle(KropsTheme.accentPrimary)
                         .fixedSize(horizontal: false, vertical: true)
                 }
                 .font(.headline)
@@ -105,7 +104,7 @@ struct AssessmentOverviewView: View {
 
     private func contactRow(_ contact: ReviewContactDetails, index: Int) -> some View {
         let selected = viewModel.selectedContactIndex == index
-        let contactSecondary = dark ? palette.secondary : .white.opacity(0.8)
+        let contactSecondary = KropsTheme.labelInverseSecondary
         return HStack(alignment: .top, spacing: 8) {
             Button {
                 viewModel.selectContact(at: index)
@@ -139,7 +138,7 @@ struct AssessmentOverviewView: View {
             .padding(.top, 5)
             .accessibilityLabel("Ubah narahubung \(contact.name)")
         }
-        .foregroundStyle(dark ? palette.primary : .white)
+        .foregroundStyle(KropsTheme.labelInversePrimary)
     }
 
     private var budgetSection: some View {
@@ -153,7 +152,7 @@ struct AssessmentOverviewView: View {
                         .contentTransition(.numericText())
                     Text("per hektar per tahun")
                         .font(.footnote)
-                        .foregroundStyle(palette.secondary)
+                        .foregroundStyle(KropsTheme.labelSecondary)
                 }
                 .multilineTextAlignment(.center)
                 .fixedSize(horizontal: false, vertical: true)
@@ -169,11 +168,11 @@ struct AssessmentOverviewView: View {
                     Text("Rp10 jt")
                 }
                 .font(.footnote)
-                .foregroundStyle(palette.secondary)
+                .foregroundStyle(KropsTheme.labelSecondary)
                 .accessibilityHidden(true)
 
                 Rectangle()
-                    .fill(dark ? Color.white.opacity(31 / 255) : Color(uiColor: .separator))
+                    .fill(KropsTheme.separatorDefault)
                     .frame(height: 0.1)
                     .accessibilityHidden(true)
 
@@ -193,7 +192,7 @@ struct AssessmentOverviewView: View {
                 .accessibilityElement(children: .combine)
             }
             .padding(.horizontal, 16)
-            .background(palette.card, in: RoundedRectangle(cornerRadius: 20))
+            .background(KropsTheme.surfaceCard, in: RoundedRectangle(cornerRadius: 20))
         }
     }
 
@@ -217,16 +216,16 @@ struct AssessmentOverviewView: View {
 
             ZStack(alignment: .topLeading) {
                 Capsule()
-                    .fill(dark ? Color(red: 120 / 255, green: 120 / 255, blue: 128 / 255).opacity(92 / 255) : Color(white: 120 / 255).opacity(51 / 255))
+                    .fill(KropsTheme.fillGray1)
                     .frame(width: width, height: 6)
                     .position(x: inset + width / 2, y: 20)
                 Capsule()
-                    .fill(AssessmentPalette.graphite)
+                    .fill(KropsTheme.surfaceInverseRaised)
                     .frame(width: x - inset, height: 6)
                     .position(x: inset + (x - inset) / 2, y: dark ? 26 : 20)
                 ForEach(0..<5) { tick in
                     RoundedRectangle(cornerRadius: 3)
-                        .fill(dark ? Color(red: 235 / 255, green: 235 / 255, blue: 245 / 255).opacity(41 / 255) : Color(red: 60 / 255, green: 60 / 255, blue: 67 / 255).opacity(46 / 255))
+                        .fill(KropsTheme.fillBlack12)
                         .frame(width: 4, height: 4)
                         .position(x: inset + thumb / 2 + travel * Double(tick) / 4, y: 29)
                 }
@@ -294,13 +293,13 @@ struct AssessmentOverviewView: View {
                     .frame(minHeight: buttonHeight)
             }
             .buttonStyle(.plain)
-            .foregroundStyle(palette.buttonLabel)
-            .glassEffect(.regular.tint(palette.buttonTint), in: Capsule())
+            .foregroundStyle(KropsTheme.labelInversePrimary)
+            .glassEffect(.regular.tint(KropsTheme.surfaceInverse), in: Capsule())
             .opacity(viewModel.canSubmit ? 1 : 0.45)
             .disabled(!viewModel.canSubmit)
         }
         .padding(.horizontal, 16)
-        .background(palette.background)
+        .background(KropsTheme.surfaceBackground)
     }
 
     private func sectionHeader(_ title: String, description: String) -> some View {
@@ -310,7 +309,7 @@ struct AssessmentOverviewView: View {
                 .accessibilityAddTraits(.isHeader)
             Text(description)
                 .font(.subheadline)
-                .foregroundStyle(palette.secondary)
+                .foregroundStyle(KropsTheme.labelSecondary)
                 .fixedSize(horizontal: false, vertical: true)
                 .frame(minHeight: descriptionHeight, alignment: .topLeading)
         }
@@ -322,7 +321,7 @@ struct AssessmentOverviewView: View {
     private func checkmark(_ selected: Bool, onInverseCard: Bool = false) -> some View {
         Image(systemName: selected ? "checkmark.circle.fill" : "circle")
             .font(.system(size: checkSize))
-            .foregroundStyle(selected ? palette.accent : onInverseCard ? .white.opacity(0.8) : palette.secondary)
+            .foregroundStyle(selected ? KropsTheme.accentHero : onInverseCard ? KropsTheme.labelInverseSecondary : KropsTheme.labelSecondary)
             .frame(minWidth: 26, minHeight: 28)
             .accessibilityHidden(true)
     }

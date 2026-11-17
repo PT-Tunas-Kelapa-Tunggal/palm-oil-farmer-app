@@ -7,7 +7,6 @@ public struct FarmGreenIndexDetailSheetView: View {
     public var onBack: (() -> Void)?
     public var onCollapse: (() -> Void)?
 
-    private let darkPrimary = Color(red: 0.08, green: 0.08, blue: 0.09) // #141517
 
     public init(
         summary: TreeConditionSummaryItem,
@@ -20,7 +19,7 @@ public struct FarmGreenIndexDetailSheetView: View {
     }
 
     public var body: some View {
-        let dotColor = Color(hex: summary.category.colorHex)
+        let dotColor = summary.category.color
 
         VStack(alignment: .leading, spacing: 16) {
             // Grabber handle
@@ -28,7 +27,7 @@ public struct FarmGreenIndexDetailSheetView: View {
                 Spacer()
                 Button(action: { onCollapse?() }) {
                     Capsule()
-                        .fill(darkPrimary.opacity(0.20))
+                        .fill(KropsTheme.fillBlack20)
                         .frame(width: 44, height: 4)
                         .padding(.vertical, 4)
                 }
@@ -42,7 +41,7 @@ public struct FarmGreenIndexDetailSheetView: View {
                 Button(action: { onBack?() }) {
                     Image(systemName: "chevron.left")
                         .font(.system(size: 13, weight: .bold))
-                        .foregroundStyle(darkPrimary)
+                        .foregroundStyle(KropsTheme.labelPrimary)
                         .frame(width: 32, height: 32)
                 }
                 .buttonStyle(.plain)
@@ -55,7 +54,7 @@ public struct FarmGreenIndexDetailSheetView: View {
 
                 Text(summary.category.title)
                     .font(.system(size: 22, weight: .bold))
-                    .foregroundStyle(darkPrimary)
+                    .foregroundStyle(KropsTheme.labelPrimary)
 
                 Spacer()
             }
@@ -63,7 +62,7 @@ public struct FarmGreenIndexDetailSheetView: View {
             // Detailed Narrative Explanation (Left-aligned)
             Text(summary.category.detailNarrative)
                 .font(.system(size: 14, weight: .regular))
-                .foregroundStyle(darkPrimary.opacity(0.75))
+                .foregroundStyle(KropsTheme.labelSecondary)
                 .fixedSize(horizontal: false, vertical: true)
 
             // 2 Metric Cards Row (Jumlah pohon & Bagian kebun)
@@ -99,11 +98,11 @@ public struct FarmGreenIndexDetailSheetView: View {
         VStack(alignment: .leading, spacing: 6) {
             Text(title)
                 .font(.system(size: 12, weight: .medium))
-                .foregroundStyle(darkPrimary.opacity(0.60))
+                .foregroundStyle(KropsTheme.labelSecondary)
 
             Text(value)
                 .font(.system(size: 20, weight: .bold))
-                .foregroundStyle(darkPrimary)
+                .foregroundStyle(KropsTheme.labelPrimary)
                 .lineLimit(1)
                 .minimumScaleFactor(0.8)
         }
@@ -114,17 +113,6 @@ public struct FarmGreenIndexDetailSheetView: View {
     }
 }
 
-private extension Color {
-    init(hex: UInt32, alpha: Double = 1.0) {
-        self.init(
-            .sRGB,
-            red: Double((hex >> 16) & 0xFF) / 255.0,
-            green: Double((hex >> 8) & 0xFF) / 255.0,
-            blue: Double(hex & 0xFF) / 255.0,
-            opacity: alpha
-        )
-    }
-}
 
 #Preview("Detail Kondisi · Normal") {
     ZStack {

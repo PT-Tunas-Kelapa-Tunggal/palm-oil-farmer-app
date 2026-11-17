@@ -7,12 +7,10 @@ struct AssessmentResultsConfirmationView: View {
     let onContinue: () -> Void
     var onViewHistory: (() -> Void)? = nil
 
-    @Environment(\.colorScheme) private var colorScheme
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @ScaledMetric(relativeTo: .body) private var buttonHeight = 52.0
     @State private var hasAppeared = false
 
-    private var palette: AssessmentPalette { .init(isDark: colorScheme == .dark) }
     private var entranceIsVisible: Bool { reduceMotion || hasAppeared }
 
     private var isReviewCompleted: Bool { confirmation == .reviewCompleted }
@@ -55,8 +53,8 @@ struct AssessmentResultsConfirmationView: View {
                 .padding(.horizontal, 16)
             }
         }
-        .foregroundStyle(palette.primary)
-        .background(palette.background.ignoresSafeArea())
+        .foregroundStyle(KropsTheme.labelPrimary)
+        .background(KropsTheme.surfaceBackground.ignoresSafeArea())
         .toolbar(.hidden, for: .navigationBar)
         .safeAreaInset(edge: .bottom, spacing: 0) {
             VStack(spacing: 8) {
@@ -64,18 +62,18 @@ struct AssessmentResultsConfirmationView: View {
                     buttonLabel(isReviewCompleted ? "Lihat & Unduh Hasil Peninjauan" : "Lihat Hasil Peninjauan")
                 }
                 .buttonStyle(.plain)
-                .foregroundStyle(palette.buttonLabel)
-                .glassEffect(.regular.tint(palette.buttonTint), in: Capsule())
+                .foregroundStyle(KropsTheme.labelInversePrimary)
+                .glassEffect(.regular.tint(KropsTheme.surfaceInverse), in: Capsule())
 
                 Button(action: isReviewCompleted ? onViewHistory ?? onContinue : onContinue) {
                     buttonLabel(isReviewCompleted ? "Riwayat Pengajuan" : "Kembali ke Detail Kebun")
                 }
                 .buttonStyle(.plain)
-                .foregroundStyle(palette.isDark ? palette.primary : palette.accent)
+                .foregroundStyle(KropsTheme.accentPrimary)
             }
             .padding(.horizontal, 16)
             .padding(.bottom, 2)
-            .background(palette.background)
+            .background(KropsTheme.surfaceBackground)
             .opacity(entranceIsVisible ? 1 : 0)
         }
         .sensoryFeedback(.success, trigger: hasAppeared) { _, appeared in appeared }

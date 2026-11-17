@@ -58,7 +58,7 @@ public struct FarmGreenIndexMapView: View {
                                 .scaledToFill()
                         } else {
                             LinearGradient(
-                                colors: [Color(red: 0.12, green: 0.22, blue: 0.16), Color(red: 0.08, green: 0.14, blue: 0.10)],
+                                colors: [KropsTheme.surfaceInverseRaised, KropsTheme.surfaceInverse],
                                 startPoint: .topLeading,
                                 endPoint: .bottomTrailing
                             )
@@ -103,7 +103,7 @@ public struct FarmGreenIndexMapView: View {
                         Button(action: { onRecenter?() }) {
                             Image(systemName: "location.fill")
                                 .font(.system(size: 18, weight: .semibold))
-                                .foregroundStyle(Color(red: 0.08, green: 0.08, blue: 0.09))
+                                .foregroundStyle(KropsTheme.labelPrimary)
                                 .frame(width: 48, height: 48)
                         }
                         .buttonStyle(.plain)
@@ -125,7 +125,7 @@ public struct FarmGreenIndexMapView: View {
     }
 
     private func treePinMarker(_ pin: TreePinItem, isSelected: Bool) -> some View {
-        let pinColor = Color(hex: pin.category.colorHex)
+        let pinColor = pin.category.color
 
         return VStack(spacing: 2) {
             ZStack {
@@ -158,17 +158,6 @@ public struct FarmGreenIndexMapView: View {
     }
 }
 
-private extension Color {
-    init(hex: UInt32, alpha: Double = 1.0) {
-        self.init(
-            .sRGB,
-            red: Double((hex >> 16) & 0xFF) / 255.0,
-            green: Double((hex >> 8) & 0xFF) / 255.0,
-            blue: Double(hex & 0xFF) / 255.0,
-            opacity: alpha
-        )
-    }
-}
 
 #Preview {
     FarmGreenIndexMapView(

@@ -56,7 +56,7 @@ public struct FertilizerEstimationView: View {
                             VStack(alignment: .leading, spacing: 12) {
                                 Text("Daftar Belanja")
                                     .font(.title3.weight(.bold))
-                                    .foregroundStyle(Color(red: 0.08, green: 0.08, blue: 0.09))
+                                    .foregroundStyle(KropsTheme.labelPrimary)
                                     .padding(.horizontal, 4)
 
                                 FertilizerShoppingTableView(
@@ -119,7 +119,7 @@ public struct FertilizerEstimationView: View {
                                 Task { await viewModel.load() }
                             }
                             .buttonStyle(.borderedProminent)
-                            .tint(Color(red: 0.18, green: 0.42, blue: 0.25))
+                            .tint(KropsTheme.surfaceInverse)
                         }
                         .padding(32)
                         .frame(maxWidth: .infinity, minHeight: 250)
@@ -177,7 +177,7 @@ public struct FertilizerEstimationView: View {
             }
         }
         }
-        .background(Color(hex: 0xF2F4F7).ignoresSafeArea())
+        .background(KropsTheme.surfaceBackground.ignoresSafeArea())
         .task {
             if viewModel.overview == nil {
                 await viewModel.load()
@@ -201,7 +201,7 @@ public struct FertilizerEstimationView: View {
             Button(action: handleBack) {
                 Image(systemName: "chevron.left")
                     .font(.system(size: 18, weight: .semibold))
-                    .foregroundStyle(Color(red: 0.08, green: 0.08, blue: 0.09))
+                    .foregroundStyle(KropsTheme.labelPrimary)
                     .frame(width: 44, height: 44)
                     .background(.ultraThinMaterial, in: Circle())
             }
@@ -218,7 +218,7 @@ public struct FertilizerEstimationView: View {
         VStack(alignment: .leading, spacing: 6) {
             Text("Perkiraan Biaya Pupuk")
                 .font(.largeTitle.bold())
-                .foregroundStyle(Color(red: 0.08, green: 0.08, blue: 0.09))
+                .foregroundStyle(KropsTheme.labelPrimary)
 
             Text("\(viewModel.overview?.gardenName ?? "Kebun"), \(viewModel.overview?.periodDescription ?? "untuk kebutuhan 1 tahun")")
                 .font(.subheadline)
@@ -239,17 +239,6 @@ public struct FertilizerEstimationView: View {
 
 // MARK: - Color Hex Helper
 
-private extension Color {
-    init(hex: UInt32, alpha: Double = 1.0) {
-        self.init(
-            .sRGB,
-            red: Double((hex >> 16) & 0xFF) / 255.0,
-            green: Double((hex >> 8) & 0xFF) / 255.0,
-            blue: Double(hex & 0xFF) / 255.0,
-            opacity: alpha
-        )
-    }
-}
 
 // MARK: - Previews
 

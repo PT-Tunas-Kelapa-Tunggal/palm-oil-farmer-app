@@ -78,7 +78,7 @@ struct GardenMetricReferenceTile: View {
     GardenMetricsReferenceView(garden: GardenPreviewData.garden, metrics: GardenPreviewData.metrics)
         .padding(16)
         .frame(width: 402)
-        .background(KropsTheme.background)
+        .background(KropsTheme.surfaceBackground)
 }
 
 #Preview("Metric Tile", traits: .sizeThatFitsLayout) {

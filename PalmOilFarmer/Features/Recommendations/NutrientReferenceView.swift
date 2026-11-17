@@ -85,7 +85,7 @@ struct NutrientLinkedText: View {
 
     var body: some View {
         Text(Self.linked(text))
-            .tint(KropsTheme.primaryText)
+            .tint(KropsTheme.accentPrimary)
             .environment(\.openURL, OpenURLAction { url in
                 guard url.scheme == Self.scheme, let symbol = url.host() else { return .systemAction }
                 onSelect(symbol)

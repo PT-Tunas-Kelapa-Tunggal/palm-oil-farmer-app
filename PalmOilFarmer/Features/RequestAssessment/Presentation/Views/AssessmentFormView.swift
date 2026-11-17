@@ -31,10 +31,9 @@ struct AssessmentFormView: View {
     }
 
     private var dark: Bool { colorScheme == .dark }
-    private var palette: AssessmentPalette { .init(isDark: dark) }
 
     private var inputFill: Color {
-        dark ? Color(red: 118 / 255, green: 118 / 255, blue: 128 / 255).opacity(61 / 255) : palette.card
+        KropsTheme.surfaceCard
     }
 
     var body: some View {
@@ -51,7 +50,7 @@ struct AssessmentFormView: View {
                         Text("Petugas menghubungi orang ini untuk menjadwalkan kunjungan ke kebun.")
                             .font(.system(size: descriptionSize))
                             .frame(minHeight: descriptionHeight, alignment: .topLeading)
-                            .foregroundStyle(palette.secondary)
+                            .foregroundStyle(KropsTheme.labelSecondary)
                             .fixedSize(horizontal: false, vertical: true)
                     }
                     .padding(.horizontal, 16)
@@ -59,7 +58,7 @@ struct AssessmentFormView: View {
 
                     VStack(alignment: .leading, spacing: 0) {
                         field(title: "Nama lengkap", icon: "person", error: model.nameError) {
-                            TextField("Nama lengkap", text: $model.name, prompt: Text("Contoh: Hendrawan Nugroho").foregroundStyle(palette.tertiary))
+                            TextField("Nama lengkap", text: $model.name, prompt: Text("Contoh: Hendrawan Nugroho").foregroundStyle(KropsTheme.labelTertiary))
                                 .textContentType(.name)
                                 .textInputAutocapitalization(.words)
                                 .focused($focusedField, equals: .name)
@@ -67,13 +66,13 @@ struct AssessmentFormView: View {
                                 .onSubmit { focusedField = .phone }
                         }
                         field(title: "Nomor HP", icon: "phone", error: model.phoneError) {
-                            TextField("Nomor HP", text: $model.phone, prompt: Text("Contoh: 0812 3456 7890").foregroundStyle(palette.tertiary))
+                            TextField("Nomor HP", text: $model.phone, prompt: Text("Contoh: 0812 3456 7890").foregroundStyle(KropsTheme.labelTertiary))
                                 .textContentType(.telephoneNumber)
                                 .keyboardType(.phonePad)
                                 .focused($focusedField, equals: .phone)
                         }
                         field(title: "Alamat lengkap", icon: "house", error: model.addressError, multiline: true) {
-                            TextField("Alamat lengkap", text: $model.address, prompt: Text("Nama jalan, desa atau dusun, dan kecamatan").foregroundStyle(palette.tertiary), axis: .vertical)
+                            TextField("Alamat lengkap", text: $model.address, prompt: Text("Nama jalan, desa atau dusun, dan kecamatan").foregroundStyle(KropsTheme.labelTertiary), axis: .vertical)
                                 .fixedSize(horizontal: false, vertical: true)
                                 .textContentType(.fullStreetAddress)
                                 .textInputAutocapitalization(.sentences)
@@ -82,7 +81,7 @@ struct AssessmentFormView: View {
                     }
                     .padding(.horizontal, dark ? 16 : 0)
                     .padding(.vertical, dark ? 8 : 0)
-                    .background(dark ? palette.card : .clear, in: RoundedRectangle(cornerRadius: 20))
+                    .background(.clear, in: RoundedRectangle(cornerRadius: 20))
                 }
                 .padding(.horizontal, 16)
                 .padding(.top, 18)
@@ -90,8 +89,8 @@ struct AssessmentFormView: View {
             }
             .scrollDismissesKeyboard(.interactively)
         }
-        .foregroundStyle(palette.primary)
-        .background(palette.background.ignoresSafeArea())
+        .foregroundStyle(KropsTheme.labelPrimary)
+        .background(KropsTheme.surfaceBackground.ignoresSafeArea())
         .toolbar(.hidden, for: .navigationBar)
         .safeAreaInset(edge: .bottom) {
             Button {
@@ -114,10 +113,10 @@ struct AssessmentFormView: View {
                     .frame(minHeight: inputHeight)
             }
             .buttonStyle(.plain)
-            .foregroundStyle(palette.buttonLabel)
-            .glassEffect(.regular.tint(palette.buttonTint), in: Capsule())
+            .foregroundStyle(KropsTheme.labelInversePrimary)
+            .glassEffect(.regular.tint(KropsTheme.surfaceInverse), in: Capsule())
             .padding(.horizontal, 16)
-            .background(palette.background)
+            .background(KropsTheme.surfaceBackground)
         }
     }
 
@@ -154,7 +153,7 @@ struct AssessmentFormView: View {
         VStack(alignment: .leading, spacing: 6) {
             Text(title)
                 .font(.system(size: bodySize, weight: .semibold))
-                .foregroundStyle(palette.secondary)
+                .foregroundStyle(KropsTheme.labelSecondary)
                 .fixedSize(horizontal: false, vertical: true)
                 .frame(minHeight: labelHeight)
                 .padding(.leading, !dark && !multiline ? 8 : 0)
@@ -162,7 +161,7 @@ struct AssessmentFormView: View {
                 Image(systemName: icon)
                     .font(.system(size: iconSize))
                     .frame(width: multiline ? addressIconWidth : iconWidth)
-                    .foregroundStyle(palette.secondary)
+                    .foregroundStyle(KropsTheme.labelSecondary)
                     .accessibilityHidden(true)
                 content()
                     .font(.system(size: inputSize))
@@ -175,7 +174,7 @@ struct AssessmentFormView: View {
             if viewModel.showsValidation, let error {
                 Text(error)
                     .font(.system(size: errorSize))
-                    .foregroundStyle(Color(red: 1, green: 66 / 255, blue: 69 / 255))
+                    .foregroundStyle(KropsTheme.statusCritical)
                     .fixedSize(horizontal: false, vertical: true)
             }
         }

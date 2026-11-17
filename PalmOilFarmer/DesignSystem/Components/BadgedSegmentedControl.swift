@@ -27,7 +27,7 @@ struct BadgedSegmentedControl<Value: Hashable & Identifiable>: View {
                                 .foregroundStyle(.white)
                                 .padding(.horizontal, 6)
                                 .frame(minWidth: 18, minHeight: 18)
-                                .background(KropsTheme.primary, in: Capsule())
+                                .background(KropsTheme.accentHero, in: Capsule())
                         }
                     }
                     .foregroundStyle(.primary)
@@ -35,7 +35,7 @@ struct BadgedSegmentedControl<Value: Hashable & Identifiable>: View {
                     .background {
                         if isSelected {
                             Capsule()
-                                .fill(Color(uiColor: .systemBackground))
+                                .fill(KropsTheme.surfaceCard)
                                 .shadow(color: .black.opacity(0.08), radius: 4, y: 1)
                                 .matchedGeometryEffect(id: "selection", in: selectionSpace)
                         }
@@ -49,7 +49,7 @@ struct BadgedSegmentedControl<Value: Hashable & Identifiable>: View {
             }
         }
         .padding(3)
-        .background(KropsTheme.cardFill, in: Capsule())
+        .background(KropsTheme.fillGray1, in: Capsule())
         .sensoryFeedback(.selection, trigger: selection)
     }
 }

@@ -9,11 +9,6 @@ public struct NutrientConditionSummaryCardView: View {
     public let nutrients: [NutrientStatusSummaryItem]
     public var onTap: (() -> Void)?
 
-    private let orangeColor = Color(red: 1.0, green: 0.31, blue: 0.09) // #FF4F18
-    private let statusRed = Color(red: 0.79, green: 0.22, blue: 0.05) // #C9390C
-    private let darkPrimary = Color(red: 0.08, green: 0.08, blue: 0.09) // #141517
-    private let graySecondary = Color(red: 0.24, green: 0.24, blue: 0.26).opacity(0.60) // #3C3C4399
-    private let lightGray = Color(red: 0.95, green: 0.96, blue: 0.97) // #F2F4F7
 
     public init(
         title: String = "Kondisi Hara",
@@ -36,28 +31,28 @@ public struct NutrientConditionSummaryCardView: View {
                 HStack(alignment: .center, spacing: 8) {
                     Image(systemName: "sparkles")
                         .font(.system(size: 15, weight: .semibold))
-                        .foregroundStyle(graySecondary)
+                        .foregroundStyle(KropsTheme.labelSecondary)
 
                     Text(title)
                         .font(.system(size: 15, weight: .semibold))
-                        .foregroundStyle(graySecondary)
+                        .foregroundStyle(KropsTheme.labelSecondary)
 
                     Spacer()
 
                     Image(systemName: "chevron.right")
                         .font(.system(size: 14, weight: .semibold))
-                        .foregroundStyle(darkPrimary.opacity(0.55))
+                        .foregroundStyle(KropsTheme.labelTertiary)
                 }
 
                 // Title Headline & Description
                 VStack(alignment: .leading, spacing: 6) {
                     Text(statusBadgeText)
                         .font(.system(size: 28, weight: .bold))
-                        .foregroundStyle(darkPrimary)
+                        .foregroundStyle(KropsTheme.labelPrimary)
 
                     Text(summaryText)
                         .font(.system(size: 14))
-                        .foregroundStyle(darkPrimary.opacity(0.72))
+                        .foregroundStyle(KropsTheme.labelSecondary)
                         .fixedSize(horizontal: false, vertical: true)
                 }
 
@@ -91,14 +86,14 @@ public struct NutrientConditionSummaryCardView: View {
                             .fill(Color.white)
                             .overlay(
                                 Circle()
-                                    .stroke(Color(red: 0.90, green: 0.91, blue: 0.93), lineWidth: 1.5)
+                                    .stroke(KropsTheme.surfaceControl, lineWidth: 1.5)
                             )
                     } else if item.symbol == "Mg" {
                         Circle()
-                            .fill(lightGray)
+                            .fill(KropsTheme.surfaceCardRaised)
                     } else {
                         Circle()
-                            .fill(orangeColor)
+                            .fill(KropsTheme.accentHero)
                     }
                 }
                 .frame(width: 64, height: 64)
@@ -134,7 +129,7 @@ public struct NutrientConditionSummaryCardView: View {
 
                 Text(item.name)
                     .font(.system(size: 12, weight: .regular))
-                    .foregroundStyle(darkPrimary.opacity(0.72))
+                    .foregroundStyle(KropsTheme.labelSecondary)
             }
         }
     }
@@ -142,9 +137,9 @@ public struct NutrientConditionSummaryCardView: View {
     private func badgeTextColor(for item: NutrientStatusSummaryItem) -> Color {
         switch item.symbol {
         case "P":
-            return statusRed
+            return KropsTheme.accentPrimary
         case "Mg":
-            return darkPrimary
+            return KropsTheme.labelPrimary
         default:
             return Color.white
         }
@@ -153,9 +148,9 @@ public struct NutrientConditionSummaryCardView: View {
     private func statusMarkBackground(for status: NutrientConditionStatus) -> Color {
         switch status {
         case .cukup:
-            return darkPrimary
+            return KropsTheme.surfaceInverse
         case .kurang, .berlebih:
-            return orangeColor
+            return KropsTheme.accentHero
         }
     }
 
@@ -174,9 +169,9 @@ public struct NutrientConditionSummaryCardView: View {
     private func statusTextColor(for status: NutrientConditionStatus) -> Color {
         switch status {
         case .cukup:
-            return darkPrimary
+            return KropsTheme.labelPrimary
         case .kurang, .berlebih:
-            return statusRed
+            return KropsTheme.accentPrimary
         }
     }
 }
@@ -186,5 +181,5 @@ public struct NutrientConditionSummaryCardView: View {
         nutrients: ResultOverviewItem.sample.nutrients
     )
     .padding()
-    .background(Color(red: 0.95, green: 0.96, blue: 0.97))
+    .background(KropsTheme.surfaceBackground)
 }

@@ -67,14 +67,14 @@ public struct NutrientConditionView: View {
                             Task { await viewModel.load() }
                         }
                         .buttonStyle(.borderedProminent)
-                        .tint(Color(red: 0.18, green: 0.42, blue: 0.25))
+                        .tint(KropsTheme.surfaceInverse)
                     }
                     .padding(32)
                     .frame(maxWidth: .infinity, minHeight: 200)
                 }
             }
         }
-        .background(Color(hex: 0xF2F4F7).ignoresSafeArea())
+        .background(KropsTheme.surfaceBackground.ignoresSafeArea())
         .task {
             if viewModel.overview == nil {
                 await viewModel.load()
@@ -93,7 +93,7 @@ public struct NutrientConditionView: View {
             Button(action: handleBack) {
                 Image(systemName: "chevron.left")
                     .font(.system(size: 18, weight: .semibold))
-                    .foregroundStyle(Color(red: 0.08, green: 0.08, blue: 0.09))
+                    .foregroundStyle(KropsTheme.labelPrimary)
                     .frame(width: 44, height: 44)
                     .background(.ultraThinMaterial, in: Circle())
             }
@@ -110,7 +110,7 @@ public struct NutrientConditionView: View {
                         Image(systemName: "chevron.right")
                             .font(.system(size: 12, weight: .bold))
                     }
-                    .foregroundStyle(Color(red: 0.08, green: 0.08, blue: 0.09))
+                    .foregroundStyle(KropsTheme.labelPrimary)
                     .padding(.horizontal, 14)
                     .padding(.vertical, 10)
                     .background(.ultraThinMaterial, in: Capsule())
@@ -127,7 +127,7 @@ public struct NutrientConditionView: View {
         VStack(alignment: .leading, spacing: 6) {
             Text(viewModel.overview?.title ?? "Kondisi Hara")
                 .font(.largeTitle.bold())
-                .foregroundStyle(Color(red: 0.08, green: 0.08, blue: 0.09))
+                .foregroundStyle(KropsTheme.labelPrimary)
 
             Text(viewModel.overview?.subtitle ?? "Belum seimbang, dihitung per tahun untuk seluruh kebun")
                 .font(.subheadline)
@@ -159,15 +159,4 @@ public struct NutrientConditionView: View {
 
 // MARK: - Color Hex Helper
 
-private extension Color {
-    init(hex: UInt32, alpha: Double = 1.0) {
-        self.init(
-            .sRGB,
-            red: Double((hex >> 16) & 0xFF) / 255.0,
-            green: Double((hex >> 8) & 0xFF) / 255.0,
-            blue: Double(hex & 0xFF) / 255.0,
-            opacity: alpha
-        )
-    }
-}
 

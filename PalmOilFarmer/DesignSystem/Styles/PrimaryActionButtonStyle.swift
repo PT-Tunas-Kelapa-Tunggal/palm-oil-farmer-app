@@ -9,7 +9,7 @@ struct PrimaryActionButtonStyle: PrimitiveButtonStyle {
             Button(configuration)
                 .buttonStyle(.glassProminent)
                 .buttonBorderShape(.capsule)
-                .tint(KropsTheme.buttonBackground)
+                .tint(KropsTheme.surfaceInverse)
                 .controlSize(.large)
         } else {
             Button(configuration)

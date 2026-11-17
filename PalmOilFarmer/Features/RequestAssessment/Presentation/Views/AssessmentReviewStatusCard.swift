@@ -36,7 +36,6 @@ struct AssessmentReviewStatusCard: View {
     @State private var hasRevealedCheckmark = false
 
     private var dark: Bool { colorScheme == .dark }
-    private var palette: AssessmentPalette { .init(isDark: dark) }
 
     var body: some View {
         AssessmentGardenStatusCard {
@@ -48,7 +47,7 @@ struct AssessmentReviewStatusCard: View {
                     .accessibilityAddTraits(.isHeader)
                 Text(description)
                     .font(.body)
-                    .foregroundStyle(palette.secondary)
+                    .foregroundStyle(KropsTheme.labelSecondary)
             }
             .id(status.phase)
             .transition(.opacity)
@@ -81,14 +80,14 @@ struct AssessmentReviewStatusCard: View {
                         .frame(minHeight: buttonHeight)
                 }
                 .buttonStyle(.plain)
-                .foregroundStyle(palette.buttonLabel)
-                .glassEffect(.regular.tint(palette.buttonTint).interactive(), in: Capsule())
+                .foregroundStyle(KropsTheme.labelInversePrimary)
+                .glassEffect(.regular.tint(KropsTheme.surfaceInverse).interactive(), in: Capsule())
             case .ready:
                 primaryButton("Unduh Hasil Peninjauan", enabled: true)
             case .downloading:
                 Button(action: onAction) { buttonLabel("Batalkan Unduhan") }
                     .buttonStyle(.plain)
-                    .foregroundStyle(dark ? palette.primary : palette.accent)
+                    .foregroundStyle(KropsTheme.accentPrimary)
             case .downloaded:
                 primaryButton("Lihat Hasil Peninjauan", enabled: true)
             }
@@ -173,11 +172,11 @@ struct AssessmentReviewStatusCard: View {
         if let timestamp, let size, !dark {
             Text("\(timestamp) (\(size))")
                 .font(.footnote)
-                .foregroundStyle(palette.secondary)
+                .foregroundStyle(KropsTheme.labelSecondary)
         } else if !parts.isEmpty {
             Text(parts.joined(separator: " · "))
                 .font(.footnote)
-                .foregroundStyle(palette.secondary)
+                .foregroundStyle(KropsTheme.labelSecondary)
         }
     }
 
@@ -187,10 +186,10 @@ struct AssessmentReviewStatusCard: View {
                 if !dark, let fraction = progress.fraction {
                     GeometryReader { geometry in
                         Capsule()
-                            .fill(palette.background)
+                            .fill(KropsTheme.surfaceBackground)
                             .overlay(alignment: .leading) {
                                 Capsule()
-                                    .fill(palette.accent)
+                                    .fill(KropsTheme.accentHero)
                                     .frame(width: geometry.size.width * fraction)
                             }
                     }
@@ -199,7 +198,7 @@ struct AssessmentReviewStatusCard: View {
                     .accessibilityValue(Text(fraction, format: .percent.precision(.fractionLength(0))))
                 } else {
                     ProgressView(value: progress.fraction)
-                        .tint(palette.accent)
+                        .tint(KropsTheme.accentHero)
                 }
             }
             .accessibilityLabel("Progres unduhan hasil peninjauan")
@@ -248,8 +247,8 @@ struct AssessmentReviewStatusCard: View {
     private func primaryButton(_ title: LocalizedStringKey, enabled: Bool) -> some View {
         Button(action: onAction) { buttonLabel(title) }
             .buttonStyle(.plain)
-            .foregroundStyle(palette.buttonLabel)
-            .glassEffect(.regular.tint(palette.buttonTint), in: Capsule())
+            .foregroundStyle(KropsTheme.labelInversePrimary)
+            .glassEffect(.regular.tint(KropsTheme.surfaceInverse), in: Capsule())
             .disabled(!enabled)
     }
 
@@ -285,7 +284,7 @@ struct AssessmentReviewStatusCard: View {
         completedAt: .now, expectedByteCount: 20_000_000, onAction: {}
     )
     .padding(16)
-    .background(AssessmentPalette.lightBackground)
+    .background(KropsTheme.surfaceBackground)
     .preferredColorScheme(.light)
 }
 

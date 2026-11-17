@@ -8,8 +8,6 @@ public struct GardenDataSummarySectionView: View {
     public let rows: [GardenDataSummaryRowItem]
     public var onTapRow: ((GardenDataSummaryRowItem) -> Void)?
 
-    private let darkPrimary = Color(red: 0.08, green: 0.08, blue: 0.09) // #141517
-    private let lightGrayCircle = Color(red: 0.95, green: 0.96, blue: 0.97) // #F2F4F7
 
     public init(
         title: String = "Data Kebun",
@@ -29,11 +27,11 @@ public struct GardenDataSummarySectionView: View {
             VStack(alignment: .leading, spacing: 3) {
                 Text(title)
                     .font(.system(size: 20, weight: .bold))
-                    .foregroundStyle(darkPrimary)
+                    .foregroundStyle(KropsTheme.labelPrimary)
 
                 Text(message)
                     .font(.system(size: 13))
-                    .foregroundStyle(darkPrimary.opacity(0.65))
+                    .foregroundStyle(KropsTheme.labelSecondary)
             }
             .padding(.horizontal, 4)
             .padding(.bottom, 2)
@@ -46,19 +44,19 @@ public struct GardenDataSummarySectionView: View {
                             // 40x40 circle background for icon
                             Image(systemName: item.iconSystemName)
                                 .font(.system(size: 16, weight: .semibold))
-                                .foregroundStyle(darkPrimary.opacity(0.65))
+                                .foregroundStyle(KropsTheme.labelSecondary)
                                 .frame(width: 40, height: 40)
-                                .background(lightGrayCircle)
+                                .background(KropsTheme.surfaceCardRaised)
                                 .clipShape(Circle())
 
                             VStack(alignment: .leading, spacing: 3) {
                                 Text(item.title)
                                     .font(.system(size: 15, weight: .semibold))
-                                    .foregroundStyle(darkPrimary)
+                                    .foregroundStyle(KropsTheme.labelPrimary)
 
                                 Text(item.subtitle)
                                     .font(.system(size: 13))
-                                    .foregroundStyle(darkPrimary.opacity(0.65))
+                                    .foregroundStyle(KropsTheme.labelSecondary)
                                     .lineLimit(1)
                             }
 
@@ -67,12 +65,12 @@ public struct GardenDataSummarySectionView: View {
                             if item.isLocked {
                                 Image(systemName: "lock.fill")
                                     .font(.system(size: 13, weight: .semibold))
-                                    .foregroundStyle(darkPrimary.opacity(0.35))
+                                    .foregroundStyle(KropsTheme.labelQuaternary)
                             }
 
                             Image(systemName: "chevron.right")
                                 .font(.system(size: 13, weight: .semibold))
-                                .foregroundStyle(darkPrimary.opacity(0.35))
+                                .foregroundStyle(KropsTheme.labelQuaternary)
                         }
                         .padding(.horizontal, 16)
                         .padding(.vertical, 16)
@@ -92,5 +90,5 @@ public struct GardenDataSummarySectionView: View {
         rows: ResultOverviewItem.sample.gardenDataRows
     )
     .padding()
-    .background(Color(red: 0.95, green: 0.96, blue: 0.97))
+    .background(KropsTheme.surfaceBackground)
 }

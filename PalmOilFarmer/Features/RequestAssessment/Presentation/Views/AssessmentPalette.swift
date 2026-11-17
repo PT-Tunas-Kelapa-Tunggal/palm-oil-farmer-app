@@ -1,5 +1,6 @@
 import SwiftUI
 
+@available(*, deprecated, message: "Tidak dipakai lagi. Pakai token KropsTheme; file ini dihapus saat pembersihan.")
 struct AssessmentPalette {
     let isDark: Bool
 

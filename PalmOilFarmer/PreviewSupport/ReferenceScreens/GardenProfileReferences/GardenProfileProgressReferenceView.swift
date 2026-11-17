@@ -48,7 +48,7 @@ struct GardenProfileProgressReferenceView: View {
             .frame(maxWidth: .infinity, alignment: .leading)
             .background {
                 ProfileCalloutShape(pointerFraction: step == .fertilizer ? 0.5 : 0.96)
-                    .fill(KropsTheme.cardFill)
+                    .fill(KropsTheme.surfaceCard)
             }
 
             Button(action: onContinue) {
@@ -59,7 +59,7 @@ struct GardenProfileProgressReferenceView: View {
                 }
                 .padding(16)
                 .frame(minHeight: 52)
-                .background(KropsTheme.cardFill, in: RoundedRectangle(cornerRadius: 24))
+                .background(KropsTheme.surfaceCard, in: RoundedRectangle(cornerRadius: 24))
             }
             .buttonStyle(.plain)
         }
@@ -77,7 +77,7 @@ struct GardenProfileProgressReferenceView: View {
         }
             .foregroundStyle(.white)
             .frame(width: 33, height: 33)
-            .background(index <= step.rawValue ? KropsTheme.primary : Color(uiColor: .systemGray3), in: Circle())
+            .background(index <= step.rawValue ? KropsTheme.surfaceInverse : KropsTheme.separatorOpaque, in: Circle())
             .overlay {
                 if index > step.rawValue {
                     Circle().fill(Color(uiColor: .systemGray3))
@@ -88,7 +88,7 @@ struct GardenProfileProgressReferenceView: View {
 
     private func progressLine(completed: Bool) -> some View {
         Rectangle()
-            .fill(completed ? KropsTheme.primary : Color(uiColor: .systemGray3))
+            .fill(completed ? KropsTheme.surfaceInverse : KropsTheme.separatorOpaque)
             .frame(height: 8)
     }
 }
@@ -126,11 +126,11 @@ private struct ProfileCalloutShape: Shape {
 
 #Preview("Fertilizer Step", traits: .sizeThatFitsLayout) {
     GardenProfileProgressReferenceView(step: .fertilizer, onContinue: {})
-        .frame(width: 402).background(KropsTheme.background)
+        .frame(width: 402).background(KropsTheme.surfaceBackground)
 }
 #Preview("Harvest Step", traits: .sizeThatFitsLayout) {
     GardenProfileProgressReferenceView(step: .harvest, onContinue: {})
-        .frame(width: 402).background(KropsTheme.background)
+        .frame(width: 402).background(KropsTheme.surfaceBackground)
 }
 
 #endif
