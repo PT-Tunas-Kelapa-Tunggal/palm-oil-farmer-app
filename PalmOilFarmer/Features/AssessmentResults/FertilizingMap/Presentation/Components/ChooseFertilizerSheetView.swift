@@ -4,6 +4,8 @@ public struct ChooseFertilizerSheetView: View {
     public let selectedFertilizer: FertilizerPeriodOption?
     public let availableFertilizers: [FertilizerPeriodOption]
     public let periodTitle: String
+    public let pendingFertilizerID: String?
+    public let errorMessage: String?
     public let onSelect: (FertilizerPeriodOption) -> Void
     public let onClose: () -> Void
 
@@ -11,12 +13,16 @@ public struct ChooseFertilizerSheetView: View {
         selectedFertilizer: FertilizerPeriodOption?,
         availableFertilizers: [FertilizerPeriodOption],
         periodTitle: String = "Pemupukan 1 · Jan–Feb 2027",
+        pendingFertilizerID: String? = nil,
+        errorMessage: String? = nil,
         onSelect: @escaping (FertilizerPeriodOption) -> Void,
         onClose: @escaping () -> Void
     ) {
         self.selectedFertilizer = selectedFertilizer
         self.availableFertilizers = availableFertilizers
         self.periodTitle = periodTitle
+        self.pendingFertilizerID = pendingFertilizerID
+        self.errorMessage = errorMessage
         self.onSelect = onSelect
         self.onClose = onClose
     }
@@ -29,7 +35,7 @@ public struct ChooseFertilizerSheetView: View {
                 VStack(spacing: 2) {
                     Text("Jenis Pupuk")
                         .font(.system(size: 20, weight: .semibold))
-                    Text(periodTitle)
+                    Text(pendingFertilizerID == nil ? periodTitle : "Memuat data pupuk…")
                         .font(.system(size: 14))
                         .foregroundStyle(.secondary)
                 }
@@ -41,10 +47,19 @@ public struct ChooseFertilizerSheetView: View {
                         .background(.quaternary, in: Circle())
                 }
                 .buttonStyle(.plain)
+                .disabled(pendingFertilizerID != nil)
             }
 
             ScrollView {
                 LazyVStack(spacing: 4) {
+                    if let errorMessage {
+                        Label(errorMessage, systemImage: "exclamationmark.triangle")
+                            .font(.footnote)
+                            .foregroundStyle(.red)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .padding(.horizontal, 12)
+                            .padding(.vertical, 8)
+                    }
                     ForEach(availableFertilizers) { fertilizer in
                         fertilizerRow(fertilizer)
                     }
@@ -59,12 +74,16 @@ public struct ChooseFertilizerSheetView: View {
 
     private func fertilizerRow(_ fertilizer: FertilizerPeriodOption) -> some View {
         let isSelected = selectedFertilizer?.id == fertilizer.id
+        let isPending = pendingFertilizerID == fertilizer.id
 
         return Button {
             onSelect(fertilizer)
         } label: {
             HStack(spacing: 12) {
-                if isSelected {
+                if isPending {
+                    ProgressView()
+                        .frame(width: 20)
+                } else if isSelected {
                     Image(systemName: "checkmark")
                         .font(.body.weight(.semibold))
                         .foregroundStyle(.tint)
@@ -76,9 +95,11 @@ public struct ChooseFertilizerSheetView: View {
                 VStack(alignment: .leading, spacing: 3) {
                     Text(fertilizer.name)
                         .font(.body.weight(.semibold))
-                    Text(fertilizer.timingSubtitle)
-                        .font(.subheadline)
-                        .foregroundStyle(.secondary)
+                    if !fertilizer.timingSubtitle.isEmpty {
+                        Text(fertilizer.timingSubtitle)
+                            .font(.subheadline)
+                            .foregroundStyle(.secondary)
+                    }
                 }
 
                 Spacer(minLength: 8)
@@ -90,7 +111,7 @@ public struct ChooseFertilizerSheetView: View {
             .padding(.horizontal, 12)
             .padding(.vertical, 10)
             .background {
-                if isSelected {
+                if isSelected || isPending {
                     RoundedRectangle(cornerRadius: 26, style: .continuous)
                         .fill(Color.black.opacity(0.12))
                 }
@@ -98,6 +119,7 @@ public struct ChooseFertilizerSheetView: View {
             .contentShape(RoundedRectangle(cornerRadius: 26, style: .continuous))
         }
         .buttonStyle(.plain)
+        .disabled(pendingFertilizerID != nil)
     }
 }
 

@@ -69,7 +69,7 @@ actor CloudKitFertilizingMapRepository: FertilizingMapRepositoryProtocol {
             let amount = Self.totalAmount(matching, treeCount: farm.totalTrees)
             let division: AreaDivisionMode = matching.allSatisfy { $0.fertilizerApplicationType == .general } ? .wholeFarm : .perZona
             return FertilizerPeriodOption(id: optionType.rawValue, name: optionType.rawValue,
-                timingSubtitle: "Dosis anjuran dari CloudKit", totalDose: Self.kg(amount),
+                timingSubtitle: "", totalDose: Self.kg(amount),
                 perTreeDose: Self.kg(farm.totalTrees > 0 ? amount / Double(farm.totalTrees) : amount),
                 defaultDivision: division)
         }

@@ -172,6 +172,8 @@ public struct FertilizingMapView: View {
                     ChooseFertilizerSheetView(
                         selectedFertilizer: item.selectedFertilizer,
                         availableFertilizers: item.availableFertilizers,
+                        pendingFertilizerID: viewModel.pendingFertilizerID,
+                        errorMessage: viewModel.fertilizerSelectionError,
                         onSelect: { selected in
                             Task { await viewModel.selectFertilizer(selected) }
                         },
@@ -184,6 +186,7 @@ public struct FertilizingMapView: View {
                     .presentationBackground(.thickMaterial)
                     .presentationCornerRadius(38)
                     .presentationBackgroundInteraction(.enabled)
+                    .interactiveDismissDisabled(viewModel.pendingFertilizerID != nil)
                 }
 
             case .chooseAreaDivision:

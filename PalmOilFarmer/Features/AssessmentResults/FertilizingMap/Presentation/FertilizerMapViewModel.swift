@@ -21,6 +21,8 @@ public final class FertilizingMapViewModel {
     public var activeModalSheet: ActiveModalSheet?
     public var isLoading: Bool = false
     public var errorMessage: String?
+    public var pendingFertilizerID: String?
+    public var fertilizerSelectionError: String?
 
     private let initialFertilizerName: String?
 
@@ -77,19 +79,32 @@ public final class FertilizingMapViewModel {
     }
 
     public func selectFertilizer(_ option: FertilizerPeriodOption) async {
+        guard pendingFertilizerID == nil else { return }
+        if item?.selectedFertilizer.id == option.id {
+            activeModalSheet = nil
+            return
+        }
+
+        pendingFertilizerID = option.id
+        fertilizerSelectionError = nil
+        defer { pendingFertilizerID = nil }
+
         do {
             var updated = try await repository.selectFertilizer(fertilizerId: option.id, for: gardenId)
             updated.isMarkedDone = item?.isMarkedDone ?? false
+            if let selectedZone {
+                self.selectedZone = updated.zones.first(where: { $0.id == selectedZone.id })
+            }
             item = updated
+            if option.defaultDivision == .wholeFarm {
+                areaDivision = .wholeFarm
+            } else if areaDivision == .wholeFarm {
+                areaDivision = option.defaultDivision
+            }
+            activeModalSheet = nil
         } catch {
-            errorMessage = error.localizedDescription
+            fertilizerSelectionError = error.localizedDescription
         }
-        if option.defaultDivision == .wholeFarm {
-            areaDivision = .wholeFarm
-        } else if areaDivision == .wholeFarm {
-            areaDivision = option.defaultDivision
-        }
-        activeModalSheet = nil
     }
 
     public func selectAreaDivision(_ mode: AreaDivisionMode) {
@@ -98,6 +113,7 @@ public final class FertilizingMapViewModel {
     }
 
     public func openFertilizerSelector() {
+        fertilizerSelectionError = nil
         activeModalSheet = .chooseFertilizer
     }
 
