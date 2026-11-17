@@ -251,14 +251,14 @@ final class CloudKitResultOverviewRepository: ResultOverviewRepositoryProtocol, 
             id: gardenId, gardenName: reader.farmName().or("Kebun"), locationName: reader.farmAddress().or(""),
             recommendationSubtitle: "\(periods.count) kali pemupukan berdasarkan jadwal tersimpan", periods: periods,
             nutrientStatusTitle: low == 0 && high == 0 ? "Seimbang" : "Belum Seimbang",
-            nutrientStatusSummary: "\(low) unsur kurang dan \(high) unsur berlebih berdasarkan data CloudKit.",
+            nutrientStatusSummary: "Hasil dari praktik pemupukan Anda sebelumnya: \(low) hara kurang dan \(high) berlebih",
             nutrients: nutrientItems,
             greenness: FarmGreennessSummary(affectedTreeCount: 0, totalTreeCount: 0, statusDescription: "hasil pemantauan drone"),
             fertilizerEstimation: FertilizerEstimationSummary(totalCost: estimation.totalCost,
                 fertilizerTypeCount: estimation.fertilizers.count, budgetLimit: estimation.budgetLimit),
             gardenDataRows: [
-                GardenDataSummaryRowItem(id: "identity", title: "Identitas Kebun", subtitle: "Lokasi, luas, tahun tanam, jenis tanah", iconSystemName: "square.dashed.inset.filled"),
-                GardenDataSummaryRowItem(id: "history", title: "Riwayat Panen dan Pemupukan", subtitle: "Dasar perhitungan kondisi hara", iconSystemName: "doc.text")
+                GardenDataSummaryRowItem(id: "identity", title: "Identitas Kebun", subtitle: "Lokasi, luas, tahun tanam, jenis tanah", iconSystemName: "square.dashed.inset.filled", isLocked: false),
+                GardenDataSummaryRowItem(id: "history", title: "Riwayat Panen dan Pemupukan", subtitle: "Dasar perhitungan kondisi hara", iconSystemName: "doc.text", isLocked: false)
             ]
         )
     }

@@ -194,7 +194,7 @@ public struct ResultOverviewView: View {
         switch item.id {
         case "identity":
             onOpenGardenIdentity?()
-        case "logs":
+        case "history", "logs":
             onOpenGardenLogs?()
         case "request":
             onOpenAssessmentSubmission?()

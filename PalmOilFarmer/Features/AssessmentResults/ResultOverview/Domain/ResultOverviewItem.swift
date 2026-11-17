@@ -215,14 +215,14 @@ extension ResultOverviewItem {
                 title: "Identitas Kebun",
                 subtitle: "Lokasi, luas, tahun tanam, jenis tanah",
                 iconSystemName: "square.dashed.inset.filled",
-                isLocked: true
+                isLocked: false
             ),
             GardenDataSummaryRowItem(
-                id: "logs",
+                id: "history",
                 title: "Riwayat Panen dan Pemupukan",
                 subtitle: "Dasar perhitungan kondisi hara",
                 iconSystemName: "doc.text",
-                isLocked: true
+                isLocked: false
             ),
             GardenDataSummaryRowItem(
                 id: "request",
