@@ -116,6 +116,8 @@ struct ContentView: View {
                     gardenName: store.gardens.first(where: { $0.id.uuidString == gardenId })?.name,
                     locationName: store.gardens.first(where: { $0.id.uuidString == gardenId })?.locationName
                 ),
+                gardenBoundaryCoordinates: store.gardens.first(where: { $0.id.uuidString == gardenId })?
+                    .boundary.points.map { FarmMapCoordinate(latitude: $0.latitude, longitude: $0.longitude) } ?? [],
                 onBack: {
                     coordinator.pop()
                 },

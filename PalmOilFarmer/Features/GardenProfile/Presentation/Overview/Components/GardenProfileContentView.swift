@@ -156,11 +156,21 @@ struct GardenProfileContentView: View {
         }
         .frame(minHeight: 360)
         .background {
-            map.overlay(alignment: .top) {
-                // Satellite imagery needs a dark scrim for readable white map labels.
-                LinearGradient(colors: [.black.opacity(0.55), .clear], startPoint: .top, endPoint: .bottom)
+            map
+                .overlay(alignment: .top) {
+                    // Satellite imagery needs a dark scrim for readable white map labels.
+                    LinearGradient(colors: [.black.opacity(0.55), .clear], startPoint: .top, endPoint: .bottom)
+                        .allowsHitTesting(false)
+                }
+                .overlay(alignment: .bottom) {
+                    LinearGradient(
+                        colors: [.clear, KropsTheme.surfaceBackground],
+                        startPoint: .top,
+                        endPoint: .bottom
+                    )
+                    .frame(height: 160)
                     .allowsHitTesting(false)
-            }
+                }
         }
         .contextMenu {
             Button("Ubah data kebun", systemImage: "pencil", action: onEditGarden)

@@ -6,6 +6,7 @@ import SwiftUI
 public struct ResultOverviewView: View {
     @Environment(\.dismiss) private var dismiss
     @State private var viewModel: ResultOverviewViewModel
+    private let gardenBoundaryCoordinates: [FarmMapCoordinate]
 
     public var onBack: (() -> Void)?
     public var onOpenFertilizerSchedule: (() -> Void)?
@@ -19,6 +20,7 @@ public struct ResultOverviewView: View {
 
     public init(
         viewModel: ResultOverviewViewModel,
+        gardenBoundaryCoordinates: [FarmMapCoordinate] = [],
         onBack: (() -> Void)? = nil,
         onOpenFertilizerSchedule: (() -> Void)? = nil,
         fertilizerScheduleTransitionNamespace: Namespace.ID? = nil,
@@ -30,6 +32,7 @@ public struct ResultOverviewView: View {
         onOpenAssessmentSubmission: (() -> Void)? = nil
     ) {
         _viewModel = State(initialValue: viewModel)
+        self.gardenBoundaryCoordinates = gardenBoundaryCoordinates
         self.onBack = onBack
         self.onOpenFertilizerSchedule = onOpenFertilizerSchedule
         self.fertilizerScheduleTransitionNamespace = fertilizerScheduleTransitionNamespace
@@ -42,6 +45,7 @@ public struct ResultOverviewView: View {
     }
 
     public init(
+        gardenBoundaryCoordinates: [FarmMapCoordinate] = [],
         onBack: (() -> Void)? = nil,
         onOpenFertilizerSchedule: (() -> Void)? = nil,
         fertilizerScheduleTransitionNamespace: Namespace.ID? = nil,
@@ -53,6 +57,7 @@ public struct ResultOverviewView: View {
         onOpenAssessmentSubmission: (() -> Void)? = nil
     ) {
         _viewModel = State(initialValue: ResultOverviewViewModel())
+        self.gardenBoundaryCoordinates = gardenBoundaryCoordinates
         self.onBack = onBack
         self.onOpenFertilizerSchedule = onOpenFertilizerSchedule
         self.fertilizerScheduleTransitionNamespace = fertilizerScheduleTransitionNamespace
@@ -73,6 +78,7 @@ public struct ResultOverviewView: View {
                         gardenName: overview.gardenName,
                         locationName: overview.locationName,
                         heroImageName: overview.heroImageName,
+                        gardenBoundaryCoordinates: gardenBoundaryCoordinates,
                         onBack: handleBack
                     )
 
