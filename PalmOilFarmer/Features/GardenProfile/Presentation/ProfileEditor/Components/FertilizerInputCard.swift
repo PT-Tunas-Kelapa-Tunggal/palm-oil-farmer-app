@@ -3,6 +3,8 @@ import SwiftUI
 struct FertilizerInputCard: View {
     @Binding var draft: FertilizerInputDraft
     var focusedField: FocusState<GardenProfileEditorField?>.Binding
+    var showsDeleteButton: Bool
+    var onDelete: () -> Void
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
@@ -52,6 +54,17 @@ struct FertilizerInputCard: View {
                 .background(Color(uiColor: .tertiarySystemFill), in: RoundedRectangle(cornerRadius: 12))
             }
             .padding(.top, draft.kind == .npk ? 16 : 8).padding(.bottom, 8)
+            if showsDeleteButton {
+                Button(action: onDelete) {
+                    Label("Hapus", systemImage: "trash")
+                        .font(.body)
+                        .foregroundStyle(.red)
+                        .frame(maxWidth: .infinity, minHeight: 44)
+                }
+                .buttonStyle(.plain)
+                .accessibilityLabel("Hapus jenis pupuk \(draft.name)")
+                .padding(.top, 4)
+            }
         }
         .fixedSize(horizontal: false, vertical: true)
         .padding(.horizontal, 16).padding(.bottom, 8)
@@ -76,7 +89,8 @@ private struct FertilizerInputCardCanvas: View {
     @FocusState private var focusedField: GardenProfileEditorField?
 
     var body: some View {
-        FertilizerInputCard(draft: $draft, focusedField: $focusedField)
+        FertilizerInputCard(draft: $draft, focusedField: $focusedField,
+                            showsDeleteButton: true, onDelete: {})
             .padding(12)
             .environment(\.locale, Locale(identifier: "id_ID"))
     }

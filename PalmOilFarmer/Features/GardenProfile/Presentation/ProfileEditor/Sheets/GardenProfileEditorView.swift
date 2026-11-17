@@ -67,7 +67,15 @@ struct GardenProfileEditorView: View {
                         GardenProfileSectionHeader(title: "Jenis Pupuk",
                                             message: "Pupuk yang diberikan pada pemupukan terakhir.")
                         ForEach($viewModel.fertilizers) { $draft in
-                            FertilizerInputCard(draft: $draft, focusedField: $focusedField)
+                            FertilizerInputCard(
+                                draft: $draft,
+                                focusedField: $focusedField,
+                                showsDeleteButton: viewModel.fertilizers.count > 1 || !draft.isEmpty,
+                                onDelete: {
+                                    focusedField = nil
+                                    viewModel.removeFertilizer(id: draft.id)
+                                }
+                            )
                                 .contextMenu {
                                     Button("Hapus jenis pupuk", role: .destructive) { viewModel.removeFertilizer(id: draft.id) }
                                 }
