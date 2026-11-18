@@ -23,25 +23,16 @@ struct ContentView: View {
 
     var body: some View {
         @Bindable var coordinator = coordinator
-        TabView {
-            Tab("Home", systemImage: "house") {
-                NavigationStack(path: $coordinator.path) {
-                    DashboardView(viewModel: dashboardViewModel)
-                        .toolbar(.hidden, for: .navigationBar)
-                        .navigationDestination(for: AppRoute.self) { route in
-                            destination(for: route)
-                                .toolbar(.hidden, for: .tabBar)
-                        }
+        NavigationStack(path: $coordinator.path) {
+            DashboardView(viewModel: dashboardViewModel)
+                .toolbar(.hidden, for: .navigationBar)
+                .navigationDestination(for: AppRoute.self) { route in
+                    destination(for: route)
+                        .toolbar(.hidden, for: .tabBar)
                 }
-                .task {
-                    await dashboardViewModel.refresh()
-                }
-            }
-            Tab("Pemupukan", systemImage: "leaf") {
-                NavigationStack {
-                    WaypointGardenList(gardens: store.gardens)
-                }
-            }
+        }
+        .task {
+            await dashboardViewModel.refresh()
         }
         .environment(store)
         .environment(coordinator)
