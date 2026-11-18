@@ -159,7 +159,7 @@ final class CloudKitFertilizerEstimationRepository: FertilizerEstimationReposito
         needs.reduce(0) { sum, need in
             let unit = need.dosageUnit.lowercased()
             let multiplier = unit.contains("pohon") || unit.contains("tree") ? Double(treeCount) : 1
-            return sum + max(0, need.recommendedDosage) * multiplier
+            return sum + max(0, need.recommendedDosagePerZonePerYear) * multiplier
         }
     }
 
