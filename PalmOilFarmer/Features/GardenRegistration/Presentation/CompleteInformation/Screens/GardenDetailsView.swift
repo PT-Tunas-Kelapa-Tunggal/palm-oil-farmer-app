@@ -78,8 +78,12 @@ struct GardenDetailsView: View {
                     VStack(spacing: 0) {
                         RegistrationFormField(title: "Nama Kebun") {
                             HStack(spacing: 8) {
-                                Image(systemName: "mappin.and.ellipse").foregroundStyle(.secondary)
-                                TextField("cth: Pinggir jalan, Hilir sungai", text: $viewModel.name)
+                                Image(systemName: "pencil")
+                                    .font(.title2)
+                                    .foregroundStyle(KropsTheme.labelTertiary)
+                                    .accessibilityHidden(true)
+                                TextField("Nama Kebun", text: $viewModel.name,
+                                          prompt: Text("Cth: Kebun Belakang Rumah").foregroundStyle(KropsTheme.fillBlack30))
                                     .textInputAutocapitalization(.words)
                                     .focused($isNameFocused)
                                     .submitLabel(.done)
@@ -111,7 +115,7 @@ struct GardenDetailsView: View {
                                 }
                             } label: {
                                 selectionLabel(viewModel.soilType?.displayName,
-                                               placeholder: "Pilih jenis tanah", symbol: "leaf",
+                                               placeholder: "Pilih jenis tanah", symbol: "apple.meditate",
                                                trailing: "chevron.up.chevron.down")
                             }
                             .tint(.primary)
@@ -121,13 +125,7 @@ struct GardenDetailsView: View {
                         }
                     }
                     .padding(.horizontal, 16)
-                    .padding(.bottom, 16)
-                    .background {
-                        RoundedRectangle(cornerRadius: RegistrationStyle.cardRadius)
-                            .fill(KropsTheme.surfaceCard)
-                            .onTapGesture { isNameFocused = false }
-                    }
-                    .padding(.horizontal, 16)
+                    
                 }
                 .background {
                     Color.clear
@@ -157,7 +155,8 @@ struct GardenDetailsView: View {
         }
         .background(KropsTheme.surfaceBackground)
         .sheet(isPresented: $viewModel.showsPlantingDate) {
-            PlantingDatePickerView(month: viewModel.plantingMonth, year: viewModel.plantingYear ?? Calendar.current.component(.year, from: .now)) { month, year in
+            PlantingDatePickerView(month: viewModel.plantingYear == nil ? 10 : viewModel.plantingMonth,
+                                   year: viewModel.plantingYear ?? 2016) { month, year in
                 viewModel.plantingMonth = month
                 viewModel.plantingYear = year
             }
@@ -175,12 +174,15 @@ struct GardenDetailsView: View {
 
     private func selectionLabel(_ value: String?, placeholder: String, symbol: String, trailing: String) -> some View {
         HStack(spacing: 8) {
-            Image(systemName: symbol).foregroundStyle(.secondary).accessibilityHidden(true)
+            Image(systemName: symbol)
+                .font(.title2)
+                .foregroundStyle(KropsTheme.labelTertiary)
+                .accessibilityHidden(true)
             Text(value ?? placeholder)
-                .foregroundStyle(value == nil ? KropsTheme.labelQuaternary : KropsTheme.labelPrimary)
+                .foregroundStyle(value == nil ? KropsTheme.fillBlack30 : KropsTheme.labelPrimary)
                 .fixedSize(horizontal: false, vertical: true)
             Spacer(minLength: 0)
-            Image(systemName: trailing).font(.footnote).foregroundStyle(.tertiary)
+            Image(systemName: trailing).font(.footnote).foregroundStyle(KropsTheme.labelTertiary)
         }
         .frame(maxWidth: .infinity, minHeight: 44, alignment: .leading)
         .contentShape(Rectangle())

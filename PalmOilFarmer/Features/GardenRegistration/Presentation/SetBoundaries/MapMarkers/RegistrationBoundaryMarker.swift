@@ -1,18 +1,19 @@
 import SwiftUI
 
-/// Numbered corner point of the boundary being drawn.
+/// Numbered corner point of the boundary being drawn (Sketch "Atom / Vertex Pin").
+/// Every point looks the same; the active one only gets a thicker white border.
 struct RegistrationBoundaryMarker: View {
     let number: Int
     var isActive = false
-    @ScaledMetric(relativeTo: .footnote) private var size = 28
+    @ScaledMetric(relativeTo: .caption) private var size = 30
 
     var body: some View {
         Text(number.formatted())
-            .font(.footnote)
-            .foregroundStyle(isActive ? KropsTheme.labelInversePrimary : KropsTheme.accentHero)
+            .font(.caption.bold())
+            .foregroundStyle(KropsTheme.labelInversePrimary)
             .frame(minWidth: size, minHeight: size)
-            .background(isActive ? KropsTheme.accentHero : KropsTheme.surfaceCard, in: Circle())
-            .overlay { Circle().stroke(KropsTheme.accentHero, lineWidth: 2) }
+            .background(KropsTheme.accentHero, in: Circle())
+            .overlay { Circle().stroke(KropsTheme.labelInversePrimary, lineWidth: isActive ? 3 : 2) }
             .accessibilityLabel("Titik \(number)")
     }
 }

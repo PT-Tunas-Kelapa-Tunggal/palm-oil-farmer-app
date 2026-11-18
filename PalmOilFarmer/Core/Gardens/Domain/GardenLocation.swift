@@ -14,4 +14,6 @@ struct GardenLocation: Identifiable {
     var photoPreviewData: Data? = nil
     /// Set when mapping resumes a saved draft, so a successful save can remove it.
     var draftID: UUID? = nil
+    /// When the selected photo was taken, shown while confirming a photo location.
+    var photoDate: Date? = nil
 }

@@ -43,7 +43,8 @@ final class GardenPhotoPickerViewModel {
         guard loadID != nil, access == .allowed, let photo = photos.first(where: { $0.id == id }), let coordinate = photo.coordinate else { return false }
         let location = previewPhotoID == id ? previewLocation : nil
         onSelect(location ?? GardenLocation(name: "Lokasi dari foto", subtitle: "Foto kebun",
-                                           coordinate: coordinate, source: .photo))
+                                           coordinate: coordinate, source: .photo,
+                                           photoDate: photo.creationDate))
         return true
     }
 
@@ -70,6 +71,7 @@ final class GardenPhotoPickerViewModel {
         var location = await resolveLocation(coordinate)
         guard !Task.isCancelled, loadID == requestID, previewPhotoID == photoID else { return }
         location.source = .photo
+        location.photoDate = photo.creationDate
         previewLocation = location
     }
 

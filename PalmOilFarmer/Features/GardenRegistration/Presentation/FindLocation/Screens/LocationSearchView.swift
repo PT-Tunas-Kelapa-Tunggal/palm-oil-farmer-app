@@ -16,7 +16,9 @@ struct LocationSearchView: View {
         LocationSearchContent(
             query: $searchViewModel.query, isSearchFocused: $isSearchFocused,
             results: searchViewModel.results, isSearching: searchViewModel.isSearching,
-            isLocating: searchViewModel.isLocating, errorMessage: searchViewModel.errorMessage,
+            isLocating: searchViewModel.isLocating,
+            canDictate: searchViewModel.canDictate, isDictating: searchViewModel.isDictating,
+            errorMessage: searchViewModel.errorMessage,
             onSelect: { location in
                 isSearchFocused = false
                 searchViewModel.selectResult(location)
@@ -30,11 +32,16 @@ struct LocationSearchView: View {
                 searchViewModel.cancelPendingWork()
                 viewModel.openPhotoPicker()
             },
-            onClose: { viewModel.cancel(); dismiss() }
+            onClose: { viewModel.cancel(); dismiss() },
+            onDictate: {
+                isSearchFocused = false
+                searchViewModel.toggleDictation()
+            }
         )
         .task { isSearchFocused = !searchViewModel.query.isEmpty }
         .task(id: searchViewModel.query) { await searchViewModel.search() }
         .task(id: searchViewModel.locationRequestID) { await searchViewModel.locateCurrentIfRequested() }
+        .task(id: searchViewModel.dictationRequestID) { await searchViewModel.dictateIfRequested() }
         .sheet(isPresented: $viewModel.showsPhotoPicker, onDismiss: viewModel.photoPickerDidDismiss) {
             GardenPhotoPickerView(viewModel: viewModel.photoViewModel)
         }

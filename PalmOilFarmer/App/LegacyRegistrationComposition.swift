@@ -19,7 +19,8 @@ extension LocationSearchView {
                 locations: LegacyLocationSearchRepository(
                     base: services.locations, fixedResults: initialResults, search: searchLocations
                 ),
-                photos: services.photos
+                photos: services.photos,
+                dictation: services.dictation
             )
         }
         self.init(viewModel: factory.makeViewModel(

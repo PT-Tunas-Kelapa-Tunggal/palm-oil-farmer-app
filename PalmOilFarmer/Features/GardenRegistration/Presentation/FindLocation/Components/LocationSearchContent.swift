@@ -7,24 +7,36 @@ struct LocationSearchContent: View {
     let results: [GardenLocation]
     var isSearching = false
     var isLocating = false
+    var canDictate = false
+    var isDictating = false
     var errorMessage: String? = nil
     let onSelect: (GardenLocation) -> Void
     let onCurrentLocation: () -> Void
     let onPhoto: () -> Void
     let onClose: () -> Void
+    var onDictate: () -> Void = {}
 
     var body: some View {
         VStack(spacing: 0) {
             RegistrationHeader(title: "Cari Lokasi Kebun", onClose: onClose)
-            VStack(alignment: .leading, spacing: 4) {
+            VStack(alignment: .leading, spacing: 8) {
                 HStack(spacing: 8) {
                     Image(systemName: "magnifyingglass").font(.title2).foregroundStyle(.secondary)
-                    TextField("Cari patokan terdekat", text: $query)
+                    TextField("Cari patokan terdekat", text: $query,
+                              prompt: Text(isDictating ? "Mendengarkan…" : "Cari patokan terdekat"))
                         .focused(isSearchFocused)
                         .submitLabel(.search)
                         .autocorrectionDisabled()
                         .accessibilityLabel("Cari patokan terdekat")
-                    if !query.isEmpty {
+                    if showsMicrophone {
+                        Button(isDictating ? "Berhenti mendengarkan" : "Cari dengan suara",
+                               systemImage: isDictating ? "mic.fill" : "mic", action: onDictate)
+                            .labelStyle(.iconOnly)
+                            .font(.title3)
+                            .foregroundStyle(isDictating ? KropsTheme.accentHero : KropsTheme.labelSecondary)
+                            .symbolEffect(.pulse, isActive: isDictating)
+                            .frame(minWidth: 44, minHeight: 44)
+                    } else if !query.isEmpty {
                         Button("Hapus pencarian", systemImage: "xmark.circle.fill") { query = "" }
                             .labelStyle(.iconOnly)
                             .foregroundStyle(.tertiary)
@@ -32,8 +44,8 @@ struct LocationSearchContent: View {
                     }
                 }
                 .padding(.leading, 16)
-                .padding(.trailing, query.isEmpty ? 16 : 4)
-                .frame(minHeight: 52)
+                .padding(.trailing, showsMicrophone || !query.isEmpty ? 4 : 16)
+                .frame(minHeight: 48)
                 .glassEffect(.regular, in: Capsule())
                 Text("Contohnya nama desa, masjid, sekolah, atau simpang jalan di dekat kebun.")
                     .font(.footnote)
@@ -60,13 +72,12 @@ struct LocationSearchContent: View {
                                                 symbol: "mappin", isBrand: false) { onSelect(location) }
                     }
                     VStack(alignment: .leading, spacing: 2) {
-                        Text("Belum tahu alamat kebun").font(.title3.weight(.semibold)).accessibilityAddTraits(.isHeader)
+                        Text("Belum tahu alamat kebun").font(.title3.weight(.bold)).accessibilityAddTraits(.isHeader)
                         Text("Pilih cara yang paling mudah untuk Anda.")
-                            .font(.body).foregroundStyle(.secondary)
+                            .font(.subheadline).foregroundStyle(.secondary)
                     }
                     .padding(.horizontal, 16)
                     .padding(.top, results.isEmpty ? 0 : 12)
-                    .padding(.bottom, 8)
                     LocationOptionRow(title: "Saya sedang di kebun",
                                             subtitle: isLocating ? "Mencari lokasi…" : "Lokasi kebun diambil dari posisi Anda saat ini.",
                                             symbol: "location.fill", isLoading: isLocating,
@@ -77,13 +88,19 @@ struct LocationSearchContent: View {
                                             action: onPhoto)
                 }
                 .padding(.horizontal, 16)
-                .padding(.top, 16)
+                .padding(.top, 24)
                 .padding(.bottom, 16)
             }
             .scrollDismissesKeyboard(.immediately)
         }
         .background(KropsTheme.surfaceBackground)
         .presentationBackground(KropsTheme.surfaceCardRaised)
+    }
+
+    /// The microphone sits where the clear button goes: shown while the field is empty, and kept
+    /// while listening so the farmer can stop it even after words appear.
+    private var showsMicrophone: Bool {
+        canDictate && (isDictating || query.isEmpty)
     }
 }
 
@@ -109,7 +126,7 @@ struct LocationSearchContentPreview: View {
     var body: some View {
         LocationSearchContent(
             query: $query, isSearchFocused: $isFocused, results: results,
-            isSearching: isSearching, isLocating: isLocating, errorMessage: errorMessage,
+            isSearching: isSearching, isLocating: isLocating, canDictate: true, errorMessage: errorMessage,
             onSelect: { _ in }, onCurrentLocation: {}, onPhoto: {}, onClose: {}
         )
     }

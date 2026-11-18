@@ -166,4 +166,66 @@ struct LocationSearchViewModelTests {
         model.selectResult(value)
         #expect(selected?.id == value.id && selected?.coordinate == value.coordinate && selected?.source == value.source)
     }
+
+    // MARK: Voice search
+
+    @Test func dictationIsHiddenWithoutService() {
+        let model = LocationSearchViewModel(repository: LocationRepositoryStub(), onSelect: { _ in })
+        model.toggleDictation()
+        #expect(!model.canDictate && !model.isDictating && model.dictationRequestID == nil)
+    }
+
+    @Test func dictationWritesTranscriptIntoQuery() async {
+        let dictation = SpeechDictationStub()
+        dictation.texts = ["Gunung", "Gunung Kijang"]
+        let model = LocationSearchViewModel(repository: LocationRepositoryStub(), debounce: {},
+                                            dictation: dictation, onSelect: { _ in })
+        model.toggleDictation()
+        #expect(model.canDictate && model.isDictating)
+        await model.dictateIfRequested()
+        #expect(model.query == "Gunung Kijang" && !model.isDictating && model.errorMessage == nil)
+    }
+
+    @Test func secondTapStopsListening() {
+        let dictation = SpeechDictationStub()
+        let model = LocationSearchViewModel(repository: LocationRepositoryStub(), dictation: dictation, onSelect: { _ in })
+        model.toggleDictation()
+        model.toggleDictation()
+        #expect(dictation.stopCount == 1)
+    }
+
+    @Test func deniedPermissionExplainsWhereToAllowIt() async {
+        let dictation = SpeechDictationStub()
+        dictation.error = GardenSpeechDictationError.notAuthorized
+        let model = LocationSearchViewModel(repository: LocationRepositoryStub(), dictation: dictation, onSelect: { _ in })
+        model.toggleDictation()
+        await model.dictateIfRequested()
+        #expect(model.errorMessage == "Izinkan mikrofon dan pengenalan suara di Pengaturan untuk mencari dengan suara.")
+        #expect(!model.isDictating)
+    }
+
+    @Test func cancellingPendingWorkStopsDictation() {
+        let dictation = SpeechDictationStub()
+        let model = LocationSearchViewModel(repository: LocationRepositoryStub(), dictation: dictation, onSelect: { _ in })
+        model.toggleDictation()
+        model.cancelPendingWork()
+        #expect(dictation.stopCount == 1 && !model.isDictating && model.dictationRequestID == nil)
+    }
+}
+
+@MainActor
+private final class SpeechDictationStub: GardenSpeechDictating {
+    var texts: [String] = []
+    var error: (any Error)?
+    private(set) var stopCount = 0
+
+    func transcripts() -> AsyncThrowingStream<String, Error> {
+        let texts = texts, error = error
+        return AsyncThrowingStream { continuation in
+            for text in texts { continuation.yield(text) }
+            continuation.finish(throwing: error)
+        }
+    }
+
+    func stop() { stopCount += 1 }
 }

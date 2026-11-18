@@ -6,15 +6,18 @@ struct RegistrationFormField<Content: View>: View {
     @ViewBuilder let content: () -> Content
 
     var body: some View {
-        VStack(alignment: .leading, spacing: KropsTheme.Spacing.compact) {
-            Text(title).font(.body.weight(.semibold)).foregroundStyle(.secondary)
+        VStack(alignment: .leading, spacing: 6) {
+            Text(title)
+                .font(.body.bold())
+                .foregroundStyle(KropsTheme.labelSecondary)
+                .padding(.horizontal, 8)
             content()
-                .font(KropsTheme.Typography.body)
+                .font(.title3)
                 .frame(minHeight: 52)
                 .padding(.horizontal, KropsTheme.Spacing.field)
                 .background(KropsTheme.surfaceCard, in: RoundedRectangle(cornerRadius: 12))
         }
-        .padding(.top, 16)
+        .padding(.vertical, 8)
         .frame(maxWidth: .infinity, alignment: .leading)
     }
 }

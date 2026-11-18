@@ -59,6 +59,28 @@ struct GardenPhotoPickerViewModelTests {
         #expect(selections == [coordinate])
     }
 
+    @Test func selectedLocationKeepsWhenThePhotoWasTaken() async throws {
+        let repository = PhotoRepositoryStub()
+        repository.snapshot = GardenPhotoLibrarySnapshot(access: .allowed, photos: [try photo("known")])
+        var selected: GardenLocation?
+        let model = GardenPhotoPickerViewModel(repository: repository, onSelect: { selected = $0 })
+        await model.load()
+        #expect(model.selectPhoto(id: "known"))
+        #expect(selected?.photoDate == Date(timeIntervalSince1970: 1_000))
+    }
+
+    @Test func previewedLocationKeepsWhenThePhotoWasTaken() async throws {
+        let repository = PhotoRepositoryStub()
+        repository.snapshot = GardenPhotoLibrarySnapshot(access: .allowed, photos: [try photo("known")])
+        var selected: GardenLocation?
+        let model = GardenPhotoPickerViewModel(repository: repository, onSelect: { selected = $0 })
+        await model.load()
+        #expect(model.showPreview(for: "known"))
+        await model.preparePreview(for: "known")
+        #expect(model.confirmPreview(imageData: nil))
+        #expect(selected?.photoDate == Date(timeIntervalSince1970: 1_000) && selected?.source == .photo)
+    }
+
     @Test func invalidatedLoadCannotOverrideNewerLibrarySnapshot() async throws {
         let repository = ControlledPhotoRepository()
         let model = GardenPhotoPickerViewModel(repository: repository, onSelect: { _ in })

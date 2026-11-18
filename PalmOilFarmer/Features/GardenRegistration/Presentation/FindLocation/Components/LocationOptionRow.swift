@@ -3,6 +3,8 @@ import SwiftUI
 /// A selectable row for search results and alternative location sources.
 struct LocationOptionRow: View {
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
+    /// Sketch "Molecule / List Row" corner radius.
+    private static let cornerRadius: CGFloat = 20
     @ScaledMetric(relativeTo: .title3) private var iconSize = 36
     let title: String
     let subtitle: String
@@ -14,16 +16,16 @@ struct LocationOptionRow: View {
     var body: some View {
         let layout = dynamicTypeSize.isAccessibilitySize
             ? AnyLayout(VStackLayout(alignment: .leading, spacing: 12))
-            : AnyLayout(HStackLayout(spacing: 14))
+            : AnyLayout(HStackLayout(spacing: 12))
         Button(action: action) {
             layout {
                 Image(systemName: symbol)
-                    .font(.title3)
+                    .font(.subheadline)
                     .foregroundStyle(isBrand ? KropsTheme.accentHero : KropsTheme.labelSecondary)
                     .frame(width: iconSize, height: iconSize)
                     .background(isBrand ? KropsTheme.accentSoft : KropsTheme.fillBlack8, in: Circle())
                     .accessibilityHidden(true)
-                VStack(alignment: .leading, spacing: 0) {
+                VStack(alignment: .leading, spacing: 2) {
                     Text(title).font(.headline)
                     Text(subtitle).font(.subheadline).foregroundStyle(.secondary)
                 }
@@ -32,13 +34,13 @@ struct LocationOptionRow: View {
                 if isLoading {
                     ProgressView()
                 } else if !dynamicTypeSize.isAccessibilitySize {
-                    Image(systemName: "chevron.right").font(.subheadline).foregroundStyle(.secondary)
+                    Image(systemName: "chevron.right").font(.subheadline.bold()).foregroundStyle(KropsTheme.labelTertiary)
                 }
             }
             .padding(16)
-            .frame(maxWidth: .infinity, minHeight: 74, alignment: .leading)
-            .background(KropsTheme.surfaceCard, in: RoundedRectangle(cornerRadius: RegistrationStyle.cardRadius))
-            .contentShape(RoundedRectangle(cornerRadius: RegistrationStyle.cardRadius))
+            .frame(maxWidth: .infinity, minHeight: 76, alignment: .leading)
+            .background(KropsTheme.surfaceCard, in: RoundedRectangle(cornerRadius: Self.cornerRadius))
+            .contentShape(RoundedRectangle(cornerRadius: Self.cornerRadius))
         }
         .buttonStyle(.plain)
         .disabled(isLoading)

@@ -27,6 +27,7 @@ final class RegistrationIntroViewModel {
         weak var owner: RegistrationIntroViewModel?
         searchViewModel = LocationSearchViewModel(
             repository: services.locations, initialQuery: initialQuery, initialResults: initialResults,
+            dictation: services.dictation,
             onSelect: { owner?.selectLocation($0) }
         )
         photoViewModel = GardenPhotoPickerViewModel(
