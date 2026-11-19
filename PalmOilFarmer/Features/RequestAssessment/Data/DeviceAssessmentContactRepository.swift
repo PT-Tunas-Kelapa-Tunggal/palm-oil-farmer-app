@@ -38,6 +38,14 @@ struct DeviceAssessmentContactRepository: AssessmentContactRepository {
         return contacts
     }
 
+    func delete(_ contact: ReviewContactDetails) throws -> [ReviewContactDetails] {
+        var contacts = try loadContacts()
+        guard let index = contacts.firstIndex(of: contact) else { return contacts }
+        contacts.remove(at: index)
+        try write(contacts)
+        return contacts
+    }
+
     private enum UpdateError: LocalizedError {
         case missingContact, duplicateContact
 

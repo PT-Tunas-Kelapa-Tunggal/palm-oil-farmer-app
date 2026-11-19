@@ -16,7 +16,6 @@ struct SubmissionSuccessView: View {
                         .resizable()
                         .scaledToFit()
                         .frame(maxWidth: 370)
-                        .background(KropsTheme.surfaceCardRaised, in: RoundedRectangle(cornerRadius: 20))
                         .accessibilityHidden(true)
 
                     VStack(spacing: 8) {
