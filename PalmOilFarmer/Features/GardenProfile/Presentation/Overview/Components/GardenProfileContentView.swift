@@ -90,7 +90,9 @@ struct GardenProfileContentView: View {
                                     dataSection
                                         .transition(.opacity)
                                 }
-                            } else if isComplete || currentReviewStatus != nil {
+                            } else if !isComplete && currentReviewStatus != nil {
+                                lightCompletionCard
+                            } else if isComplete {
                                 readyCard
                                 dataSection
                             } else {

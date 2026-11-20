@@ -7,6 +7,42 @@ import Testing
 @MainActor
 struct CloudKitContractTests {
 
+    @Test func pendingGardenKeepsProfileReadinessAfterCloudKitReload() throws {
+        let gardenID = UUID()
+        let fertilizer = FertilizerCompositionItem(
+            fertilizerType: .urea,
+            dosagePerTree: DosagePerTree(value: "1.0", valueType: "double", valueUnit: "kg")
+        )
+        let incompleteRecord = try ScanRequestRecordWriter(
+            recordName: gardenID.uuidString,
+            farmName: "Kebun MDP",
+            farmAddress: "Nongsa Digital Park",
+            fertilizersCompositions: [fertilizer]
+        ).buildRecord()
+        let mapper = PlantationDomainMapper()
+        let incompleteGarden = Garden(reviewRequest: mapper.toDomain(
+            from: ScanRequestRecord(incompleteRecord), gardenID: gardenID
+        ))
+        #expect(incompleteGarden.review?.status == .submitted)
+        #expect(incompleteGarden.fertilizerRecords?.first?.name == "Urea")
+        #expect(!incompleteGarden.isProfileComplete)
+
+        let completeRecord = try ScanRequestRecordWriter(
+            recordName: gardenID.uuidString,
+            farmName: "Kebun MDP",
+            farmAddress: "Nongsa Digital Park",
+            fertilizersCompositions: [fertilizer],
+            harvestFrequencyPerMonth: 2,
+            averageHarvestWeightKg: 150
+        ).buildRecord()
+        let completeGarden = Garden(reviewRequest: mapper.toDomain(
+            from: ScanRequestRecord(completeRecord), gardenID: gardenID
+        ))
+        #expect(completeGarden.review?.status == .submitted)
+        #expect(completeGarden.harvestRecord?.frequencyPerMonth == 2)
+        #expect(completeGarden.isProfileComplete)
+    }
+
     @Test func testRecordWriterAndReaderRoundTrip() throws {
         let coordinates = [
             CLLocation(latitude: 1.6640, longitude: 101.4480),

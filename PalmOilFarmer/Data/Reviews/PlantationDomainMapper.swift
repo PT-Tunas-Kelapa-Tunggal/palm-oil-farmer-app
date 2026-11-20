@@ -205,10 +205,39 @@ public struct PlantationDomainMapper {
         }
 
         let plantingDate = reader.plantingMonthAndYear().or(Date())
+        let fertilizerRecords = reader.fertilizersCompositions().or([]).compactMap { item -> FertilizerUsage? in
+            guard let dose = Double(item.dosagePerTree.value), dose.isFinite else { return nil }
+            let elements = item.composition ?? []
+            func percentage(_ name: String) -> Double? {
+                guard let value = elements.first(where: { $0.name.caseInsensitiveCompare(name) == .orderedSame })?.value,
+                      let percentage = Double(value), percentage.isFinite else { return nil }
+                return percentage
+            }
+            let nitrogen = percentage("Nitrogen")
+            let phosphorus = percentage("Phosphorus")
+            let potassium = percentage("Potassium")
+            let magnesium = percentage("Magnesium")
+            let composition: FertilizerComposition? = [nitrogen, phosphorus, potassium, magnesium].allSatisfy { $0 == nil }
+                ? nil
+                : FertilizerComposition(nitrogen: nitrogen, phosphorus: phosphorus,
+                                        potassium: potassium, magnesium: magnesium)
+            return FertilizerUsage(name: item.fertilizerType.rawValue, bagWeightKg: nil,
+                                   bagCount: nil, doseKgPerTree: dose, composition: composition)
+        }
+        let harvestRecord: HarvestYield?
+        if let frequency = reader.harvestFrequencyPerMonth().orNil,
+           let weight = reader.averageHarvestWeightKg().orNil,
+           frequency > 0, weight.isFinite {
+            harvestRecord = HarvestYield(frequencyPerMonth: Int(frequency), latestWeightKg: weight)
+        } else {
+            harvestRecord = nil
+        }
         let agronomy = AgronomicProfile(
             plantingYear: Calendar.current.component(.year, from: plantingDate),
             plantingMonth: Calendar.current.component(.month, from: plantingDate),
             soilType: reader.soilType().or(.mineral).rawValue,
+            fertilizerRecords: fertilizerRecords,
+            harvestRecord: harvestRecord,
             fertilizationFrequencyPerYear: reader.fertilizingFrequencyPerYear().map(Int.init).orNil
         )
 
