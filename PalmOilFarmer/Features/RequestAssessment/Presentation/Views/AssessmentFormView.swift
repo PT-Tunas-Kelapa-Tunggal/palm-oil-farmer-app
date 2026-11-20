@@ -5,6 +5,7 @@ struct AssessmentFormView: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.colorScheme) private var colorScheme
     @FocusState private var focusedField: Field?
+    @State private var confirmsDeletion = false
 
     @ScaledMetric(relativeTo: .body) private var bodySize = 17.0
     @ScaledMetric(relativeTo: .title3) private var inputSize = 20.0
@@ -19,14 +20,20 @@ struct AssessmentFormView: View {
     @ScaledMetric(relativeTo: .body) private var inputHeight = 52.0
     @ScaledMetric(relativeTo: .body) private var addressHeight = 112.0
 
+    private let isPresentedInSheet: Bool
+    private let onDelete: (() -> Void)?
     private let onSave: (String, String, String) -> Void
     private enum Field: Hashable { case name, phone, address }
 
     init(
         viewModel: AssessmentFormViewModel,
+        isPresentedInSheet: Bool = false,
+        onDelete: (() -> Void)? = nil,
         onSave: @escaping (String, String, String) -> Void
     ) {
         _viewModel = State(initialValue: viewModel)
+        self.isPresentedInSheet = isPresentedInSheet
+        self.onDelete = onDelete
         self.onSave = onSave
     }
 
@@ -43,18 +50,20 @@ struct AssessmentFormView: View {
             header
             ScrollView {
                 VStack(alignment: .leading, spacing: 8) {
-                    VStack(alignment: .leading, spacing: 2) {
-                        Text("Narahubung")
-                            .font(.system(size: inputSize, weight: .semibold))
-                            .frame(minHeight: titleHeight)
-                        Text("Petugas menghubungi orang ini untuk menjadwalkan kunjungan ke kebun.")
-                            .font(.system(size: descriptionSize))
-                            .frame(minHeight: descriptionHeight, alignment: .topLeading)
-                            .foregroundStyle(KropsTheme.labelSecondary)
-                            .fixedSize(horizontal: false, vertical: true)
+                    if !isPresentedInSheet {
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text("Narahubung")
+                                .font(.system(size: inputSize, weight: .semibold))
+                                .frame(minHeight: titleHeight)
+                            Text("Petugas menghubungi orang ini untuk menjadwalkan kunjungan ke kebun.")
+                                .font(.system(size: descriptionSize))
+                                .frame(minHeight: descriptionHeight, alignment: .topLeading)
+                                .foregroundStyle(KropsTheme.labelSecondary)
+                                .fixedSize(horizontal: false, vertical: true)
+                        }
+                        .padding(.horizontal, 16)
+                        .padding(.bottom, 4)
                     }
-                    .padding(.horizontal, 16)
-                    .padding(.bottom, 4)
 
                     VStack(alignment: .leading, spacing: 0) {
                         field(title: "Nama lengkap", icon: "person", error: model.nameError) {
@@ -79,12 +88,12 @@ struct AssessmentFormView: View {
                                 .focused($focusedField, equals: .address)
                         }
                     }
-                    .padding(.horizontal, dark ? 16 : 0)
-                    .padding(.vertical, dark ? 8 : 0)
+                    .padding(.horizontal, dark && !isPresentedInSheet ? 16 : 0)
+                    .padding(.vertical, dark && !isPresentedInSheet ? 8 : 0)
                     .background(.clear, in: RoundedRectangle(cornerRadius: 20))
                 }
                 .padding(.horizontal, 16)
-                .padding(.top, 18)
+                .padding(.top, isPresentedInSheet ? 16 : 18)
                 .padding(.bottom, 24)
             }
             .scrollDismissesKeyboard(.interactively)
@@ -92,46 +101,71 @@ struct AssessmentFormView: View {
         .foregroundStyle(KropsTheme.labelPrimary)
         .background(KropsTheme.surfaceBackground.ignoresSafeArea())
         .toolbar(.hidden, for: .navigationBar)
-        .safeAreaInset(edge: .bottom) {
-            Button {
-                if viewModel.save(onSave: onSave) {
-                    focusedField = nil
-                } else if viewModel.nameError != nil {
-                    focusedField = .name
-                } else if viewModel.phoneError != nil {
-                    focusedField = .phone
-                } else {
-                    focusedField = .address
+        .safeAreaInset(edge: .bottom, spacing: 0) {
+            VStack(spacing: 8) {
+                saveButton
+                if onDelete != nil {
+                    Button(role: .destructive) {
+                        focusedField = nil
+                        confirmsDeletion = true
+                    } label: {
+                        Text("Hapus Narahubung")
+                            .font(.headline)
+                            .multilineTextAlignment(.center)
+                            .padding(.vertical, 12)
+                            .frame(maxWidth: .infinity, minHeight: inputHeight)
+                            .contentShape(Rectangle())
+                    }
+                    .buttonStyle(.plain)
+                    .foregroundStyle(KropsTheme.statusCritical)
                 }
-            } label: {
-                Text("Simpan Narahubung")
-                    .font(.system(size: bodySize, weight: .semibold))
-                    .multilineTextAlignment(.center)
-                    .frame(maxWidth: .infinity)
-                    .padding(.horizontal, 16)
-                    .padding(.vertical, 12)
-                    .frame(minHeight: inputHeight)
             }
-            .buttonStyle(.plain)
-            .foregroundStyle(KropsTheme.labelInversePrimary)
-            .glassEffect(.regular.tint(KropsTheme.surfaceInverse), in: Capsule())
             .padding(.horizontal, 16)
             .background(KropsTheme.surfaceBackground)
         }
+        .confirmationDialog("Hapus narahubung?", isPresented: $confirmsDeletion, titleVisibility: .visible) {
+            Button("Hapus Narahubung", role: .destructive) { onDelete?() }
+            Button("Batal", role: .cancel) {}
+        }
+    }
+
+    private var saveButton: some View {
+        Button {
+            if viewModel.save(onSave: onSave) {
+                focusedField = nil
+            } else if viewModel.nameError != nil {
+                focusedField = .name
+            } else if viewModel.phoneError != nil {
+                focusedField = .phone
+            } else {
+                focusedField = .address
+            }
+        } label: {
+            Text("Simpan Narahubung")
+                .font(.system(size: bodySize, weight: .semibold))
+                .multilineTextAlignment(.center)
+                .frame(maxWidth: .infinity)
+                .padding(.horizontal, 16)
+                .padding(.vertical, 12)
+                .frame(minHeight: inputHeight)
+        }
+        .buttonStyle(.plain)
+        .foregroundStyle(KropsTheme.labelInversePrimary)
+        .glassEffect(.regular.tint(KropsTheme.surfaceInverse), in: Capsule())
     }
 
     private var header: some View {
         HStack(spacing: 8) {
             Button { dismiss() } label: {
-                Image(systemName: "chevron.left")
+                Image(systemName: isPresentedInSheet ? "xmark" : "chevron.left")
                     .font(.system(size: bodySize, weight: .medium))
                     .frame(width: 44, height: 44)
                     .glassEffect(.regular, in: Circle())
             }
             .buttonStyle(.plain)
-            .accessibilityLabel("Kembali")
+            .accessibilityLabel(isPresentedInSheet ? "Tutup" : "Kembali")
 
-            Text("Ajukan Peninjauan")
+            Text(isPresentedInSheet ? "Narahubung" : "Ajukan Peninjauan")
                 .font(.system(size: bodySize, weight: .semibold))
                 .multilineTextAlignment(.center)
                 .fixedSize(horizontal: false, vertical: true)
@@ -141,6 +175,7 @@ struct AssessmentFormView: View {
                 .accessibilityHidden(true)
         }
         .padding(.horizontal, 16)
+        .padding(.top, isPresentedInSheet ? 16 : 0)
     }
 
     private func field<Content: View>(

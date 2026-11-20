@@ -74,13 +74,9 @@ struct AssessmentOverviewView: View {
         VStack(spacing: 8) {
             sectionHeader("Narahubung", description: "Petugas menghubungi orang ini untuk menjadwalkan kunjungan.")
             if !viewModel.contacts.isEmpty {
-                VStack(spacing: 0) {
-                    ForEach(viewModel.contacts.indices, id: \.self) { index in
-                        contactRow(viewModel.contacts[index], index: index)
-                    }
+                ForEach(viewModel.contacts.indices, id: \.self) { index in
+                    contactRow(viewModel.contacts[index], index: index)
                 }
-                .padding(.horizontal, 16)
-                .background(KropsTheme.surfaceInverse, in: RoundedRectangle(cornerRadius: 20))
             }
 
             Button(action: onAddContact) {
@@ -88,7 +84,7 @@ struct AssessmentOverviewView: View {
                     Image(systemName: "plus")
                         .foregroundStyle(KropsTheme.accentHero)
                         .accessibilityHidden(true)
-                    Text("Tambah narahubung lain")
+                    Text(viewModel.contacts.isEmpty ? "Tambah narahubung" : "Tambah narahubung lain")
                         .foregroundStyle(KropsTheme.accentPrimary)
                         .fixedSize(horizontal: false, vertical: true)
                 }
@@ -105,14 +101,16 @@ struct AssessmentOverviewView: View {
     private func contactRow(_ contact: ReviewContactDetails, index: Int) -> some View {
         let selected = viewModel.selectedContactIndex == index
         let contactSecondary = KropsTheme.labelInverseSecondary
-        return HStack(alignment: .top, spacing: 8) {
+        return ZStack(alignment: .topTrailing) {
             Button {
                 viewModel.selectContact(at: index)
             } label: {
                 HStack(alignment: .top, spacing: 12) {
                     checkmark(selected, onInverseCard: !dark)
                     VStack(alignment: .leading, spacing: 2) {
-                        Text(contact.name).font(.headline)
+                        Text(contact.name)
+                            .font(.headline)
+                            .padding(.trailing, 44)
                         Text(contact.phone).font(.subheadline).foregroundStyle(contactSecondary)
                         Text(contact.address).font(.subheadline).foregroundStyle(contactSecondary)
                     }
@@ -129,7 +127,7 @@ struct AssessmentOverviewView: View {
             Button {
                 onEditContact(contact)
             } label: {
-                Image(systemName: "pencil")
+                Image(systemName: "pencil.line")
                     .font(.headline)
                     .frame(width: 44, height: 44)
                     .contentShape(Rectangle())
@@ -138,7 +136,9 @@ struct AssessmentOverviewView: View {
             .padding(.top, 5)
             .accessibilityLabel("Ubah narahubung \(contact.name)")
         }
+        .padding(.horizontal, 16)
         .foregroundStyle(KropsTheme.labelInversePrimary)
+        .background(KropsTheme.surfaceInverse, in: RoundedRectangle(cornerRadius: 20))
     }
 
     private var budgetSection: some View {
@@ -158,7 +158,6 @@ struct AssessmentOverviewView: View {
                 .fixedSize(horizontal: false, vertical: true)
                 .frame(maxWidth: .infinity)
                 .padding(.top, 20)
-                .padding(.bottom, 4)
 
                 budgetSlider
 
@@ -207,51 +206,47 @@ struct AssessmentOverviewView: View {
     }
 
     private var budgetSlider: some View {
-        GeometryReader { proxy in
-            let inset = 16.0
-            let width = max(1, proxy.size.width - inset * 2)
-            let thumb = min(37, width)
-            let travel = width - thumb
-            let x = inset + thumb / 2 + travel * viewModel.budgetProgress
+        let range = AssessmentOverviewViewModel.budgetRange
+        let step = AssessmentOverviewViewModel.budgetStep
 
-            ZStack(alignment: .topLeading) {
-                Capsule()
-                    .fill(KropsTheme.fillGray1)
-                    .frame(width: width, height: 6)
-                    .position(x: inset + width / 2, y: 20)
-                Capsule()
-                    .fill(KropsTheme.surfaceInverseRaised)
-                    .frame(width: x - inset, height: 6)
-                    .position(x: inset + (x - inset) / 2, y: dark ? 26 : 20)
-                ForEach(0..<5) { tick in
-                    RoundedRectangle(cornerRadius: 3)
-                        .fill(KropsTheme.fillBlack12)
-                        .frame(width: 4, height: 4)
-                        .position(x: inset + thumb / 2 + travel * Double(tick) / 4, y: 29)
+        return VStack(spacing: 2) {
+            // A continuous native slider avoids drawing a tick for every budget step.
+            Slider(
+                value: Binding(
+                    get: { Double(viewModel.budgetPerHectare) },
+                    set: { value in
+                        let steps = ((value - Double(range.lowerBound)) / Double(step)).rounded()
+                        viewModel.setBudget(range.lowerBound + Int(steps) * step)
+                    }
+                ),
+                in: Double(range.lowerBound)...Double(range.upperBound)
+            )
+            .tint(KropsTheme.labelPrimary)
+            .frame(minHeight: 44)
+            .accessibilityLabel("Anggaran pupuk per hektar per tahun")
+            .accessibilityValue(viewModel.budgetText)
+            .accessibilityAdjustableAction { direction in
+                switch direction {
+                case .increment: viewModel.setBudget(viewModel.budgetPerHectare + step)
+                case .decrement: viewModel.setBudget(viewModel.budgetPerHectare - step)
+                @unknown default: break
                 }
-                Capsule()
-                    .fill(.white)
-                    .shadow(color: .black.opacity(dark ? 0 : 0.16), radius: 6, y: 3)
-                    .frame(width: thumb, height: 24)
-                    .position(x: x, y: 26)
             }
-            .frame(maxWidth: .infinity, maxHeight: .infinity)
-            .contentShape(Rectangle())
-            .gesture(DragGesture(minimumDistance: 0).onChanged { gesture in
-                guard travel > 0 else { return }
-                viewModel.setBudgetProgress((gesture.location.x - inset - thumb / 2) / travel)
-            })
-        }
-        .frame(height: 40)
-        .accessibilityElement(children: .ignore)
-        .accessibilityLabel("Anggaran pupuk per hektar per tahun")
-        .accessibilityValue(viewModel.budgetText)
-        .accessibilityAdjustableAction { direction in
-            switch direction {
-            case .increment: viewModel.adjustBudget(by: 1)
-            case .decrement: viewModel.adjustBudget(by: -1)
-            @unknown default: break
+
+            HStack(spacing: 0) {
+                ForEach(0..<5) { index in
+                    if index > 0 {
+                        Spacer(minLength: 0)
+                    }
+                    Circle()
+                        .fill(KropsTheme.labelSecondary.opacity(0.3))
+                        .frame(width: 4, height: 4)
+                }
             }
+            .padding(.horizontal, 19)
+            .offset(y: -7)
+            .allowsHitTesting(false)
+            .accessibilityHidden(true)
         }
     }
 
@@ -419,9 +414,18 @@ struct AssessmentRequestFlow: View {
             }
         )
         .sheet(item: $contactEditor) { editor in
-            NavigationStack {
-                AssessmentContactEditor(overview: overview, contact: editor.contact) { contactEditor = nil }
+            DynamicSheet(animation: .bouncy, size: .large) {
+                NavigationStack {
+                    AssessmentContactEditor(
+                        overview: overview,
+                        contact: editor.contact,
+                        isPresentedInSheet: true
+                    ) { contactEditor = nil }
+                }
             }
+            .presentationBackgroundInteraction(.disabled)
+            .presentationDragIndicator(.hidden)
+            .presentationContentInteraction(.scrolls)
         }
     }
 
@@ -439,18 +443,34 @@ private struct AssessmentContactEditor: View {
     let overview: AssessmentOverviewViewModel
     let onSaved: () -> Void
     private let contact: ReviewContactDetails?
+    private let isPresentedInSheet: Bool
     @State private var form: AssessmentFormViewModel
-    @State private var saveError: String?
+    @State private var contactError: ContactError?
 
-    init(overview: AssessmentOverviewViewModel, contact: ReviewContactDetails? = nil, onSaved: @escaping () -> Void) {
+    private struct ContactError {
+        let title: String
+        let message: String
+    }
+
+    init(
+        overview: AssessmentOverviewViewModel,
+        contact: ReviewContactDetails? = nil,
+        isPresentedInSheet: Bool = false,
+        onSaved: @escaping () -> Void
+    ) {
         self.overview = overview
         self.contact = contact
+        self.isPresentedInSheet = isPresentedInSheet
         self.onSaved = onSaved
         _form = State(initialValue: AssessmentFormViewModel(contact: contact))
     }
 
     var body: some View {
-        AssessmentFormView(viewModel: form) { name, phone, address in
+        AssessmentFormView(
+            viewModel: form,
+            isPresentedInSheet: isPresentedInSheet,
+            onDelete: deleteAction
+        ) { name, phone, address in
             do {
                 if let contact {
                     try overview.updateContact(contact, name: name, phone: phone, address: address)
@@ -459,16 +479,34 @@ private struct AssessmentContactEditor: View {
                 }
                 onSaved()
             } catch {
-                saveError = (error as? LocalizedError)?.errorDescription ?? "Coba simpan kembali."
+                contactError = ContactError(
+                    title: "Narahubung belum disimpan",
+                    message: (error as? LocalizedError)?.errorDescription ?? "Coba simpan kembali."
+                )
             }
         }
-        .alert("Narahubung belum disimpan", isPresented: Binding(
-            get: { saveError != nil },
-            set: { if !$0 { saveError = nil } }
+        .alert(contactError?.title ?? "", isPresented: Binding(
+            get: { contactError != nil },
+            set: { if !$0 { contactError = nil } }
         )) {
             Button("Mengerti", role: .cancel) {}
         } message: {
-            Text(saveError ?? "")
+            Text(contactError?.message ?? "")
+        }
+    }
+
+    private var deleteAction: (() -> Void)? {
+        guard let contact else { return nil }
+        return {
+            do {
+                try overview.deleteContact(contact)
+                onSaved()
+            } catch {
+                contactError = ContactError(
+                    title: "Narahubung belum dihapus",
+                    message: (error as? LocalizedError)?.errorDescription ?? "Coba hapus kembali."
+                )
+            }
         }
     }
 }

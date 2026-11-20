@@ -6,7 +6,6 @@ struct AssessmentStatusView: View {
 
     @Environment(\.dismiss) private var dismiss
     @Environment(\.colorScheme) private var colorScheme
-    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
 
     private var dark: Bool { colorScheme == .dark }
     private var track: Color {
@@ -14,6 +13,19 @@ struct AssessmentStatusView: View {
     }
 
     var body: some View {
+        DynamicSheet(animation: .bouncy, size: .halfscreen) {
+            sheetContent
+        }
+        .presentationBackgroundInteraction(.disabled)
+        .presentationDragIndicator(.hidden)
+        .presentationContentInteraction(.scrolls)
+        .presentationCornerRadius(38)
+        .presentationBackground {
+            Rectangle().fill(.regularMaterial)
+        }
+    }
+
+    private var sheetContent: some View {
         VStack(spacing: 0) {
             header
             ScrollView {
@@ -29,12 +41,6 @@ struct AssessmentStatusView: View {
         }
         .padding(.top, 12)
         .foregroundStyle(KropsTheme.labelPrimary)
-        .presentationDetents(dynamicTypeSize.isAccessibilitySize ? [.large] : [.height(viewModel.sheetHeight), .large])
-        .presentationDragIndicator(dark ? .visible : .hidden)
-        .presentationCornerRadius(38)
-        .presentationBackground {
-            Rectangle().fill(.regularMaterial)
-        }
     }
 
     private var header: some View {
