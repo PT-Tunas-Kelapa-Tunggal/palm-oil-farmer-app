@@ -5,22 +5,25 @@ import SwiftUI
 public struct FertilizerTotalCostCard: View {
     public let totalCost: String
     public let fertilizerCount: Int
-    public let budgetLimit: String
-    public let remainingBudget: String
     public let budgetProgress: Double
+    public let budgetStatusText: String
+    public let budgetBalanceText: String
+    public let isOverBudget: Bool
 
     public init(
         totalCost: String,
         fertilizerCount: Int,
-        budgetLimit: String,
-        remainingBudget: String,
-        budgetProgress: Double
+        budgetProgress: Double,
+        budgetStatusText: String,
+        budgetBalanceText: String,
+        isOverBudget: Bool
     ) {
         self.totalCost = totalCost
         self.fertilizerCount = fertilizerCount
-        self.budgetLimit = budgetLimit
-        self.remainingBudget = remainingBudget
         self.budgetProgress = budgetProgress
+        self.budgetStatusText = budgetStatusText
+        self.budgetBalanceText = budgetBalanceText
+        self.isOverBudget = isOverBudget
     }
 
     public var body: some View {
@@ -59,13 +62,13 @@ public struct FertilizerTotalCostCard: View {
 
                 // Budget Labels
                 HStack {
-                    Text("Di bawah anggaran \(budgetLimit)")
+                    Text(budgetStatusText)
                         .font(.footnote)
-                        .foregroundStyle(KropsTheme.labelPrimary)
+                        .foregroundStyle(isOverBudget ? KropsTheme.accentHero : KropsTheme.labelPrimary)
 
                     Spacer()
 
-                    Text("Sisa \(remainingBudget)")
+                    Text(budgetBalanceText)
                         .font(.footnote)
                         .foregroundStyle(.secondary)
                 }
@@ -82,9 +85,10 @@ public struct FertilizerTotalCostCard: View {
     FertilizerTotalCostCard(
         totalCost: "Rp7.850.000",
         fertilizerCount: 3,
-        budgetLimit: "Rp9.350.000",
-        remainingBudget: "Rp1.500.000",
-        budgetProgress: 0.84
+        budgetProgress: 0.84,
+        budgetStatusText: "Di bawah anggaran Rp9.350.000",
+        budgetBalanceText: "Sisa Rp1.500.000",
+        isOverBudget: false
     )
     .padding()
     .background(KropsTheme.surfaceBackground)

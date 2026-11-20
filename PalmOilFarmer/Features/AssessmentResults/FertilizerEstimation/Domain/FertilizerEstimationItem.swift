@@ -133,8 +133,25 @@ public struct FertilizerEstimationOverview: Identifiable, Equatable, Sendable {
         max(0, budgetLimit - totalCost)
     }
 
+    public var isOverBudget: Bool {
+        totalCost > budgetLimit
+    }
+
+    public var budgetStatusText: String {
+        if isOverBudget { return "Di atas anggaran \(formattedBudgetLimit)" }
+        if totalCost == budgetLimit { return "Sesuai anggaran \(formattedBudgetLimit)" }
+        return "Di bawah anggaran \(formattedBudgetLimit)"
+    }
+
+    public var budgetBalanceText: String {
+        if isOverBudget {
+            return "Kelebihan \(CurrencyFormatter.formatRupiah(totalCost - budgetLimit))"
+        }
+        return "Sisa \(formattedRemainingBudget)"
+    }
+
     public var budgetProgress: Double {
-        guard budgetLimit > 0 else { return 0 }
+        guard budgetLimit > 0 else { return totalCost > 0 ? 1 : 0 }
         return min(1.0, Double(totalCost) / Double(budgetLimit))
     }
 

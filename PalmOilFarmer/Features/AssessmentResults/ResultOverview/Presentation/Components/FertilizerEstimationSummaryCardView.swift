@@ -51,11 +51,11 @@ public struct FertilizerEstimationSummaryCardView: View {
 
                 // Budget comparison pill
                 HStack(spacing: 6) {
-                    Image(systemName: "checkmark.circle.fill")
+                    Image(systemName: estimation.isOverBudget ? "exclamationmark.circle.fill" : "checkmark.circle.fill")
                         .font(.system(size: 14, weight: .semibold))
                         .foregroundStyle(KropsTheme.accentHero)
 
-                    Text("Di bawah anggaran \(estimation.formattedBudgetLimit)")
+                    Text(estimation.budgetStatusText)
                         .font(.system(size: 13, weight: .semibold))
                         .foregroundStyle(KropsTheme.labelPrimary)
                 }

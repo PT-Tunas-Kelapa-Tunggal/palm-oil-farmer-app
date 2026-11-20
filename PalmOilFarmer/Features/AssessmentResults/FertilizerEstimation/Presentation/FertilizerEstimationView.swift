@@ -47,9 +47,10 @@ public struct FertilizerEstimationView: View {
                             FertilizerTotalCostCard(
                                 totalCost: overview.formattedTotalCost,
                                 fertilizerCount: overview.fertilizers.count,
-                                budgetLimit: overview.formattedBudgetLimit,
-                                remainingBudget: overview.formattedRemainingBudget,
-                                budgetProgress: overview.budgetProgress
+                                budgetProgress: overview.budgetProgress,
+                                budgetStatusText: overview.budgetStatusText,
+                                budgetBalanceText: overview.budgetBalanceText,
+                                isOverBudget: overview.isOverBudget
                             )
 
                             // Shopping List Section
