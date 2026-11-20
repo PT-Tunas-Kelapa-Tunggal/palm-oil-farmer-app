@@ -62,7 +62,17 @@ public struct FertilizerEstimationSummary: Equatable, Sendable {
     }
 
     public var isUnderBudget: Bool {
-        totalCost <= budgetLimit
+        totalCost < budgetLimit
+    }
+
+    public var isOverBudget: Bool {
+        totalCost > budgetLimit
+    }
+
+    public var budgetStatusText: String {
+        if isOverBudget { return "Di atas anggaran \(formattedBudgetLimit)" }
+        if totalCost == budgetLimit { return "Sesuai anggaran \(formattedBudgetLimit)" }
+        return "Di bawah anggaran \(formattedBudgetLimit)"
     }
 
     public var formattedTotalCost: String {
