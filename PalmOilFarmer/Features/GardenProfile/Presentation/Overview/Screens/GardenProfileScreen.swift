@@ -51,7 +51,7 @@ struct GardenProfileScreen: View {
         } message: {
             Text("Data tidak dapat dihapus dari perangkat. Coba lagi.")
         }
-        .navigationDestination(isPresented: $viewModel.showsSummary) {
+        .navigationDestination(isPresented: summaryPresented) {
             GardenProfileSummaryView(garden: garden,
                 onClose: viewModel.closeSummary, onEdit: viewModel.editSummary,
                 savedNotice: viewModel.savedNotice)
@@ -92,6 +92,17 @@ struct GardenProfileScreen: View {
                 }
             }
         }
+    }
+
+    /// The native back button writes `false` here; closing through the view model also clears the save notice.
+    private var summaryPresented: Binding<Bool> {
+        Binding(
+            get: { viewModel.showsSummary },
+            set: { shows in
+                if !shows { viewModel.closeSummary() }
+                viewModel.showsSummary = shows
+            }
+        )
     }
 
     /// The review request and the profile form are pages pushed onto the stack; the rest are sheets.

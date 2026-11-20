@@ -155,7 +155,7 @@ struct GardenProfileContentView: View {
                 .frame(maxWidth: .infinity)
                 Menu {
                     Button("Ubah data kebun", systemImage: "pencil", action: onEditGarden)
-                    if let onDelete { Button("Hapus kebun", systemImage: "trash", role: .destructive, action: onDelete) }
+                    if let onDelete { Button("Hapus kebun", systemImage: "trash", role: .destructive, action: onDelete).tint(KropsTheme.statusCritical) }
                 } label: {
                     Image(systemName: "ellipsis").font(.title2).foregroundStyle(KropsTheme.labelPrimary).frame(width: 44, height: 44)
                 }
@@ -191,9 +191,12 @@ struct GardenProfileContentView: View {
                     .allowsHitTesting(false)
                 }
         }
+        // The app tints controls orange; menu icons are black like native menus. Delete is tinted red below,
+        // because a destructive role only colours the text, while the icon follows the tint.
+        .tint(KropsTheme.labelPrimary)
         .contextMenu {
             Button("Ubah data kebun", systemImage: "pencil", action: onEditGarden)
-            if let onDelete { Button("Hapus kebun", systemImage: "trash", role: .destructive, action: onDelete) }
+            if let onDelete { Button("Hapus kebun", systemImage: "trash", role: .destructive, action: onDelete).tint(KropsTheme.statusCritical) }
         }
     }
 

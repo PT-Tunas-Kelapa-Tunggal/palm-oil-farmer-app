@@ -3,6 +3,7 @@ import SwiftUI
 /// "Profil Kebun" form page (pushed): harvest and fertilizer history.
 struct GardenProfileEditorView: View {
     @State private var viewModel: GardenProfileEditorViewModel
+    /// Kept for callers; the native back button pops the page.
     let onClose: () -> Void
     @FocusState private var focusedField: GardenProfileEditorField?
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
@@ -15,7 +16,6 @@ struct GardenProfileEditorView: View {
     var body: some View {
         @Bindable var viewModel = viewModel
         VStack(spacing: 0) {
-            GardenProfileHeader(onBack: close)
             ScrollView {
                 VStack(spacing: 28) {
                     VStack(spacing: 8) {
@@ -90,6 +90,8 @@ struct GardenProfileEditorView: View {
                         .onTapGesture { focusedField = nil }
                 }
             }
+            // Fields keep the app's orange cursor and menu checkmarks.
+            .tint(KropsTheme.accentPrimary)
             .scrollBounceBehavior(.always)
             .scrollDismissesKeyboard(.immediately)
             .background {
@@ -106,12 +108,12 @@ struct GardenProfileEditorView: View {
         .alert("Profil belum tersimpan", isPresented: Binding(
             get: { viewModel.errorMessage != nil }, set: { if !$0 { viewModel.validationIssue = nil } }
         )) { Button("Mengerti", role: .cancel) {} } message: { Text(viewModel.errorMessage ?? "") }
-        .toolbar(.hidden, for: .navigationBar)
-    }
-
-    private func close() {
-        focusedField = nil
-        onClose()
+        // Native bar with a centred "Profil Kebun" title, as in Sketch; back and swipe back pop the page.
+        .navigationTitle("Profil Kebun")
+        .navigationBarTitleDisplayMode(.inline)
+        .toolbar(.visible, for: .navigationBar)
+        // The app tints controls orange; bar buttons (‹, Ubah) are black as in Sketch.
+        .tint(KropsTheme.labelPrimary)
     }
 }
 

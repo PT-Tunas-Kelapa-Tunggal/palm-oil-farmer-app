@@ -7,6 +7,7 @@ struct GardenIdentityView: View {
     /// The data became the basis of a review result and can no longer change.
     var isLocked = false
     var referenceMapImage: String? = nil
+    /// Kept for callers; the native back button pops the page.
     let onBack: () -> Void
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
 
@@ -14,52 +15,51 @@ struct GardenIdentityView: View {
 
     var body: some View {
         let metrics = GardenDisplayMetrics(boundary: garden.boundary)
-        VStack(spacing: 0) {
-            GardenProfileHeader(title: "", onBack: onBack)
-            ScrollView {
-                VStack(alignment: .leading, spacing: 28) {
-                    VStack(alignment: .leading, spacing: 4) {
-                        Text("Identitas Kebun").font(.largeTitle.bold())
-                            .accessibilityAddTraits(.isHeader)
-                        Text(garden.name).font(.subheadline).foregroundStyle(KropsTheme.labelSecondary)
+        ScrollView {
+            VStack(alignment: .leading, spacing: 28) {
+                // The navigation bar shows "Identitas Kebun" as the large title.
+                Text(garden.name).font(.subheadline).foregroundStyle(KropsTheme.labelSecondary)
+                GardenMapView(boundary: garden.boundary, referenceImage: referenceMapImage,
+                              contentInsets: EdgeInsets(top: 20, leading: 20, bottom: 20, trailing: 20))
+                    .frame(height: 180)
+                    .clipShape(RoundedRectangle(cornerRadius: 20))
+                section("Lokasi", message: "Titik tengah kebun yang Anda tandai.") {
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("Wilayah").font(.subheadline).foregroundStyle(KropsTheme.labelSecondary)
+                        Text(garden.locationName).font(.headline)
                     }
-                    GardenMapView(boundary: garden.boundary, referenceImage: referenceMapImage,
-                                  contentInsets: EdgeInsets(top: 20, leading: 20, bottom: 20, trailing: 20))
-                        .frame(height: 180)
-                        .clipShape(RoundedRectangle(cornerRadius: 20))
-                    section("Lokasi", message: "Titik tengah kebun yang Anda tandai.") {
-                        VStack(alignment: .leading, spacing: 2) {
-                            Text("Wilayah").font(.subheadline).foregroundStyle(KropsTheme.labelSecondary)
-                            Text(garden.locationName).font(.headline)
-                        }
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                        .padding(.vertical, 14)
-                        .accessibilityElement(children: .combine)
-                        Divider()
-                        row("Koordinat", value: centerText)
-                    }
-                    section("Ukuran Kebun", message: "Dihitung dari batas kebun yang Anda petakan.") {
-                        row("Luas", value: metrics.area)
-                        Divider()
-                        row("Keliling", value: metrics.perimeter)
-                        Divider()
-                        row("Titik batas", value: "\(garden.boundary.points.count) titik")
-                    }
-                    section("Tanaman dan Tanah", message: "Data yang Anda isi saat mendaftarkan kebun.") {
-                        row("Tahun tanam", value: plantingText)
-                        Divider()
-                        row("Jenis tanah", value: garden.soilType.rawValue)
-                    }
-                    if isLocked {
-                        Text(lockedNote).font(.footnote).foregroundStyle(KropsTheme.labelSecondary)
-                    }
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(.vertical, 14)
+                    .accessibilityElement(children: .combine)
+                    Divider()
+                    row("Koordinat", value: centerText)
                 }
-                .foregroundStyle(KropsTheme.labelPrimary)
-                .padding(.horizontal, 16).padding(.top, 20).padding(.bottom, 34)
+                section("Ukuran Kebun", message: "Dihitung dari batas kebun yang Anda petakan.") {
+                    row("Luas", value: metrics.area)
+                    Divider()
+                    row("Keliling", value: metrics.perimeter)
+                    Divider()
+                    row("Titik batas", value: "\(garden.boundary.points.count) titik")
+                }
+                section("Tanaman dan Tanah", message: "Data yang Anda isi saat mendaftarkan kebun.") {
+                    row("Tahun tanam", value: plantingText)
+                    Divider()
+                    row("Jenis tanah", value: garden.soilType.rawValue)
+                }
+                if isLocked {
+                    Text(lockedNote).font(.footnote).foregroundStyle(KropsTheme.labelSecondary)
+                }
             }
+            .foregroundStyle(KropsTheme.labelPrimary)
+            .padding(.horizontal, 16).padding(.top, 4).padding(.bottom, 34)
         }
         .background(KropsTheme.surfaceBackground.ignoresSafeArea())
-        .toolbar(.hidden, for: .navigationBar)
+        .navigationTitle("Identitas Kebun")
+        .navigationBarTitleDisplayMode(.large)
+        // The profile page behind hides its bar; this page uses the native one (back button, swipe back).
+        .toolbar(.visible, for: .navigationBar)
+        // The app tints controls orange; bar buttons (‹, Ubah) are black as in Sketch.
+        .tint(KropsTheme.labelPrimary)
     }
 
     private func section<Rows: View>(_ title: String, message: String,
@@ -113,12 +113,16 @@ struct GardenIdentityView: View {
 
 #if DEBUG
 #Preview("Identitas kebun · Terkunci") {
-    GardenIdentityView(garden: GardenProfileCanvasFixtures.completeGarden, isLocked: true,
-                       referenceMapImage: "GardenProfileMap", onBack: {})
-        .environment(\.locale, Locale(identifier: "id_ID"))
+    NavigationStack {
+        GardenIdentityView(garden: GardenProfileCanvasFixtures.completeGarden, isLocked: true,
+                           referenceMapImage: "GardenProfileMap", onBack: {})
+    }
+    .environment(\.locale, Locale(identifier: "id_ID"))
 }
 #Preview("Identitas kebun · Teks besar") {
-    GardenIdentityView(garden: GardenProfileCanvasFixtures.completeGarden, onBack: {})
-        .environment(\.dynamicTypeSize, .accessibility3)
+    NavigationStack {
+        GardenIdentityView(garden: GardenProfileCanvasFixtures.completeGarden, onBack: {})
+    }
+    .environment(\.dynamicTypeSize, .accessibility3)
 }
 #endif
