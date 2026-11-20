@@ -20,7 +20,7 @@ struct GardenMapView: View {
                         .stroke(.white.opacity(0.9), lineWidth: 2)
                     if showsAnnotations {
                         ForEach(boundary.points.indices, id: \.self) { index in
-                            Annotation("", coordinate: boundary.points[index].mapCoordinate) {
+                            Annotation("", coordinate: boundary.points[index].mapCoordinate, anchor: .center) {
                                 BoundaryPointMarker(number: index + 1)
                             }
                         }
@@ -38,23 +38,14 @@ struct GardenMapView: View {
 
 struct BoundaryPointMarker: View {
     let number: Int
-    @ScaledMetric(relativeTo: .caption2) private var markerSize = 24
+    @ScaledMetric(relativeTo: .caption2) private var markerSize = 5
 
     var body: some View {
-        VStack(spacing: -1) {
-            Text(number.formatted())
-                .font(.caption2)
-                .foregroundStyle(.white)
-                .frame(minWidth: markerSize, minHeight: markerSize)
-                .background(KropsTheme.accentHero, in: Circle())
-                .overlay { Circle().stroke(.white, lineWidth: 1.5) }
-            Image(systemName: "triangle.fill")
-                .font(.caption2)
-                .imageScale(.small)
-                .rotationEffect(.degrees(180))
-                .foregroundStyle(.white)
-        }
-        .accessibilityLabel("Titik \(number)")
+        Circle()
+            .fill(KropsTheme.labelInversePrimary)
+            .overlay { Circle().stroke(KropsTheme.labelInversePrimary, lineWidth: 1.5) }
+            .frame(width: markerSize, height: markerSize)
+            .accessibilityLabel("Titik \(number)")
     }
 }
 

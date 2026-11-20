@@ -19,7 +19,8 @@ enum GardenRegistrationPreview {
         GardenLocation(name: "Malang Rapat",
                        subtitle: "Kecamatan Gunung Kijang, Kabupaten Bintan, Kepulauan Riau",
                        coordinate: GardenCoordinate(latitude: 1.104950, longitude: 104.121010),
-                       source: .photo)
+                       source: .photo,
+                       photoDate: Calendar.current.date(from: DateComponents(year: 2026, month: 11, day: 2, hour: 8, minute: 14)))
     }
 
     // MARK: Location

@@ -18,6 +18,7 @@ struct GardenRegistrationFactory {
     }
 
     static func liveServices() -> GardenRegistrationServices {
-        GardenRegistrationServices(locations: MapKitGardenLocationRepository(), photos: PhotosGardenPhotoRepository())
+        GardenRegistrationServices(locations: MapKitGardenLocationRepository(), photos: PhotosGardenPhotoRepository(),
+                                   dictation: SpeechDictationService())
     }
 }

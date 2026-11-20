@@ -9,7 +9,7 @@ enum DynamicSheetSize: String, CaseIterable {
     var detent: PresentationDetent {
         switch self {
         case .xsmall: .height(180)
-        case .small: .height(230)
+        case .small: .height(210)
         case .medium: .height(330)
         case .large: .large
         }

@@ -18,11 +18,11 @@ struct GardenSavedConfirmationView: View {
 
             VStack(spacing: KropsTheme.Spacing.compact) {
                 Text("Kebun Tersimpan")
-                    .font(.title2.bold())
+                    .font(.title.bold())
                     .accessibilityAddTraits(.isHeader)
                 Text("\(gardenName) seluas \(area) sudah masuk ke daftar kebun Anda.")
                     .font(KropsTheme.Typography.body)
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(.primary)
                     .multilineTextAlignment(.center)
             }
             if voiceOverEnabled {
