@@ -1,6 +1,6 @@
 import SwiftUI
 
-/// "Lengkapi / Ubah Profil" sheet: harvest and fertilizer form.
+/// "Profil Kebun" form page (pushed): harvest and fertilizer history.
 struct GardenProfileEditorView: View {
     @State private var viewModel: GardenProfileEditorViewModel
     let onClose: () -> Void
@@ -13,16 +13,6 @@ struct GardenProfileEditorView: View {
     }
 
     var body: some View {
-        DynamicSheet(animation: .bouncy, size: .large) {
-            sheetContent
-        }
-        .presentationBackgroundInteraction(.disabled)
-        .presentationDragIndicator(.hidden)
-        .presentationContentInteraction(.scrolls)
-    }
-
-    @ViewBuilder
-    private var sheetContent: some View {
         @Bindable var viewModel = viewModel
         VStack(spacing: 0) {
             GardenProfileHeader(onBack: close)
@@ -134,14 +124,14 @@ struct GardenProfileEditorView: View {
     GardenProfileEditorView(viewModel: GardenProfileCanvasFixtures.makeEditor(), onClose: {})
         .environment(\.locale, Locale(identifier: "id_ID"))
 }
-#Preview("Sheet Ubah Profil") {
-    SheetPreview(backdrop: "ProfileHiFiMap") {
+#Preview("Form profil · Dalam navigasi") {
+    NavigationStack {
         GardenProfileEditorView(viewModel: GardenProfileCanvasFixtures.makeEditor(), onClose: {})
     }
     .environment(\.locale, Locale(identifier: "id_ID"))
 }
-#Preview("Sheet Ubah Profil · Teks besar") {
-    SheetPreview(backdrop: "ProfileHiFiMap") {
+#Preview("Form profil · Teks besar") {
+    NavigationStack {
         GardenProfileEditorView(viewModel: GardenProfileCanvasFixtures.makeEditor(filled: false), onClose: {})
             .environment(\.dynamicTypeSize, .accessibility3)
     }

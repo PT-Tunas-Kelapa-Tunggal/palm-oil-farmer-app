@@ -230,7 +230,7 @@ private struct GardenHistoryDestination: View {
 
     var body: some View {
         GardenProfileSummaryView(garden: garden, onClose: onBack, onEdit: { isEditing = true })
-            .sheet(isPresented: $isEditing) {
+            .navigationDestination(isPresented: $isEditing) {
                 GardenProfileEditorView(
                     viewModel: GardenProfileEditorViewModel(
                         garden: garden,

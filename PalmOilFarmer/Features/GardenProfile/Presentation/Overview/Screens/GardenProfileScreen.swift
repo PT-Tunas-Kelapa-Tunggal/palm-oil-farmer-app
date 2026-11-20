@@ -53,21 +53,12 @@ struct GardenProfileScreen: View {
         .navigationDestination(isPresented: $viewModel.showsSummary) {
             GardenProfileSummaryView(garden: garden,
                 onClose: viewModel.closeSummary, onEdit: viewModel.editSummary)
-                .sheet(item: $viewModel.sheet, onDismiss: viewModel.sheetDidDismiss) { presentation in
-                    sheetContent(presentation)
+                .navigationDestination(item: summaryDestination) { presentation in
+                    pushedContent(presentation)
                 }
         }
-        .navigationDestination(item: reviewDestination) { presentation in
-            Group {
-                if let request = viewModel.makeReviewRequest(for: presentation) {
-                    ReviewRequestView(flow: request)
-                }
-            }
-            .onDisappear {
-                if viewModel.sheet == nil {
-                    viewModel.sheetDidDismiss()
-                }
-            }
+        .navigationDestination(item: rootDestination) { presentation in
+            pushedContent(presentation)
         }
         .sheet(isPresented: $viewModel.showsReviewStatus) {
             AssessmentStatusView(
@@ -97,25 +88,54 @@ struct GardenProfileScreen: View {
         }
     }
 
+    /// The review request and the profile form are pages pushed onto the stack; the rest are sheets.
+    private static func isPushed(_ kind: GardenProfileSheet.Kind) -> Bool {
+        kind == .review || kind == .profile
+    }
+
     private var rootSheet: Binding<GardenProfileSheet?> {
         Binding(
             get: {
-                guard !viewModel.showsSummary, viewModel.sheet?.kind != .review else { return nil }
-                return viewModel.sheet
+                guard !viewModel.showsSummary, let sheet = viewModel.sheet, !Self.isPushed(sheet.kind) else { return nil }
+                return sheet
             },
             set: { viewModel.sheet = $0 }
         )
     }
 
-    private var reviewDestination: Binding<GardenProfileSheet?> {
+    /// Pushed from the profile page itself.
+    private var rootDestination: Binding<GardenProfileSheet?> {
+        pushedDestination { !viewModel.showsSummary || $0 == .review }
+    }
+
+    /// Pushed from the history page ("Ubah" opens the profile form on top of it).
+    private var summaryDestination: Binding<GardenProfileSheet?> {
+        pushedDestination { viewModel.showsSummary && $0 == .profile }
+    }
+
+    private func pushedDestination(where shows: @escaping (GardenProfileSheet.Kind) -> Bool) -> Binding<GardenProfileSheet?> {
         Binding(
-            get: { viewModel.sheet?.kind == .review ? viewModel.sheet : nil },
+            get: {
+                guard let sheet = viewModel.sheet, Self.isPushed(sheet.kind), shows(sheet.kind) else { return nil }
+                return sheet
+            },
             set: { newValue in
-                if newValue == nil, viewModel.sheet?.kind == .review {
+                // Back button or swipe back: end the session like a dismissed sheet.
+                if newValue == nil, let kind = viewModel.sheet?.kind, Self.isPushed(kind) {
                     viewModel.sheetDidDismiss()
                 }
             }
         )
+    }
+
+    /// A pushed page that closed itself (saved or tapped ‹) clears `sheet` first; finish the session once it is gone.
+    private func pushedContent(_ presentation: GardenProfileSheet) -> some View {
+        sheetContent(presentation)
+            .onDisappear {
+                if viewModel.sheet == nil {
+                    viewModel.sheetDidDismiss()
+                }
+            }
     }
 
     private var deleteAction: (() -> Void)? {

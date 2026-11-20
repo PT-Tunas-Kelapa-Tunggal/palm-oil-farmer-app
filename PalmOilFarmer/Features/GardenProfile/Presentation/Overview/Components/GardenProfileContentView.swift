@@ -127,6 +127,13 @@ struct GardenProfileContentView: View {
         GardenMapView(boundary: garden.boundary, referenceImage: referenceMapImage)
     }
 
+    /// Keeps the boundary below the title row and above the metrics band that overlaps the map.
+    private func heroMap(topInset: CGFloat) -> some View {
+        GardenMapView(boundary: garden.boundary, referenceImage: referenceMapImage,
+                      contentInsets: EdgeInsets(top: topInset + 60, leading: 24, bottom: 56, trailing: 24),
+                      zoomOut: 1.1)
+    }
+
     private func hero(topInset: CGFloat) -> some View {
         VStack(spacing: 0) {
             HStack(alignment: .top, spacing: 16) {
@@ -158,15 +165,21 @@ struct GardenProfileContentView: View {
         }
         .frame(minHeight: 360)
         .background {
-            map
+            heroMap(topInset: topInset)
                 .overlay(alignment: .top) {
                     // Satellite imagery needs a dark scrim for readable white map labels.
-                    LinearGradient(colors: [.black.opacity(0.55), .clear], startPoint: .top, endPoint: .bottom)
+                    LinearGradient(colors: [KropsTheme.surfaceInverse.opacity(0.4), KropsTheme.surfaceInverse.opacity(0)],
+                                   startPoint: .top, endPoint: .bottom)
+                        .frame(height: 140)
                         .allowsHitTesting(false)
                 }
                 .overlay(alignment: .bottom) {
+                    // Clear until the last ~40 pt, which the metrics band mostly covers (Sketch "Gradasi Bawah").
                     LinearGradient(
-                        colors: [.clear, KropsTheme.surfaceBackground],
+                        stops: [
+                            .init(color: KropsTheme.surfaceBackground.opacity(0), location: 0.76),
+                            .init(color: KropsTheme.surfaceBackground, location: 1)
+                        ],
                         startPoint: .top,
                         endPoint: .bottom
                     )
