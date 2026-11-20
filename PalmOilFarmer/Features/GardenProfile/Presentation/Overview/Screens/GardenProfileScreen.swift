@@ -26,6 +26,7 @@ struct GardenProfileScreen: View {
     }
 
     @AppStorage("gardenReview.hideIntroduction") private var hideReviewIntroduction = false
+    @State private var showsIdentity = false
     @Environment(\.dismiss) private var dismiss
     private var garden: Garden { viewModel.garden }
     private var currentReviewStatus: ReviewStatus? { viewModel.reviewViewModel.activeStatus ?? garden.review?.status }
@@ -52,13 +53,18 @@ struct GardenProfileScreen: View {
         }
         .navigationDestination(isPresented: $viewModel.showsSummary) {
             GardenProfileSummaryView(garden: garden,
-                onClose: viewModel.closeSummary, onEdit: viewModel.editSummary)
+                onClose: viewModel.closeSummary, onEdit: viewModel.editSummary,
+                savedNotice: viewModel.savedNotice)
                 .navigationDestination(item: summaryDestination) { presentation in
                     pushedContent(presentation)
                 }
         }
         .navigationDestination(item: rootDestination) { presentation in
             pushedContent(presentation)
+        }
+        .navigationDestination(isPresented: $showsIdentity) {
+            GardenIdentityView(garden: garden, isLocked: currentReviewStatus == .completed,
+                               referenceMapImage: referenceMapImage, onBack: { showsIdentity = false })
         }
         .sheet(isPresented: $viewModel.showsReviewStatus) {
             AssessmentStatusView(
@@ -145,7 +151,7 @@ struct GardenProfileScreen: View {
 
     private var profileContent: some View {
         GardenProfileContentView(
-            garden: garden, referenceMapImage: referenceMapImage, profileJustSaved: viewModel.profileJustSaved, currentReviewStatus: currentReviewStatus, isComplete: viewModel.isComplete,
+            garden: garden, referenceMapImage: referenceMapImage, profileJustSaved: viewModel.profileJustSaved, savedNotice: viewModel.savedNotice, currentReviewStatus: currentReviewStatus, isComplete: viewModel.isComplete,
             onBack: viewModel.close, onEditGarden: { viewModel.open(.details) },
             onEditProfile: { viewModel.open(.profile) },
             onReviewAction: {
@@ -172,6 +178,7 @@ struct GardenProfileScreen: View {
             },
             onViewSummary: viewModel.openSummary,
             onViewReviewInformation: { viewModel.open(.reviewInformation) },
+            onViewIdentity: { showsIdentity = true },
             onDelete: deleteAction,
             assessmentCompletedAt: viewModel.reviewViewModel.completedAt ?? garden.review?.date(for: .completed),
             assessmentResultByteCount: currentReviewStatus == .completed ? PlaceholderAssessmentResultsDownloadRepository.resultByteCount : nil

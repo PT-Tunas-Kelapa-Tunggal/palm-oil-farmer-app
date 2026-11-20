@@ -7,6 +7,8 @@ struct GardenProfileContentView: View {
     var metrics: GardenDisplayMetrics? = nil
     var showsHeader = true
     var profileJustSaved = false
+    /// Text of the save notice; defaults to the first-save wording.
+    var savedNotice: String? = nil
     let currentReviewStatus: ReviewStatus?
     let isComplete: Bool
     let onBack: () -> Void
@@ -15,6 +17,8 @@ struct GardenProfileContentView: View {
     let onReviewAction: () -> Void
     let onViewSummary: () -> Void
     let onViewReviewInformation: () -> Void
+    /// Opens the read-only "Identitas Kebun" page; without it the row opens the edit form.
+    var onViewIdentity: (() -> Void)? = nil
     var onDelete: (() -> Void)? = nil
     var assessmentContactName: String? = nil
     var assessmentResultsState: AssessmentResultsViewModel.State? = nil
@@ -193,21 +197,27 @@ struct GardenProfileContentView: View {
         }
     }
 
+    /// After saving, the rows sit in a grey container topped by the save notice
+    /// (Sketch "Profil Kebun / Detail Kebun / Profile Saved"); the section header stays outside it.
     private var dataSection: some View {
         VStack(spacing: 8) {
-            if profileJustSaved {
-                Label("Profil kebun baru saja disimpan", systemImage: "sparkles")
-                    .font(.caption).foregroundStyle(KropsTheme.accentPrimary)
-                    .frame(maxWidth: .infinity, alignment: .leading).padding(.horizontal, 14).padding(.top, 10)
-            }
             GardenProfileSectionHeader(title: "Data Kebun", message: "Data yang Anda isi dan menjadi dasar hasil peninjauan.")
                 .padding(.top, 8)
-            dataRow("Identitas Kebun", subtitle: "Lokasi, luas, tahun tanam, jenis tanah", symbol: "square.dashed.inset.filled", action: onEditGarden)
-            dataRow("Riwayat Panen dan Pemupukan", subtitle: "Dasar perhitungan kondisi hara", symbol: "doc.text", action: onViewSummary)
+            VStack(spacing: 0) {
+                if profileJustSaved {
+                    GardenSavedNotice(text: savedNotice ?? "Profil kebun baru saja disimpan")
+                        .padding(.horizontal, 10).padding(.top, 10).padding(.bottom, 8)
+                }
+                VStack(spacing: 8) {
+                    dataRow("Identitas Kebun", subtitle: "Lokasi, luas, tahun tanam, jenis tanah", symbol: "square.dashed.inset.filled", action: onViewIdentity ?? onEditGarden)
+                    dataRow("Riwayat Panen dan Pemupukan", subtitle: "Dasar perhitungan kondisi hara", symbol: "doc.text", action: onViewSummary)
+                }
+            }
+            .padding(.horizontal, profileJustSaved ? 8 : 0)
+            .padding(.bottom, profileJustSaved ? 8 : 0)
+            .background(profileJustSaved ? KropsTheme.surfaceControl : .clear, in: RoundedRectangle(cornerRadius: 24))
         }
         .foregroundStyle(KropsTheme.labelPrimary)
-        .padding(profileJustSaved ? 4 : 0)
-        .background(profileJustSaved ? KropsTheme.accentSoft : .clear, in: RoundedRectangle(cornerRadius: 24))
     }
 
     private func dataRow(_ title: String, subtitle: String, symbol: String, action: @escaping () -> Void) -> some View {

@@ -1,12 +1,15 @@
 import SwiftUI
 
 /// "Riwayat Panen dan Pemupukan" page. "Ubah" opens the profile editor.
+/// Sliced from Sketch "Profil Kebun / Profil Kebun / Default".
 struct GardenProfileSummaryView: View {
     let garden: Garden
     var metrics: GardenDisplayMetrics? = nil
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
     let onClose: () -> Void
     let onEdit: () -> Void
+    /// Shown under the subtitle after saving from this page ("Profil kebun baru saja diperbarui").
+    var savedNotice: String? = nil
 
     var body: some View {
         VStack(spacing: 0) {
@@ -14,22 +17,26 @@ struct GardenProfileSummaryView: View {
             ScrollView {
                 VStack(alignment: .leading, spacing: 28) {
                     VStack(alignment: .leading, spacing: 4) {
-                        Text("Profil Kebun").font(.largeTitle.bold())
+                        Text("Riwayat Panen dan Pemupukan").font(.largeTitle.bold())
+                            .accessibilityAddTraits(.isHeader)
                         Text(subtitle)
-                            .font(.subheadline).foregroundStyle(.secondary)
+                            .font(.subheadline).foregroundStyle(KropsTheme.labelSecondary)
+                        if let savedNotice {
+                            GardenSavedNotice(text: savedNotice).padding(.top, 8)
+                        }
                     }
                     LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 16), count: dynamicTypeSize.isAccessibilitySize ? 1 : 2), spacing: 16) {
-                        metric("Panen", detail: "kali per bulan", value: garden.harvestRecord.map { String($0.frequencyPerMonth) } ?? "—", symbol: "calendar", colors: [.init(red: 0.28, green: 0.75, blue: 0.40), .init(red: 0.15, green: 0.62, blue: 0.29)])
-                        metric("Hasil panen", detail: "kg per bulan", value: garden.harvestRecord.map { $0.monthlyWeightKg.formatted() } ?? "—", symbol: "chart.xyaxis.line", colors: [.init(red: 0.72, green: 0.62, blue: 0), .init(red: 0.64, green: 0.56, blue: 0)])
-                        metric("Pemupukan", detail: "kali per tahun", value: garden.fertilizationFrequencyPerYear.map(String.init) ?? "—", symbol: "rectangle.stack", colors: [.init(red: 0.94, green: 0.52, blue: 0.29), .init(red: 0.88, green: 0.41, blue: 0.14)])
-                        metric("Jenis pupuk", detail: (garden.fertilizerRecords ?? []).map(\.name).joined(separator: " dan "), value: String(garden.fertilizerRecords?.count ?? 0), symbol: "sprout", colors: [.init(red: 0.68, green: 0.68, blue: 0.70), .init(red: 0.56, green: 0.56, blue: 0.58)])
+                        metric("Panen", detail: "kali per bulan", value: garden.harvestRecord.map { String($0.frequencyPerMonth) } ?? "—", symbol: "calendar")
+                        metric("Hasil panen", detail: "kg per bulan", value: garden.harvestRecord.map { $0.monthlyWeightKg.formatted() } ?? "—", symbol: "chart.line.uptrend.xyaxis")
+                        metric("Pemupukan", detail: "kali per tahun", value: garden.fertilizationFrequencyPerYear.map(String.init) ?? "—", symbol: "rectangle.stack")
+                        metric("Jenis pupuk", detail: (garden.fertilizerRecords ?? []).map(\.name).joined(separator: " dan "), value: String(garden.fertilizerRecords?.count ?? 0), symbol: "sprout")
                     }
                     VStack(spacing: 8) {
                         GardenProfileSectionHeader(title: "Pupuk yang Diberikan", message: "Pupuk dan dosis pada pemupukan terakhir.")
                         ForEach(garden.fertilizerRecords ?? []) { record in FertilizerSummaryCard(record: record) }
                     }
                     Text("Data ini berasal dari isian Anda. Rekomendasi pupuk akan tersedia setelah kebun ditinjau.")
-                        .font(.footnote).foregroundStyle(.secondary)
+                        .font(.footnote).foregroundStyle(KropsTheme.labelSecondary)
                 }
                 .padding(.horizontal, 16).padding(.top, 20).padding(.bottom, 34)
             }
@@ -37,32 +44,39 @@ struct GardenProfileSummaryView: View {
         .background(KropsTheme.surfaceBackground)
         .toolbar(.hidden, for: .navigationBar)
     }
+    /// "Kebun Belakang Rumah, diperbarui 7 November 2026"
     private var subtitle: String {
-        let identity = "\(garden.name) · \((metrics ?? GardenDisplayMetrics(boundary: garden.boundary)).area)"
-        guard let updatedAt = garden.profileUpdatedAt else { return identity }
-        let date = updatedAt.formatted(.dateTime.day().month(.abbreviated).year().locale(Locale(identifier: "id_ID")))
-        return identity + " · Diperbarui " + date
+        let name = garden.name.lowercased().hasPrefix("kebun") ? garden.name : "Kebun " + garden.name
+        guard let updatedAt = garden.profileUpdatedAt else { return name }
+        let date = updatedAt.formatted(.dateTime.day().month(.wide).year().locale(Locale(identifier: "id_ID")))
+        return name + ", diperbarui " + date
     }
 
-    private func metric(_ title: String, detail: String, value: String, symbol: String, colors: [Color]) -> some View {
-        VStack(alignment: .leading, spacing: 14) {
-            HStack {
+    private func metric(_ title: String, detail: String, value: String, symbol: String) -> some View {
+        VStack(alignment: .leading, spacing: 0) {
+            HStack(spacing: 8) {
                 if symbol == "sprout" {
                     Image("ProfileSeedling").resizable().scaledToFit().frame(width: 24, height: 24)
                 } else {
                     Image(systemName: symbol).font(.title2)
                 }
-                Spacer(minLength: 4)
+                Spacer(minLength: 0)
                 Text(value).font(.title.bold()).minimumScaleFactor(0.7).lineLimit(1)
             }
-            VStack(alignment: .leading, spacing: 4) {
+            .padding(.bottom, 14)
+            VStack(alignment: .leading, spacing: 2) {
                 Text(title).font(.headline)
-                Text(detail).font(.subheadline).opacity(0.85)
+                Text(detail).font(.subheadline)
             }
         }
-        .foregroundStyle(.white).padding(16)
+        .foregroundStyle(KropsTheme.labelInversePrimary).padding(14)
         .frame(maxWidth: .infinity, minHeight: 122, alignment: .leading)
-        .background(LinearGradient(colors: colors, startPoint: .topLeading, endPoint: .bottomTrailing), in: RoundedRectangle(cornerRadius: 20))
+        .background(
+            LinearGradient(colors: [KropsTheme.surfaceInverse, KropsTheme.surfaceInverseRaised],
+                           startPoint: .topLeading, endPoint: .bottomTrailing),
+            in: RoundedRectangle(cornerRadius: 20)
+        )
+        .accessibilityElement(children: .combine)
     }
 
 }
