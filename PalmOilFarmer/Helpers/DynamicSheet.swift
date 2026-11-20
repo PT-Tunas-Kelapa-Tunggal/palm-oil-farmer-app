@@ -12,7 +12,7 @@ enum DynamicSheetSize: String, CaseIterable {
         case .xsmall: .height(180)
         case .small: .height(210)
         case .medium: .height(330)
-        case .halfscreen: .height(550)
+        case .halfscreen: .medium
         case .large: .large
         }
     }
