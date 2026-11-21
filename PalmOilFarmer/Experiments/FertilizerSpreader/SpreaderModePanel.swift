@@ -100,7 +100,7 @@ struct SpreaderModePanel: View {
     private var statsRow: some View {
         HStack(alignment: .top, spacing: 16) {
             stat(label: "Zona saat ini", value: zoneName ?? "–")
-            stat(label: "Dosis per pohon", value: plan.map { SpreaderFormat.kilograms($0.dosePerTreeKg) } ?? "–")
+            stat(label: "Dosis per pohon", value: plan.map { SpreaderFormat.kilograms($0.dosePerTreeKg, maxFraction: 3) } ?? "–")
         }
     }
 
@@ -128,7 +128,7 @@ struct SpreaderModePanel: View {
             DeviceList(spreader: spreader)
         case .ready:
             RoundActionButton(kind: .dispense, action: onDispense)
-                .disabled(zoneID == nil || plan == nil)
+                .disabled(zoneID == nil || (plan?.litersPerTree ?? 0) <= 0)
         case .dispensing:
             RoundActionButton(kind: .dispensing(progress: spreader.run?.progress(at: now) ?? 0)) {
                 spreader.stop()

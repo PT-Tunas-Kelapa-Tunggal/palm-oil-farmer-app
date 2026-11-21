@@ -4,12 +4,13 @@ import MapKit
 import SwiftUI
 import UIKit
 
-/// Satellite MapKit canvas with the bundled orthomosaic and JSON-derived tree/zone boxes.
+/// Satellite MapKit canvas with the CloudKit orthomosaic and zone coordinates.
 @MainActor
 struct FertilizingMapKitView: UIViewRepresentable {
     let data: FarmOrthomosaicMapData
     let zones: [FertilizingZoneDetail]
     let mode: AreaDivisionMode
+    let hidesZoneLabels: Bool
     let wholeFarmDoseText: String
     let selectedZone: FertilizingZoneDetail?
     let onSelectZone: (FertilizingZoneDetail) -> Void
@@ -22,9 +23,14 @@ struct FertilizingMapKitView: UIViewRepresentable {
         map.delegate = context.coordinator
         map.isRotateEnabled = true
         map.isPitchEnabled = true
+        map.isZoomEnabled = true
         map.showsUserLocation = true
+        let zoneTap = UITapGestureRecognizer(target: context.coordinator, action: #selector(Coordinator.handleMapTap(_:)))
+        zoneTap.cancelsTouchesInView = false
+        map.addGestureRecognizer(zoneTap)
         context.coordinator.requestLocationAuthorization()
         context.coordinator.update(map, data: data, zones: zones, mode: mode,
+                                   hidesZoneLabels: hidesZoneLabels,
                                    wholeFarmDoseText: wholeFarmDoseText,
                                    selectedZone: selectedZone,
                                    onSelectZone: onSelectZone)
@@ -33,6 +39,7 @@ struct FertilizingMapKitView: UIViewRepresentable {
 
     func updateUIView(_ map: MKMapView, context: Context) {
         context.coordinator.update(map, data: data, zones: zones, mode: mode,
+                                   hidesZoneLabels: hidesZoneLabels,
                                    wholeFarmDoseText: wholeFarmDoseText,
                                    selectedZone: selectedZone,
                                    onSelectZone: onSelectZone)
@@ -44,11 +51,14 @@ struct FertilizingMapKitView: UIViewRepresentable {
         private var lastData: FarmOrthomosaicMapData?
         private var lastZones: [FertilizingZoneDetail] = []
         private var lastMode: AreaDivisionMode?
+        private var lastHidesZoneLabels = false
+        private var lastRequestedImageURL: URL?
         private var lastWholeFarmDoseText: String?
         private var lastSelectedZoneID: Int?
         private var imageMapRect: MKMapRect?
         private var zoneAnnotations: [ObjectIdentifier: FertilizingZoneDetail] = [:]
         private var zonePolygons: [Int64: MKPolygon] = [:]
+        private var zonePixelPolygons: [Int64: [PixelPoint]] = [:]
         private var onSelectZone: ((FertilizingZoneDetail) -> Void)?
 
         func requestLocationAuthorization() {
@@ -62,6 +72,7 @@ struct FertilizingMapKitView: UIViewRepresentable {
             data: FarmOrthomosaicMapData,
             zones: [FertilizingZoneDetail],
             mode: AreaDivisionMode,
+            hidesZoneLabels: Bool,
             wholeFarmDoseText: String,
             selectedZone: FertilizingZoneDetail?,
             onSelectZone: @escaping (FertilizingZoneDetail) -> Void
@@ -71,19 +82,26 @@ struct FertilizingMapKitView: UIViewRepresentable {
             let dataChanged = lastData != data
             let zonesChanged = lastZones != zones
             let modeChanged = lastMode != mode
+            let labelsChanged = lastHidesZoneLabels != hidesZoneLabels
+            let requestedImageURL = data.imageURL
+            let imageChanged = lastRequestedImageURL != requestedImageURL
             let doseChanged = lastWholeFarmDoseText != wholeFarmDoseText
             let previousSelectedZoneID = lastSelectedZoneID
             let selectionChanged = previousSelectedZoneID != selectedZoneID
-            guard dataChanged || zonesChanged || modeChanged || doseChanged || selectionChanged else { return }
+            guard dataChanged || zonesChanged || modeChanged || imageChanged || labelsChanged
+                    || doseChanged || selectionChanged else { return }
 
             let shouldReframe = dataChanged || modeChanged
             lastData = data
             lastZones = zones
             lastMode = mode
+            lastHidesZoneLabels = hidesZoneLabels
+            lastRequestedImageURL = requestedImageURL
             lastWholeFarmDoseText = wholeFarmDoseText
             lastSelectedZoneID = selectedZoneID
 
-            if selectionChanged && !dataChanged && !zonesChanged && !modeChanged && !doseChanged {
+            if selectionChanged && !dataChanged && !zonesChanged && !modeChanged
+                && !imageChanged && !labelsChanged && !doseChanged {
                 if let previousSelectedZoneID {
                     refreshZoneOutline(Int64(previousSelectedZoneID), on: map)
                 }
@@ -93,7 +111,7 @@ struct FertilizingMapKitView: UIViewRepresentable {
                 return
             }
 
-            if dataChanged {
+            if dataChanged || imageChanged {
                 map.removeOverlays(map.overlays)
             } else {
                 map.removeOverlays(map.overlays.filter { !($0 is FertilizingImageOverlay) })
@@ -101,36 +119,44 @@ struct FertilizingMapKitView: UIViewRepresentable {
             map.removeAnnotations(map.annotations.filter { !($0 is MKUserLocation) })
             zoneAnnotations.removeAll()
             zonePolygons.removeAll()
+            zonePixelPolygons.removeAll()
 
-            guard let imageURL = data.imageURL,
-                  data.imagePixelWidth > 0, data.imagePixelHeight > 0,
+            guard data.imagePixelWidth > 0, data.imagePixelHeight > 0,
                   data.farmBoundary.count >= 3,
                   let farmRect = Self.mapRect(for: data.farmBoundary),
                   let imageRect = Self.imageRect(for: data, inside: farmRect) else { return }
             imageMapRect = imageRect
 
-            if dataChanged, let image = Self.downsampledImage(at: imageURL) {
-                map.addOverlay(FertilizingImageOverlay(image: image, rect: imageRect), level: .aboveLabels)
+            if dataChanged || imageChanged {
+                let image = requestedImageURL.flatMap(Self.downsampledImage(at:))
+                if let image {
+                    map.addOverlay(FertilizingImageOverlay(image: image, rect: imageRect), level: .aboveLabels)
+                }
             }
 
             switch mode {
             case .perZona:
                 let zonesByID = Dictionary(uniqueKeysWithValues: zones.map { (Int64($0.id), $0) })
+                zonePixelPolygons = NonOverlappingFarmZones.polygons(for: data.zones)
                 let polygons = data.zones.compactMap { zone -> MKPolygon? in
-                    guard let polygon = polygon(for: zone.boundingBox, data: data,
+                    guard let points = zonePixelPolygons[zone.id],
+                          let polygon = polygon(for: points, data: data,
                                                 rect: imageRect, title: "zone-\(zone.id)") else { return nil }
                     zonePolygons[zone.id] = polygon
                     return polygon
                 }
                 map.addOverlays(polygons, level: .aboveLabels)
 
-                for zone in data.zones {
-                    guard let detail = zonesByID[zone.id],
-                          let center = Self.center(of: zone.boundingBox),
-                          let coordinate = Self.coordinate(for: center, data: data, rect: imageRect) else { continue }
-                    let annotation = FertilizingZoneAnnotation(detail: detail, coordinate: coordinate)
-                    zoneAnnotations[ObjectIdentifier(annotation)] = detail
-                    map.addAnnotation(annotation)
+                if !hidesZoneLabels {
+                    for zone in data.zones {
+                        guard let detail = zonesByID[zone.id],
+                              let points = zonePixelPolygons[zone.id],
+                              let center = NonOverlappingFarmZones.center(of: points),
+                              let coordinate = Self.coordinate(for: center, data: data, rect: imageRect) else { continue }
+                        let annotation = FertilizingZoneAnnotation(detail: detail, coordinate: coordinate)
+                        zoneAnnotations[ObjectIdentifier(annotation)] = detail
+                        map.addAnnotation(annotation)
+                    }
                 }
 
             case .perPohon:
@@ -155,10 +181,31 @@ struct FertilizingMapKitView: UIViewRepresentable {
             if shouldReframe {
                 map.setVisibleMapRect(
                     farmRect,
-                    edgePadding: UIEdgeInsets(top: 130, left: 24, bottom: 300, right: 24),
+                    edgePadding: mode == .perZona
+                        ? UIEdgeInsets(top: 105, left: 14, bottom: 175, right: 14)
+                        : UIEdgeInsets(top: 130, left: 24, bottom: 300, right: 24),
                     animated: false
                 )
             }
+        }
+
+        @objc func handleMapTap(_ gesture: UITapGestureRecognizer) {
+            guard gesture.state == .ended,
+                  lastMode == .perZona, lastHidesZoneLabels,
+                  let map = gesture.view as? MKMapView,
+                  let data = lastData, let imageRect = imageMapRect,
+                  imageRect.width > 0, imageRect.height > 0 else { return }
+
+            let mapPoint = MKMapPoint(map.convert(gesture.location(in: map), toCoordinateFrom: map))
+            let pixel = PixelPoint(
+                x: (mapPoint.x - imageRect.minX) / imageRect.width * Double(data.imagePixelWidth),
+                y: (mapPoint.y - imageRect.minY) / imageRect.height * Double(data.imagePixelHeight)
+            )
+            guard let zoneID = zonePixelPolygons.first(where: {
+                NonOverlappingFarmZones.contains(pixel, in: $0.value)
+            })?.key,
+                let detail = lastZones.first(where: { Int64($0.id) == zoneID }) else { return }
+            onSelectZone?(detail)
         }
 
         private func refreshZoneOutline(_ id: Int64, on map: MKMapView) {
@@ -167,7 +214,7 @@ struct FertilizingMapKitView: UIViewRepresentable {
             let isSelected = Int64(lastSelectedZoneID ?? -1) == id
             renderer.strokeColor = UIColor.white.withAlphaComponent(isSelected ? 1 : 0.92)
             renderer.fillColor = isSelected ? UIColor.white.withAlphaComponent(0.10) : .clear
-            renderer.lineWidth = isSelected ? 3 : 2
+            renderer.lineWidth = isSelected ? 1.8 : 1.1
             renderer.setNeedsDisplay()
         }
 
@@ -193,7 +240,7 @@ struct FertilizingMapKitView: UIViewRepresentable {
                 let isSelected = Int64(lastSelectedZoneID ?? -1) == zoneID
                 renderer.strokeColor = UIColor.white.withAlphaComponent(isSelected ? 1 : 0.92)
                 renderer.fillColor = isSelected ? UIColor.white.withAlphaComponent(0.10) : .clear
-                renderer.lineWidth = isSelected ? 3 : 2
+                renderer.lineWidth = isSelected ? 1.8 : 1.1
             }
             return renderer
         }
@@ -263,12 +310,6 @@ struct FertilizingMapKitView: UIViewRepresentable {
             let x = rect.minX + pixel.x / Double(data.imagePixelWidth) * rect.width
             let y = rect.minY + pixel.y / Double(data.imagePixelHeight) * rect.height
             return MKMapPoint(x: x, y: y).coordinate
-        }
-
-        private static func center(of polygon: [PixelPoint]) -> PixelPoint? {
-            guard let minX = polygon.map(\.x).min(), let maxX = polygon.map(\.x).max(),
-                  let minY = polygon.map(\.y).min(), let maxY = polygon.map(\.y).max() else { return nil }
-            return PixelPoint(x: (minX + maxX) / 2, y: (minY + maxY) / 2)
         }
 
         private static func downsampledImage(at url: URL) -> CGImage? {
@@ -421,6 +462,7 @@ private final class FertilizingWholeFarmAnnotation: NSObject, MKAnnotation {
             data: mapData,
             zones: zones,
             mode: .perZona,
+            hidesZoneLabels: false,
             wholeFarmDoseText: "400 kg",
             selectedZone: zones.first,
             onSelectZone: { _ in }

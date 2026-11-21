@@ -3,12 +3,13 @@ import MapKit
 import SwiftUI
 
 /// Mode Pemupukan: the farmer stands in a zone, connects the spreader, and releases one tree's dose per press.
-/// Opened from the Pemupukan garden list and from the FindingWaypoint map (tombol "Semprot").
+/// Opened from the fertilizer dose map, the Pemupukan garden list, and the FindingWaypoint map.
 struct SpreaderModeView: View {
     let garden: Garden
     let zones: [WaypointZone]
+    private var isAssessmentFlow: Bool
+    private var assessmentMap: FarmOrthomosaicMapData?
     private let plans: [Int: SpreaderZonePlan]
-    private let separators: [[CLLocationCoordinate2D]]
 
     /// Zone the farmer stands in, from GPS only. nil until a precise fix lands inside a zone.
     @State private var currentZoneID: Int?
@@ -26,11 +27,19 @@ struct SpreaderModeView: View {
     @State private var customZoneError: String?
     @Environment(\.dismiss) private var dismiss
 
-    init(garden: Garden, zones: [WaypointZone]) {
+    init(garden: Garden, zones: [WaypointZone], plans: [Int: SpreaderZonePlan]? = nil) {
         self.garden = garden
         self.zones = zones
-        plans = SpreaderZonePlan.sample(for: zones)
-        separators = SpreaderGeometry.separators(for: zones)
+        isAssessmentFlow = false
+        assessmentMap = nil
+        self.plans = plans ?? SpreaderZonePlan.sample(for: zones)
+    }
+
+    init(garden: Garden, fertilizingMap: FertilizingMapItem) {
+        let assessment = SpreaderAssessmentZones.make(from: fertilizingMap)
+        self.init(garden: garden, zones: assessment.zones, plans: assessment.plans)
+        isAssessmentFlow = true
+        assessmentMap = fertilizingMap.orthomosaic
     }
 
     private var customPlans: [Int: SpreaderZonePlan] {
@@ -59,7 +68,8 @@ struct SpreaderModeView: View {
             let fix = location.freshLocation(at: context.date)
             VStack(spacing: -32) {
                 SpreaderModeMapView(
-                    garden: garden, zones: zones, separators: separators, plans: plans,
+                    garden: garden, zones: zones,
+                    assessmentMap: assessmentMap,
                     currentZoneID: currentZoneID,
                     tab: selectedTab,
                     customZones: customZones,
@@ -92,7 +102,8 @@ struct SpreaderModeView: View {
             SpreaderModeHeader(
                 selectedTab: $selectedTab,
                 onBack: { dismiss() },
-                backDisabled: spreader.isRunning
+                backDisabled: spreader.isRunning,
+                showsCustomTab: !isAssessmentFlow
             )
         }
         .overlay(alignment: .top) {
@@ -267,6 +278,79 @@ struct SpreaderModeView: View {
         GardenBoundary(points: draftBoundary.map {
             GardenCoordinate(latitude: $0.latitude, longitude: $0.longitude)
         }).areaHectares
+    }
+}
+
+/// Converts the same orthomosaic pixel polygons shown on the dose map to MapKit coordinates.
+/// This keeps zone IDs and displayed amounts consistent when entering Mode Pemupukan.
+private enum SpreaderAssessmentZones {
+    static func make(from item: FertilizingMapItem) -> (zones: [WaypointZone], plans: [Int: SpreaderZonePlan]) {
+        guard let map = item.orthomosaic,
+              map.imagePixelWidth > 0, map.imagePixelHeight > 0 else { return ([], [:]) }
+        let boundary = map.farmBoundary.map {
+            MKMapPoint(CLLocationCoordinate2D(latitude: $0.latitude, longitude: $0.longitude))
+        }
+        guard let minX = boundary.map(\.x).min(), let maxX = boundary.map(\.x).max(),
+              let minY = boundary.map(\.y).min(), let maxY = boundary.map(\.y).max(),
+              maxX > minX, maxY > minY else { return ([], [:]) }
+
+        let bounds = MKMapRect(x: minX, y: minY, width: maxX - minX, height: maxY - minY)
+        let imageAspect = Double(map.imagePixelWidth) / Double(map.imagePixelHeight)
+        let imageRect: MKMapRect
+        if bounds.width / bounds.height > imageAspect {
+            let width = bounds.height * imageAspect
+            imageRect = MKMapRect(x: bounds.midX - width / 2, y: bounds.minY,
+                                  width: width, height: bounds.height)
+        } else {
+            let height = bounds.width / imageAspect
+            imageRect = MKMapRect(x: bounds.minX, y: bounds.midY - height / 2,
+                                  width: bounds.width, height: height)
+        }
+
+        let doses = Dictionary(item.zones.map { ($0.id, $0.doseKg) }, uniquingKeysWith: { _, new in new })
+        let nonOverlappingPolygons = NonOverlappingFarmZones.polygons(for: map.zones)
+        var zones: [WaypointZone] = []
+        var plans: [Int: SpreaderZonePlan] = [:]
+        for source in map.zones {
+            guard let zoneID = Int(exactly: source.id),
+                  let pixels = nonOverlappingPolygons[source.id],
+                  let centerPixel = NonOverlappingFarmZones.center(of: pixels) else { continue }
+            let coordinates = pixels.map { pixel in
+                MKMapPoint(
+                    x: imageRect.minX + pixel.x / Double(map.imagePixelWidth) * imageRect.width,
+                    y: imageRect.minY + pixel.y / Double(map.imagePixelHeight) * imageRect.height
+                ).coordinate
+            }
+            let points = coordinates.map { MKMapPoint($0) }
+            let centerPoint = MKMapPoint(
+                x: imageRect.minX + centerPixel.x / Double(map.imagePixelWidth) * imageRect.width,
+                y: imageRect.minY + centerPixel.y / Double(map.imagePixelHeight) * imageRect.height
+            )
+            let center = centerPoint.coordinate
+            let areaInMapPoints = abs(points.indices.reduce(0.0) { sum, index in
+                let first = points[index]
+                let second = points[(index + 1) % points.count]
+                return sum + first.x * second.y - second.x * first.y
+            }) / 2
+            let pointsPerMeter = MKMapPointsPerMeterAtLatitude(center.latitude)
+            zones.append(WaypointZone(
+                id: zoneID, fragments: [coordinates], destination: center,
+                areaSquareMeters: areaInMapPoints / (pointsPerMeter * pointsPerMeter)
+            ))
+
+            let treeCount = max(0, Int(source.treeCount))
+            let doseKg = max(0, doses[zoneID] ?? 0)
+            let dosePerTreeKg = treeCount > 0 ? doseKg / Double(treeCount) : 0
+            // The current spreader prototype uses 0.5 L of solution per kg of fertilizer.
+            let litersPerTree = SpreaderDose.litersPerTree(
+                zoneTotalLiters: doseKg * 0.5, treeCount: treeCount
+            ) ?? 0
+            plans[zoneID] = SpreaderZonePlan(
+                zoneID: zoneID, treeCount: treeCount, totalKg: doseKg,
+                dosePerTreeKg: dosePerTreeKg, litersPerTree: litersPerTree
+            )
+        }
+        return (zones.sorted { $0.id < $1.id }, plans)
     }
 }
 

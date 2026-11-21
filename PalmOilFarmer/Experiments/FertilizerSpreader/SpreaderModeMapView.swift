@@ -2,7 +2,7 @@ import CoreLocation
 import MapKit
 import SwiftUI
 
-/// Satellite map with white zone lines, per-zone fertilizer totals, and the farmer's position.
+/// Satellite map with compact zone markers and the farmer's position.
 enum SpreaderModeTab: String, CaseIterable, Identifiable, Equatable {
     case mode = "Mode Pemupukan"
     case custom = "Custom"
@@ -13,8 +13,7 @@ struct SpreaderModeMapView: View {
 
     let garden: Garden
     let zones: [WaypointZone]
-    let separators: [[CLLocationCoordinate2D]]
-    let plans: [Int: SpreaderZonePlan]
+    let assessmentMap: FarmOrthomosaicMapData?
     let currentZoneID: Int?
     let tab: SpreaderModeTab
     let customZones: [WaypointZone]
@@ -29,33 +28,37 @@ struct SpreaderModeMapView: View {
     @Binding var followsUser: Bool
     @State private var draggingIndex: Int?
     @State private var dragOffset: CGSize?
+    @State private var cameraRequestID = 0
     @GestureState private var isDraggingPoint = false
     private let markerHitSize: CGFloat = 44
 
     var body: some View {
+        if let assessmentMap {
+            SpreaderAssessmentMapKitView(
+                data: assessmentMap,
+                zones: zones,
+                currentZoneID: currentZoneID,
+                fix: fix,
+                camera: $camera,
+                cameraRequestID: cameraRequestID,
+                followsUser: $followsUser
+            )
+            .overlay(alignment: .top) { topFade }
+            .overlay(alignment: .topTrailing) {
+                controls.padding(.top, 210).padding(.trailing, 16)
+            }
+            .onAppear { frameGarden() }
+        } else {
         MapReader { proxy in
         Map(position: $camera, interactionModes: [.pan, .zoom, .rotate]) {
             if tab == .mode {
-            ForEach(zones) { zone in
-                if zone.id == currentZoneID {
-                    ForEach(zone.fragments.indices, id: \.self) { index in
-                        MapPolygon(coordinates: zone.fragments[index])
-                            .foregroundStyle(.white.opacity(0.16))
+                ForEach(zones) { zone in
+                    Annotation("Zona \(zone.id)", coordinate: zone.destination) {
+                        ZoneLabel(zoneID: zone.id, isCurrent: zone.id == currentZoneID)
+                            .allowsHitTesting(false)  // the current zone follows GPS only
                     }
+                    .annotationTitles(.hidden)
                 }
-            }
-            ForEach(separators.indices, id: \.self) { index in
-                MapPolyline(coordinates: separators[index])
-                    .stroke(.white.opacity(0.9), lineWidth: 2)
-            }
-            ForEach(zones) { zone in
-                Annotation("Zona \(zone.id)", coordinate: zone.destination) {
-                    ZoneLabel(zoneID: zone.id, totalKg: plans[zone.id]?.totalKg,
-                              isCurrent: zone.id == currentZoneID)
-                        .allowsHitTesting(false)  // the current zone follows GPS only
-                }
-                .annotationTitles(.hidden)
-            }
             } else {
                 ForEach(customZones) { zone in
                     BoundaryGeometryMapContent(
@@ -66,7 +69,6 @@ struct SpreaderModeMapView: View {
                     Annotation("Zona custom", coordinate: zone.destination) {
                         Button { onSelectCustomZone(zone.id) } label: {
                             ZoneLabel(zoneID: zone.id - 10_000,
-                                      totalKg: nil,
                                       isCurrent: zone.id == selectedCustomZoneID)
                         }
                         .buttonStyle(.plain)
@@ -138,6 +140,7 @@ struct SpreaderModeMapView: View {
         }
         .onAppear { frameGarden() }
         }
+        }
     }
 
     // MARK: Chrome
@@ -163,6 +166,7 @@ struct SpreaderModeMapView: View {
             Button {
                 followsUser = true
                 if let fix {
+                    cameraRequestID += 1
                     camera = .region(MKCoordinateRegion(center: fix.coordinate,
                                                         latitudinalMeters: 120, longitudinalMeters: 120))
                 }
@@ -183,6 +187,7 @@ struct SpreaderModeMapView: View {
         guard !coordinates.isEmpty else { return }
         let rect = MKPolygon(coordinates: coordinates, count: coordinates.count).boundingMapRect
         let padding = max(rect.width, rect.height) * 0.2
+        cameraRequestID += 1
         camera = .rect(rect.insetBy(dx: -padding, dy: -padding * 1.6))
     }
 
@@ -225,24 +230,16 @@ struct SpreaderModeMapView: View {
 /// Sketch: Atom / Map Label / Zone / Default.
 private struct ZoneLabel: View {
     let zoneID: Int
-    let totalKg: Double?
     let isCurrent: Bool
 
     var body: some View {
-        VStack(spacing: 0) {
-            Text("Zona \(zoneID)")
-                .font(.footnote.weight(.medium))
-                .padding(.horizontal, 4)
-                .background(.black.opacity(isCurrent ? 0.85 : 0.55), in: RoundedRectangle(cornerRadius: 3))
-            if let totalKg {
-                Text(SpreaderFormat.kilograms(totalKg, maxFraction: 0))
-                    .font(.headline.weight(.bold))
-                    .shadow(color: .black.opacity(0.7), radius: 2, y: 1)
-            }
-        }
-        .foregroundStyle(.white)
-        .frame(minWidth: 80, minHeight: 44)
-        .accessibilityElement(children: .combine)
+        Text("Z\(zoneID)")
+            .font(.caption2.weight(.semibold))
+            .foregroundStyle(.white)
+            .padding(.horizontal, 7)
+            .padding(.vertical, 5)
+            .background(.black.opacity(isCurrent ? 0.85 : 0.65), in: Capsule())
+            .accessibilityLabel("Zona \(zoneID)")
     }
 }
 
@@ -269,6 +266,7 @@ struct SpreaderModeHeader: View {
     @Binding var selectedTab: SpreaderModeTab
     let onBack: () -> Void
     let backDisabled: Bool
+    let showsCustomTab: Bool
 
     var body: some View {
         HStack(spacing: 10) {
@@ -287,30 +285,37 @@ struct SpreaderModeHeader: View {
             }
             .frame(width: 44)
 
-            HStack(spacing: 2) {
-                ForEach(SpreaderModeTab.allCases) { tab in
-                    Button {
-                        selectedTab = tab
-                    } label: {
-                        Text(tab.rawValue)
-                            .font(.system(size: 13, weight: .semibold))
-                            .lineLimit(1)
-                            .minimumScaleFactor(0.8)
-                            .foregroundStyle(selectedTab == tab ? SpreaderPalette.ink : SpreaderPalette.inkSecondary)
-                            .padding(.horizontal, 12)
-                            .frame(height: 42)
-                            .background {
-                                if selectedTab == tab {
-                                    Capsule().fill(.white.opacity(0.72))
+            if showsCustomTab {
+                HStack(spacing: 2) {
+                    ForEach(SpreaderModeTab.allCases) { tab in
+                        Button {
+                            selectedTab = tab
+                        } label: {
+                            Text(tab.rawValue)
+                                .font(.system(size: 13, weight: .semibold))
+                                .lineLimit(1)
+                                .minimumScaleFactor(0.8)
+                                .foregroundStyle(selectedTab == tab ? SpreaderPalette.ink : SpreaderPalette.inkSecondary)
+                                .padding(.horizontal, 12)
+                                .frame(height: 42)
+                                .background {
+                                    if selectedTab == tab {
+                                        Capsule().fill(.white.opacity(0.72))
+                                    }
                                 }
-                            }
+                        }
+                        .buttonStyle(.plain)
+                        .disabled(backDisabled)
                     }
-                    .buttonStyle(.plain)
-                    .disabled(backDisabled)
                 }
+                .padding(3)
+                .glassEffect(.regular, in: Capsule())
+            } else {
+                Text("Mode Pemupukan")
+                    .font(.subheadline.weight(.semibold))
+                    .foregroundStyle(.white)
+                    .frame(maxWidth: .infinity)
             }
-            .padding(3)
-            .glassEffect(.regular, in: Capsule())
 
             Color.clear.frame(width: 44, height: 44)
         }
