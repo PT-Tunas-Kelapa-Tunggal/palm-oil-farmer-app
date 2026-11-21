@@ -7,6 +7,7 @@ public struct FertilizingMapCanvasView: View {
     public let selectedFertilizerTotalDose: String
     public let selectedZone: FertilizingZoneDetail?
     public let orthomosaic: FarmOrthomosaicMapData?
+    public let hidesZoneLabels: Bool
     public let onSelectZone: (FertilizingZoneDetail) -> Void
 
     public init(
@@ -16,6 +17,7 @@ public struct FertilizingMapCanvasView: View {
         selectedFertilizerTotalDose: String = "",
         selectedZone: FertilizingZoneDetail?,
         orthomosaic: FarmOrthomosaicMapData? = nil,
+        hidesZoneLabels: Bool = false,
         onSelectZone: @escaping (FertilizingZoneDetail) -> Void
     ) {
         self.mode = mode
@@ -24,6 +26,7 @@ public struct FertilizingMapCanvasView: View {
         self.selectedFertilizerTotalDose = selectedFertilizerTotalDose
         self.selectedZone = selectedZone
         self.orthomosaic = orthomosaic
+        self.hidesZoneLabels = hidesZoneLabels
         self.onSelectZone = onSelectZone
     }
 
@@ -37,6 +40,7 @@ public struct FertilizingMapCanvasView: View {
                         data: orthomosaic,
                         zones: zones,
                         mode: mode,
+                        hidesZoneLabels: hidesZoneLabels,
                         wholeFarmDoseText: selectedFertilizerTotalDose,
                         selectedZone: selectedZone,
                         onSelectZone: onSelectZone
@@ -64,8 +68,10 @@ public struct FertilizingMapCanvasView: View {
                     .frame(width: canvasWidth)
 
                 // 6 Zone Badges
-                ForEach(zones) { zone in
-                    zoneBadge(zone: zone, in: geometry)
+                if !hidesZoneLabels {
+                    ForEach(zones) { zone in
+                        zoneBadge(zone: zone, in: geometry)
+                    }
                 }
 
             case .perPohon:

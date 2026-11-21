@@ -3,6 +3,7 @@ import SwiftUI
 struct FertilizerScheduleView: View {
     @Bindable var viewModel: FertilizerScheduleViewModel
     var mapRepository: any FertilizingMapRepositoryProtocol = DummyFertilizingMapRepository()
+    var garden: Garden?
     @Environment(\.dismiss) private var dismiss
 
     var body: some View {
@@ -23,6 +24,7 @@ struct FertilizerScheduleView: View {
                         initialFertilizerName: fertilizerName,
                         isInPeriod: isInPeriod
                     )
+                    .withSpreaderGarden(garden)
                 case .exampleScreen:
                     FertilizerExampleScreen()
                 }
