@@ -5,6 +5,7 @@ struct DashboardContentView: View {
     let state: DashboardViewState
     @Binding var selectedFilter: DashboardFilter
     let showsFilter: Bool
+    var isLoading = false
     var onSelectDraft: (DashboardDraft) -> Void = { _ in }
     var onDeleteDraft: (DashboardDraft) -> Void = { _ in }
     var downloads: [MapDownloadItem] = []
@@ -33,6 +34,11 @@ struct DashboardContentView: View {
                     }
                     .sensoryFeedback(.success, trigger: developerTrigger)
                 Spacer()
+                if isLoading && !state.isEmpty {
+                    ProgressView()
+                        .accessibilityLabel("Memuat kebun dari iCloud")
+                        .padding(.trailing, 8)
+                }
                 if !state.isEmpty || !downloads.isEmpty {
                     Button(action: onRegisterGarden) {
                         Image(systemName: "plus").font(.system(size: 22)).frame(width: 44, height: 44)
@@ -44,7 +50,16 @@ struct DashboardContentView: View {
             .padding(.horizontal, 24)
             .padding(.vertical, 16)
 
-            if state.isEmpty && downloads.isEmpty {
+            if state.isEmpty && downloads.isEmpty && isLoading {
+                VStack(spacing: 12) {
+                    ProgressView()
+                    Text("Memuat kebun dari iCloud…")
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
+                }
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .accessibilityElement(children: .combine)
+            } else if state.isEmpty && downloads.isEmpty {
                 GeometryReader { geometry in
                     ScrollView {
                         DashboardEmptyStateView()
@@ -85,7 +100,9 @@ struct DashboardContentView: View {
                                     Button {
                                         onSelectGarden(garden)
                                     } label: {
-                                        DashboardGardenCard(garden: garden, referenceImage: referenceMapImage, metrics: previewMetrics, fertilizerSchedule: fertilizerSchedules[garden.id])
+                                        DashboardGardenCard(garden: garden, referenceImage: referenceMapImage,
+                                                            metrics: previewMetrics, isLoading: isLoading,
+                                                            fertilizerSchedule: fertilizerSchedules[garden.id])
                                     }
                                     .buttonStyle(.plain)
                                 case .draft(let draft):
@@ -124,7 +141,7 @@ struct DashboardContentView: View {
             KropsTheme.surfaceBackground.ignoresSafeArea()
         }
         .safeAreaInset(edge: .bottom, spacing: 0) {
-            if state.isEmpty && downloads.isEmpty {
+            if state.isEmpty && downloads.isEmpty && !isLoading {
                 RegistrationPrimaryButton(title: "Daftarkan Kebun", systemImage: "plus", action: onRegisterGarden)
                     .padding(.horizontal, 34)
                     .padding(.bottom, 2)

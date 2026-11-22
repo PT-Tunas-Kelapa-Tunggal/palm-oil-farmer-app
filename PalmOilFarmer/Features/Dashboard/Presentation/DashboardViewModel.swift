@@ -19,6 +19,8 @@ enum DashboardEvent {
 final class DashboardViewModel {
     var selectedFilter = DashboardFilter.all
     var showsNoConnectionSheet = false
+    private(set) var isLoading = true
+    private var activeRefreshes = 0
     private(set) var pendingGarden: DashboardGarden?
 
     private let repository: any DashboardRepositoryProtocol
@@ -44,6 +46,12 @@ final class DashboardViewModel {
     }
 
     func refresh() async {
+        activeRefreshes += 1
+        isLoading = true
+        defer {
+            activeRefreshes -= 1
+            isLoading = activeRefreshes > 0
+        }
         await repository.refresh()
     }
 

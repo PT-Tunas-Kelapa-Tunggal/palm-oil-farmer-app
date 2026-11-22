@@ -10,6 +10,7 @@ struct DashboardView: View {
             state: viewModel.viewState(showsFilter: showsFilter),
             selectedFilter: $viewModel.selectedFilter,
             showsFilter: showsFilter,
+            isLoading: viewModel.isLoading,
             onSelectDraft: viewModel.selectDraft,
             onDeleteDraft: { _ = viewModel.deleteDraft($0) },
             onSelectGarden: viewModel.selectGarden,
@@ -33,9 +34,11 @@ struct DashboardView: View {
 
 #if DEBUG
 #Preview("Dashboard") {
-    DashboardView(viewModel: DashboardViewModel(
+    let viewModel = DashboardViewModel(
         repository: DummyDashboardRepository(gardens: DashboardPreviewData.gardens),
         onEvent: { _ in }
-    ))
+    )
+    DashboardView(viewModel: viewModel)
+        .task { await viewModel.refresh() }
 }
 #endif
