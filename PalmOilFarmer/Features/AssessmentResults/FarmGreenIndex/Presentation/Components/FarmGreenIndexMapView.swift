@@ -7,6 +7,7 @@ public struct FarmGreenIndexMapView: View {
     public let orthomosaic: FarmOrthomosaicMapData?
     public let pins: [TreePinItem]
     public let selectedPin: TreePinItem?
+    public let selectedCategory: TreeConditionCategory?
     public let showsZones: Bool
     public var onSelectPin: ((TreePinItem) -> Void)?
     public var onRecenter: (() -> Void)?
@@ -17,6 +18,7 @@ public struct FarmGreenIndexMapView: View {
         orthomosaic: FarmOrthomosaicMapData? = nil,
         pins: [TreePinItem] = [],
         selectedPin: TreePinItem? = nil,
+        selectedCategory: TreeConditionCategory? = nil,
         showsZones: Bool = false,
         onSelectPin: ((TreePinItem) -> Void)? = nil,
         onRecenter: (() -> Void)? = nil,
@@ -26,6 +28,7 @@ public struct FarmGreenIndexMapView: View {
         self.orthomosaic = orthomosaic
         self.pins = pins
         self.selectedPin = selectedPin
+        self.selectedCategory = selectedCategory
         self.showsZones = showsZones
         self.onSelectPin = onSelectPin
         self.onRecenter = onRecenter
@@ -41,6 +44,7 @@ public struct FarmGreenIndexMapView: View {
                         data: orthomosaic,
                         pins: pins,
                         selectedPin: selectedPin,
+                        selectedCategory: selectedCategory,
                         showsZones: showsZones,
                         showsTrees: !showsZones,
                         onSelectPin: { onSelectPin?($0) }
@@ -81,7 +85,7 @@ public struct FarmGreenIndexMapView: View {
 
                 // Interactive Tree Marker Pins
                 if !usesGeoreferencedOrthomosaic {
-                    ForEach(pins) { pin in
+                    ForEach(visiblePins) { pin in
                         let xPos = pin.coordinateX * geometry.size.width
                         let yPos = pin.coordinateY * geometry.size.height
                         let isSelected = selectedPin?.id == pin.id
@@ -122,6 +126,12 @@ public struct FarmGreenIndexMapView: View {
         guard let orthomosaic else { return false }
         return orthomosaic.imageURL != nil && orthomosaic.imagePixelWidth > 0
             && orthomosaic.imagePixelHeight > 0 && orthomosaic.farmBoundary.count >= 3
+    }
+
+    private var visiblePins: [TreePinItem] {
+        guard !showsZones else { return [] }
+        guard let selectedCategory else { return pins }
+        return pins.filter { $0.category == selectedCategory }
     }
 
     private func treePinMarker(_ pin: TreePinItem, isSelected: Bool) -> some View {

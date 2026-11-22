@@ -9,6 +9,7 @@ struct OrthomosaicMapKitView: UIViewRepresentable {
     let data: FarmOrthomosaicMapData
     let pins: [TreePinItem]
     let selectedPin: TreePinItem?
+    let selectedCategory: TreeConditionCategory?
     let showsZones: Bool
     let showsTrees: Bool
     let onSelectPin: (TreePinItem) -> Void
@@ -26,12 +27,14 @@ struct OrthomosaicMapKitView: UIViewRepresentable {
         treeTap.cancelsTouchesInView = false
         mapView.addGestureRecognizer(treeTap)
         context.coordinator.update(mapView, data: data, pins: pins, selectedPin: selectedPin,
+                                   selectedCategory: selectedCategory,
                                    showsZones: showsZones, showsTrees: showsTrees, onSelectPin: onSelectPin)
         return mapView
     }
 
     func updateUIView(_ mapView: MKMapView, context: Context) {
         context.coordinator.update(mapView, data: data, pins: pins, selectedPin: selectedPin,
+                                   selectedCategory: selectedCategory,
                                    showsZones: showsZones, showsTrees: showsTrees, onSelectPin: onSelectPin)
     }
 
@@ -41,8 +44,13 @@ struct OrthomosaicMapKitView: UIViewRepresentable {
         private var lastPins: [TreePinItem] = []
         private var lastShowsZones = false
         private var lastShowsTrees = false
+        private var lastSelectedCategory: TreeConditionCategory?
         private var selectedPinID: String?
+        private var cachedImage: CGImage?
+        private var zoneOverlays: [MKPolygon] = []
+        private var treeOverlays: [MKPolygon] = []
         private var treeOverlayPins: [ObjectIdentifier: TreePinItem] = [:]
+        private var treeOverlayByPinID: [String: MKPolygon] = [:]
         private var onSelectPin: ((TreePinItem) -> Void)?
 
         func gestureRecognizer(_ gestureRecognizer: UIGestureRecognizer,
@@ -54,12 +62,13 @@ struct OrthomosaicMapKitView: UIViewRepresentable {
             guard gesture.state == .ended, let mapView = gesture.view as? MKMapView else { return }
             let coordinate = mapView.convert(gesture.location(in: mapView), toCoordinateFrom: mapView)
             let mapPoint = MKMapPoint(coordinate)
-            let tappedPin = treeOverlayPins.first { key, _ in
-                guard let polygon = mapView.overlays.first(where: { ObjectIdentifier($0) == key }) as? MKPolygon else {
-                    return false
-                }
-                return Self.contains(mapPoint, in: polygon)
-            }?.value
+            guard lastShowsTrees else { return }
+            let tappedPin = treeOverlays.lazy.compactMap { polygon -> TreePinItem? in
+                guard let pin = self.treeOverlayPins[ObjectIdentifier(polygon)],
+                      self.lastSelectedCategory == nil || pin.category == self.lastSelectedCategory,
+                      Self.contains(mapPoint, in: polygon) else { return nil }
+                return pin
+            }.first
             if let tappedPin { onSelectPin?(tappedPin) }
         }
 
@@ -68,46 +77,77 @@ struct OrthomosaicMapKitView: UIViewRepresentable {
             data: FarmOrthomosaicMapData,
             pins: [TreePinItem],
             selectedPin: TreePinItem?,
+            selectedCategory: TreeConditionCategory?,
             showsZones: Bool,
             showsTrees: Bool,
             onSelectPin: @escaping (TreePinItem) -> Void
         ) {
             self.onSelectPin = onSelectPin
-            let selectionChanged = selectedPinID != selectedPin?.id
+            let dataChanged = lastData != data
+            let pinsChanged = lastPins != pins
+            let modeChanged = lastShowsZones != showsZones || lastShowsTrees != showsTrees
+            let previousCategory = lastSelectedCategory
+            let categoryChanged = previousCategory != selectedCategory
+            let previousSelectedPinID = selectedPinID
+            let selectionChanged = previousSelectedPinID != selectedPin?.id
             selectedPinID = selectedPin?.id
-            guard lastData != data || lastPins != pins || lastShowsZones != showsZones || lastShowsTrees != showsTrees else {
-                if selectionChanged {
-                    for overlay in mapView.overlays where treeOverlayPins[ObjectIdentifier(overlay)] != nil {
-                        mapView.renderer(for: overlay)?.setNeedsDisplay()
-                    }
-                }
-                return
-            }
+            guard dataChanged || pinsChanged || modeChanged || categoryChanged || selectionChanged else { return }
             lastData = data
             lastPins = pins
             lastShowsZones = showsZones
             lastShowsTrees = showsTrees
+            lastSelectedCategory = selectedCategory
 
-            mapView.removeOverlays(mapView.overlays)
-            mapView.removeAnnotations(mapView.annotations)
-            treeOverlayPins.removeAll()
+            if dataChanged || pinsChanged {
+                mapView.removeOverlays(mapView.overlays)
+                mapView.removeAnnotations(mapView.annotations)
+                zoneOverlays.removeAll()
+                treeOverlays.removeAll()
+                treeOverlayPins.removeAll()
+                treeOverlayByPinID.removeAll()
 
-            guard let imageURL = data.imageURL,
-                  data.imagePixelWidth > 0, data.imagePixelHeight > 0,
-                  data.farmBoundary.count >= 3,
-                  let mapRect = Self.mapRect(for: data.farmBoundary),
-                  let imageMapRect = Self.imageRect(for: data, inside: mapRect) else { return }
+                guard let imageURL = data.imageURL,
+                      data.imagePixelWidth > 0, data.imagePixelHeight > 0,
+                      data.farmBoundary.count >= 3,
+                      let mapRect = Self.mapRect(for: data.farmBoundary),
+                      let imageMapRect = Self.imageRect(for: data, inside: mapRect) else { return }
 
-            if let image = Self.downsampledImage(at: imageURL, maxPixelSize: 4_096) {
-                mapView.addOverlay(OrthomosaicImageOverlay(image: image, boundingMapRect: imageMapRect), level: .aboveLabels)
+                if dataChanged {
+                    cachedImage = Self.downsampledImage(at: imageURL, maxPixelSize: 4_096)
+                }
+                if let cachedImage {
+                    mapView.addOverlay(OrthomosaicImageOverlay(image: cachedImage, boundingMapRect: imageMapRect), level: .aboveLabels)
+                }
+
+                zoneOverlays = data.zones.compactMap { zone in
+                    self.polygon(for: zone.boundingBox, data: data, mapRect: imageMapRect, title: "zone-\(zone.id)")
+                }
+                let pinByID = Dictionary(uniqueKeysWithValues: pins.map { ($0.id, $0) })
+                treeOverlays = data.trees.compactMap { tree -> MKPolygon? in
+                    guard let pin = pinByID["tree-\(tree.id)"],
+                          let polygon = self.polygon(for: tree.boundingBox, data: data, mapRect: imageMapRect,
+                                                title: "tree-\(tree.id)") else { return nil }
+                    self.treeOverlayPins[ObjectIdentifier(polygon)] = pin
+                    self.treeOverlayByPinID[pin.id] = polygon
+                    return polygon
+                }
+
+                if dataChanged {
+                    mapView.setVisibleMapRect(
+                        mapRect,
+                        edgePadding: UIEdgeInsets(top: 130, left: 24, bottom: 300, right: 24),
+                        animated: false
+                    )
+                }
             }
 
-            if showsZones {
-                let zonePolygons = data.zones.compactMap { zone -> MKPolygon? in
-                    polygon(for: zone.boundingBox, data: data, mapRect: imageMapRect, title: "zone-\(zone.id)")
+            if dataChanged || pinsChanged || modeChanged {
+                mapView.removeOverlays(mapView.overlays.filter { $0 is MKPolygon })
+                mapView.removeAnnotations(mapView.annotations.filter { $0 is FarmZoneAnnotation })
+                if showsZones {
+                    mapView.addOverlays(zoneOverlays, level: .aboveLabels)
                 }
-                mapView.addOverlays(zonePolygons, level: .aboveLabels)
-                if zonePolygons.isEmpty {
+                if showsZones && zoneOverlays.isEmpty {
                     let zoneAnnotations = Dictionary(grouping: data.trees, by: \.zoneId).compactMap { entry -> FarmZoneAnnotation? in
                         let (zoneID, trees) = entry
                         let centers = trees.compactMap { Self.center(of: $0.boundingBox) }
@@ -116,30 +156,30 @@ struct OrthomosaicMapKitView: UIViewRepresentable {
                             x: centers.map(\.x).reduce(0, +) / Double(centers.count),
                             y: centers.map(\.y).reduce(0, +) / Double(centers.count)
                         )
-                        guard let coordinate = Self.coordinate(for: center, data: data, mapRect: imageMapRect) else { return nil }
+                        guard let mapRect = Self.mapRect(for: data.farmBoundary),
+                              let imageMapRect = Self.imageRect(for: data, inside: mapRect),
+                              let coordinate = Self.coordinate(for: center, data: data, mapRect: imageMapRect) else { return nil }
                         return FarmZoneAnnotation(zoneID: zoneID, treeCount: trees.count, coordinate: coordinate)
                     }
                     mapView.addAnnotations(zoneAnnotations)
                 }
-            }
-
-            if showsTrees {
-                let pinByID = Dictionary(uniqueKeysWithValues: pins.map { ($0.id, $0) })
-                let treePolygons = data.trees.compactMap { tree -> MKPolygon? in
-                    guard let pin = pinByID["tree-\(tree.id)"],
-                          let polygon = polygon(for: tree.boundingBox, data: data, mapRect: imageMapRect,
-                                                title: "tree-\(tree.id)") else { return nil }
-                    treeOverlayPins[ObjectIdentifier(polygon)] = pin
-                    return polygon
+                if showsTrees {
+                    mapView.addOverlays(treeOverlays, level: .aboveLabels)
                 }
-                mapView.addOverlays(treePolygons, level: .aboveLabels)
             }
 
-            mapView.setVisibleMapRect(
-                mapRect,
-                edgePadding: UIEdgeInsets(top: 130, left: 24, bottom: 300, right: 24),
-                animated: false
-            )
+            if categoryChanged && showsTrees && !dataChanged && !pinsChanged && !modeChanged {
+                for polygon in treeOverlays {
+                    guard let pin = treeOverlayPins[ObjectIdentifier(polygon)] else { continue }
+                    let wasVisible = previousCategory == nil || pin.category == previousCategory
+                    let isVisible = selectedCategory == nil || pin.category == selectedCategory
+                    if wasVisible != isVisible { refreshTreeOutline(for: pin.id, on: mapView) }
+                }
+            }
+            if selectionChanged && showsTrees && !dataChanged && !pinsChanged && !modeChanged {
+                if let previousSelectedPinID { refreshTreeOutline(for: previousSelectedPinID, on: mapView) }
+                if let selectedPinID { refreshTreeOutline(for: selectedPinID, on: mapView) }
+            }
         }
 
         func mapView(_ mapView: MKMapView, rendererFor overlay: MKOverlay) -> MKOverlayRenderer {
@@ -149,10 +189,7 @@ struct OrthomosaicMapKitView: UIViewRepresentable {
             if let polygon = overlay as? MKPolygon {
                 let renderer = MKPolygonRenderer(polygon: polygon)
                 if let pin = treeOverlayPins[ObjectIdentifier(polygon)] {
-                    let categoryColor = UIColor(pin.category.color)
-                    renderer.strokeColor = categoryColor.withAlphaComponent(0.98)
-                    renderer.fillColor = UIColor(pin.category.color).withAlphaComponent(0.58)
-                    renderer.lineWidth = pin.id == selectedPinID ? 2.5 : 1.5
+                    configureTreeRenderer(renderer, for: pin)
                 } else {
                     renderer.strokeColor = UIColor(KropsTheme.fillWhite55)
                     renderer.fillColor = UIColor(KropsTheme.fillWhite6)
@@ -161,6 +198,22 @@ struct OrthomosaicMapKitView: UIViewRepresentable {
                 return renderer
             }
             return MKOverlayRenderer(overlay: overlay)
+        }
+
+        private func refreshTreeOutline(for pinID: String, on mapView: MKMapView) {
+            guard let polygon = treeOverlayByPinID[pinID],
+                  let pin = treeOverlayPins[ObjectIdentifier(polygon)],
+                  let renderer = mapView.renderer(for: polygon) as? MKPolygonRenderer else { return }
+            configureTreeRenderer(renderer, for: pin)
+            renderer.setNeedsDisplay()
+        }
+
+        private func configureTreeRenderer(_ renderer: MKPolygonRenderer, for pin: TreePinItem) {
+            let isVisible = lastSelectedCategory == nil || pin.category == lastSelectedCategory
+            let categoryColor = UIColor(pin.category.color)
+            renderer.strokeColor = categoryColor.withAlphaComponent(isVisible ? 0.98 : 0)
+            renderer.fillColor = categoryColor.withAlphaComponent(isVisible ? 0.58 : 0)
+            renderer.lineWidth = pin.id == selectedPinID ? 2.5 : 1.5
         }
 
         func mapView(_ mapView: MKMapView, viewFor annotation: MKAnnotation) -> MKAnnotationView? {

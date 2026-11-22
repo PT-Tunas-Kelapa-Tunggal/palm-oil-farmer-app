@@ -37,8 +37,9 @@ public struct FarmGreenIndexView: View {
                     mapImageName: item.orthomosaic?.imageURL == nil && viewModel.selectedAreaDivision == .perZona
                         ? "FarmGreenIndexZoneMap" : item.mapImageName,
                     orthomosaic: item.orthomosaic,
-                    pins: visiblePins(for: item),
+                    pins: item.pins,
                     selectedPin: viewModel.selectedPin,
+                    selectedCategory: visibleCategory,
                     showsZones: viewModel.selectedAreaDivision == .perZona,
                     onSelectPin: { pin in
                         withAnimation(.spring(response: 0.35, dampingFraction: 0.8)) {
@@ -120,12 +121,10 @@ public struct FarmGreenIndexView: View {
         .toolbar(.hidden, for: .navigationBar)
     }
 
-    private func visiblePins(for item: FarmGreenIndexItem) -> [TreePinItem] {
-        guard viewModel.selectedAreaDivision == .perPohon else { return [] }
-        if case .detail(let category) = viewModel.sheetState {
-            return item.pins.filter { $0.category == category }
-        }
-        return item.pins
+    private var visibleCategory: TreeConditionCategory? {
+        guard viewModel.selectedAreaDivision == .perPohon,
+              case .detail(let category) = viewModel.sheetState else { return nil }
+        return category
     }
 
     // MARK: - Bottom Sheet Builder
