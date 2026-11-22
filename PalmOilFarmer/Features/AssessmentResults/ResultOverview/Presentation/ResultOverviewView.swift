@@ -147,6 +147,12 @@ public struct ResultOverviewView: View {
             .frame(maxWidth: .infinity)
         }
         .ignoresSafeArea(edges: .top)
+        .overlay(alignment: .topLeading) {
+            if viewModel.overview == nil {
+                GardenProfileIconButton(symbol: "chevron.left", label: "Kembali", action: handleBack)
+                    .padding(.leading, 16)
+            }
+        }
         .background(KropsTheme.surfaceBackground.ignoresSafeArea())
         .task {
             if viewModel.overview == nil {
