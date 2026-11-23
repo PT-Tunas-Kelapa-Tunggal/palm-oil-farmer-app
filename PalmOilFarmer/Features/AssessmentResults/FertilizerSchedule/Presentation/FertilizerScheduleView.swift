@@ -104,7 +104,7 @@ struct FertilizerScheduleView: View {
 
     private func header(_ subtitle: String) -> some View {
         VStack(alignment: .leading, spacing: 4) {
-            backButton.padding(.bottom, 18)
+            backButton.padding(.bottom, 7)
             Text("Jadwal Pemupukan")
                 .font(.largeTitle.bold())
                 .accessibilityAddTraits(.isHeader)
@@ -113,6 +113,7 @@ struct FertilizerScheduleView: View {
                 .foregroundStyle(FertilizerScheduleStyle.headerSecondary)
         }
         .foregroundStyle(.white)
+        .padding(.top, 15)
     }
 
     // MARK: Hero
