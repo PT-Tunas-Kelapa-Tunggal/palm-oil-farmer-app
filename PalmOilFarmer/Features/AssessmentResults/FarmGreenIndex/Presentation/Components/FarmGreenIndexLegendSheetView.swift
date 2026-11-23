@@ -20,20 +20,6 @@ public struct FarmGreenIndexLegendSheetView: View {
 
     public var body: some View {
         VStack(alignment: .leading, spacing: 14) {
-            // Grabber handle
-            HStack {
-                Spacer()
-                Button(action: { onCollapse?() }) {
-                    Capsule()
-                        .fill(KropsTheme.fillBlack20)
-                        .frame(width: 44, height: 4)
-                        .padding(.vertical, 6)
-                }
-                .buttonStyle(.plain)
-                .accessibilityLabel("Tutup Legenda")
-                Spacer()
-            }
-
             // Header Title & Subtitle (Left-aligned matching Sketch)
             VStack(alignment: .leading, spacing: 3) {
                 Text("Kondisi Pohon")
@@ -56,19 +42,10 @@ public struct FarmGreenIndexLegendSheetView: View {
                 }
             }
         }
+        // Shown inside `DetentSheet`: the system draws the sheet, its glass and its grabber.
         .padding(.horizontal, 16)
-        .padding(.top, 8)
-        .padding(.bottom, 36)
-        .glassEffect(
-            .regular,
-            in: UnevenRoundedRectangle(
-                topLeadingRadius: 32,
-                bottomLeadingRadius: 0,
-                bottomTrailingRadius: 0,
-                topTrailingRadius: 32,
-                style: .continuous
-            )
-        )
+        .padding(.top, 24)
+        .padding(.bottom, 16)
     }
 
     private func categoryRow(_ item: TreeConditionSummaryItem) -> some View {

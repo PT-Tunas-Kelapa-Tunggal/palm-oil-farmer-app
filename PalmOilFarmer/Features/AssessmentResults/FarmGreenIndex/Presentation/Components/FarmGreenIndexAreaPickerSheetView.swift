@@ -54,19 +54,10 @@ public struct FarmGreenIndexAreaPickerSheetView: View {
                 optionCard(mode: .perZona, imageName: "AreaPickerPerZona")
             }
         }
+        // Shown inside `DetentSheet`: the system draws the sheet, its glass and its grabber.
         .padding(.horizontal, 16)
-        .padding(.top, 16)
-        .padding(.bottom, 36)
-        .glassEffect(
-            .regular,
-            in: UnevenRoundedRectangle(
-                topLeadingRadius: 32,
-                bottomLeadingRadius: 0,
-                bottomTrailingRadius: 0,
-                topTrailingRadius: 32,
-                style: .continuous
-            )
-        )
+        .padding(.top, 24)
+        .padding(.bottom, 16)
     }
 
     private func optionCard(mode: FarmAreaDivisionMode, imageName: String) -> some View {

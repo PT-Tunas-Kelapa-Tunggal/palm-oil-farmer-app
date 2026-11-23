@@ -24,29 +24,23 @@ public struct ResultOverviewMapHeaderView: View {
         self.onBack = onBack
     }
 
-    private var mapRegion: MKCoordinateRegion? {
-        guard gardenBoundaryCoordinates.count >= 3,
-              gardenBoundaryCoordinates.allSatisfy({
-                  $0.latitude.isFinite && $0.longitude.isFinite
-                      && (-90...90).contains($0.latitude)
-                      && (-180...180).contains($0.longitude)
-              }) else { return nil }
+    /// The title row ends at 104 pt (60 top + 44); the content cards overlap the map's last 52 pt.
+    /// The boundary is framed between them, with 16 pt to spare, like the Profil Kebun header.
+    private static let boundaryInsets = EdgeInsets(top: 120, leading: 24, bottom: 68, trailing: 24)
 
-        let latitudes = gardenBoundaryCoordinates.map(\.latitude)
-        let longitudes = gardenBoundaryCoordinates.map(\.longitude)
-        guard let minLatitude = latitudes.min(), let maxLatitude = latitudes.max(),
-              let minLongitude = longitudes.min(), let maxLongitude = longitudes.max() else { return nil }
+    private var hasValidBoundary: Bool {
+        gardenBoundaryCoordinates.count >= 3
+            && gardenBoundaryCoordinates.allSatisfy {
+                $0.latitude.isFinite && $0.longitude.isFinite
+                    && (-90...90).contains($0.latitude)
+                    && (-180...180).contains($0.longitude)
+            }
+    }
 
-        return MKCoordinateRegion(
-            center: CLLocationCoordinate2D(
-                latitude: (minLatitude + maxLatitude) / 2,
-                longitude: (minLongitude + maxLongitude) / 2
-            ),
-            span: MKCoordinateSpan(
-                latitudeDelta: max((maxLatitude - minLatitude) * 1.8, 0.0007),
-                longitudeDelta: max((maxLongitude - minLongitude) * 1.8, 0.0007)
-            )
-        )
+    private var boundary: GardenBoundary {
+        GardenBoundary(points: gardenBoundaryCoordinates.map {
+            GardenCoordinate(latitude: $0.latitude, longitude: $0.longitude)
+        })
     }
 
     public var body: some View {
@@ -54,16 +48,9 @@ public struct ResultOverviewMapHeaderView: View {
             // Use the saved garden boundary to center the live satellite map.
             Color.clear
                 .overlay {
-                    if let mapRegion {
-                        Map(initialPosition: .region(mapRegion), interactionModes: []) {
-                            MapPolygon(coordinates: gardenBoundaryCoordinates.map {
-                                CLLocationCoordinate2D(latitude: $0.latitude, longitude: $0.longitude)
-                            })
-                            .foregroundStyle(.white.opacity(0.25))
-                            .stroke(.white.opacity(0.9), lineWidth: 2)
-                        }
-                        .mapStyle(.imagery)
-                        .allowsHitTesting(false)
+                    if hasValidBoundary {
+                        // Same map as Profil Kebun: the boundary always sits below the title.
+                        GardenMapView(boundary: boundary, contentInsets: Self.boundaryInsets, zoomOut: 1.1)
                     } else if let heroImageName, let uiImage = UIImage(named: heroImageName) {
                         Image(uiImage: uiImage)
                             .resizable()
@@ -84,9 +71,9 @@ public struct ResultOverviewMapHeaderView: View {
                 .frame(height: 360)
                 .clipped()
 
-            // Top gradient overlay for status bar readability
+            // Top gradient overlay for status bar readability (same as the Profil Kebun header)
             LinearGradient(
-                colors: [Color.black.opacity(0.55), Color.clear],
+                colors: [KropsTheme.surfaceInverse.opacity(0.4), KropsTheme.surfaceInverse.opacity(0)],
                 startPoint: .top,
                 endPoint: .bottom
             )
@@ -96,8 +83,13 @@ public struct ResultOverviewMapHeaderView: View {
             // Bottom gradient overlay to blend into the #F2F4F7 page background
             VStack {
                 Spacer()
+                // Clear until the last ~40 pt, which the overlapping cards mostly cover
+                // (same as the Profil Kebun header), so the map is not washed out above the cards.
                 LinearGradient(
-                    colors: [Color.clear, KropsTheme.surfaceBackground],
+                    stops: [
+                        .init(color: KropsTheme.surfaceBackground.opacity(0), location: 0.76),
+                        .init(color: KropsTheme.surfaceBackground, location: 1)
+                    ],
                     startPoint: .top,
                     endPoint: .bottom
                 )

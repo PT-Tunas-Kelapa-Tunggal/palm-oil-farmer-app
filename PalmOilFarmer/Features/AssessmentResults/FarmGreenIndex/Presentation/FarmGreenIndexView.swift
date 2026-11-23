@@ -11,8 +11,36 @@ import SwiftUI
 @MainActor
 public struct FarmGreenIndexView: View {
     @Environment(\.dismiss) private var dismiss
+    /// The sheet contents fit their heights and do not scroll; at accessibility text sizes they may not
+    /// fit, so scrolling comes back there.
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
     @State private var viewModel: FarmGreenIndexViewModel
-    @State private var sheetDragOffsetY: CGFloat = 0
+    /// The bottom sheet is a real sheet, open for as long as the page is shown.
+    @State private var showsSheet = true
+    /// Set by the back button: the sheet closes first, then the page leaves (see `finishLeaving`).
+    @State private var isLeaving = false
+
+    /// Current sheet height. Kept apart from the content state so a content change only moves the
+    /// sheet to a new height (an animated resize) instead of swapping its set of heights.
+    @State private var detent: PresentationDetent
+
+    /// Sheet heights: summary, detail / area picker, legend.
+    private static let collapsedDetent = PresentationDetent.height(90)
+    private static let detailDetent = PresentationDetent.fraction(0.3)
+    private static let legendDetent = PresentationDetent.medium
+
+    /// The height each content opens at.
+    private static func detent(for state: FarmGreenIndexSheetState) -> PresentationDetent {
+        state == .collapsed ? collapsedDetent : expandedDetent(for: state)
+    }
+
+    /// The open height a drag can reach from this content (from the summary, dragging up opens the legend).
+    private static func expandedDetent(for state: FarmGreenIndexSheetState) -> PresentationDetent {
+        switch state {
+        case .collapsed, .legend: legendDetent
+        case .detail, .areaPicker: detailDetent
+        }
+    }
 
     public var onBack: (() -> Void)?
 
@@ -21,11 +49,13 @@ public struct FarmGreenIndexView: View {
         onBack: (() -> Void)? = nil
     ) {
         _viewModel = State(initialValue: viewModel)
+        _detent = State(initialValue: Self.detent(for: viewModel.sheetState))
         self.onBack = onBack
     }
 
     public init(onBack: (() -> Void)? = nil) {
         _viewModel = State(initialValue: FarmGreenIndexViewModel())
+        _detent = State(initialValue: Self.collapsedDetent)
         self.onBack = onBack
     }
 
@@ -42,17 +72,17 @@ public struct FarmGreenIndexView: View {
                     selectedCategory: visibleCategory,
                     showsZones: viewModel.selectedAreaDivision == .perZona,
                     onSelectPin: { pin in
-                        withAnimation(.spring(response: 0.35, dampingFraction: 0.8)) {
+                        animateSheet {
                             viewModel.selectPin(pin)
                         }
                     },
                     onRecenter: {
-                        withAnimation(.spring(response: 0.35, dampingFraction: 0.8)) {
+                        animateSheet {
                             viewModel.deselectPin()
                         }
                     },
                     onTapBackground: {
-                        withAnimation(.spring(response: 0.35, dampingFraction: 0.8)) {
+                        animateSheet {
                             viewModel.collapseSheet()
                             viewModel.deselectPin()
                         }
@@ -65,25 +95,16 @@ public struct FarmGreenIndexView: View {
                     locationName: item.locationName,
                     onBack: handleBack,
                     onToggleLegend: {
-                        withAnimation(.spring(response: 0.35, dampingFraction: 0.8)) {
+                        animateSheet {
                             viewModel.toggleSheet()
                         }
                     },
                     onOpenAreaPicker: {
-                        withAnimation(.spring(response: 0.35, dampingFraction: 0.8)) {
+                        animateSheet {
                             viewModel.openAreaPicker()
                         }
                     }
                 )
-
-                // 3. Floating Bottom Sheet (Interactive & Swipable)
-                VStack {
-                    Spacer()
-                    bottomSheetContent(item)
-                        .offset(y: sheetDragOffsetY)
-                        .simultaneousGesture(sheetDragGesture)
-                }
-                .ignoresSafeArea(edges: .bottom)
             } else if viewModel.isLoading {
                 ZStack {
                     Color.black.opacity(0.85).ignoresSafeArea()
@@ -113,6 +134,22 @@ public struct FarmGreenIndexView: View {
                 }
             }
         }
+        // 3. Bottom sheet: a native sheet resting at the summary height or the height of its content,
+        // with the map and header still usable behind it.
+        .sheet(isPresented: sheetPresented, onDismiss: finishLeaving) {
+            if let item = viewModel.item {
+                DetentSheet(detents: sheetDetents, selection: detentSelection,
+                            backgroundInteractiveUpThrough: Self.legendDetent) {
+                    sheetContent(item)
+                }
+            }
+        }
+        // Safety net for content changes made outside `animateSheet` (e.g. previews).
+        .onChange(of: viewModel.sheetState) { _, state in
+            withAnimation(.spring(response: 0.35, dampingFraction: 0.8)) {
+                detent = Self.detent(for: state)
+            }
+        }
         .task {
             if viewModel.item == nil {
                 await viewModel.load()
@@ -127,169 +164,142 @@ public struct FarmGreenIndexView: View {
         return category
     }
 
-    // MARK: - Bottom Sheet Builder
+    // MARK: - Bottom Sheet
+
+    private var sheetPresented: Binding<Bool> {
+        Binding(get: { showsSheet && viewModel.item != nil }, set: { showsSheet = $0 })
+    }
+
+    /// Heights a drag can stop at: the summary and the current content's height, so dragging down from the
+    /// legend goes straight to the summary. The height the sheet is at stays in the set while it animates
+    /// to a new one; removing it mid-way would make the sheet jump instead of resize.
+    private var sheetDetents: Set<PresentationDetent> {
+        [Self.collapsedDetent, Self.expandedDetent(for: viewModel.sheetState), detent]
+    }
+
+    /// The farmer dragged the sheet: keep the new height, and change the content where the height asks for it.
+    private var detentSelection: Binding<PresentationDetent> {
+        Binding(
+            get: { detent },
+            set: { detent in
+                self.detent = detent
+                animateSheet {
+                    if detent == Self.collapsedDetent {
+                        // Dragged down: the area picker returns to where it came from, the rest collapse.
+                        if viewModel.sheetState == .areaPicker {
+                            viewModel.closeAreaPicker()
+                        } else {
+                            viewModel.collapseSheet()
+                        }
+                    } else if viewModel.sheetState == .collapsed {
+                        // Dragged up from the summary.
+                        viewModel.showLegend()
+                    }
+                }
+            }
+        )
+    }
 
     @ViewBuilder
-    private func bottomSheetContent(_ item: FarmGreenIndexItem) -> some View {
+    private func sheetContent(_ item: FarmGreenIndexItem) -> some View {
         switch viewModel.sheetState {
         case .collapsed:
             FarmGreenIndexCollapsedPillView(
                 subtitle: "\(item.treesToPayAttentionCount) dari \(item.totalTrees) pohon perlu diperhatikan",
                 onExpand: {
-                    withAnimation(.spring(response: 0.35, dampingFraction: 0.8)) {
+                    animateSheet {
                         viewModel.showLegend()
                     }
                 }
             )
-            .transition(.move(edge: .bottom).combined(with: .opacity))
+            .transition(.opacity)
 
         case .legend:
-            FarmGreenIndexLegendSheetView(
-                categories: item.categories,
-                onSelectCategory: { category in
-                    withAnimation(.spring(response: 0.35, dampingFraction: 0.8)) {
-                        viewModel.selectCategory(category)
-                    }
-                },
-                onCollapse: {
-                    withAnimation(.spring(response: 0.35, dampingFraction: 0.8)) {
-                        viewModel.collapseSheet()
-                    }
-                }
-            )
-            .transition(.move(edge: .bottom).combined(with: .opacity))
-
-        case .detail(let category):
-            if let summary = item.categories.first(where: { $0.category == category }) {
-                FarmGreenIndexDetailSheetView(
-                    summary: summary,
-                    onBack: {
-                        withAnimation(.spring(response: 0.35, dampingFraction: 0.8)) {
-                            viewModel.showLegend()
+            ScrollView {
+                FarmGreenIndexLegendSheetView(
+                    categories: item.categories,
+                    onSelectCategory: { category in
+                        animateSheet {
+                            viewModel.selectCategory(category)
                         }
                     },
                     onCollapse: {
-                        withAnimation(.spring(response: 0.35, dampingFraction: 0.8)) {
+                        animateSheet {
                             viewModel.collapseSheet()
                         }
                     }
                 )
-                .transition(.move(edge: .bottom).combined(with: .opacity))
+            }
+            .scrollDisabled(!dynamicTypeSize.isAccessibilitySize)
+            .transition(.opacity)
+
+        case .detail(let category):
+            if let summary = item.categories.first(where: { $0.category == category }) {
+                ScrollView {
+                    FarmGreenIndexDetailSheetView(
+                        summary: summary,
+                        onBack: {
+                            animateSheet {
+                                viewModel.showLegend()
+                            }
+                        },
+                        onCollapse: {
+                            animateSheet {
+                                viewModel.collapseSheet()
+                            }
+                        }
+                    )
+                }
+                .scrollDisabled(!dynamicTypeSize.isAccessibilitySize)
+                .transition(.opacity)
             }
 
         case .areaPicker:
-            FarmGreenIndexAreaPickerSheetView(
-                selectedMode: viewModel.selectedAreaDivision,
-                onSelectMode: { mode in
-                    withAnimation(.spring(response: 0.35, dampingFraction: 0.8)) {
-                        viewModel.selectAreaDivision(mode)
-                    }
-                },
-                onClose: {
-                    withAnimation(.spring(response: 0.35, dampingFraction: 0.8)) {
-                        viewModel.closeAreaPicker()
-                    }
-                }
-            )
-            .transition(.move(edge: .bottom).combined(with: .opacity))
-        }
-    }
-
-    // MARK: - Swipe Gesture
-
-    private var sheetDragGesture: some Gesture {
-        DragGesture(minimumDistance: 12)
-            .onChanged { value in
-                let translation = value.translation.height
-                switch viewModel.sheetState {
-                case .collapsed:
-                    // Swiping up from collapsed: allows dragging up (negative translation)
-                    if translation < 0 {
-                        sheetDragOffsetY = translation * 0.4
-                    } else {
-                        // Light elastic resistance downwards
-                        sheetDragOffsetY = translation * 0.1
-                    }
-
-                case .legend, .detail, .areaPicker:
-                    // Swiping down from expanded sheet: allows dragging down (positive translation)
-                    if translation > 0 {
-                        sheetDragOffsetY = translation * 0.5
-                    } else {
-                        // Light elastic resistance upwards
-                        sheetDragOffsetY = translation * 0.1
-                    }
-                }
-            }
-            .onEnded { value in
-                let translation = value.translation.height
-                let velocity = value.predictedEndTranslation.height - translation
-
-                switch viewModel.sheetState {
-                case .collapsed:
-                    // Swipe up condition: dragged up > 25pt or fast upward velocity -> expand
-                    if translation < -25 || velocity < -100 {
-                        withAnimation(.spring(response: 0.36, dampingFraction: 0.82)) {
-                            sheetDragOffsetY = 0
-                            viewModel.showLegend()
+            ScrollView {
+                FarmGreenIndexAreaPickerSheetView(
+                    selectedMode: viewModel.selectedAreaDivision,
+                    onSelectMode: { mode in
+                        animateSheet {
+                            viewModel.selectAreaDivision(mode)
                         }
-                    } else {
-                        withAnimation(.spring(response: 0.28, dampingFraction: 0.8)) {
-                            sheetDragOffsetY = 0
-                        }
-                    }
-
-                case .legend:
-                    // Swipe down condition: dragged down > 25pt or fast downward velocity -> hide/collapse
-                    if translation > 25 || velocity > 100 {
-                        withAnimation(.spring(response: 0.36, dampingFraction: 0.82)) {
-                            sheetDragOffsetY = 0
-                            viewModel.collapseSheet()
-                        }
-                    } else {
-                        withAnimation(.spring(response: 0.28, dampingFraction: 0.8)) {
-                            sheetDragOffsetY = 0
-                        }
-                    }
-
-                case .detail:
-                    // Swipe down condition: dragged down > 25pt or fast downward velocity -> hide/collapse
-                    if translation > 25 || velocity > 100 {
-                        withAnimation(.spring(response: 0.36, dampingFraction: 0.82)) {
-                            sheetDragOffsetY = 0
-                            viewModel.collapseSheet()
-                        }
-                    } else if value.translation.width > 50 {
-                        // Horizontal swipe right -> back to legend
-                        withAnimation(.spring(response: 0.36, dampingFraction: 0.82)) {
-                            sheetDragOffsetY = 0
-                            viewModel.showLegend()
-                        }
-                    } else {
-                        withAnimation(.spring(response: 0.28, dampingFraction: 0.8)) {
-                            sheetDragOffsetY = 0
-                        }
-                    }
-
-                case .areaPicker:
-                    // Swipe down condition: dragged down > 25pt or fast downward velocity -> close area picker
-                    if translation > 25 || velocity > 100 {
-                        withAnimation(.spring(response: 0.36, dampingFraction: 0.82)) {
-                            sheetDragOffsetY = 0
+                    },
+                    onClose: {
+                        animateSheet {
                             viewModel.closeAreaPicker()
                         }
-                    } else {
-                        withAnimation(.spring(response: 0.28, dampingFraction: 0.8)) {
-                            sheetDragOffsetY = 0
-                        }
                     }
-                }
+                )
             }
+            .scrollDisabled(!dynamicTypeSize.isAccessibilitySize)
+            .transition(.opacity)
+        }
     }
 
     // MARK: - Actions
 
+    /// Changes the sheet content and its height in the same animation, so the sheet resizes while the
+    /// content changes instead of swapping the content first and resizing a moment later.
+    private func animateSheet(_ change: () -> Void) {
+        withAnimation(.spring(response: 0.35, dampingFraction: 0.8)) {
+            change()
+            detent = Self.detent(for: viewModel.sheetState)
+        }
+    }
+
+    /// The sheet sits above the navigation stack, so it closes before the page leaves.
     private func handleBack() {
+        guard sheetPresented.wrappedValue else { return leave() }
+        isLeaving = true
+        showsSheet = false
+    }
+
+    private func finishLeaving() {
+        guard isLeaving else { return }
+        isLeaving = false
+        leave()
+    }
+
+    private func leave() {
         if let onBack {
             onBack()
         } else {
