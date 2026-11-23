@@ -164,7 +164,8 @@ struct ContentView: View {
                     ),
                     mapRepository: CloudKitFertilizingMapRepository(
                         containerIdentifier: AppConfiguration.cloudKitContainerIdentifier
-                    )
+                    ),
+                    garden: store.gardens.first(where: { $0.id == gardenID })
                 )
                 .navigationTransition(.zoom(sourceID: gardenId, in: fertilizerScheduleTransition))
             } else {

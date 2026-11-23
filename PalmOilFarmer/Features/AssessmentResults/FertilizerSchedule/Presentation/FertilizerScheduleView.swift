@@ -3,6 +3,7 @@ import SwiftUI
 struct FertilizerScheduleView: View {
     @Bindable var viewModel: FertilizerScheduleViewModel
     var mapRepository: any FertilizingMapRepositoryProtocol = DummyFertilizingMapRepository()
+    var garden: Garden?
     @Environment(\.dismiss) private var dismiss
 
     var body: some View {
@@ -23,6 +24,7 @@ struct FertilizerScheduleView: View {
                         initialFertilizerName: fertilizerName,
                         isInPeriod: isInPeriod
                     )
+                    .withSpreaderGarden(garden)
                 case .exampleScreen:
                     FertilizerExampleScreen()
                 }
@@ -102,7 +104,7 @@ struct FertilizerScheduleView: View {
 
     private func header(_ subtitle: String) -> some View {
         VStack(alignment: .leading, spacing: 4) {
-            backButton.padding(.bottom, 18)
+            backButton.padding(.bottom, 7)
             Text("Jadwal Pemupukan")
                 .font(.largeTitle.bold())
                 .accessibilityAddTraits(.isHeader)
@@ -111,6 +113,7 @@ struct FertilizerScheduleView: View {
                 .foregroundStyle(FertilizerScheduleStyle.headerSecondary)
         }
         .foregroundStyle(.white)
+        .padding(.top, 15)
     }
 
     // MARK: Hero

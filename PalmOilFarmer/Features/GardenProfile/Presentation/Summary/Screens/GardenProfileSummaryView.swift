@@ -61,10 +61,10 @@ struct GardenProfileSummaryView: View {
     }
 
     private func metric(_ title: String, detail: String, value: String, symbol: String) -> some View {
-        VStack(alignment: .leading, spacing: 0) {
-            HStack(spacing: 8) {
+        VStack(alignment: .leading, spacing: 14) {
+            HStack {
                 if symbol == "sprout" {
-                    Image("ProfileSeedling").resizable().scaledToFit().frame(width: 24, height: 24)
+                    Image("ProfileSeedling").renderingMode(.template).resizable().scaledToFit().frame(width: 24, height: 24)
                 } else {
                     Image(systemName: symbol).font(.title2)
                 }
@@ -84,9 +84,7 @@ struct GardenProfileSummaryView: View {
                            startPoint: .topLeading, endPoint: .bottomTrailing),
             in: RoundedRectangle(cornerRadius: 20)
         )
-        .accessibilityElement(children: .combine)
     }
-
 }
 
 #if DEBUG

@@ -5,6 +5,7 @@ struct DashboardGardenCard: View {
     let garden: DashboardGarden
     var referenceImage: String? = nil
     var metrics: GardenDisplayMetrics? = nil
+    var isLoading = false
 
     private var displayMetrics: GardenDisplayMetrics {
         metrics ?? GardenDisplayMetrics(area: garden.area, perimeter: garden.perimeter)
@@ -41,7 +42,7 @@ struct DashboardGardenCard: View {
                         }.frame(maxWidth: .infinity, alignment: .leading)
                     }.font(.footnote)
                 }.frame(minHeight: 82).padding(10)
-                if fertilizerSchedule == nil {
+                if fertilizerSchedule == nil && !isLoading {
                     VStack(spacing: 0) {
                         Divider()
                         DashboardGardenStageLabel(stage: garden.stage, visitDate: garden.visitDate)

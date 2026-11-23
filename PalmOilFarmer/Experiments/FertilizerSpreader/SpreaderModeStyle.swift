@@ -48,11 +48,10 @@ enum SpreaderFormat {
 struct SpreaderZonePlan: Equatable {
     let zoneID: Int
     let treeCount: Int
+    let totalKg: Double
     let dosePerTreeKg: Double
     /// Solution volume sent to the spreader for one tree.
     let litersPerTree: Double
-
-    var totalKg: Double { Double(treeCount) * dosePerTreeKg }
 
     // Sample assumptions, same tree density as DemoReviewReport.
     private static let treesPerHectare = 136.0
@@ -66,6 +65,7 @@ struct SpreaderZonePlan: Equatable {
             let zoneTotalLiters = Double(trees) * sampleDosePerTreeKg * sampleLitersPerKg
             let liters = SpreaderDose.litersPerTree(zoneTotalLiters: zoneTotalLiters, treeCount: trees) ?? 0
             return (zone.id, SpreaderZonePlan(zoneID: zone.id, treeCount: trees,
+                                                 totalKg: Double(trees) * sampleDosePerTreeKg,
                                                  dosePerTreeKg: sampleDosePerTreeKg, litersPerTree: liters))
         })
     }

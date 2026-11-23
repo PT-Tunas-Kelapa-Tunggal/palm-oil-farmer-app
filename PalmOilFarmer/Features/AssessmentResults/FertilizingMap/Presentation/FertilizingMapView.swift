@@ -8,6 +8,9 @@ public typealias FertilizerMapView = FertilizingMapView
 public struct FertilizingMapView: View {
     @Environment(\.dismiss) private var dismiss
     @State private var viewModel: FertilizingMapViewModel
+    @State private var showsSpreader = false
+    @State private var spreaderError: String?
+    private var spreaderGarden: Garden?
 
     public var onBack: (() -> Void)?
 
@@ -88,6 +91,7 @@ public struct FertilizingMapView: View {
                     selectedFertilizerTotalDose: item.selectedFertilizer.totalDose,
                     selectedZone: viewModel.selectedZone,
                     orthomosaic: item.orthomosaic,
+                    hidesZoneLabels: true,
                     onSelectZone: { zone in
                         viewModel.selectZone(zone)
                     }
@@ -116,21 +120,45 @@ public struct FertilizingMapView: View {
                 }
 
                 // 3. Bottom Detail Panel
-                if shouldShowDetailSheet && viewModel.activeModalSheet != .chooseFertilizer {
-                    FertilizingMapDetailSheetView(
-                        mode: viewModel.areaDivision,
-                        selectedFertilizer: item.selectedFertilizer,
-                        isInPeriod: viewModel.isInPeriod,
-                        totalZones: item.totalZoneCount,
-                        totalDoseKg: item.totalDoseKg,
-                        selectedZone: viewModel.selectedZone,
-                        isMarkedDone: item.isMarkedDone,
-                        onToggleDone: {
-                            Task {
-                                await viewModel.toggleMarkDone()
-                            }
+                if viewModel.activeModalSheet != .chooseFertilizer {
+                    VStack(spacing: 12) {
+                        if shouldShowDetailSheet && (viewModel.areaDivision != .perZona || viewModel.selectedZone != nil) {
+                            FertilizingMapDetailSheetView(
+                                mode: viewModel.areaDivision,
+                                selectedFertilizer: item.selectedFertilizer,
+                                isInPeriod: viewModel.isInPeriod,
+                                totalZones: item.totalZoneCount,
+                                totalDoseKg: item.totalDoseKg,
+                                selectedZone: viewModel.selectedZone,
+                                isMarkedDone: item.isMarkedDone,
+                                onToggleDone: {
+                                    Task { await viewModel.toggleMarkDone() }
+                                }
+                            )
                         }
-                    )
+
+                        if hasZoneSpecificDoses(item) {
+                            Button {
+                                if let map = item.orthomosaic, !map.zones.isEmpty,
+                                   gardenForSpreader(item) != nil {
+                                    showsSpreader = true
+                                } else {
+                                    spreaderError = "Peta zona kebun belum tersedia untuk mode pemupukan."
+                                }
+                            } label: {
+                                Label("Mulai Pemupukan", systemImage: "leaf.fill")
+                                    .font(.system(size: 18, weight: .semibold))
+                                    .frame(maxWidth: .infinity)
+                                    .frame(height: 70)
+                            }
+                            .buttonStyle(.plain)
+                            .foregroundStyle(.white)
+                            .background(Color(red: 0.08, green: 0.08, blue: 0.09), in: Capsule())
+                            .padding(.horizontal, 16)
+                            .padding(.bottom, 20)
+                            .accessibilityHint("Buka mode pemupukan untuk pupuk yang dipilih")
+                        }
+                    }
                     .transition(.move(edge: .bottom).combined(with: .opacity))
                 }
 
@@ -163,6 +191,19 @@ public struct FertilizingMapView: View {
         }
         .navigationBarBackButtonHidden(true)
         .toolbarVisibility(.hidden, for: .navigationBar)
+        .fullScreenCover(isPresented: $showsSpreader) {
+            if let item = viewModel.item, let garden = gardenForSpreader(item) {
+                SpreaderModeView(garden: garden, fertilizingMap: item)
+            }
+        }
+        .alert("Mode Pemupukan", isPresented: Binding(
+            get: { spreaderError != nil },
+            set: { if !$0 { spreaderError = nil } }
+        )) {
+            Button("OK", role: .cancel) { spreaderError = nil }
+        } message: {
+            Text(spreaderError ?? "")
+        }
         .sheet(item: $viewModel.activeModalSheet) { sheet in
             switch sheet {
             case .chooseFertilizer:
@@ -212,6 +253,34 @@ public struct FertilizingMapView: View {
 
     private func fertilizerSheetHeight(for itemCount: Int) -> CGFloat {
         min(CGFloat(100 + max(itemCount, 1) * 55), 650)
+    }
+
+    private func hasZoneSpecificDoses(_ item: FertilizingMapItem) -> Bool {
+        item.selectedFertilizer.defaultDivision == .perZona
+            && item.zones.filter { $0.doseKg > 0 }.count > 1
+    }
+
+    private func gardenForSpreader(_ item: FertilizingMapItem) -> Garden? {
+        if let spreaderGarden { return spreaderGarden }
+        guard let map = item.orthomosaic, map.farmBoundary.count >= 3 else { return nil }
+        let boundary = GardenBoundary(points: map.farmBoundary.map {
+            GardenCoordinate(latitude: $0.latitude, longitude: $0.longitude)
+        })
+        // The spreader uses this temporary garden only to frame the assessment map.
+        return Garden(
+            id: item.gardenUUID ?? UUID(),
+            name: item.gardenName,
+            locationName: "",
+            boundary: boundary,
+            plantingYear: Calendar.current.component(.year, from: .now),
+            soilType: .other
+        )
+    }
+
+    func withSpreaderGarden(_ garden: Garden?) -> Self {
+        var view = self
+        view.spreaderGarden = garden
+        return view
     }
 }
 
