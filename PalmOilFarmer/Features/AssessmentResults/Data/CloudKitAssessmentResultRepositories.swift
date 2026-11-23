@@ -89,56 +89,14 @@ final class CloudKitFertilizerEstimationRepository: FertilizerEstimationReposito
 
     func fetchEstimation(for gardenId: String) async throws -> FertilizerEstimationOverview {
         let (_, _, reader) = try await AssessmentRecordAccess.fetch(gardenId, containerIdentifier: containerIdentifier)
-        let needs = try reader.fertilizerNeedPerZone().get()
-        guard !needs.isEmpty else { throw CloudKitAssessmentDataError.missingField("kebutuhan pupuk") }
-
-        let treeCount = max(reader.treeIdentification().or([]).count, 1)
-        let groups = Dictionary(grouping: needs, by: \.fertilizerType)
-        let npkTypes = groups.keys.filter(Self.isNPK).sorted { $0.rawValue < $1.rawValue }
-        let options = npkTypes.map { type in
-            Self.npkOption(type: type, doseKg: Self.amount(groups[type] ?? [], treeCount: treeCount))
-        }
-        let defaultID = options.min { $0.totalPrice < $1.totalPrice }?.id ?? ""
+        let predictions = try reader.fertilizerCostPredictions().get()
         let savedID = await SavedNPKSelectionStore.shared.selection(for: gardenId)
-        let selectedID = lock.withLock { selectedNPKByGarden[gardenId] } ?? savedID ?? defaultID
-        let selected = options.first(where: { $0.id == selectedID }) ?? options.first
-
-        var products = groups.keys.filter { !Self.isNPK($0) }.sorted { $0.rawValue < $1.rawValue }.compactMap { type -> FertilizerItem? in
-            let dose = Self.amount(groups[type] ?? [], treeCount: treeCount)
-            guard dose > 0 else { return nil }
-            let bags = max(Int(ceil(dose / 50)), 1)
-            return Self.productRow(id: type.rawValue, name: type.rawValue, doseKg: dose, bagCount: bags, price: Self.price(for: type))
-        }
-        if let selected {
-            products.append(Self.productRow(
-                id: "npk", name: selected.name, doseKg: Double(selected.weightKg),
-                bagCount: selected.bagCount, price: selected.pricePerBag, customizable: true
-            ))
-        }
-        products.sort { $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending }
         let budgetPerHectare = reader.fertilizationBudgetPerHa().or(0)
         let budget = Int((reader.farmSize().or(0) * Double(max(budgetPerHectare, 0))).rounded())
-        let selectedIDValue = selected?.id ?? ""
-        products = products.map { product in
-            guard product.isCustomizableNPK, let selected else { return product }
-            let least = options.map(\.totalPrice).min() ?? selected.totalPrice
-            let saving = selected.totalPrice - least
-            return Self.productRow(
-                id: product.id, name: selected.name, doseKg: Double(selected.weightKg), bagCount: selected.bagCount,
-                price: selected.pricePerBag, customizable: true,
-                savingsHint: saving > 0 ? "Ada pilihan NPK yang \(CurrencyFormatter.formatRupiah(saving)) lebih hemat." : nil
-            )
-        }
-        return FertilizerEstimationOverview(
-            id: gardenId,
-            gardenName: reader.farmName().or("Kebun"),
-            periodDescription: "untuk kebutuhan 1 tahun",
-            budgetLimit: budget,
-            fertilizers: products,
-            npkOptions: options,
-            selectedNPKId: selectedIDValue,
-            defaultNPKId: defaultID,
-            footnote: "Jumlah pupuk berasal dari kebutuhan CloudKit. Harga per sak 50 kg merupakan estimasi lokal."
+        return try Self.makeOverview(
+            gardenId: gardenId, gardenName: reader.farmName().or("Kebun"), budget: budget,
+            predictions: predictions,
+            selectedID: lock.withLock { selectedNPKByGarden[gardenId] } ?? savedID
         )
     }
 
@@ -155,42 +113,82 @@ final class CloudKitFertilizerEstimationRepository: FertilizerEstimationReposito
         await SavedNPKSelectionStore.shared.save(optionId, for: gardenId)
     }
 
-    private static func amount(_ needs: [FertilizerNeedItem], treeCount: Int) -> Double {
-        needs.reduce(0) { sum, need in
-            let unit = need.dosageUnit.lowercased()
-            let multiplier = unit.contains("pohon") || unit.contains("tree") ? Double(treeCount) : 1
-            return sum + max(0, need.recommendedDosagePerZonePerYear) * multiplier
-        }
-    }
-
     private static func isNPK(_ type: ContractFertilizerType) -> Bool {
         [.npk, .npk15_15_15, .npk12_6_22_3, .npk13_6_27_4, .npk13_8_27_4, .npk16_16_16].contains(type)
     }
 
-    private static func price(for type: ContractFertilizerType) -> Int {
-        switch type {
-        case .dolomite: 100_000
-        case .urea: 500_000
-        case .npk12_6_22_3: 630_000
-        case .npk13_6_27_4, .npk13_8_27_4: 550_000
-        case .npk16_16_16: 890_000
-        case .npk, .npk15_15_15: 740_000
-        default: 0
-        }
+    private struct PredictionValues {
+        let weightKg: Int
+        let bagCount: Int
+        let bagWeightKg: Int
+        let pricePerBag: Int
+        let totalCost: Int
     }
 
-    private static func npkOption(type: ContractFertilizerType, doseKg: Double) -> NPKOption {
-        let bags = max(Int(ceil(max(doseKg, 0) / 50)), 1)
-        let price = price(for: type)
-        let isCheapest = type == .npk13_6_27_4 || type == .npk13_8_27_4
-        return NPKOption(
-            id: type.rawValue,
-            name: displayName(for: type),
-            weightKg: Int(doseKg.rounded()),
-            bagCount: bags,
-            pricePerBag: price,
-            totalPrice: bags * price,
-            tag: isCheapest ? "Paling hemat" : nil
+    static func makeOverview(
+        gardenId: String, gardenName: String, budget: Int,
+        predictions: FertilizerCostPredictions, selectedID: String?
+    ) throws -> FertilizerEstimationOverview {
+        guard !predictions.byFertilizer.isEmpty else {
+            throw CloudKitAssessmentDataError.missingField("perkiraan biaya pupuk")
+        }
+        let entries = try predictions.byFertilizer.keys.sorted { $0.rawValue < $1.rawValue }
+            .compactMap { type -> (ContractFertilizerType, PredictionValues)? in
+                guard let prediction = predictions.byFertilizer[type],
+                      let values = try predictionValues(prediction, for: type) else { return nil }
+                return (type, values)
+            }
+        let npkEntries = entries.filter { isNPK($0.0) }
+        let lowestNPKCost = npkEntries.map { $0.1.totalCost }.min()
+        let options = npkEntries.map { type, values in
+            NPKOption(
+                id: type.rawValue, name: displayName(for: type), weightKg: values.weightKg,
+                bagCount: values.bagCount, pricePerBag: values.pricePerBag,
+                totalPrice: values.totalCost,
+                tag: values.totalCost == lowestNPKCost ? "Paling hemat" : nil
+            )
+        }
+        let defaultID = options.first(where: { $0.totalPrice == lowestNPKCost })?.id ?? ""
+        let selected = options.first(where: { $0.id == selectedID }) ?? options.first(where: { $0.id == defaultID })
+        var products = entries.filter { !isNPK($0.0) }.map { type, values in
+            productRow(id: type.rawValue, name: type.rawValue, values: values)
+        }
+        if let selected, let values = npkEntries.first(where: { $0.0.rawValue == selected.id })?.1 {
+            let saving = selected.totalPrice - (lowestNPKCost ?? selected.totalPrice)
+            products.append(productRow(
+                id: "npk", name: selected.name, values: values, customizable: true,
+                savingsHint: saving > 0
+                    ? "Ada pilihan NPK yang \(CurrencyFormatter.formatRupiah(saving)) lebih hemat." : nil
+            ))
+        }
+        products.sort { $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending }
+        return FertilizerEstimationOverview(
+            id: gardenId, gardenName: gardenName, periodDescription: "untuk kebutuhan 1 tahun",
+            budgetLimit: budget, fertilizers: products, npkOptions: options,
+            selectedNPKId: selected?.id ?? "", defaultNPKId: defaultID,
+            footnote: "Berat, jumlah sak, dan total harga mengikuti hasil peninjauan kebun. Harga per sak dihitung dari total harga dibagi jumlah sak."
+        )
+    }
+
+    private static func predictionValues(
+        _ prediction: FertilizerCostPredictionItem, for type: ContractFertilizerType
+    ) throws -> PredictionValues? {
+        guard let kilograms = prediction.totalKg, let cost = prediction.totalCost,
+              kilograms.isFinite, cost.isFinite,
+              kilograms >= 0, cost >= 0,
+              kilograms < Double(Int.max), cost < Double(Int.max),
+              prediction.totalBagsNeeded >= 0 else {
+            throw CloudKitAssessmentDataError.missingField("perkiraan biaya \(type.rawValue)")
+        }
+        let bags = prediction.totalBagsNeeded
+        if kilograms == 0 && bags == 0 && cost == 0 { return nil }
+        guard bags > 0 else {
+            throw CloudKitAssessmentDataError.missingField("jumlah sak \(type.rawValue)")
+        }
+        return PredictionValues(
+            weightKg: Int(kilograms.rounded()), bagCount: bags,
+            bagWeightKg: Int((kilograms / Double(bags)).rounded()),
+            pricePerBag: Int((cost / Double(bags)).rounded()), totalCost: Int(cost.rounded())
         )
     }
 
@@ -206,10 +204,10 @@ final class CloudKitFertilizerEstimationRepository: FertilizerEstimationReposito
         }
     }
 
-    private static func productRow(id: String, name: String, doseKg: Double, bagCount: Int, price: Int,
+    private static func productRow(id: String, name: String, values: PredictionValues,
                                    customizable: Bool = false, savingsHint: String? = nil) -> FertilizerItem {
-        FertilizerItem(id: id, name: name, pricePerBag: price, bagWeightKg: 50,
-                       weightKg: Int(doseKg.rounded()), bagCount: bagCount, totalPrice: bagCount * price,
+        FertilizerItem(id: id, name: name, pricePerBag: values.pricePerBag, bagWeightKg: values.bagWeightKg,
+                       weightKg: values.weightKg, bagCount: values.bagCount, totalPrice: values.totalCost,
                        isCustomizableNPK: customizable, savingsHint: savingsHint)
     }
 }
