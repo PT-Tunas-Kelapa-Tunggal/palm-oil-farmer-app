@@ -97,26 +97,6 @@ public struct FarmGreenIndexMapView: View {
                         .position(x: xPos, y: yPos)
                     }
                 }
-
-                // Floating "Lokasi Saya" button
-                VStack {
-                    Spacer()
-                    HStack {
-                        Spacer()
-                        // Floating "Lokasi Saya" button with Liquid Glass
-                        Button(action: { onRecenter?() }) {
-                            Image(systemName: "location.fill")
-                                .font(.system(size: 18, weight: .semibold))
-                                .foregroundStyle(KropsTheme.labelPrimary)
-                                .frame(width: 48, height: 48)
-                        }
-                        .buttonStyle(.plain)
-                        .glassEffect(.regular.interactive(), in: Circle())
-                        .accessibilityLabel("Lokasi Saya")
-                        .padding(.trailing, 16)
-                        .padding(.bottom, 280) // Sits comfortably above bottom sheet
-                    }
-                }
             }
         }
         .ignoresSafeArea()

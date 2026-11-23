@@ -54,22 +54,10 @@ public struct FarmGreenIndexHeaderView: View {
 
             Spacer()
 
-            // Right button (Tombol Kanan) with folded map icon - Opens Area Picker (Pembagian Area)
-            Button(action: {
-                if let onOpenAreaPicker {
-                    onOpenAreaPicker()
-                } else {
-                    onToggleLegend?()
-                }
-            }) {
-                Image(systemName: "map")
-                    .font(.system(size: 16, weight: .semibold))
-                    .foregroundStyle(KropsTheme.labelPrimary)
-                    .frame(width: 44, height: 44)
-            }
-            .buttonStyle(.plain)
-            .glassEffect(.regular.interactive(), in: Circle())
-            .accessibilityLabel("Pembagian Area")
+            // Same width as the back button, so the title stays centred.
+            Color.clear
+                .frame(width: 44, height: 44)
+                .accessibilityHidden(true)
         }
         .padding(.horizontal, 16)
         .padding(.top, 8)

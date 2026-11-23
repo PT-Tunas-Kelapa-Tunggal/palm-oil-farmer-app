@@ -22,20 +22,6 @@ public struct FarmGreenIndexDetailSheetView: View {
         let dotColor = summary.category.color
 
         VStack(alignment: .leading, spacing: 16) {
-            // Grabber handle
-            HStack {
-                Spacer()
-                Button(action: { onCollapse?() }) {
-                    Capsule()
-                        .fill(KropsTheme.fillBlack20)
-                        .frame(width: 44, height: 4)
-                        .padding(.vertical, 4)
-                }
-                .buttonStyle(.plain)
-                .accessibilityLabel("Sembunyikan Panel")
-                Spacer()
-            }
-
             // Header: Circular Back Button (<) + Category Dot + Title (Left-aligned matching Sketch)
             HStack(alignment: .center, spacing: 10) {
                 Button(action: { onBack?() }) {
@@ -79,19 +65,10 @@ public struct FarmGreenIndexDetailSheetView: View {
             }
             .padding(.top, 4)
         }
+        // Shown inside `DetentSheet`: the system draws the sheet, its glass and its grabber.
         .padding(.horizontal, 16)
-        .padding(.top, 8)
-        .padding(.bottom, 36)
-        .glassEffect(
-            .regular,
-            in: UnevenRoundedRectangle(
-                topLeadingRadius: 32,
-                bottomLeadingRadius: 0,
-                bottomTrailingRadius: 0,
-                topTrailingRadius: 32,
-                style: .continuous
-            )
-        )
+        .padding(.top, 24)
+        .padding(.bottom, 16)
     }
 
     private func metricCard(title: String, value: String) -> some View {
