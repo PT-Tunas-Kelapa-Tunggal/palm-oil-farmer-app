@@ -11,6 +11,9 @@ import SwiftUI
 @MainActor
 public struct FarmGreenIndexView: View {
     @Environment(\.dismiss) private var dismiss
+    /// The sheet contents fit their heights and do not scroll; at accessibility text sizes they may not
+    /// fit, so scrolling comes back there.
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
     @State private var viewModel: FarmGreenIndexViewModel
     /// The bottom sheet is a real sheet, open for as long as the page is shown.
     @State private var showsSheet = true
@@ -227,7 +230,7 @@ public struct FarmGreenIndexView: View {
                     }
                 )
             }
-            .scrollBounceBehavior(.basedOnSize)
+            .scrollDisabled(!dynamicTypeSize.isAccessibilitySize)
             .transition(.opacity)
 
         case .detail(let category):
@@ -247,7 +250,7 @@ public struct FarmGreenIndexView: View {
                         }
                     )
                 }
-                .scrollBounceBehavior(.basedOnSize)
+                .scrollDisabled(!dynamicTypeSize.isAccessibilitySize)
                 .transition(.opacity)
             }
 
@@ -267,7 +270,7 @@ public struct FarmGreenIndexView: View {
                     }
                 )
             }
-            .scrollBounceBehavior(.basedOnSize)
+            .scrollDisabled(!dynamicTypeSize.isAccessibilitySize)
             .transition(.opacity)
         }
     }
