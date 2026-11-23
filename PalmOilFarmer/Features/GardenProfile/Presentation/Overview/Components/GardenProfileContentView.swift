@@ -7,6 +7,8 @@ struct GardenProfileContentView: View {
     var metrics: GardenDisplayMetrics? = nil
     var showsHeader = true
     var profileJustSaved = false
+    /// Text of the save notice; defaults to the first-save wording.
+    var savedNotice: String? = nil
     let currentReviewStatus: ReviewStatus?
     let isComplete: Bool
     let onBack: () -> Void
@@ -15,6 +17,8 @@ struct GardenProfileContentView: View {
     let onReviewAction: () -> Void
     let onViewSummary: () -> Void
     let onViewReviewInformation: () -> Void
+    /// Opens the read-only "Identitas Kebun" page; without it the row opens the edit form.
+    var onViewIdentity: (() -> Void)? = nil
     var onDelete: (() -> Void)? = nil
     var assessmentContactName: String? = nil
     var assessmentResultsState: AssessmentResultsViewModel.State? = nil
@@ -127,6 +131,13 @@ struct GardenProfileContentView: View {
         GardenMapView(boundary: garden.boundary, referenceImage: referenceMapImage)
     }
 
+    /// Keeps the boundary below the title row and above the metrics band that overlaps the map.
+    private func heroMap(topInset: CGFloat) -> some View {
+        GardenMapView(boundary: garden.boundary, referenceImage: referenceMapImage,
+                      contentInsets: EdgeInsets(top: topInset + 60, leading: 24, bottom: 56, trailing: 24),
+                      zoomOut: 1.1)
+    }
+
     private func hero(topInset: CGFloat) -> some View {
         VStack(spacing: 0) {
             HStack(alignment: .top, spacing: 16) {
@@ -144,7 +155,7 @@ struct GardenProfileContentView: View {
                 .frame(maxWidth: .infinity)
                 Menu {
                     Button("Ubah data kebun", systemImage: "pencil", action: onEditGarden)
-                    if let onDelete { Button("Hapus kebun", systemImage: "trash", role: .destructive, action: onDelete) }
+                    if let onDelete { Button("Hapus kebun", systemImage: "trash", role: .destructive, action: onDelete).tint(KropsTheme.statusCritical) }
                 } label: {
                     Image(systemName: "ellipsis").font(.title2).foregroundStyle(KropsTheme.labelPrimary).frame(width: 44, height: 44)
                 }
@@ -158,15 +169,21 @@ struct GardenProfileContentView: View {
         }
         .frame(minHeight: 360)
         .background {
-            map
+            heroMap(topInset: topInset)
                 .overlay(alignment: .top) {
                     // Satellite imagery needs a dark scrim for readable white map labels.
-                    LinearGradient(colors: [.black.opacity(0.55), .clear], startPoint: .top, endPoint: .bottom)
+                    LinearGradient(colors: [KropsTheme.surfaceInverse.opacity(0.4), KropsTheme.surfaceInverse.opacity(0)],
+                                   startPoint: .top, endPoint: .bottom)
+                        .frame(height: 140)
                         .allowsHitTesting(false)
                 }
                 .overlay(alignment: .bottom) {
+                    // Clear until the last ~40 pt, which the metrics band mostly covers (Sketch "Gradasi Bawah").
                     LinearGradient(
-                        colors: [.clear, KropsTheme.surfaceBackground],
+                        stops: [
+                            .init(color: KropsTheme.surfaceBackground.opacity(0), location: 0.76),
+                            .init(color: KropsTheme.surfaceBackground, location: 1)
+                        ],
                         startPoint: .top,
                         endPoint: .bottom
                     )
@@ -174,27 +191,36 @@ struct GardenProfileContentView: View {
                     .allowsHitTesting(false)
                 }
         }
+        // The app tints controls orange; menu icons are black like native menus. Delete is tinted red below,
+        // because a destructive role only colours the text, while the icon follows the tint.
+        .tint(KropsTheme.labelPrimary)
         .contextMenu {
             Button("Ubah data kebun", systemImage: "pencil", action: onEditGarden)
-            if let onDelete { Button("Hapus kebun", systemImage: "trash", role: .destructive, action: onDelete) }
+            if let onDelete { Button("Hapus kebun", systemImage: "trash", role: .destructive, action: onDelete).tint(KropsTheme.statusCritical) }
         }
     }
 
+    /// After saving, the rows sit in a grey container topped by the save notice
+    /// (Sketch "Profil Kebun / Detail Kebun / Profile Saved"); the section header stays outside it.
     private var dataSection: some View {
         VStack(spacing: 8) {
-            if profileJustSaved {
-                Label("Profil kebun baru saja disimpan", systemImage: "sparkles")
-                    .font(.caption).foregroundStyle(KropsTheme.accentPrimary)
-                    .frame(maxWidth: .infinity, alignment: .leading).padding(.horizontal, 14).padding(.top, 10)
-            }
             GardenProfileSectionHeader(title: "Data Kebun", message: "Data yang Anda isi dan menjadi dasar hasil peninjauan.")
                 .padding(.top, 8)
-            dataRow("Identitas Kebun", subtitle: "Lokasi, luas, tahun tanam, jenis tanah", symbol: "square.dashed.inset.filled", action: onEditGarden)
-            dataRow("Riwayat Panen dan Pemupukan", subtitle: "Dasar perhitungan kondisi hara", symbol: "doc.text", action: onViewSummary)
+            VStack(spacing: 0) {
+                if profileJustSaved {
+                    GardenSavedNotice(text: savedNotice ?? "Profil kebun baru saja disimpan")
+                        .padding(.horizontal, 10).padding(.top, 10).padding(.bottom, 8)
+                }
+                VStack(spacing: 8) {
+                    dataRow("Identitas Kebun", subtitle: "Lokasi, luas, tahun tanam, jenis tanah", symbol: "square.dashed.inset.filled", action: onViewIdentity ?? onEditGarden)
+                    dataRow("Riwayat Panen dan Pemupukan", subtitle: "Dasar perhitungan kondisi hara", symbol: "doc.text", action: onViewSummary)
+                }
+            }
+            .padding(.horizontal, profileJustSaved ? 8 : 0)
+            .padding(.bottom, profileJustSaved ? 8 : 0)
+            .background(profileJustSaved ? KropsTheme.surfaceControl : .clear, in: RoundedRectangle(cornerRadius: 24))
         }
         .foregroundStyle(KropsTheme.labelPrimary)
-        .padding(profileJustSaved ? 4 : 0)
-        .background(profileJustSaved ? KropsTheme.accentSoft : .clear, in: RoundedRectangle(cornerRadius: 24))
     }
 
     private func dataRow(_ title: String, subtitle: String, symbol: String, action: @escaping () -> Void) -> some View {

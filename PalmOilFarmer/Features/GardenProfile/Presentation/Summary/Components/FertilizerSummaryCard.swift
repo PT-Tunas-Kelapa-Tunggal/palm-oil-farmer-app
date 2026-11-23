@@ -20,7 +20,7 @@ struct FertilizerSummaryCard: View {
                         nutrient("N", value: 46)
                     }
                 }
-            }.padding(.top, 16).padding(.bottom, 17)
+            }.padding(.top, 16).padding(.bottom, 14)
             Divider()
             HStack {
                 Text("Dosis per pohon")
@@ -45,8 +45,8 @@ struct FertilizerSummaryCard: View {
 
     private var category: some View {
         Text(record.name.hasPrefix("NPK") ? "Majemuk" : "Tunggal")
-            .font(.footnote.weight(.medium)).foregroundStyle(.secondary)
-            .padding(.horizontal, 10).padding(.vertical, 5)
+            .font(.footnote.bold()).foregroundStyle(KropsTheme.labelSecondary)
+            .padding(.horizontal, 10).padding(.vertical, 4)
             .background(KropsTheme.fillBlack4, in: Capsule())
     }
 
@@ -54,8 +54,8 @@ struct FertilizerSummaryCard: View {
     private func nutrient(_ label: String, value: Double?) -> some View {
         if let value {
             Text("\(label) \(value.formatted())%")
-                .font(.footnote.weight(.medium)).foregroundStyle(KropsTheme.labelPrimary)
-                .padding(.horizontal, 10).padding(.vertical, 5)
+                .font(.footnote.bold()).foregroundStyle(KropsTheme.labelPrimary)
+                .padding(.horizontal, 10).padding(.vertical, 4)
                 .background(KropsTheme.fillBlack4, in: Capsule())
         }
     }

@@ -19,7 +19,6 @@ struct AssessmentStatusView: View {
         .presentationBackgroundInteraction(.disabled)
         .presentationDragIndicator(.hidden)
         .presentationContentInteraction(.scrolls)
-        .presentationCornerRadius(38)
         .presentationBackground {
             Rectangle().fill(.regularMaterial)
         }
@@ -45,14 +44,7 @@ struct AssessmentStatusView: View {
 
     private var header: some View {
         HStack(spacing: 0) {
-            Button { dismiss() } label: {
-                Image(systemName: dark ? "checkmark" : "xmark")
-                    .font(dark ? .title3 : .headline)
-                    .frame(width: 44, height: 44)
-                    .glassEffect(.regular.interactive(), in: Circle())
-            }
-            .buttonStyle(.plain)
-            .accessibilityLabel("Tutup status peninjauan")
+            GardenProfileIconButton(symbol: "xmark", label: "Tutup status peninjauan") { dismiss() }
 
             Text("Status Peninjauan")
                 .font(.headline)

@@ -26,6 +26,7 @@ struct GardenProfileScreen: View {
     }
 
     @AppStorage("gardenReview.hideIntroduction") private var hideReviewIntroduction = false
+    @State private var showsIdentity = false
     @Environment(\.dismiss) private var dismiss
     private var garden: Garden { viewModel.garden }
     private var currentReviewStatus: ReviewStatus? { viewModel.reviewViewModel.activeStatus ?? garden.review?.status }
@@ -50,24 +51,20 @@ struct GardenProfileScreen: View {
         } message: {
             Text("Data tidak dapat dihapus dari perangkat. Coba lagi.")
         }
-        .navigationDestination(isPresented: $viewModel.showsSummary) {
+        .navigationDestination(isPresented: summaryPresented) {
             GardenProfileSummaryView(garden: garden,
-                onClose: viewModel.closeSummary, onEdit: viewModel.editSummary)
-                .sheet(item: $viewModel.sheet, onDismiss: viewModel.sheetDidDismiss) { presentation in
-                    sheetContent(presentation)
+                onClose: viewModel.closeSummary, onEdit: viewModel.editSummary,
+                savedNotice: viewModel.savedNotice)
+                .navigationDestination(item: summaryDestination) { presentation in
+                    pushedContent(presentation)
                 }
         }
-        .navigationDestination(item: reviewDestination) { presentation in
-            Group {
-                if let request = viewModel.makeReviewRequest(for: presentation) {
-                    ReviewRequestView(flow: request)
-                }
-            }
-            .onDisappear {
-                if viewModel.sheet == nil {
-                    viewModel.sheetDidDismiss()
-                }
-            }
+        .navigationDestination(item: rootDestination) { presentation in
+            pushedContent(presentation)
+        }
+        .navigationDestination(isPresented: $showsIdentity) {
+            GardenIdentityView(garden: garden, isLocked: currentReviewStatus == .completed,
+                               referenceMapImage: referenceMapImage, onBack: { showsIdentity = false })
         }
         .sheet(isPresented: $viewModel.showsReviewStatus) {
             AssessmentStatusView(
@@ -97,25 +94,65 @@ struct GardenProfileScreen: View {
         }
     }
 
+    /// The native back button writes `false` here; closing through the view model also clears the save notice.
+    private var summaryPresented: Binding<Bool> {
+        Binding(
+            get: { viewModel.showsSummary },
+            set: { shows in
+                if !shows { viewModel.closeSummary() }
+                viewModel.showsSummary = shows
+            }
+        )
+    }
+
+    /// The review request and the profile form are pages pushed onto the stack; the rest are sheets.
+    private static func isPushed(_ kind: GardenProfileSheet.Kind) -> Bool {
+        kind == .review || kind == .profile
+    }
+
     private var rootSheet: Binding<GardenProfileSheet?> {
         Binding(
             get: {
-                guard !viewModel.showsSummary, viewModel.sheet?.kind != .review else { return nil }
-                return viewModel.sheet
+                guard !viewModel.showsSummary, let sheet = viewModel.sheet, !Self.isPushed(sheet.kind) else { return nil }
+                return sheet
             },
             set: { viewModel.sheet = $0 }
         )
     }
 
-    private var reviewDestination: Binding<GardenProfileSheet?> {
+    /// Pushed from the profile page itself.
+    private var rootDestination: Binding<GardenProfileSheet?> {
+        pushedDestination { !viewModel.showsSummary || $0 == .review }
+    }
+
+    /// Pushed from the history page ("Ubah" opens the profile form on top of it).
+    private var summaryDestination: Binding<GardenProfileSheet?> {
+        pushedDestination { viewModel.showsSummary && $0 == .profile }
+    }
+
+    private func pushedDestination(where shows: @escaping (GardenProfileSheet.Kind) -> Bool) -> Binding<GardenProfileSheet?> {
         Binding(
-            get: { viewModel.sheet?.kind == .review ? viewModel.sheet : nil },
+            get: {
+                guard let sheet = viewModel.sheet, Self.isPushed(sheet.kind), shows(sheet.kind) else { return nil }
+                return sheet
+            },
             set: { newValue in
-                if newValue == nil, viewModel.sheet?.kind == .review {
+                // Back button or swipe back: end the session like a dismissed sheet.
+                if newValue == nil, let kind = viewModel.sheet?.kind, Self.isPushed(kind) {
                     viewModel.sheetDidDismiss()
                 }
             }
         )
+    }
+
+    /// A pushed page that closed itself (saved or tapped ‹) clears `sheet` first; finish the session once it is gone.
+    private func pushedContent(_ presentation: GardenProfileSheet) -> some View {
+        sheetContent(presentation)
+            .onDisappear {
+                if viewModel.sheet == nil {
+                    viewModel.sheetDidDismiss()
+                }
+            }
     }
 
     private var deleteAction: (() -> Void)? {
@@ -125,7 +162,7 @@ struct GardenProfileScreen: View {
 
     private var profileContent: some View {
         GardenProfileContentView(
-            garden: garden, referenceMapImage: referenceMapImage, profileJustSaved: viewModel.profileJustSaved, currentReviewStatus: currentReviewStatus, isComplete: viewModel.isComplete,
+            garden: garden, referenceMapImage: referenceMapImage, profileJustSaved: viewModel.profileJustSaved, savedNotice: viewModel.savedNotice, currentReviewStatus: currentReviewStatus, isComplete: viewModel.isComplete,
             onBack: viewModel.close, onEditGarden: { viewModel.open(.details) },
             onEditProfile: { viewModel.open(.profile) },
             onReviewAction: {
@@ -152,6 +189,7 @@ struct GardenProfileScreen: View {
             },
             onViewSummary: viewModel.openSummary,
             onViewReviewInformation: { viewModel.open(.reviewInformation) },
+            onViewIdentity: { showsIdentity = true },
             onDelete: deleteAction,
             assessmentCompletedAt: viewModel.reviewViewModel.completedAt ?? garden.review?.date(for: .completed),
             assessmentResultByteCount: currentReviewStatus == .completed ? PlaceholderAssessmentResultsDownloadRepository.resultByteCount : nil

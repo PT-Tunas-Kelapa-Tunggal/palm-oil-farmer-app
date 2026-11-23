@@ -42,16 +42,6 @@ struct ContentView: View {
                 onLocate: coordinator.locatedGarden, onCancel: coordinator.cancelRegistration
             ))
         }
-        .sheet(item: $identityGarden) { garden in
-            GardenDetailsView(viewModel: GardenDetailsViewModel(
-                locationName: garden.locationName,
-                boundary: garden.boundary,
-                editing: garden,
-                closesAfterSaving: true,
-                onSave: { store.update($0) },
-                onSaved: {}
-            ))
-        }
         .fullScreenCover(item: $coordinator.mappingLocation, onDismiss: coordinator.mappingDidDismiss) { location in
             GardenBoundaryView(viewModel: mappingFactory.makeViewModel(location: location, onFinish: coordinator.mappingFinished))
         }
@@ -154,6 +144,15 @@ struct ContentView: View {
                     coordinator.openGardenHistory(id)
                 }
             )
+            // Results are based on this data, so it opens read-only (Sketch "Identitas Kebun / Locked").
+            .navigationDestination(isPresented: Binding(
+                get: { identityGarden != nil },
+                set: { if !$0 { identityGarden = nil } }
+            )) {
+                if let identityGarden {
+                    GardenIdentityView(garden: identityGarden, isLocked: true, onBack: { self.identityGarden = nil })
+                }
+            }
         case .fertilizerSchedule(let gardenId):
             if let gardenID = UUID(uuidString: gardenId) {
                 FertilizerScheduleView(
@@ -230,7 +229,7 @@ private struct GardenHistoryDestination: View {
 
     var body: some View {
         GardenProfileSummaryView(garden: garden, onClose: onBack, onEdit: { isEditing = true })
-            .sheet(isPresented: $isEditing) {
+            .navigationDestination(isPresented: $isEditing) {
                 GardenProfileEditorView(
                     viewModel: GardenProfileEditorViewModel(
                         garden: garden,

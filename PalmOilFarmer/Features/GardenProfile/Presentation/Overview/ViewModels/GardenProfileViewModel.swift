@@ -33,7 +33,11 @@ final class GardenProfileViewModel {
     var showsSummary = false
     var showsReviewStatus = false
     var showsResults = false
-    private(set) var profileJustSaved = false
+    /// Short notice after a save: "Profil kebun baru saja disimpan" the first time,
+    /// "… diperbarui" afterwards, or "Data kebun baru saja diperbarui" after editing the garden data.
+    private(set) var savedNotice: String?
+    /// True while a save notice is shown.
+    var profileJustSaved: Bool { savedNotice != nil }
     private(set) var isFinished = false
 
     private var activeSheet: GardenProfileSheet?
@@ -158,9 +162,16 @@ final class GardenProfileViewModel {
         sheet = nil
     }
 
-    func profileSaved(_ presentation: GardenProfileSheet) {
+    /// - Parameter updating: the profile already had saved data when the form opened.
+    func profileSaved(_ presentation: GardenProfileSheet, updating: Bool = false) {
         guard presentation.kind == .profile, isCurrent(presentation) else { return }
-        profileJustSaved = true
+        savedNotice = updating ? "Profil kebun baru saja diperbarui" : "Profil kebun baru saja disimpan"
+        closeSheet(presentation)
+    }
+
+    func detailsSaved(_ presentation: GardenProfileSheet) {
+        guard presentation.kind == .details, isCurrent(presentation) else { return }
+        savedNotice = "Data kebun baru saja diperbarui"
         closeSheet(presentation)
     }
 
@@ -182,16 +193,17 @@ final class GardenProfileViewModel {
             },
             closesAfterSaving: true,
             onSave: { [weak self] edited in self?.saveDetails(edited) ?? false },
-            onSaved: { [weak self] in self?.closeSheet(presentation) })
+            onSaved: { [weak self] in self?.detailsSaved(presentation) })
     }
 
     func makeProfileEditor(for presentation: GardenProfileSheet) -> GardenProfileEditorViewModel {
-        GardenProfileEditorViewModel(garden: garden,
+        let updating = garden.profileUpdatedAt != nil
+        return GardenProfileEditorViewModel(garden: garden,
             isActive: { [weak self] in
                 presentation.kind == .profile && self?.isCurrent(presentation) == true
             },
             onSave: { [weak self] in self?.saveProfile(harvest: $0, frequency: $1, fertilizers: $2) ?? false },
-            onSaved: { [weak self] in self?.profileSaved(presentation) })
+            onSaved: { [weak self] in self?.profileSaved(presentation, updating: updating) })
     }
 
     func makeReviewRequest(for presentation: GardenProfileSheet) -> ReviewRequestFlow? {
@@ -208,11 +220,14 @@ final class GardenProfileViewModel {
 
     func openSummary() {
         guard canDeleteNow, !showsDeleteConfirmation else { return }
+        // The notice belongs to the page where the save happened (Sketch: gone after visiting the history page).
+        savedNotice = nil
         showsSummary = true
     }
 
     func closeSummary() {
         guard activeSheet == nil else { return }
+        savedNotice = nil
         showsSummary = false
     }
 
