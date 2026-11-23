@@ -6,5 +6,7 @@
 	<string>$(CLOUDKIT_CONTAINER_ID)</string>
 	<key>CKEnvironment</key>
 	<string>$(CLOUDKIT_ENVIRONMENT)</string>
+	<key>UILaunchStoryboardName</key>
+	<string>LaunchScreen</string>
 </dict>
 </plist>
