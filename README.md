@@ -51,27 +51,60 @@ Apple restricts beta builds exported as **TestFlight Internal Only** to internal
 tester groups. CI verifies the **Internal Only** audience in App Store Connect
 before assigning the build to the staging group.
 
-### Repository settings
+### Repository-level Actions variables
 
-Add these under **Settings → Secrets and variables → Actions → Variables**.
+In the iOS repository, open **Settings → Secrets and variables → Actions →
+Variables** and add these five variables once. Both release paths read them
+and select the bundle ID and container for the tag. Add the Apple credentials
+as environment secrets in the sections below.
 
-| Variable | Value |
+| Repository variable | Value |
 | --- | --- |
-| `APPLE_TEAM_ID` | Team ID from Apple Developer → Membership |
-| `CLOUDKIT_STAGING_CONTAINER_ID`, `CLOUDKIT_PRODUCTION_CONTAINER_ID` | Exact container IDs from Apple Developer → Identifiers, matching the Drone Operator repository |
-| `IOS_STAGING_BUNDLE_ID`, `IOS_PRODUCTION_BUNDLE_ID` | Distinct explicit App IDs from Apple Developer → Identifiers, each linked to its own App Store Connect record |
+| `APPLE_TEAM_ID` | One Team ID shared by both builds and the CloudKit checks. Copy it from Apple Developer → Membership. |
+| `CLOUDKIT_STAGING_CONTAINER_ID` | The staging container ID from Apple Developer → Identifiers. Match the staging value in the Drone Operator repository. |
+| `CLOUDKIT_PRODUCTION_CONTAINER_ID` | The production container ID from Apple Developer → Identifiers. Match the production value in the Drone Operator repository. |
+| `IOS_STAGING_BUNDLE_ID` | The explicit bundle ID for the staging App Store Connect record. |
+| `IOS_PRODUCTION_BUNDLE_ID` | The explicit bundle ID for the production App Store Connect record. |
 
-Create these under **Settings → Environments** and restrict their deployment refs.
+Use distinct staging and production container IDs and distinct staging and
+production bundle IDs.
 
-| Environment | Allowed refs | Variables | Secrets |
-| --- | --- | --- | --- |
-| `cloudkit-staging` | Branch `develop`, tags `beta-v*` | — | `CLOUDKIT_MANAGEMENT_TOKEN` |
-| `cloudkit-production` | Branch `main`, tags `release-v*` | — | `CLOUDKIT_MANAGEMENT_TOKEN` |
-| `ios-beta` | Tags `beta-v*` | `IOS_BUILD_NUMBER_OFFSET`, `TESTFLIGHT_INTERNAL_GROUP` | `IOS_DISTRIBUTION_P12_BASE64`, `IOS_DISTRIBUTION_P12_PASSWORD`, `IOS_PROFILE_BASE64`, `ASC_KEY_ID`, `ASC_ISSUER_ID`, `ASC_KEY_P8_BASE64` |
-| `ios-release` | Tags `release-v*` | `IOS_BUILD_NUMBER_OFFSET` | Same names as `ios-beta`, with the production profile and upload key |
+### GitHub environments and allowed refs
 
-- Generate the CloudKit management token under **CloudKit Console → Settings**.
-  Store it only in the schema environments. [Apple cktool setup](https://developer.apple.com/icloud/ck-tool/)
+Under **Settings → Environments**, create `staging` and `production`. Set
+their deployment branch and tag restrictions as follows.
+
+| Environment | Branch rule | Tag rule |
+| --- | --- | --- |
+| `staging` | `develop` | `beta-v*` |
+| `production` | `main` | `release-v*` |
+
+Branch pushes use the selected environment for the live CloudKit schema check.
+Release tags use that same environment for the schema check and, after it
+passes, for signing and uploading.
+
+### Environment variables and secrets
+
+Add these values to the **Environment variables** and **Environment secrets**
+sections inside each environment.
+
+| Environment variable | `staging` | `production` |
+| --- | --- | --- |
+| `IOS_BUILD_NUMBER_OFFSET` | Set to `0` for a fresh staging record. For an existing record, set an offset that puts CI build numbers above its uploads. | Required. Use the same rule with the production record’s build numbers. |
+| `TESTFLIGHT_INTERNAL_GROUP` | Exact name of the staging app’s internal TestFlight group. | — |
+
+| Environment secret | `staging` | `production` |
+| --- | --- | --- |
+| `CLOUDKIT_MANAGEMENT_TOKEN` | Token with export access to the staging container. | Token with export access to the production container. Reuse the staging token if it can export from both. |
+| `IOS_PROFILE_BASE64` | App Store Connect profile for the staging bundle ID and staging container. | App Store Connect profile for the production bundle ID and production container. |
+| `IOS_DISTRIBUTION_P12_BASE64` | Apple Distribution identity selected when creating the staging profile. | Identity selected when creating the production profile. Reuse the same `.p12` if both profiles use that identity. |
+| `IOS_DISTRIBUTION_P12_PASSWORD` | Password for the staging `.p12` export. | Password for the production `.p12` export. Reuse the password if you reuse the file. |
+| `ASC_KEY_ID` | Key ID of the **App Manager** team key for beta upload and TestFlight group assignment. | Key ID of the **Developer** team key for production uploads. |
+| `ASC_KEY_P8_BASE64` | Private `.p8` file for the staging Key ID. | Private `.p8` file for the production Key ID. |
+| `ASC_ISSUER_ID` | Issuer ID from App Store Connect. | Enter the same Issuer ID when both keys belong to the same App Store Connect team. |
+
+- Generate the management token under **CloudKit Console → Settings**.
+  [Apple cktool setup](https://developer.apple.com/icloud/ck-tool/)
 - Associate the staging and production App IDs with their respective CloudKit
   containers before creating profiles. Export an **Apple Distribution**
   signing identity as a password-protected `.p12` from **Xcode → Settings →
@@ -81,21 +114,20 @@ Create these under **Settings → Environments** and restrict their deployment r
   `.p8` as single-line base64 for its `*_BASE64` secret. Enter the
   `.p12` export password separately. [Apple provisioning profile setup](https://developer.apple.com/help/account/provisioning-profiles/create-an-app-store-provisioning-profile/)
 - In **App Store Connect → Users and Access → Integrations → App Store Connect
-  API → Team Keys**, create an **App Manager** key for the beta environment and
-  a **Developer** key for the release environment. Copy each Key ID and Issuer
+  API → Team Keys**, create an **App Manager** key for `staging` and
+  a **Developer** key for `production`. Copy each Key ID and Issuer
   ID and download the corresponding `.p8` when issued. Team keys have access
   across apps according to their assigned roles. [App Store Connect API setup](https://developer.apple.com/help/app-store-connect/get-started/app-store-connect-api/)
 - On the staging app record, create an internal TestFlight group and set
   `TESTFLIGHT_INTERNAL_GROUP` to its exact name. [Apple internal testing setup](https://developer.apple.com/help/app-store-connect/test-a-beta-version/add-internal-testers/)
-- Set `IOS_BUILD_NUMBER_OFFSET` to `0` on a fresh app record. For an existing
-  record, find the highest uploaded build in App Store Connect and choose a
-  starting offset above it. For example, if the highest build is `45`, use
-  `435600` to start at `45.0.1` when the workflow run number is `1`. Each
-  major component spans 9,900 numbers and each minor component spans 99.
-  Use the same offset across
-  retries and later tags. Protect `develop` and `main` with the
-  **Build and test PalmOilFarmer** status check and restrict creation and
-  movement of release tags with GitHub rulesets.
+- To set an offset for an existing app record, find its highest build in App
+  Store Connect. For example, if the highest build is `45`, use `435600` to
+  start at `45.0.1` when the workflow run number is `1`. Each major component
+  spans 9,900 numbers and each minor component spans 99. Keep each
+  environment’s offset stable across retries and later tags.
+
+Protect `develop` and `main` with the **Build and test PalmOilFarmer** status
+check. Restrict creation and movement of release tags with GitHub rulesets.
 
 Use the [shared contract procedure](PalmOilFarmer/CloudKitContract/Contract-README.md#cloudkit-schema-snapshots)
 to refresh `schema.ckdb` and coordinate manual schema promotion. For initial

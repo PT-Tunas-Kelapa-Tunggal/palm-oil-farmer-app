@@ -14,7 +14,6 @@ jobs:
     timeout-minutes: 5
     outputs:
       environment: ${{ steps.route.outputs.environment }}
-      container: ${{ steps.route.outputs.container }}
       marketing_version: ${{ steps.route.outputs.marketing_version }}
     steps:
       - uses: actions/checkout@v4
@@ -30,7 +29,7 @@ jobs:
     uses: ./.github/workflows/cloudkit-schema.yml
     with:
       contract: PalmOilFarmer/CloudKitContract
-      container: ${{ needs.route.outputs.container }}
+      container: ${{ needs.route.outputs.environment }}
       partition: production
 
   publish:

@@ -20,11 +20,11 @@ if [[ "$IOS_STAGING_BUNDLE_ID" == "$IOS_PRODUCTION_BUNDLE_ID" ||
 fi
 
 case "${IOS_ENVIRONMENT:-}" in
-    ios-beta)
+    staging)
         bundle_id="$IOS_STAGING_BUNDLE_ID"
         container="$CLOUDKIT_STAGING_CONTAINER_ID"
         ;;
-    ios-release)
+    production)
         bundle_id="$IOS_PRODUCTION_BUNDLE_ID"
         container="$CLOUDKIT_PRODUCTION_CONTAINER_ID"
         : "${IOS_BUILD_NUMBER_OFFSET:?Set IOS_BUILD_NUMBER_OFFSET above existing production builds}"
@@ -153,7 +153,7 @@ with open(path, "wb") as stream:
         "provisioningProfiles": {bundle_id: profile_uuid},
         "iCloudContainerEnvironment": "Production",
         "manageAppVersionAndBuildNumber": False,
-        "testFlightInternalTestingOnly": environment == "ios-beta",
+        "testFlightInternalTestingOnly": environment == "staging",
     }, stream)
 PY
 

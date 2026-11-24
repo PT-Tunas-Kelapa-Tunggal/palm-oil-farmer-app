@@ -12,8 +12,8 @@ fi
 lane="${BASH_REMATCH[1]}"
 marketing_version="${BASH_REMATCH[2]}"
 case "$lane" in
-    beta) source_branch=develop; environment=ios-beta; container=staging ;;
-    release) source_branch=main; environment=ios-release; container=production ;;
+    beta) source_branch=develop; environment=staging ;;
+    release) source_branch=main; environment=production ;;
 esac
 
 if ! git merge-base --is-ancestor HEAD "refs/remotes/origin/$source_branch"; then
@@ -23,6 +23,5 @@ fi
 
 {
     echo "environment=$environment"
-    echo "container=$container"
     echo "marketing_version=$marketing_version"
 } >> "${GITHUB_OUTPUT:?Missing GITHUB_OUTPUT}"

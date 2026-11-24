@@ -44,7 +44,7 @@ end
 desc "Upload the verified IPA and distribute staging builds to internal TestFlight testers"
 lane :publish_ci do
   environment = ENV.fetch("IOS_ENVIRONMENT")
-  UI.user_error!("Invalid release environment") unless %w[ios-beta ios-release].include?(environment)
+  UI.user_error!("Invalid release environment") unless %w[staging production].include?(environment)
 
   key = app_store_connect_api_key(
     key_id: ENV.fetch("ASC_KEY_ID"),
@@ -57,7 +57,7 @@ lane :publish_ci do
   build_number = ENV.fetch("RELEASE_BUILD_NUMBER")
   app = Spaceship::ConnectAPI::App.find(bundle_id)
   UI.user_error!("No App Store Connect app matches #{bundle_id}") unless app
-  beta = environment == "ios-beta"
+  beta = environment == "staging"
   internal_group = ci_internal_testflight_group(app) if beta
   options = { api_key: key, app_identifier: bundle_id, app_platform: "ios" }
 
