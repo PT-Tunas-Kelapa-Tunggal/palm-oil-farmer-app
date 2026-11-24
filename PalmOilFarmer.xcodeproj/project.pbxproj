@@ -29,9 +29,20 @@
 		85AD44C230AC5BFB004C61B1 /* AppIcon.icon */ = {isa = PBXFileReference; lastKnownFileType = folder.iconcomposer.icon; path = AppIcon.icon; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
+/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		ABC000000000000000000031 /* Exclude CloudKit schema snapshot from app target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				CloudKitContract/schema.ckdb,
+			);
+			target = 2F68B35D308611DB0039EDEC;
+		};
+/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
+
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		2F68B360308611DB0039EDEC /* PalmOilFarmer */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (ABC000000000000000000031);
 			path = PalmOilFarmer;
 			sourceTree = "<group>";
 		};

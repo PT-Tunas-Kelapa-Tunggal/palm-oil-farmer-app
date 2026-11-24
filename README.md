@@ -31,6 +31,192 @@ This project uses a central `Developer.xcconfig` file for developer-specific cre
 > - All required configuration keys are enforced at runtime via `AppConfiguration`; missing keys trigger an explicit panic (`fatalError`) rather than falling back to hardcoded defaults.
 
 
+## GitHub Actions and TestFlight
+
+PRs into `develop` and `main` build the unsigned iOS app and run the CloudKit
+contract tests. Pushes to `develop` compare staging Development and pushes to
+`main` compare production Production. Release tags verify the partition before
+signing.
+
+| Tag example | Branch | CloudKit target | Distribution |
+| --- | --- | --- | --- |
+| `beta-v11.15.119-1` | `develop` | Staging / Production | TestFlight Internal Only on the staging app record |
+| `release-v11.15.119-1` | `main` | Production / Production | Processed upload for manual selection for external TestFlight or App Review |
+
+Use `-2`, `-3`, and so on to create more candidates for the same marketing
+version. The workflow validates all three version components and checks that
+the tag points to a commit on the indicated branch.
+
+Apple restricts beta builds exported as **TestFlight Internal Only** to internal
+tester groups. CI verifies the **Internal Only** audience in App Store Connect
+before assigning the build to the staging group.
+
+### Repository-level Actions variable
+
+In the iOS repository, open **Settings → Secrets and variables → Actions →
+Variables** and add the shared Team ID.
+
+- **`APPLE_TEAM_ID`**. Sign in to your Apple Developer account, open
+  **Membership details**, and copy the 10-character Team ID. Both builds
+  and CloudKit checks share this value. [Apple Team ID](https://developer.apple.com/help/glossary/team-id)
+
+### GitHub environments and allowed refs
+
+Under **Settings → Environments**, create `staging` and `production`. Open
+each environment, choose **Selected branches and tags** under **Deployment
+branches and tags**, and click **Add deployment branch or tag rule**. Add
+one rule with **Ref type → Branch** and one with **Ref type → Tag** using
+the patterns below. These rules control which refs can use the
+environment’s credentials. [GitHub environment setup](https://docs.github.com/en/actions/how-tos/deploy/configure-and-manage-deployments/manage-environments#creating-an-environment)
+
+| Environment | Branch rule | Tag rule |
+| --- | --- | --- |
+| `staging` | `develop` | `beta-v*` |
+| `production` | `main` | `release-v*` |
+
+Branch pushes use the selected environment for the live CloudKit schema check.
+Release tags use that same environment for the schema check and, after it
+passes, for signing and uploading.
+
+### Environment variables
+
+Open **Settings → Environments → staging** or **production**, then add the
+applicable entries under **Environment variables**.
+
+- **`CLOUDKIT_CONTAINER_ID`**. In **Apple Developer → Certificates, Identifiers
+  & Profiles → Identifiers → iCloud Containers**, copy the full `iCloud.` ID
+  assigned to the PalmOilFarmer App ID for that environment. Use distinct
+  containers for staging and production. The schema check and signed build use
+  this value from the same environment. [Create an iCloud container](https://developer.apple.com/help/account/identifiers/create-an-icloud-container), [Assign an iCloud container](https://developer.apple.com/help/account/identifiers/enable-app-capabilities#Enable-iCloud)
+- **`IOS_BUNDLE_ID`**. In **App Store Connect → Apps**, open the app record for
+  that environment and copy the **Bundle ID** under **General → App Information**.
+  Use separate app records and bundle IDs for staging and production. To create
+  a staging record, first register its explicit App ID in Apple Developer.
+  [Register an App ID](https://developer.apple.com/help/account/identifiers/register-an-app-id/), [Create an app record](https://developer.apple.com/help/app-store-connect/create-an-app-record/add-a-new-app/)
+- **`IOS_BUILD_NUMBER_OFFSET`**. Set separately in both environments. Use
+  `0` for a fresh App Store Connect record. For an existing record, find its
+  highest build number under **TestFlight**. To start at the next major build
+  number, multiply the first component of the highest build by `9900`.
+  For a highest build of `45` or `45.8.2`, enter `445500`. At workflow run
+  `1` that yields `46.0.1`. Keep each environment’s offset stable across
+  retries and later tags.
+- **`TESTFLIGHT_INTERNAL_GROUP`**. Set in `staging` only. Open the staging
+  app in **App Store Connect → TestFlight → Internal Testing**, create an
+  internal group if needed, and copy its exact name. [Apple internal testing setup](https://developer.apple.com/help/app-store-connect/test-a-beta-version/add-internal-testers/)
+
+If you already configured separate repository variables for the staging and
+production IDs, copy those values into the corresponding environment entries
+and remove the four old repository variables once the updated workflow is live.
+
+### Environment secrets
+
+Add each secret under **Environment secrets** in both `staging` and
+`production`. For a name ending in `_BASE64`, replace `/path/to/file` with the
+credential file’s path, run the command, then paste into the matching secret.
+
+```sh
+openssl base64 -A -in "/path/to/file" | pbcopy
+```
+
+- **`CLOUDKIT_MANAGEMENT_TOKEN`**. Open **CloudKit Console → Settings** for
+  your account and generate a **Management Token**. Copy the token as issued
+  into the environment for the container it can export. You can use the same
+  value in both environments if it can export both containers. [Apple cktool setup](https://developer.apple.com/icloud/ck-tool/)
+- **`IOS_DISTRIBUTION_P12_BASE64`**. In **Xcode → Settings → Accounts →
+  [your team] → Manage Certificates**, select the **Apple Distribution**
+  identity and export it as a password-protected `.p12`. Encode that file
+  with the command above. The identity must match the certificate chosen
+  for that environment’s provisioning profile. Reuse the same file if both
+  profiles use the same identity. [Export a signing identity](https://developer.apple.com/documentation/xcode/sharing-your-teams-signing-certificates)
+- **`IOS_DISTRIBUTION_P12_PASSWORD`**. Enter the password you chose when
+  exporting that environment’s `.p12`. Use the same password in both
+  environments if you reuse the file. [Export a signing identity](https://developer.apple.com/documentation/xcode/sharing-your-teams-signing-certificates)
+- **`IOS_PROFILE_BASE64`**. Associate each App ID with its corresponding
+  CloudKit container in Apple Developer. Then go to **Certificates,
+  Identifiers & Profiles → Profiles → +** and create an **App Store Connect**
+  distribution profile using that environment’s App ID and the certificate
+  from its `.p12`. Download the `.mobileprovision` and encode it with the
+  command above. Create a separate profile for each app. [Enable iCloud](https://developer.apple.com/help/account/identifiers/enable-app-capabilities#Enable-iCloud), [Create an App Store Connect profile](https://developer.apple.com/help/account/provisioning-profiles/create-an-app-store-provisioning-profile/)
+- **`ASC_KEY_ID`**. Go to **App Store Connect → Users and Access →
+  Integrations → App Store Connect API → Team Keys**. Create an **App Manager**
+  team key for `staging` and a **Developer** team key for `production`.
+  Copy the **Key ID** from the corresponding row. Team keys have access
+  across apps according to their assigned roles. [Create a team API key](https://developer.apple.com/documentation/appstoreconnectapi/creating-api-keys-for-app-store-connect-api)
+- **`ASC_ISSUER_ID`**. On the same **Integrations** page, copy the
+  **Issuer ID** near the top. Use that value in both environments when both
+  keys belong to the same App Store Connect team. [Find the Issuer ID](https://developer.apple.com/documentation/appstoreconnectapi/generating-tokens-for-api-requests)
+- **`ASC_KEY_P8_BASE64`**. In **Team Keys**, download the `.p8` from the
+  row for that environment’s `ASC_KEY_ID`. Apple offers the download once.
+  Encode the downloaded file with the command above. [Download a team private key](https://developer.apple.com/documentation/appstoreconnectapi/creating-api-keys-for-app-store-connect-api)
+
+### Protect `develop` and `main`
+
+Create one branch ruleset that requires a pull request and passing CI for
+changes to either branch. Before configuring it, get a successful
+**Build and test PalmOilFarmer** run on a PR into `develop` or `main`.
+GitHub requires a successful run in this repository within the past
+seven days for a check to be eligible. [Troubleshoot required checks](https://docs.github.com/en/pull-requests/how-tos/merge-and-close-pull-requests/troubleshooting-required-status-checks)
+
+1. Open **Settings → Rules → Rulesets → New ruleset → New branch ruleset**.
+   Name it **Require iOS PR checks** and set **Enforcement status** to **Active**.
+2. Under **Target branches → Add a target → Include by pattern**, add
+   `develop` and `main` as two separate entries.
+3. Leave the **Bypass list** empty to apply the merge requirements to
+   everyone, including repository admins.
+4. Enable the following rules under **Branch protections**, then click
+   **Create**. [Create a GitHub branch ruleset](https://docs.github.com/en/repositories/configuring-branches-and-merges-in-your-repository/managing-rulesets/creating-rulesets-for-a-repository#creating-a-branch-or-tag-ruleset)
+
+| Rule | How to configure it and what it does |
+| --- | --- |
+| **Require a pull request before merging** | Makes changes go through a PR. Start with **Required approvals** set to `0` for a solo maintainer. Set it to `1` if another reviewer with write access should approve each PR. |
+| **Require status checks to pass before merging** | Click **Add checks** and select **Build and test PalmOilFarmer** from the **CI** workflow. Choose **GitHub Actions** as the source if prompted. GitHub waits for the unsigned app build and CloudKit contract tests to pass before allowing a merge. |
+| **Block force pushes** | Prevents force pushes from rewriting either protected branch’s history. |
+| **Restrict deletions** | Prevents deletion of either protected branch. |
+
+Select only **Build and test PalmOilFarmer** as the required PR check. The
+live CloudKit schema job runs on branch pushes and release tags. To
+require CI against the latest changes on the target branch, also enable
+**Require branches to be up to date before merging** under the status-check
+rule. This can require a branch update and another CI run as the target
+branch advances. [GitHub rules and check options](https://docs.github.com/en/repositories/configuring-branches-and-merges-in-your-repository/managing-rulesets/available-rules-for-rulesets#require-status-checks-to-pass-before-merging)
+
+### Protect iOS release tags
+
+1. Open **Settings → Rules → Rulesets → New ruleset → New tag ruleset**.
+   Name it **Restrict iOS release tags** and set **Enforcement status** to
+   **Active**.
+2. Under **Target tags → Add a target → Include by pattern**, add
+   `beta-v*` and `release-v*` as two separate entries.
+3. Under **Bypass list → Add bypass**, select the team or role authorized
+   to publish releases. Choose **Always allow** for that actor so they can
+   push release tags. If repository admins are the intended release
+   maintainers, select the **Repository admin** role.
+4. Enable the following rules under **Tag protections**, then click
+   **Create**. [Create a GitHub tag ruleset](https://docs.github.com/en/repositories/configuring-branches-and-merges-in-your-repository/managing-rulesets/creating-rulesets-for-a-repository#creating-a-branch-or-tag-ruleset)
+
+| Rule | What it does |
+| --- | --- |
+| **Restrict creations** | Only an actor on the bypass list can create a matching release tag. |
+| **Restrict updates** | Only an actor on the bypass list can move an existing release tag to another commit. |
+| **Restrict deletions** | Only an actor on the bypass list can delete an existing release tag. |
+
+Use a new candidate suffix when releasing another build for the same
+version. The release workflow validates the full tag and checks that the
+commit belongs to `develop` for a beta tag or `main` for a release tag.
+
+### CloudKit schema verification
+
+CI compares the selected CloudKit partition with
+[`PalmOilFarmer/CloudKitContract/schema.ckdb`](PalmOilFarmer/CloudKitContract/schema.ckdb).
+If CI reports drift and the live schema is correct, export that partition
+with `cktool export-schema`, review the export, and update the snapshot on
+the affected branch. If a release partition is behind, deploy the reviewed
+schema from Development to Production in the same container through
+CloudKit Console, then rerun the check. [Export a CloudKit schema](https://developer.apple.com/icloud/ck-tool/), [Deploy a CloudKit schema](https://developer.apple.com/documentation/cloudkit/deploying-an-icloud-container-s-schema)
+
+For the first release, verify the schema checks and install the staging
+build through TestFlight to confirm it can load and submit staging data.
+
 ## Where code belongs
 
 | Folder | Responsibility |

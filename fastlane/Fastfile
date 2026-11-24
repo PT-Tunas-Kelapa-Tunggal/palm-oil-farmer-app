@@ -1,0 +1,105 @@
+fastlane_version "2.241.2"
+
+def ci_internal_testflight_group(app)
+  name = ENV.fetch("TESTFLIGHT_INTERNAL_GROUP")
+  matches = app.get_beta_groups.select { |group| group.name == name && group.is_internal_group == true }
+  UI.user_error!("Configure TESTFLIGHT_INTERNAL_GROUP with the exact name of one staging internal group") unless matches.one?
+  matches.first
+end
+
+def ci_find_build(app_id, version, build_number)
+  versions = [version, version.delete_suffix(".0")].uniq
+  builds = versions.flat_map do |candidate|
+    Spaceship::ConnectAPI::Build.all(
+      app_id: app_id, version: candidate, build_number: build_number, platform: "IOS"
+    )
+  end.uniq(&:id)
+  UI.user_error!("More than one iOS build matched #{version} (#{build_number})") if builds.size > 1
+  builds.first
+end
+
+def ci_wait_for_internal_testflight(build)
+  deadline = Process.clock_gettime(Process::CLOCK_MONOTONIC) + 600
+  loop do
+    response = Spaceship::ConnectAPI.get_build(build_id: build.id, includes: "buildBetaDetail")
+    audience = response.body.dig("data", "attributes", "buildAudienceType")
+    unless audience == "INTERNAL_ONLY"
+      UI.user_error!("App Store Connect build #{build.id} reports audience #{audience.inspect}. Expected INTERNAL_ONLY. Export an internal-only build and use a new beta tag.")
+    end
+
+    state = response.first.build_beta_detail&.internal_build_state
+    return if %w[READY_FOR_BETA_TESTING IN_BETA_TESTING].include?(state)
+
+    unless state.nil? || state == "PROCESSING"
+      UI.user_error!("Internal TestFlight status is #{state}. Resolve it in App Store Connect and rerun this tag.")
+    end
+    if Process.clock_gettime(Process::CLOCK_MONOTONIC) >= deadline
+      UI.user_error!("App Store Connect did not finish internal TestFlight processing within 10 minutes. Rerun this tag once the build is ready.")
+    end
+
+    sleep 30
+  end
+end
+
+desc "Upload the verified IPA and distribute staging builds to internal TestFlight testers"
+lane :publish_ci do
+  environment = ENV.fetch("IOS_ENVIRONMENT")
+  UI.user_error!("Invalid release environment") unless %w[staging production].include?(environment)
+
+  key = app_store_connect_api_key(
+    key_id: ENV.fetch("ASC_KEY_ID"),
+    issuer_id: ENV.fetch("ASC_ISSUER_ID"),
+    key_content: ENV.fetch("ASC_KEY_P8_BASE64"),
+    is_key_content_base64: true
+  )
+  bundle_id = ENV.fetch("RELEASE_BUNDLE_ID")
+  version = ENV.fetch("MARKETING_VERSION")
+  build_number = ENV.fetch("RELEASE_BUILD_NUMBER")
+  app = Spaceship::ConnectAPI::App.find(bundle_id)
+  UI.user_error!("No App Store Connect app matches #{bundle_id}") unless app
+  beta = environment == "staging"
+  internal_group = ci_internal_testflight_group(app) if beta
+  options = { api_key: key, app_identifier: bundle_id, app_platform: "ios" }
+
+  build = ci_find_build(app.id, version, build_number)
+  unless build
+    begin
+      upload_to_testflight(
+        **options, ipa: ENV.fetch("RELEASE_IPA"),
+        skip_submission: true, skip_waiting_for_build_processing: true
+      )
+    rescue FastlaneCore::Interface::FastlaneError => error
+      # A prior upload may have been accepted just before the runner stopped.
+      raise unless error.message.match?(/already (been )?uploaded|duplicate|redundant binary upload/i)
+
+      UI.important("Apple reported an existing upload. Waiting for the exact build to appear.")
+    end
+  end
+
+  build = FastlaneCore::BuildWatcher.wait_for_build_processing_to_be_complete(
+    app_id: app.id, platform: "ios", app_version: version, build_version: build_number,
+    poll_interval: 30, timeout_duration: 2400, return_spaceship_testflight_build: false,
+    wait_for_build_beta_detail_processing: false
+  )
+  unless build.processing_state == "VALID" && !build.expired
+    UI.user_error!("App Store Connect build #{version} (#{build_number}) is #{build.processing_state} or has expired")
+  end
+
+  result = "Processed on the production app record and available for selection"
+  if beta
+    ci_wait_for_internal_testflight(build)
+    unless internal_group.has_access_to_all_builds
+      assigned_groups = app.get_beta_groups(filter: { builds: build.id })
+      unless assigned_groups.any? { |group| group.id == internal_group.id }
+        build.add_beta_groups(beta_groups: [internal_group])
+      end
+    end
+    result = "Verified as internal-only and available to the staging TestFlight group"
+  end
+
+  message = "#{bundle_id} #{build.app_version} (#{build.version}) — #{result}."
+  UI.success(message)
+  if ENV["GITHUB_STEP_SUMMARY"]
+    File.open(ENV["GITHUB_STEP_SUMMARY"], "a") { |summary| summary.puts(message) }
+  end
+end

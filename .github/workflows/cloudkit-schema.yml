@@ -1,0 +1,53 @@
+name: CloudKit schema
+
+on:
+  workflow_call:
+    inputs:
+      contract:
+        required: true
+        type: string
+      environment:
+        required: true
+        type: string
+      partition:
+        required: true
+        type: string
+    outputs:
+      container_id:
+        value: ${{ jobs.compare.outputs.container_id }}
+
+permissions:
+  contents: read
+
+jobs:
+  compare:
+    name: Compare CloudKit schema
+    runs-on: xcode-27
+    timeout-minutes: 8
+    environment: ${{ inputs.environment }}
+    outputs:
+      container_id: ${{ steps.schema.outputs.container_id }}
+    env:
+      DEVELOPER_DIR: /Applications/Xcode_27.2.app/Contents/Developer
+      CONTRACT: ${{ inputs.contract }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Export and compare selected CloudKit partition
+        id: schema
+        env:
+          PARTITION: ${{ inputs.partition }}
+          APPLE_TEAM_ID: ${{ vars.APPLE_TEAM_ID }}
+          CLOUDKIT_CONTAINER_ID: ${{ vars.CLOUDKIT_CONTAINER_ID }}
+          CLOUDKIT_MANAGEMENT_TOKEN: ${{ secrets.CLOUDKIT_MANAGEMENT_TOKEN }}
+        run: |
+          : "${APPLE_TEAM_ID:?Configure APPLE_TEAM_ID in Actions variables}"
+          if [[ "$CLOUDKIT_CONTAINER_ID" != iCloud.?* ]]; then
+            echo "::error::Set CLOUDKIT_CONTAINER_ID to the full iCloud container ID in this GitHub environment."
+            exit 1
+          fi
+          python3 .github/scripts/check_cloudkit_schema.py \
+            --schema "$CONTRACT/schema.ckdb" --team-id "$APPLE_TEAM_ID" \
+            --container "$CLOUDKIT_CONTAINER_ID" --partition "$PARTITION"
+          echo "container_id=$CLOUDKIT_CONTAINER_ID" >> "$GITHUB_OUTPUT"
