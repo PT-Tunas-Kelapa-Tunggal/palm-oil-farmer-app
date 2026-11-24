@@ -4,29 +4,16 @@ umask 077
 
 : "${RUNNER_TEMP:?Missing RUNNER_TEMP}"
 : "${APPLE_TEAM_ID:?Configure APPLE_TEAM_ID}"
-: "${IOS_STAGING_BUNDLE_ID:?Configure IOS_STAGING_BUNDLE_ID}"
-: "${IOS_PRODUCTION_BUNDLE_ID:?Configure IOS_PRODUCTION_BUNDLE_ID}"
-: "${CLOUDKIT_STAGING_CONTAINER_ID:?Configure CLOUDKIT_STAGING_CONTAINER_ID}"
-: "${CLOUDKIT_PRODUCTION_CONTAINER_ID:?Configure CLOUDKIT_PRODUCTION_CONTAINER_ID}"
+bundle_id="${IOS_BUNDLE_ID:?Configure IOS_BUNDLE_ID in this GitHub environment}"
+container="${CLOUDKIT_CONTAINER_ID:?Configure CLOUDKIT_CONTAINER_ID in this GitHub environment}"
 : "${MARKETING_VERSION:?Missing MARKETING_VERSION}"
 : "${IOS_DISTRIBUTION_P12_BASE64:?Configure IOS_DISTRIBUTION_P12_BASE64}"
 : "${IOS_DISTRIBUTION_P12_PASSWORD:?Configure IOS_DISTRIBUTION_P12_PASSWORD}"
 : "${IOS_PROFILE_BASE64:?Configure IOS_PROFILE_BASE64}"
 
-if [[ "$IOS_STAGING_BUNDLE_ID" == "$IOS_PRODUCTION_BUNDLE_ID" ||
-      "$CLOUDKIT_STAGING_CONTAINER_ID" == "$CLOUDKIT_PRODUCTION_CONTAINER_ID" ]]; then
-    echo "error: Configure distinct staging and production app and CloudKit identities." >&2
-    exit 1
-fi
-
 case "${IOS_ENVIRONMENT:-}" in
-    staging)
-        bundle_id="$IOS_STAGING_BUNDLE_ID"
-        container="$CLOUDKIT_STAGING_CONTAINER_ID"
-        ;;
+    staging) ;;
     production)
-        bundle_id="$IOS_PRODUCTION_BUNDLE_ID"
-        container="$CLOUDKIT_PRODUCTION_CONTAINER_ID"
         : "${IOS_BUILD_NUMBER_OFFSET:?Set IOS_BUILD_NUMBER_OFFSET above existing production builds}"
         ;;
     *)

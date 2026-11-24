@@ -29,7 +29,7 @@ jobs:
     uses: ./.github/workflows/cloudkit-schema.yml
     with:
       contract: PalmOilFarmer/CloudKitContract
-      container: ${{ needs.route.outputs.environment }}
+      environment: ${{ needs.route.outputs.environment }}
       partition: production
 
   publish:
@@ -42,11 +42,6 @@ jobs:
       DEVELOPER_DIR: /Applications/Xcode_27.2.app/Contents/Developer
       IOS_ENVIRONMENT: ${{ needs.route.outputs.environment }}
       APPLE_TEAM_ID: ${{ vars.APPLE_TEAM_ID }}
-      IOS_STAGING_BUNDLE_ID: ${{ vars.IOS_STAGING_BUNDLE_ID }}
-      IOS_PRODUCTION_BUNDLE_ID: ${{ vars.IOS_PRODUCTION_BUNDLE_ID }}
-      CLOUDKIT_STAGING_CONTAINER_ID: ${{ vars.CLOUDKIT_STAGING_CONTAINER_ID }}
-      CLOUDKIT_PRODUCTION_CONTAINER_ID: ${{ vars.CLOUDKIT_PRODUCTION_CONTAINER_ID }}
-      IOS_BUILD_NUMBER_OFFSET: ${{ vars.IOS_BUILD_NUMBER_OFFSET }}
       MARKETING_VERSION: ${{ needs.route.outputs.marketing_version }}
     steps:
       - uses: actions/checkout@v4
@@ -55,6 +50,9 @@ jobs:
       - name: Archive, export and verify iOS app
         id: archive
         env:
+          IOS_BUNDLE_ID: ${{ vars.IOS_BUNDLE_ID }}
+          CLOUDKIT_CONTAINER_ID: ${{ needs.release-schema.outputs.container_id }}
+          IOS_BUILD_NUMBER_OFFSET: ${{ vars.IOS_BUILD_NUMBER_OFFSET }}
           IOS_DISTRIBUTION_P12_BASE64: ${{ secrets.IOS_DISTRIBUTION_P12_BASE64 }}
           IOS_DISTRIBUTION_P12_PASSWORD: ${{ secrets.IOS_DISTRIBUTION_P12_PASSWORD }}
           IOS_PROFILE_BASE64: ${{ secrets.IOS_PROFILE_BASE64 }}

@@ -47,5 +47,5 @@ jobs:
     uses: ./.github/workflows/cloudkit-schema.yml
     with:
       contract: PalmOilFarmer/CloudKitContract
-      container: ${{ github.ref_name == 'develop' && 'staging' || 'production' }}
+      environment: ${{ github.ref_name == 'develop' && 'staging' || 'production' }}
       partition: ${{ github.ref_name == 'develop' && 'development' || 'production' }}
