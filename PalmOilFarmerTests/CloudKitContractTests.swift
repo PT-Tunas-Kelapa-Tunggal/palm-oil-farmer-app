@@ -229,7 +229,7 @@ struct CloudKitContractTests {
             FertilizerNeedItem(
                 fertilizerApplicationType: .general,
                 fertilizerType: type,
-                recommendedDosage: 2.0,
+                recommendedDosagePerZonePerYear: 2.0,
                 dosageUnit: "kg",
                 currentDosage: 1.0
             )
@@ -264,7 +264,7 @@ struct CloudKitContractTests {
         let needItem = FertilizerNeedItem(
             fertilizerApplicationType: .zoneSpecific,
             fertilizerType: .kcl,
-            recommendedDosage: 2.0,
+            recommendedDosagePerZonePerYear: 2.0,
             dosageUnit: "kg",
             currentDosage: 1.0,
             zoneId: 1
