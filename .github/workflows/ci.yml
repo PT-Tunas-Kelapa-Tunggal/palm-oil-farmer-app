@@ -1,0 +1,51 @@
+name: CI
+
+on:
+  pull_request:
+    branches: [develop, main]
+  push:
+    branches: [develop, main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  validate:
+    name: Build and test PalmOilFarmer
+    runs-on: xcode-27
+    timeout-minutes: 30
+    env:
+      DEVELOPER_DIR: /Applications/Xcode_27.2.app/Contents/Developer
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Build unsigned iOS app
+        run: |
+          cp Developer.xcconfig.example Developer.xcconfig
+          xcodebuild -version
+          xcodebuild build -project PalmOilFarmer.xcodeproj -scheme PalmOilFarmer \
+            -configuration Release -destination 'generic/platform=iOS' \
+            CODE_SIGNING_ALLOWED=NO
+      - name: Run CloudKit contract tests
+        run: |
+          # xcodebuild's test filter only limits execution. Scope compilation to the same suite.
+          xcodebuild test -project PalmOilFarmer.xcodeproj -scheme PalmOilFarmer \
+            -destination 'platform=iOS Simulator,name=iPhone 17,OS=27.2' \
+            -only-testing:PalmOilFarmerTests/CloudKitContractTests \
+            EXCLUDED_SOURCE_FILE_NAMES='*Tests.swift' \
+            INCLUDED_SOURCE_FILE_NAMES=CloudKitContractTests.swift \
+            -parallel-testing-enabled NO CODE_SIGNING_ALLOWED=NO
+
+  branch-schema:
+    name: Verify branch CloudKit schema
+    if: github.event_name == 'push'
+    uses: ./.github/workflows/cloudkit-schema.yml
+    with:
+      contract: PalmOilFarmer/CloudKitContract
+      container: ${{ github.ref_name == 'develop' && 'staging' || 'production' }}
+      partition: ${{ github.ref_name == 'develop' && 'development' || 'production' }}
